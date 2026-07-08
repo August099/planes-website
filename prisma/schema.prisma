@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  role          Role       @default(BUYER)
+  createdAt     DateTime   @default(now())
+
+  aircrafts     Aircraft[]
+  favorites     Favorite[]
+}
+
+enum Role {
+  BUYER
+  SELLER
+  ADMIN
+}
+
+model Aircraft {
+  id              String          @id @default(cuid())
+  seller          User            @relation(fields: [sellerId], references: [id])
+  sellerId        String
+
+  title           String
+  manufacturer    String
+  model           String
+  year            Int
+  price           Decimal         @db.Decimal(12, 2)
+  category        AircraftCategory
+  totalTimeHours  Int
+  engineHours     Int?
+  location        String
+  description     String          @db.Text
+  status          AircraftStatus  @default(ACTIVE)
+
+  images          AircraftImage[]
+  leads           Lead[]
+  favorites       Favorite[]
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([manufacturer, model])
+  @@index([price])
+  @@index([category])
+}
+
+enum AircraftCategory {
+  MONOMOTOR
+  MULTIMOTOR
+  TURBOHELICE
+  JET
+  HELICOPTERO
+}
+
+enum AircraftStatus {
+  ACTIVE
+  PENDING
+  SOLD
+}
+
+model AircraftImage {
+  id          String    @id @default(cuid())
+  aircraft    Aircraft  @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+  aircraftId  String
+  url         String
+  order       Int       @default(0)
+}
+
+model Lead {
+  id          String    @id @default(cuid())
+  aircraft    Aircraft  @relation(fields: [aircraftId], references: [id])
+  aircraftId  String
+  buyerName   String
+  buyerEmail  String
+  buyerPhone  String?
+  message     String    @db.Text
+  createdAt   DateTime  @default(now())
+}
+
+model Favorite {
+  id          String    @id @default(cuid())
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  aircraft    Aircraft  @relation(fields: [aircraftId], references: [id])
+  aircraftId  String
+
+  @@unique([userId, aircraftId])
+}
