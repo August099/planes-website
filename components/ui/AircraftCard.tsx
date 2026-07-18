@@ -5,12 +5,12 @@ import { Badge } from "@/components/ui/badge";
 
 type AircraftCardProps = {
   id: string;
-  title: string;
+  title: string | null;
   price: number;
-  year: number;
-  category: string;
-  totalTimeHours: number;
-  location: string;
+  year: number | null;
+  category: string | null;
+  totalTimeHours: number | null;
+  location: string | null;
   imageUrl: string;
 };
 
@@ -36,7 +36,7 @@ export function AircraftCard({
         <div className="relative w-full h-48">
           <Image
             src={imageUrl}
-            alt={title}
+            alt={title ?? "Avión en venta"}
             fill
             className="object-cover"
           />
@@ -50,7 +50,7 @@ export function AircraftCard({
             {formattedPrice}
           </p>
           <div className="text-sm text-muted-foreground space-y-1">
-            <p>Año {year} · {totalTimeHours.toLocaleString()} hs totales</p>
+            <p>Año {year} · {totalTimeHours?.toLocaleString()} hs totales</p>
             <p>{location}</p>
           </div>
         </CardContent>
