@@ -2,6 +2,9 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { Button } from "@/components/ui/button";
+import { HowItWorks } from "@/components/ui/HowItWorks";
+import { SellerCta } from "@/components/ui/SellerCta";
+import { TrustBlock } from "@/components/ui/TrustBlock";
 
 export default async function HomePage() {
   const featured = await prisma.aircraft.findMany({
@@ -28,6 +31,8 @@ export default async function HomePage() {
         </Link>
       </section>
 
+      <HowItWorks />
+
       <main className="container mx-auto px-4 py-12">
         <h2 className="text-xl font-heading font-semibold mb-6">
           Publicados recientemente
@@ -49,6 +54,11 @@ export default async function HomePage() {
           ))}
         </div>
       </main>
+
+      <SellerCta />
+
+      <TrustBlock />
+
     </>
   );
 }
