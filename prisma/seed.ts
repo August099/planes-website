@@ -57,6 +57,7 @@ async function main() {
     await prisma.aircraft.create({
       data: {
         sellerId: seller.id,
+        title: `${brand.replace("_", " ")} ${model} ${faker.number.int({ min: 1985, max: 2022 })}`,
         shortDescription: `${brand.replace("_", " ")} ${model}, motorizado, listo para operar en próxima campaña.`,
         priceOnRequest: isPriceOnRequest,
         price: isPriceOnRequest ? null : faker.number.int({ min: 80000, max: 900000 }),

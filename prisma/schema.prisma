@@ -42,6 +42,7 @@ model Aircraft {
   sellerId          String
 
   // Obligatorios
+  title             String
   shortDescription  String          @db.Text
   price             Decimal?        @db.Decimal(12, 2)
   priceOnRequest    Boolean         @default(false)
