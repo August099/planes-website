@@ -6,8 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// ========== USUARIOS ==========
-
 model User {
   id            String     @id @default(cuid())
   email         String     @unique
@@ -28,13 +26,6 @@ model User {
   favorites     Favorite[]
   purchases     Purchase[]
 }
-
-enum SellerType {
-  PARTICULAR
-  MAYORISTA
-}
-
-// ========== AVIONES ==========
 
 model Aircraft {
   id                String          @id @default(cuid())
@@ -83,6 +74,84 @@ model Aircraft {
   @@index([status])
 }
 
+model AircraftImage {
+  id         String   @id @default(cuid())
+  aircraftId String
+  url        String
+  order      Int      @default(0)
+  aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+}
+
+model AircraftDocument {
+  id         String   @id @default(cuid())
+  aircraftId String
+  url        String
+  name       String
+  uploadedAt DateTime @default(now())
+  aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+}
+
+model Lead {
+  id         String   @id @default(cuid())
+  aircraftId String
+  buyerName  String
+  buyerEmail String
+  buyerPhone String?
+  message    String
+  createdAt  DateTime @default(now())
+  aircraft   Aircraft @relation(fields: [aircraftId], references: [id])
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  aircraftId String
+  aircraft   Aircraft @relation(fields: [aircraftId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, aircraftId])
+}
+
+model Report {
+  id            String       @id @default(cuid())
+  aircraftId    String
+  reason        String
+  details       String?
+  reporterEmail String?
+  status        ReportStatus @default(PENDING)
+  createdAt     DateTime     @default(now())
+  aircraft      Aircraft     @relation(fields: [aircraftId], references: [id])
+}
+
+model Plan {
+  id            String     @id @default(cuid())
+  name          String
+  sellerType    SellerType
+  postsIncluded Int
+  price         Decimal    @db.Decimal(10, 2)
+  isActive      Boolean    @default(true)
+  purchases     Purchase[]
+}
+
+model Purchase {
+  id               String        @id @default(cuid())
+  userId           String
+  planId           String
+  creditsTotal     Int
+  creditsRemaining Int
+  mpPreferenceId   String?
+  paymentStatus    PaymentStatus @default(PENDING)
+  createdAt        DateTime      @default(now())
+  aircraftsPosted  Aircraft[]
+  plan             Plan          @relation(fields: [planId], references: [id])
+  user             User          @relation(fields: [userId], references: [id])
+}
+
+enum SellerType {
+  PARTICULAR
+  MAYORISTA
+}
+
 enum AircraftBrand {
   AIR_TRACTOR
   CESSNA
@@ -102,100 +171,16 @@ enum AircraftCategory {
 }
 
 enum AircraftStatus {
-  PENDING_PAYMENT   // se creó pero no se pagó el posteo todavía
-  ACTIVE            // visible públicamente
-  EXPIRED           // venció, oculto del listado, visible solo en panel del usuario
+  PENDING_PAYMENT
+  ACTIVE
+  EXPIRED
   SOLD
-}
-
-model AircraftImage {
-  id          String    @id @default(cuid())
-  aircraft    Aircraft  @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
-  aircraftId  String
-  url         String
-  order       Int       @default(0)
-}
-
-model AircraftDocument {
-  id          String    @id @default(cuid())
-  aircraft    Aircraft  @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
-  aircraftId  String
-  url         String
-  name        String    // nombre visible del archivo, ej: "Logbook motor.pdf"
-  uploadedAt  DateTime  @default(now())
-}
-
-// ========== LEADS Y FAVORITOS ==========
-
-model Lead {
-  id          String    @id @default(cuid())
-  aircraft    Aircraft  @relation(fields: [aircraftId], references: [id])
-  aircraftId  String
-  buyerName   String
-  buyerEmail  String
-  buyerPhone  String?
-  message     String    @db.Text
-  createdAt   DateTime  @default(now())
-}
-
-model Favorite {
-  id          String    @id @default(cuid())
-  user        User      @relation(fields: [userId], references: [id])
-  userId      String
-  aircraft    Aircraft  @relation(fields: [aircraftId], references: [id])
-  aircraftId  String
-
-  @@unique([userId, aircraftId])
-}
-
-// ========== DENUNCIAS ==========
-
-model Report {
-  id             String       @id @default(cuid())
-  aircraft       Aircraft     @relation(fields: [aircraftId], references: [id])
-  aircraftId     String
-  reason         String       // "robado", "fotos indebidas", "otro", etc.
-  details        String?      @db.Text
-  reporterEmail  String?      // opcional, para poder hacer seguimiento
-  status         ReportStatus @default(PENDING)
-  createdAt      DateTime     @default(now())
 }
 
 enum ReportStatus {
   PENDING
   REVIEWED
   DISMISSED
-}
-
-// ========== PLANES Y CRÉDITOS ==========
-
-model Plan {
-  id             String      @id @default(cuid())
-  name           String                        // "Particular x5", "Mayorista x50"
-  sellerType     SellerType
-  postsIncluded  Int
-  price          Decimal     @db.Decimal(10, 2)
-  isActive       Boolean     @default(true)     // permite desactivar planes viejos sin borrarlos
-
-  purchases      Purchase[]
-}
-
-model Purchase {
-  id                String        @id @default(cuid())
-  user              User          @relation(fields: [userId], references: [id])
-  userId            String
-  plan              Plan          @relation(fields: [planId], references: [id])
-  planId            String
-
-  creditsTotal      Int                          // copiado de plan.postsIncluded al comprar
-  creditsRemaining  Int
-
-  mpPreferenceId    String?                      // id de preferencia de Mercado Pago
-  paymentStatus     PaymentStatus @default(PENDING)
-
-  createdAt         DateTime      @default(now())
-
-  aircraftsPosted   Aircraft[]
 }
 
 enum PaymentStatus {
