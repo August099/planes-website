@@ -19,7 +19,7 @@ export default async function AvionesPage() {
           <AircraftCard
             key={aircraft.id}
             id={aircraft.id}
-            title={aircraft.model}
+            title={aircraft.title}
             price={Number(aircraft.price)}
             year={aircraft.year}
             category={aircraft.category}
