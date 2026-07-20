@@ -28,35 +28,45 @@ model User {
 }
 
 model Aircraft {
-  id                 String             @id @default(cuid())
-  sellerId           String
-  model              String?
-  year               Int?
-  price              Decimal?           @db.Decimal(12, 2)
-  category           AircraftCategory?
-  totalTimeHours     Int?
-  engineHours        Int?
-  location           String?
-  status             AircraftStatus     @default(PENDING_PAYMENT)
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  brand              AircraftBrand?
-  customBrand        String?
-  extraDescription   String?
-  listingExpiresAt   DateTime?
-  listingStartsAt    DateTime?
-  modifications      String?
-  priceOnRequest     Boolean            @default(false)
-  purchaseId         String?
-  renewalEmailSentAt DateTime?
-  shortDescription   String
-  purchase           Purchase?          @relation(fields: [purchaseId], references: [id])
-  seller             User               @relation(fields: [sellerId], references: [id])
-  documents          AircraftDocument[]
-  images             AircraftImage[]
-  favorites          Favorite[]
-  leads              Lead[]
-  reports            Report[]
+  id                String          @id @default(cuid())
+  seller            User            @relation(fields: [sellerId], references: [id])
+  sellerId          String
+
+  // Obligatorios
+  title             String
+  shortDescription  String          @db.Text
+  price             Decimal?        @db.Decimal(12, 2)
+  priceOnRequest    Boolean         @default(false)
+
+  // Opcionales - se ocultan en la UI si vienen null
+  brand             AircraftBrand?
+  customBrand       String?         // solo se usa si brand = OTHER
+  model             String?
+  year              Int?
+  category          AircraftCategory?
+  totalTimeHours    Int?
+  engineHours       Int?
+  location          String?
+  extraDescription  String?         @db.Text
+  modifications     String?         @db.Text
+
+  status            AircraftStatus  @default(PENDING_PAYMENT)
+
+  purchase          Purchase?       @relation(fields: [purchaseId], references: [id])
+  purchaseId        String?
+
+  listingStartsAt     DateTime?
+  listingExpiresAt    DateTime?
+  renewalEmailSentAt  DateTime?     // evita mandar el mail de "venció" más de una vez
+
+  images            AircraftImage[]
+  documents         AircraftDocument[]
+  leads             Lead[]
+  favorites         Favorite[]
+  reports           Report[]
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   @@index([brand, model])
   @@index([price])
