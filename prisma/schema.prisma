@@ -11,7 +11,7 @@ model User {
   email         String     @unique
   emailVerified DateTime?           
   image         String?             
-  passwordHash  String?             
+  passwordHash  String             
 
   name          String?             
   phone         String?
@@ -64,6 +64,8 @@ model Aircraft {
   leads             Lead[]
   favorites         Favorite[]
   reports           Report[]
+
+  tags              Tag[]
 
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
@@ -121,6 +123,13 @@ model Report {
   status        ReportStatus @default(PENDING)
   createdAt     DateTime     @default(now())
   aircraft      Aircraft     @relation(fields: [aircraftId], references: [id])
+}
+
+model Tag {
+  id            String       @id @default(cuid())
+  name          String       @unique
+  slug          String       @unique
+  aircrafts     Aircraft[]
 }
 
 model Plan {
