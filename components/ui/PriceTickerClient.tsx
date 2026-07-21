@@ -3,8 +3,8 @@
 type TickerItem = { label: string; value: string };
 
 export function PriceTickerClient({ items }: { items: TickerItem[] }) {
-  // duplicamos el array para que el loop sea continuo sin salto visible
-  const looped = [...items, ...items];
+  // array triplicado para que el loop sea continuo sin salto visible
+  const looped = [...items, ...items, ...items];
 
   return (
     <div className="bg-[#001F58] text-white overflow-hidden py-2">
