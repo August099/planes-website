@@ -23,6 +23,7 @@ export async function Header() {
         <Link href="/" className="pt-2">
           <Image src="/logo-full.png" alt="Ventas Aeronáuticas" width={220} height={52} priority />
         </Link>
+      
       <div className="relative hidden md:block">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input placeholder="Buscar aviones..." className="pl-9 w-56" disabled />

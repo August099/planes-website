@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { HowItWorks } from "@/components/ui/HowItWorks";
 import { SellerCta } from "@/components/ui/SellerCta";
 import { TrustBlock } from "@/components/ui/TrustBlock";
+import { HeroCarousel } from "@/components/ui/HeroCarousel";
+import { ScrollVideoHero } from "@/components/ui/ScrollVideoHero";
+import { PriceTicker } from "@/components/ui/PriceTicker";
 
 export default async function HomePage() {
   const featured = await prisma.aircraft.findMany({
@@ -17,19 +20,11 @@ export default async function HomePage() {
   return (
     <>
 
-      <section className="bg-secondary text-white py-20 px-4 text-center">
-        <h1 className="text-3xl md:text-4xl font-heading font-semibold mb-3">
-          Aviones agrícolas, directo entre particulares
-        </h1>
-        <p className="text-white/80 max-w-xl mx-auto mb-6">
-          Publicá o encontrá aviones agrícolas en toda Argentina.
-        </p>
-        <Link href="/aviones">
-          <Button size="lg" className="bg-primary hover:bg-primary/90">
-            Ver aviones disponibles
-          </Button>
-        </Link>
-      </section>
+      <PriceTicker />
+
+      <ScrollVideoHero />
+
+      <HeroCarousel />
 
       <HowItWorks />
 
