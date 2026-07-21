@@ -23,7 +23,7 @@ export function HeroCarousel() {
   useEffect(() => {
     const id = setInterval(() => {
       setActive((prev) => (prev + 1) % SLIDES.length);
-    }, 6000);
+    }, 15000);
     return () => clearInterval(id);
   }, []);
 
