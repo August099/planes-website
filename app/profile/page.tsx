@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { redirect } from "next/navigation";
 
 export default async function ProfileDashboardPage() {
-  const user = await requireUser();
+  /*const user = await requireUser();
 
   // Obtener créditos del usuario
   const credits = await getAvailableCredits(user.id);
@@ -99,8 +99,8 @@ export default async function ProfileDashboardPage() {
 
     redirect("/perfil?renewed=true");
   }
-
-  return (
+  */
+  return <></>/*(
     <main className="relative isolate overflow-hidden min-h-screen -mb-16">
       <Image
         src="/bkg-plans.jpg"
@@ -112,7 +112,6 @@ export default async function ProfileDashboardPage() {
       <div className="absolute inset-0 -z-10 bg-background/85 backdrop-blur-[2px]" />
 
       <div className="container mx-auto px-4 pt-16 pb-36 max-w-6xl">
-        {/* Encabezado */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-8 border-b border-[#001F58]/15">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-[#001F58] text-white flex items-center justify-center font-bold text-2xl shadow-md uppercase">
@@ -133,7 +132,6 @@ export default async function ProfileDashboardPage() {
             </div>
           </div>
 
-          {/* Tarjeta de Saldo de Créditos */}
           <div className="bg-white/80 backdrop-blur-md border border-[#001F58]/15 rounded-2xl p-4 sm:px-6 flex items-center justify-between gap-6 shadow-sm">
             <div>
               <p className="text-xs uppercase font-bold tracking-wider text-[#001F58]/60">
@@ -153,7 +151,7 @@ export default async function ProfileDashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* COLUMNA IZQUIERDA: Configuración de Datos Predeterminados para Publicar */}
+          
           <div className="lg:col-span-1">
             <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-[#001F58]/15 shadow-sm sticky top-24">
               <h2 className="font-heading font-bold text-lg text-[#001F58] mb-1">
@@ -235,7 +233,7 @@ export default async function ProfileDashboardPage() {
             </div>
           </div>
 
-          {/* COLUMNA DERECHA: Lista de Mis Avisos y Gestión de Tiempos */}
+          
           <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -288,7 +286,7 @@ export default async function ProfileDashboardPage() {
                       className="bg-white/80 backdrop-blur-md border border-[#001F58]/15 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all"
                     >
                       <div className="flex items-center gap-4">
-                        {/* Imagen miniatura */}
+                       
                         <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-[#001F58]/10">
                           {listing.images?.[0] ? (
                             <Image
@@ -312,7 +310,7 @@ export default async function ProfileDashboardPage() {
                             ${Number(listing.price).toLocaleString("es-AR")}
                           </p>
 
-                          {/* Badge de tiempo de vigencia */}
+                        
                           <div className="mt-2 flex items-center gap-2">
                             {isExpired ? (
                               <Badge className="bg-red-100 text-red-800 border-red-200 text-[10px]">
@@ -333,7 +331,6 @@ export default async function ProfileDashboardPage() {
                         </div>
                       </div>
 
-                      {/* Botones de acción y renovación */}
                       <div className="flex flex-wrap sm:flex-col items-end gap-2 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-[#001F58]/10">
                         <form action={extendListing} className="w-full sm:w-auto">
                           <input type="hidden" name="listingId" value={listing.id} />
@@ -372,4 +369,5 @@ export default async function ProfileDashboardPage() {
       </div>
     </main>
   );
+  */
 }
