@@ -3,15 +3,11 @@ import {
   AircraftBrand, 
   AircraftCategory, 
   SparePartCategory, 
-<<<<<<< HEAD
-=======
   SparePartCondition, 
->>>>>>> 486b59c732c7d10d74c5515947f14d78aa12e542
   SellerType 
 } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { faker } from "@faker-js/faker";
-import { randomInt } from "crypto";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -143,7 +139,7 @@ async function main() {
         listingStartsAt: new Date(),
         listingExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         images: {
-          create: Array.from({ length: randomInt(1, 20) }).map((_, order) => ({
+          create: Array.from({ length: 4 }).map((_, order) => ({
             url: `https://picsum.photos/seed/aircraft-${i}-${order}/800/600`,
             order,
           })),
