@@ -3,8 +3,8 @@ import {
   AircraftBrand, 
   AircraftCategory, 
   SparePartCategory, 
-  SparePartCondition, 
-  SellerType 
+  SparePartCondition,
+  PlanType
 } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { faker } from "@faker-js/faker";
@@ -63,29 +63,101 @@ const SPARE_PART_CONDITIONS: SparePartCondition[] = [
 async function main() {
   console.log("🌱 Empezando el seed...");
 
-  // Limpieza inicial
+  // Limpieza inicial en orden de dependencias de Claves Foráneas
   await prisma.sparePartImage.deleteMany({});
   await prisma.sparePartLead.deleteMany({});
   await prisma.sparePart.deleteMany({});
   await prisma.aircraftImage.deleteMany({});
+  await prisma.aircraftDocument.deleteMany({});
+  await prisma.lead.deleteMany({});
   await prisma.aircraft.deleteMany({});
+  await prisma.subscription.deleteMany({});
   await prisma.purchase.deleteMany({});
   await prisma.plan.deleteMany({});
+  await prisma.favorite.deleteMany({});
+  await prisma.report.deleteMany({});
   await prisma.user.deleteMany({});
 
-  // 1. Crear Planes
+  // 1. Crear Planes y Suscripciones Unificados
+  console.log("📦 Insertando planes y suscripciones...");
   await prisma.plan.createMany({
     data: [
-      { name: "Particular x1", sellerType: "PARTICULAR", postsIncluded: 1, price: 50 },
-      { name: "Particular x5", sellerType: "PARTICULAR", postsIncluded: 5, price: 200 },
-      { name: "Particular x10", sellerType: "PARTICULAR", postsIncluded: 10, price: 350 },
-      { name: "Mayorista x10", sellerType: "MAYORISTA", postsIncluded: 10, price: 350 },
-      { name: "Mayorista x20", sellerType: "MAYORISTA", postsIncluded: 20, price: 650 },
-      { name: "Mayorista x50", sellerType: "MAYORISTA", postsIncluded: 50, price: 1500 },
+      // PACKS DE CRÉDITOS MINORISTAS
+      {
+        name: "Pack Básico",
+        type: PlanType.CREDIT_PACK,
+        price: 4500,
+        credits: 1,
+        savingsPercent: 0,
+        usageDescription: "Ideal para publicar 1 repuesto o accesorio puntual.",
+      },
+      {
+        name: "Pack Estándar",
+        type: PlanType.CREDIT_PACK,
+        price: 20000,
+        credits: 5,
+        savingsPercent: 11,
+        usageDescription: "Perfecto para vender varios repuestos o equipamiento de aviónica.",
+      },
+      {
+        name: "Pack Aeronave / Pro",
+        type: PlanType.CREDIT_PACK,
+        price: 36000,
+        credits: 10,
+        savingsPercent: 20,
+        usageDescription: "Suficiente para 1 aeronave completa o hasta 10 repuestos.",
+      },
+
+      // PACKS DE CRÉDITOS MAYORISTAS
+      {
+        name: "Pack Mayorista S",
+        type: PlanType.CREDIT_PACK,
+        price: 95000,
+        credits: 30,
+        savingsPercent: 30,
+        usageDescription: "Para rotación frecuente de repuestos e instrumental aeronáutico.",
+      },
+      {
+        name: "Pack Mayorista M",
+        type: PlanType.CREDIT_PACK,
+        price: 200000,
+        credits: 70,
+        savingsPercent: 36,
+        usageDescription: "Ideal para publicar varias aeronaves o un catálogo variado de insumos.",
+      },
+      {
+        name: "Pack Mayorista L",
+        type: PlanType.CREDIT_PACK,
+        price: 380000,
+        credits: 150,
+        savingsPercent: 43,
+        usageDescription: "Volumen pensado para hangares, talleres y grandes inventarios.",
+      },
+
+      // SUSCRIPCIONES MENSUALES
+      {
+        name: "Suscripción Taller / Repuestos",
+        type: PlanType.SUBSCRIPTION,
+        price: 45000,
+        includesVerifiedBadge: true,
+        allowsAircrafts: false,
+        allowsSpareParts: true,
+        usageDescription: "Publicaciones ilimitadas de Repuestos, Accesorios e Instrumental. Perfil con distintivo verificado.",
+      },
+      {
+        name: "Suscripción Dealer / Broker",
+        type: PlanType.SUBSCRIPTION,
+        price: 120000,
+        includesVerifiedBadge: true,
+        allowsAircrafts: true,
+        allowsSpareParts: true,
+        usageDescription: "Publicaciones ilimitadas de Aeronaves completas y Repuestos + Presencia destacada.",
+      },
     ],
   });
 
-  // 2. Crear Vendedores
+  // 2. Crear Usuarios (Todos con el mismo tipo unificado)
+  console.log("👤 Creado usuarios vendedores...");
   const sellers = await Promise.all(
     Array.from({ length: 5 }).map((_, i) =>
       prisma.user.create({
@@ -94,13 +166,14 @@ async function main() {
           passwordHash: "temp_hash_no_usar_en_produccion",
           name: faker.person.fullName(),
           phone: faker.phone.number(),
-          sellerType: i < 3 ? SellerType.PARTICULAR : SellerType.MAYORISTA,
+          creditsBalance: faker.number.int({ min: 0, max: 20 }), // Saldo inicial aleatorio
         },
       })
     )
   );
 
   // 3. Generar Aviones
+  console.log("✈️ Generando aeronaves...");
   for (let i = 0; i < 25; i++) {
     const { brand, models } = faker.helpers.arrayElement(BRANDS_WITH_MODELS);
     const model = faker.helpers.arrayElement(models);
@@ -137,7 +210,7 @@ async function main() {
         listingExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         images: {
           create: Array.from({ length: 4 }).map((_, order) => ({
-            url: `https://picsum.photos/seed/aircraft-${i}-${order}/800/600`, // 👈 URL válida
+            url: `https://picsum.photos/seed/aircraft-${i}-${order}/800/600`,
             order,
           })),
         },
@@ -146,6 +219,7 @@ async function main() {
   }
 
   // 4. Generar Repuestos
+  console.log("🛠️ Generando repuestos...");
   for (let i = 0; i < 15; i++) {
     const seller = faker.helpers.arrayElement(sellers);
     const category = faker.helpers.arrayElement(SPARE_PART_CATEGORIES);
@@ -183,12 +257,12 @@ async function main() {
     });
   }
 
-  console.log("✅ Seed completo: Tablas limpiadas, creados 5 planes, 5 vendedores, 25 aviones y 15 repuestos.");
+  console.log("✅ Seed completo: Base de datos limpia con 8 planes/suscripciones, 5 usuarios, 25 aviones y 15 repuestos.");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Error ejecutando el seed:", e);
     process.exit(1);
   })
   .finally(async () => {
