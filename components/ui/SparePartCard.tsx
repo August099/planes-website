@@ -1,22 +1,22 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { SparePartCategory, SparePartCondition } from "@prisma/client";
-import {
-  sparePartCategoryLabels,
-  sparePartConditionLabels,
-} from "@/lib/spare-part-labels";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { MapPin } from "lucide-react";
 
-interface SparePartCardProps {
+type SparePartCardProps = {
   id: string;
   title: string;
   price: number | null;
-  priceOnRequest: boolean;
-  category: SparePartCategory;
-  condition: SparePartCondition;
-  city: string;
-  province: string;
+  priceOnRequest?: boolean;
+  category: string | null;
+  condition: string | null; // NUEVO, USADO, REMANUFACTURADO
+  brand?: string | null;
+  model?: string | null;
+  city?: string | null;
+  province?: string | null;
   imageUrl: string;
-}
+};
 
 export function SparePartCard({
   id,
@@ -25,45 +25,82 @@ export function SparePartCard({
   priceOnRequest,
   category,
   condition,
+  brand,
+  model,
   city,
   province,
   imageUrl,
 }: SparePartCardProps) {
+  const formattedPrice =
+    !priceOnRequest && price
+      ? new Intl.NumberFormat("es-AR", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0,
+        }).format(price)
+      : "Consultar precio";
+
+  // Formateamos la ubicación según los datos disponibles
+  const locationText = [city, province].filter(Boolean).join(", ");
+
+  // Formatear texto de categoría y condición limpiando guiones bajos
+  const formattedCategory = category ? category.replace(/_/g, " ") : null;
+  const formattedCondition = condition ? condition.replace(/_/g, " ") : null;
+
+  // Marca y modelo juntos
+  const brandAndModel = [brand, model].filter(Boolean).join(" ");
+
   return (
-    <Link
-      href={`/spareparts/${id}`}
-      className="group block overflow-hidden rounded-2xl border border-border bg-white transition-shadow hover:shadow-md"
-    >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-        <Image
-          src={imageUrl}
-          alt={title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-secondary">
-          {sparePartConditionLabels[condition]}
-        </span>
-      </div>
+    <Link href={`/sparepart-details/${id}`}>
+      <Card className="overflow-hidden bg-[#001F58]/[0.025] border-[#001F58]/10 hover:border-primary/40 hover:shadow-lg transition-all group">
+        <div className="relative w-full h-48">
+          <Image
+            src={imageUrl}
+            alt={title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+          {/* Condición flotando sobre la esquina superior derecha de la imagen */}
+          {formattedCondition && (
+            <div className="absolute top-3 right-3">
+              <Badge className="bg-black/70 hover:bg-black/80 text-white backdrop-blur-md uppercase text-[10px] font-semibold tracking-wider px-2.5 py-1 border-none shadow-sm">
+                {formattedCondition}
+              </Badge>
+            </div>
+          )}
+        </div>
 
-      <div className="p-4">
-        <p className="text-xs font-medium text-muted-foreground">
-          {sparePartCategoryLabels[category]}
-        </p>
-        <h3 className="mt-1 font-heading text-base font-semibold text-secondary line-clamp-2">
-          {title}
-        </h3>
+        <CardContent className="p-4">
+          <div className="flex justify-between items-start mb-2 gap-2">
+            <h3 className="font-medium text-base line-clamp-2">{title}</h3>
+            {/* Categoría ahora al lado del título */}
+            {formattedCategory && (
+              <Badge variant="secondary" className="shrink-0 uppercase text-[10px]">
+                {formattedCategory}
+              </Badge>
+            )}
+          </div>
 
-        <p className="mt-2 font-heading text-lg font-bold text-primary">
-          {priceOnRequest || price === null
-            ? "Precio a consultar"
-            : `$${price.toLocaleString("es-AR")}`}
-        </p>
+          <p className="text-xl font-heading font-bold text-primary mb-2">
+            {formattedPrice}
+          </p>
 
-        <p className="mt-1 text-xs text-muted-foreground">
-          {city}, {province}
-        </p>
-      </div>
+          <div className="text-sm text-muted-foreground space-y-1">
+            {brandAndModel && (
+              <p className="capitalize text-xs font-medium text-muted-foreground/90">
+                {brandAndModel}
+              </p>
+            )}
+
+            {locationText && (
+              <p className="flex items-center gap-1 text-xs pt-1 border-t border-border/40 mt-2">
+                <MapPin className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
+                <span>{locationText}</span>
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </Link>
   );
 }

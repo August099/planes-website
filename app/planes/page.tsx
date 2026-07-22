@@ -64,17 +64,18 @@ export default async function AvionesPage({ searchParams }: Props) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
         {aircrafts.map((aircraft) => (
-          <AircraftCard
-            key={aircraft.id}
-            id={aircraft.id}
-            title={aircraft.title}
-            price={Number(aircraft.price)}
-            year={aircraft.year}
-            category={aircraft.category}
-            totalTimeHours={aircraft.totalTimeHours}
-            location={aircraft.location}
-            imageUrl={aircraft.images[0]?.url ?? "/placeholder.png"}
-          />
+        <AircraftCard
+          key={aircraft.id}
+          id={aircraft.id}
+          title={aircraft.title}
+          price={aircraft.price ? Number(aircraft.price) : null}
+          year={aircraft.year}
+          category={aircraft.category}
+          totalTimeHours={aircraft.totalTimeHours}
+          city={aircraft.city}
+          province={aircraft.province}
+          imageUrl={aircraft.images[0]?.url ?? "/placeholder.png"}
+        />
         ))}
       </div>
 

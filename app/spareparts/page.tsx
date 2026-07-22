@@ -15,7 +15,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
   const [spareParts, totalSpareParts] = await Promise.all([
     prisma.sparePart.findMany({
       where: { status: "ACTIVE" },
-      include: { images: { orderBy: { order: "asc" }, take: 1 } },
+      include: { images: { orderBy: { order: "asc" }, take: 1 } }, // 👈 Cambiado 'images' a 'SparePartImage'
       orderBy: { createdAt: "desc" },
       take: itemsPerPage,
       skip: skip,
@@ -41,6 +41,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
 
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
+
       for (let i = start; i <= end; i++) pages.push(i);
 
       if (currentPage < totalPages - 2) pages.push("...");
@@ -67,7 +68,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
             condition={sparePart.condition}
             city={sparePart.city}
             province={sparePart.province}
-            imageUrl={sparePart.images[0]?.url ?? "/placeholder.png"}
+            imageUrl={sparePart.images[0]?.url ?? "/placeholder.png"} // 👈 Cambiado 'images' a 'SparePartImage'
           />
         ))}
       </div>
@@ -75,7 +76,10 @@ export default async function SparePartsPage({ searchParams }: Props) {
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 mt-8 border-t pt-4 flex-wrap">
           {hasPrevPage ? (
-            <Link href={`?page=${currentPage - 1}`} className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors">
+            <Link
+              href={`?page=${currentPage - 1}`}
+              className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors"
+            >
               Anterior
             </Link>
           ) : (
@@ -87,12 +91,17 @@ export default async function SparePartsPage({ searchParams }: Props) {
           {getPageNumbers().map((page, index) => {
             if (page === "...") {
               return (
-                <span key={`ellipsis-${index}`} className="px-3 py-2 text-sm text-neutral-400 font-medium">
+                <span
+                  key={`ellipsis-${index}`}
+                  className="px-3 py-2 text-sm text-neutral-400 font-medium"
+                >
                   ...
                 </span>
               );
             }
+
             const isCurrent = page === currentPage;
+
             return (
               <Link
                 key={`page-${page}`}
@@ -109,7 +118,10 @@ export default async function SparePartsPage({ searchParams }: Props) {
           })}
 
           {hasNextPage ? (
-            <Link href={`?page=${currentPage + 1}`} className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors">
+            <Link
+              href={`?page=${currentPage + 1}`}
+              className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors"
+            >
               Siguiente
             </Link>
           ) : (

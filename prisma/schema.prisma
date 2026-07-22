@@ -102,6 +102,14 @@ model SparePart {
   @@index([province, city])
 }
 
+enum AircraftStatus {
+  ACTIVE
+  PAUSED
+  SOLD
+  EXPIRED
+  PENDING_PAYMENT
+}
+
 model AircraftImage {
   id         String   @id @default(cuid())
   aircraftId String
@@ -270,13 +278,6 @@ enum AircraftCategory {
   PROYECTO
 }
 
-enum AircraftStatus {
-  PENDING_PAYMENT
-  ACTIVE
-  EXPIRED
-  SOLD
-}
-
 enum SparePartStatus {
   PENDING_PAYMENT
   ACTIVE
@@ -310,9 +311,3 @@ enum SparePartCondition {
   REMANUFACTURADO
 }
 
-enum SparePartStatus {
-  PENDING_PAYMENT
-  ACTIVE
-  EXPIRED
-  SOLD
-}

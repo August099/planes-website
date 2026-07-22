@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MapPin } from "lucide-react"; // Importamos el ícono de mapa
 
 type AircraftCardProps = {
   id: string;
@@ -10,7 +11,8 @@ type AircraftCardProps = {
   year: number | null;
   category: string | null;
   totalTimeHours: number | null;
-  location: string | null;
+  city?: string | null;
+  province?: string | null;
   imageUrl: string;
 };
 
@@ -21,7 +23,8 @@ export function AircraftCard({
   year,
   category,
   totalTimeHours,
-  location,
+  city,
+  province,
   imageUrl,
 }: AircraftCardProps) {
   const formattedPrice = price
@@ -31,6 +34,9 @@ export function AircraftCard({
         maximumFractionDigits: 0,
       }).format(price)
     : "Consultar precio";
+
+  // Formateamos la ubicación según los datos disponibles
+  const locationText = [city, province].filter(Boolean).join(", ");
 
   return (
     <Link href={`/plane-details/${id}`}>
@@ -54,7 +60,12 @@ export function AircraftCard({
                 {totalTimeHours ? `${totalTimeHours.toLocaleString()} hs totales` : ""}
               </p>
             )}
-            {location && <p>{location}</p>}
+            {locationText && (
+              <p className="flex items-center gap-1 text-xs pt-1 border-t border-border/40 mt-2">
+                <MapPin className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
+                <span>{locationText}</span>
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
