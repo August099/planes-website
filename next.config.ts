@@ -1,14 +1,17 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "picsum.photos",
+        hostname: "picsum.photos", // Permite URLs de Picsum
+      },
+      {
+        protocol: "https",
+        hostname: "*.supabase.co", // Permite URLs del storage de Supabase
       },
     ],
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

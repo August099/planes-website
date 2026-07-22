@@ -8,7 +8,7 @@ import { SiInstagram } from '@icons-pack/react-simple-icons';
 
 export function Footer() {
   return (
-    <footer className="bg-[#001F58] text-white mt-16">
+    <footer className="bg-[#001F58] text-white pt-16">
       <div className="container mx-auto px-4 py-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
@@ -29,8 +29,8 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-white/70">
               <li><Link href="/faq" className="hover:text-white transition-colors">Preguntas frecuentes</Link></li>
               <li><Link href="/como-publicar" className="hover:text-white transition-colors">Cómo publicar</Link></li>
-              <li><Link href="/terminos" className="hover:text-white transition-colors">Términos y condiciones</Link></li>
-              <li><Link href="/privacidad" className="hover:text-white transition-colors">Privacidad</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition-colors">Términos y condiciones</Link></li>
+              <li><Link href="/privacy" className="hover:text-white transition-colors">Privacidad</Link></li>
             </ul>
           </div>
 

@@ -6,151 +6,58 @@ datasource db {
   provider = "postgresql"
 }
 
-// ==========================================
-// ENUMS
-// ==========================================
-
-enum SellerType {
-  PARTICULAR
-  MAYORISTA
-}
-
-enum AircraftStatus {
-  PENDING_PAYMENT
-  ACTIVE
-  EXPIRED
-  SOLD
-}
-
-enum SparePartStatus {
-  PENDING_PAYMENT
-  ACTIVE
-  EXPIRED
-  SOLD
-}
-
-enum ReportStatus {
-  PENDING
-  REVIEWED
-  DISMISSED
-}
-
-enum PaymentStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum AircraftCategory {
-  BIMOTOR
-  MONOMOTOR
-  FUMIGADOR_PISTON
-  FUMIGADOR_TURBOHELICE
-  EXPERIMENTAL
-  HELICOPTERO
-  PROYECTO
-}
-
-enum AircraftBrand {
-  BELL
-  CICARE
-  AIRBUS
-  AERO_BOERO
-  BEECHCRAFT
-  AIR_TRACTOR
-  CESSNA
-  PIPER
-  PZL
-  GRUMMAN
-  EMBRAER
-  OTHER
-}
-
-enum SparePartCategory {
-  MECANICO
-  ESTRUCTURAL
-  PIEZA_MOVIL
-  AVIONICA_Y_RADIO
-  EQUIPO_DE_FUMIGACION
-}
-
-enum SparePartCondition {
-  NUEVO
-  USADO
-  REMANUFACTURADO
-}
-
-// ==========================================
-// MODELOS PRINCIPALES
-// ==========================================
-
 model User {
-  id            String     @id @default(cuid())
-  email         String     @unique
-  emailVerified DateTime?           
-  image         String?             
-  passwordHash  String             
-
-  name          String?             
+  id            String      @id @default(cuid())
+  email         String      @unique
+  passwordHash  String
+  name          String?
   phone         String?
+  createdAt     DateTime    @default(now())
+  isAdmin       Boolean     @default(false)
   sellerType    SellerType?
-  isAdmin       Boolean    @default(false)
-  createdAt     DateTime   @default(now())
-
-  accounts      Account[]           
-  sessions      Session[]          
-
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
   aircrafts     Aircraft[]
-  spareParts    SparePart[]
   favorites     Favorite[]
   purchases     Purchase[]
+  sessions      Session[]
+  SparePart     SparePart[]
 }
 
 model Aircraft {
-  id                String          @id @default(cuid())
-  seller            User            @relation(fields: [sellerId], references: [id])
-  sellerId          String
-
-  // Obligatorios
-  title             String
-  shortDescription  String          @db.Text
-  price             Decimal?        @db.Decimal(12, 2)
-  priceOnRequest    Boolean         @default(false)
-  
-  // Ubicación obligatoria y segmentada
-  city              String
-  province          String
-
-  // Opcionales
-  brand             AircraftBrand?
-  customBrand       String?         
-  model             String?
-  year              Int?
-  category          AircraftCategory?
-  totalTimeHours    Int?
-  engineHours       Int?
-  extraDescription  String?         @db.Text
-  modifications     String?         @db.Text
-
-  status            AircraftStatus  @default(PENDING_PAYMENT)
-
-  purchase          Purchase?       @relation(fields: [purchaseId], references: [id])
-  purchaseId        String?
-
-  listingStartsAt     DateTime?
-  listingExpiresAt    DateTime?
-  renewalEmailSentAt  DateTime?     
-
-  images            AircraftImage[]
-  documents         AircraftDocument[]
-  leads             Lead[]
-  favorites         Favorite[]
-  reports           Report[]
-
-  tags              Tag[]
-
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  id                 String             @id @default(cuid())
+  sellerId           String
+  model              String?
+  year               Int?
+  price              Decimal?           @db.Decimal(12, 2)
+  category           AircraftCategory?
+  totalTimeHours     Int?
+  engineHours        Int?
+  status             AircraftStatus     @default(PENDING_PAYMENT)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  brand              AircraftBrand?
+  customBrand        String?
+  extraDescription   String?
+  listingExpiresAt   DateTime?
+  listingStartsAt    DateTime?
+  modifications      String?
+  priceOnRequest     Boolean            @default(false)
+  purchaseId         String?
+  renewalEmailSentAt DateTime?
+  shortDescription   String
+  title              String
+  city               String
+  province           String
+  purchase           Purchase?          @relation(fields: [purchaseId], references: [id])
+  seller             User               @relation(fields: [sellerId], references: [id])
+  documents          AircraftDocument[]
+  images             AircraftImage[]
+  favorites          Favorite[]
+  leads              Lead[]
+  reports            Report[]
+  tags               Tag[]              @relation("AircraftToTag")
 
   @@index([brand, model])
   @@index([price])
@@ -160,44 +67,33 @@ model Aircraft {
 }
 
 model SparePart {
-  id                String             @id @default(cuid())
-  seller            User               @relation(fields: [sellerId], references: [id])
-  sellerId          String
-
-  // Obligatorios
-  title             String
-  shortDescription  String             @db.Text
-  price             Decimal?           @db.Decimal(12, 2)
-  priceOnRequest    Boolean            @default(false)
-  category          SparePartCategory  
-  condition         SparePartCondition 
-  
-  // Ubicación obligatoria y segmentada
-  city              String
-  province          String
-
-  // Opcionales técnicos
-  brand             String?            
-  model             String?            
-  partNumber        String?            
-  extraDescription  String?            @db.Text
-
-  status            SparePartStatus    @default(PENDING_PAYMENT)
-
-  purchase          Purchase?          @relation(fields: [purchaseId], references: [id])
-  purchaseId        String?
-
-  listingStartsAt     DateTime?
-  listingExpiresAt    DateTime?
-  renewalEmailSentAt  DateTime?
-
-  images            SparePartImage[]
-  leads             SparePartLead[]
-  favorites         Favorite[]
-  reports           Report[]
-
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id                 String             @id @default(cuid())
+  sellerId           String
+  title              String
+  shortDescription   String
+  price              Decimal?           @db.Decimal(12, 2)
+  priceOnRequest     Boolean            @default(false)
+  category           SparePartCategory
+  condition          SparePartCondition
+  city               String
+  province           String
+  brand              String?
+  model              String?
+  partNumber         String?
+  extraDescription   String?
+  status             SparePartStatus    @default(PENDING_PAYMENT)
+  purchaseId         String?
+  listingStartsAt    DateTime?
+  listingExpiresAt   DateTime?
+  renewalEmailSentAt DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  favorites          Favorite[]
+  reports            Report[]
+  purchase           Purchase?          @relation(fields: [purchaseId], references: [id])
+  seller             User               @relation(fields: [sellerId], references: [id])
+  images             SparePartImage[]
+  leads              SparePartLead[]
 
   @@index([category])
   @@index([condition])
@@ -206,9 +102,13 @@ model SparePart {
   @@index([province, city])
 }
 
-// ==========================================
-// MODELOS SATÉLITE Y SOPORTE
-// ==========================================
+enum AircraftStatus {
+  ACTIVE
+  PAUSED
+  SOLD
+  EXPIRED
+  PENDING_PAYMENT
+}
 
 model AircraftImage {
   id         String   @id @default(cuid())
@@ -272,21 +172,21 @@ model Favorite {
 model Report {
   id            String       @id @default(cuid())
   aircraftId    String?
-  sparePartId   String?
   reason        String
   details       String?
   reporterEmail String?
   status        ReportStatus @default(PENDING)
   createdAt     DateTime     @default(now())
+  sparePartId   String?
   aircraft      Aircraft?    @relation(fields: [aircraftId], references: [id])
   sparePart     SparePart?   @relation(fields: [sparePartId], references: [id])
 }
 
 model Tag {
-  id            String       @id @default(cuid())
-  name          String       @unique
-  slug          String       @unique
-  aircrafts     Aircraft[]
+  id        String     @id @default(cuid())
+  name      String     @unique
+  slug      String     @unique
+  aircrafts Aircraft[] @relation("AircraftToTag")
 }
 
 model Plan {
@@ -309,14 +209,10 @@ model Purchase {
   paymentStatus    PaymentStatus @default(PENDING)
   createdAt        DateTime      @default(now())
   aircraftsPosted  Aircraft[]
-  sparePartsPosted SparePart[]
   plan             Plan          @relation(fields: [planId], references: [id])
   user             User          @relation(fields: [userId], references: [id])
+  sparePartsPosted SparePart[]
 }
-
-// ==========================================
-// SEGURIDAD Y SESIONES (NEXTAUTH)
-// ==========================================
 
 model Account {
   id                String  @id @default(cuid())
@@ -324,15 +220,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -342,8 +237,7 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -353,3 +247,67 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+enum SellerType {
+  PARTICULAR
+  MAYORISTA
+}
+
+enum AircraftBrand {
+  AIR_TRACTOR
+  CESSNA
+  PIPER
+  PZL
+  GRUMMAN
+  EMBRAER
+  OTHER
+  BELL
+  CICARE
+  AIRBUS
+  AERO_BOERO
+  BEECHCRAFT
+}
+
+enum AircraftCategory {
+  BIMOTOR
+  MONOMOTOR
+  FUMIGADOR_PISTON
+  FUMIGADOR_TURBOHELICE
+  EXPERIMENTAL
+  HELICOPTERO
+  PROYECTO
+}
+
+enum SparePartStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  EXPIRED
+  SOLD
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SparePartCategory {
+  MECANICO
+  ESTRUCTURAL
+  PIEZA_MOVIL
+  AVIONICA_Y_RADIO
+  EQUIPO_DE_FUMIGACION
+}
+
+enum SparePartCondition {
+  NUEVO
+  USADO
+  REMANUFACTURADO
+}
+
