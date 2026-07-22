@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import {
   Navigation,
@@ -25,10 +25,51 @@ type GalleryProps = {
 
 export function AircraftGallery({ images }: GalleryProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
+  const swiperRef = useRef<SwiperType | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const zoomLevel = useRef(1);
+
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 6;
+  const STEP = 0.15;
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (!swiperRef.current) return;
+      e.preventDefault();
+
+      const delta = e.deltaY < 0 ? STEP : -STEP;
+      zoomLevel.current = Math.min(
+        MAX_ZOOM,
+        Math.max(MIN_ZOOM, zoomLevel.current + delta)
+      );
+
+      console.log(zoomLevel.current)
+      if (zoomLevel.current <= MIN_ZOOM) {
+        swiperRef.current.zoom.out();
+        zoomLevel.current = MIN_ZOOM;
+      } else {
+        swiperRef.current.zoom.in(zoomLevel.current);
+      }
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <Swiper
+        onSwiper={(swiper) => (swiperRef.current = swiper)}
+        onZoomChange={(_swiper, scale) => {
+            zoomLevel.current = scale;
+        }}
         modules={[Navigation, Autoplay, Parallax, Zoom, Thumbs]}
         spaceBetween={10}
         slidesOffsetBefore={10}
@@ -38,7 +79,7 @@ export function AircraftGallery({ images }: GalleryProps) {
         parallax
         navigation
         autoplay={{ delay: 5000, pauseOnMouseEnter: true }}
-        zoom
+        zoom={{ maxRatio: MAX_ZOOM, minRatio: MIN_ZOOM }}
         thumbs={{ swiper: thumbsSwiper }}
       >
         {images.map((image, index) => (
