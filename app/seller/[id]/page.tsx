@@ -9,7 +9,7 @@ export default async function PublicVendorProfilePage({
 }: {
   params: { id: string };
 }) {
-  const seller = await prisma.user.findUnique({
+  /*const seller = await prisma.user.findUnique({
     where: { id: params.id },
     select: {
       id: true,
@@ -41,8 +41,8 @@ export default async function PublicVendorProfilePage({
 
   // Asegurar que el número de WhatsApp se procese correctamente como string
   const whatsappNumber = seller.whatsapp ? String(seller.whatsapp).replace(/[^0-9]/g, "") : null;
-
-  return (
+*/
+  return <></>/*(
     <main className="relative isolate overflow-hidden min-h-screen -mb-16">
       <Image
         src="/bkg-plans.jpg"
@@ -54,7 +54,7 @@ export default async function PublicVendorProfilePage({
       <div className="absolute inset-0 -z-10 bg-background/85 backdrop-blur-[2px]" />
 
       <div className="container mx-auto px-4 pt-16 pb-36 max-w-6xl">
-        {/* Encabezado del Vendedor */}
+        
         <div className="bg-white/80 backdrop-blur-md rounded-3xl p-8 border border-[#001F58]/15 shadow-sm mb-12">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
@@ -85,7 +85,7 @@ export default async function PublicVendorProfilePage({
               </div>
             </div>
 
-            {/* Acciones de Contacto Directo */}
+            
             <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
               {whatsappNumber && (
                 <a
@@ -110,7 +110,7 @@ export default async function PublicVendorProfilePage({
           </div>
         </div>
 
-        {/* Catálogo / Publicaciones del Vendedor */}
+       
         <div>
           <h2 className="font-heading font-bold text-2xl text-[#001F58] mb-6">
             Publicaciones de este Vendedor
@@ -131,7 +131,7 @@ export default async function PublicVendorProfilePage({
                   className="group bg-white/80 backdrop-blur-md border border-[#001F58]/15 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
                 >
                   <div>
-                    {/* Imagen del aviso */}
+               
                     <div className="relative w-full h-48 bg-slate-100">
                       {item.images?.[0] ? (
                         <Image
@@ -169,5 +169,5 @@ export default async function PublicVendorProfilePage({
         </div>
       </div>
     </main>
-  );
+  );*/
 }
