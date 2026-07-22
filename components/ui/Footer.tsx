@@ -37,8 +37,8 @@ export function Footer() {
           <div>
             <h3 className="font-heading font-semibold mb-3 text-sm">Explorar</h3>
             <ul className="space-y-2 text-sm text-white/70">
-              <li><Link href="/aviones" className="hover:text-white transition-colors">Aviones en venta</Link></li>
-              <li><Link href="/aviones" className="hover:text-white transition-colors">Repuestos en venta</Link></li>
+              <li><Link href="/planes" className="hover:text-white transition-colors">Aviones en venta</Link></li>
+              <li><Link href="/spareparts" className="hover:text-white transition-colors">Repuestos en venta</Link></li>
               <li><Link href="/plans" className="hover:text-white transition-colors">Planes para publicar</Link></li>
             </ul>
           </div>

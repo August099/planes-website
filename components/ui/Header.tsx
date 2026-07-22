@@ -180,8 +180,8 @@ export async function Header() {
                     </div>
                   )}
                   <DropdownMenuItem className="p-0">
-                    <Link href="/panel" className="w-full px-2 py-1.5 text-sm font-medium">
-                      Mi Panel
+                    <Link href="/profile" className="w-full px-2 py-1.5 text-sm font-medium">
+                      Mi Cuenta
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="p-0">
