@@ -138,8 +138,7 @@ export default async function PlaneDetailsPage({
           <h3 className="ml-2"><b>Vendedor:</b> {seller.name}</h3>
           <h3 className="ml-2"><b>Provincia:</b> {aircraft.province}</h3>
           <h3 className="ml-2"><b>Ciudad:</b> {aircraft.city}</h3>
-          <a className="w-min text-nowrap ml-2" href={`/user/${seller.id}`}>{seller.image && <img src={seller.image} alt="Foto de perfil" />} Ver perfil</a>
-          
+          <a className="w-min text-nowrap ml-2" href={`/profile/${seller.id}`}>{seller.image && <img src={seller.image} alt="Foto de perfil" />} Ver perfil</a>
           <Separator className="my-4" />
 
           <h1><b>Contactos</b></h1>

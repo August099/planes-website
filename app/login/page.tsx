@@ -37,7 +37,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             />
             <path
               fill="#FBBC05"
-              d="M10.7 28.1c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-7.1-5.5C2 16.6 1.5 20.2 1.5 24s.5 7.4 2.1 10.6l7.1-5.5z"
+              d="M10.7 28.1c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-7.1-5.5C2 16.6 1.5 20.2 1.5 24s.5 7.4 2.1 10.6l7.1 5.5z"
             />
             <path
               fill="#34A853"
@@ -69,7 +69,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <Separator className="flex-1" />
       </div>
 
-      {/* Cartel de Alerta si la contraseña/email fallan */}
+      {/* Alerta de Error */}
       {hasError && (
         <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 border border-red-200 dark:bg-red-950/50 dark:border-red-900 dark:text-red-300">
           Email o contraseña incorrectos. Por favor, verificá tus datos.
@@ -80,17 +80,19 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <form
         action={async (formData) => {
           "use server";
+          const email = (formData.get("email") as string)?.trim().toLowerCase();
+          const password = formData.get("password") as string;
+
           try {
             await signIn("credentials", {
-              email: formData.get("email"),
-              password: formData.get("password"),
+              email,
+              password,
               redirectTo: "/panel",
             });
           } catch (error) {
             if (error instanceof AuthError) {
               return redirect("/login?error=CredentialsSignin");
             }
-            // Re-lanzamos cualquier otro error (incluyendo NEXT_REDIRECT de Next.js)
             throw error;
           }
         }}

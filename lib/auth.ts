@@ -1,62 +1,75 @@
+// lib/auth.ts
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google"; // [1] Importación correcta
-import Facebook from "next-auth/providers/facebook";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
-  secret: process.env.AUTH_SECRET, // 👈 Forzamos la lectura explícita en Next.js Server Components
+  session: { strategy: "jwt" }, // OBLIGATORIO para el proveedor Credentials
   providers: [
-    Google({}),   // 👈 IMPORTANTE: Deben ser funciones ejecutadas
-    Facebook({}), // 👈 IMPORTANTE: Deben ser funciones ejecutadas
     Credentials({
+      name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
 
+        const email = credentials.email as string;
+        const password = credentials.password as string;
+
+        // 1. Buscar el usuario en la BD de Prisma
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
+          where: { email },
         });
-        if (!user || !user.passwordHash) return null;
 
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
+        // 2. Si no existe o no tiene contraseña (ej. se registró con Google)
+        if (!user || !user.passwordHash) {
+          return null;
+        }
+
+        // 3. Comparar la contraseña provista con el hash en la BD
+        const isPasswordValid = await bcrypt.compare(
+          password,
           user.passwordHash
         );
-        if (!isValid) return null;
 
+        if (!isPasswordValid) {
+          return null;
+        }
+
+        // 4. Retornar el objeto de usuario REAL de la BD
         return {
           id: user.id,
-          email: user.email,
           name: user.name,
-          sellerType: user.sellerType,
-          isAdmin: user.isAdmin,
+          email: user.email,
+          image: user.image,
         };
       },
     }),
   ],
   callbacks: {
+    // Pasar el ID del usuario al token JWT
     async jwt({ token, user }) {
       if (user) {
-        token.sellerType = user.sellerType;
-        token.isAdmin = user.isAdmin;
+        token.id = user.id;
       }
       return token;
     },
+    // Pasar el ID del token JWT a la sesión que lee Next.js
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub!;
-        session.user.sellerType = token.sellerType as string;
-        session.user.isAdmin = token.isAdmin as boolean;
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
       }
       return session;
     },
+  },
+  pages: {
+    signIn: "/login",
   },
 });

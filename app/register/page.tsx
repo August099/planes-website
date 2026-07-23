@@ -19,19 +19,24 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
 
   async function register(formData: FormData) {
     "use server";
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
+    const name = (formData.get("name") as string)?.trim();
+    const email = (formData.get("email") as string)?.trim().toLowerCase();
     const password = formData.get("password") as string;
 
-    // Verificar si el usuario ya existe
+    if (!name || !email || !password) {
+      return redirect("/register?error=MissingFields");
+    }
+
+    // 1. Verificar si el usuario ya existe
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return redirect("/register?error=EmailExists");
     }
 
+    // 2. Crear el hash de la contraseña
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Crear el usuario unificado (sin sellerType)
+    // 3. Crear el usuario en la BD de Prisma
     await prisma.user.create({
       data: {
         name,
@@ -40,13 +45,18 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
       },
     });
 
-    // Iniciar sesión e ir al panel
+    // 4. Iniciar sesión con el usuario recién creado
     try {
-      await signIn("credentials", { email, password, redirectTo: "/panel" });
+      await signIn("credentials", {
+        email,
+        password,
+        redirectTo: "/panel",
+      });
     } catch (error) {
       if (error instanceof AuthError) {
         return redirect("/login?error=CredentialsSignin");
       }
+      // Re-lanzar error de redirección de Next.js
       throw error;
     }
   }
@@ -57,6 +67,11 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
       {errorMessage === "EmailExists" && (
         <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 border border-red-200 dark:bg-red-950/50 dark:border-red-900 dark:text-red-300">
           Ya existe una cuenta registrada con ese correo electrónico.
+        </div>
+      )}
+      {errorMessage === "MissingFields" && (
+        <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 border border-red-200 dark:bg-red-950/50 dark:border-red-900 dark:text-red-300">
+          Por favor completá todos los campos.
         </div>
       )}
 
