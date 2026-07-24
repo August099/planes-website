@@ -1,8 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { User, Search, Menu, ShieldAlert } from "lucide-react";
+import { User, Search, Menu } from "lucide-react";
 import { auth, signOut } from "@/lib/auth";
-import { getAvailableCredits } from "@/lib/credits";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,9 +13,6 @@ import { Input } from "@/components/ui/input";
 
 export async function Header() {
   const session = await auth();
-  const credits = session?.user?.id
-    ? await getAvailableCredits(session.user.id)
-    : null;
 
   const linkClass =
     "text-sm font-medium text-[#001F58] hover:text-primary transition-colors";
@@ -68,7 +64,6 @@ export async function Header() {
 
           {session?.user ? (
             <div className="flex items-center gap-3">
-
               <DropdownMenu>
                 <DropdownMenuTrigger
                   className={`${linkClass} flex items-center gap-2 outline-none cursor-pointer`}
@@ -83,7 +78,7 @@ export async function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem className="p-0">
                     <Link href="/plans" className="w-full px-2 py-1.5 text-sm">
-                      Comprar créditos
+                      Comprar posteos
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -114,6 +109,7 @@ export async function Header() {
           )}
         </nav>
 
+        {/* Menú Móvil */}
         <div className="block md:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger className="p-2 rounded-lg border border-slate-200 text-[#001F58] hover:bg-slate-50 outline-none cursor-pointer">
@@ -154,16 +150,6 @@ export async function Header() {
 
               {session?.user ? (
                 <>
-                  {credits !== null && (
-                    <div className="px-2 py-1.5">
-                      <Link
-                        href="/plans"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors"
-                      >
-                        {credits} {credits === 1 ? "crédito" : "créditos"}
-                      </Link>
-                    </div>
-                  )}
                   <DropdownMenuItem className="p-0">
                     <Link href={`/profile/${session.user.id}`} className="w-full px-2 py-1.5 text-sm font-medium">
                       Mi Cuenta
@@ -171,7 +157,7 @@ export async function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem className="p-0">
                     <Link href="/plans" className="w-full px-2 py-1.5 text-sm font-medium">
-                      Comprar créditos
+                      Comprar posteos
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

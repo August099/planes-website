@@ -3,9 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
-import { getAvailableCredits } from "@/lib/credits";
 import { Button } from "@/components/ui/button";
-
 
 export default async function ProfileDashboardPage({
   params,
@@ -27,6 +25,8 @@ export default async function ProfileDashboardPage({
       image: true,
       phone: true,
       createdAt: true,
+      aircraftListingsBalance: true,
+      sparePartsListingsBalance: true,
     },
   });
 
@@ -34,7 +34,8 @@ export default async function ProfileDashboardPage({
     notFound();
   }
 
-  const credits = isOwner ? await getAvailableCredits(currentUser.id) : 0;
+  const aircraftBalance = isOwner ? (userProfile.aircraftListingsBalance ?? 0) : 0;
+  const partsBalance = isOwner ? (userProfile.sparePartsListingsBalance ?? 0) : 0;
 
   const userListings = await prisma.aircraft.findMany({
     where: {
@@ -74,11 +75,16 @@ export default async function ProfileDashboardPage({
     }
 
     const listingId = formData.get("listingId") as string;
-    const currentCredits = await getAvailableCredits(currentUser.id);
-    const RENEWAL_COST = 2;
 
-    if (currentCredits < RENEWAL_COST) {
-      redirect("/planes?error=insufficient_credits");
+    const dbUser = await prisma.user.findUniqueOrThrow({
+      where: { id: currentUser.id },
+      select: { aircraftListingsBalance: true },
+    });
+
+    const RENEWAL_COST = 1;
+
+    if ((dbUser.aircraftListingsBalance ?? 0) < RENEWAL_COST) {
+      redirect("/planes?error=insufficient_aircraft_credits");
     }
 
     const listing = await prisma.aircraft.findUniqueOrThrow({
@@ -95,7 +101,7 @@ export default async function ProfileDashboardPage({
       prisma.user.update({
         where: { id: currentUser.id },
         data: {
-          creditsBalance: { decrement: RENEWAL_COST },
+          aircraftListingsBalance: { decrement: RENEWAL_COST },
         },
       }),
       prisma.aircraft.update({
@@ -122,46 +128,60 @@ export default async function ProfileDashboardPage({
       <div className="absolute inset-0 -z-10 bg-background/85 backdrop-blur-[2px]" />
 
       <div className="container mx-auto px-4 pt-16 pb-36 max-w-6xl">
-        {/* ENCABEZADO */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-8 border-b border-[#001F58]/15">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10 pb-8 border-b border-[#001F58]/15">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-[#001F58] text-white flex items-center justify-center font-bold text-2xl shadow-md uppercase">
+            <div className="w-16 h-16 rounded-full bg-[#001F58] text-white flex items-center justify-center font-bold text-2xl shadow-md uppercase shrink-0">
               {userProfile.name ? userProfile.name.charAt(0) : "U"}
             </div>
             <div>
               <h1 className="font-heading text-2xl sm:text-3xl font-bold text-[#001F58]">
                 {userProfile.name || "Vendedor"}
               </h1>
-              {/* Mostramos el email solo si es el dueño o como contacto público si lo deseas */}
               <p className="text-sm text-[#001F58]/70">
                 {isOwner ? userProfile.email : `Miembro desde ${new Date(userProfile.createdAt).getFullYear()}`}
               </p>
             </div>
           </div>
 
-          {/* TARJETA DE CRÉDITOS: Solo visible para el Propietario */}
           {isOwner && (
-            <div className="bg-white/80 backdrop-blur-md border border-[#001F58]/15 rounded-2xl p-4 sm:px-6 flex items-center justify-between gap-6 shadow-sm">
-              <div>
-                <p className="text-xs uppercase font-bold tracking-wider text-[#001F58]/60">
-                  Créditos Disponibles
-                </p>
-                <p className="font-heading text-3xl font-black text-[#001F58]">
-                  {credits} <span className="text-sm font-normal text-[#001F58]/70">crédito{credits !== 1 ? "s" : ""}</span>
-                </p>
+            <div className="bg-white/80 backdrop-blur-md border border-[#001F58]/15 rounded-2xl p-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 shadow-sm">
+              <div className="flex items-center gap-6">
+                <div>
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-[#001F58]/60">
+                    Publicaciones Aviones
+                  </p>
+                  <p className="font-heading text-2xl font-black text-[#001F58]">
+                    {aircraftBalance}{" "}
+                    <span className="text-xs font-normal text-[#001F58]/70">
+                      cupo{aircraftBalance !== 1 ? "s" : ""}
+                    </span>
+                  </p>
+                </div>
+                <div className="h-8 w-[1px] bg-[#001F58]/15" />
+                <div>
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-[#001F58]/60">
+                    Publicaciones Repuestos
+                  </p>
+                  <p className="font-heading text-2xl font-black text-[#001F58]">
+                    {partsBalance}{" "}
+                    <span className="text-xs font-normal text-[#001F58]/70">
+                      cupo{partsBalance !== 1 ? "s" : ""}
+                    </span>
+                  </p>
+                </div>
               </div>
+
               <Link
-                href="/planes"
-                className="px-4 py-2.5 rounded-xl bg-[#E70F1F] hover:bg-[#c00d1a] text-white font-medium text-sm transition-all shadow-sm"
+                href="/plans"
+                className="w-full sm:w-auto text-center px-4 py-2.5 rounded-xl bg-[#E70F1F] hover:bg-[#c00d1a] text-white font-medium text-sm transition-all shadow-sm"
               >
-                Cargar Créditos
+                Cargar Cupos
               </Link>
             </div>
           )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* COLUMNA IZQUIERDA: Formulario Editable vs. Tarjeta de Contacto Pública */}
           <div className="lg:col-span-1">
             <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-[#001F58]/15 shadow-sm sticky top-24">
               <h2 className="font-heading font-bold text-lg text-[#001F58] mb-1">
@@ -174,7 +194,6 @@ export default async function ProfileDashboardPage({
               </p>
 
               {isOwner ? (
-                /* MODO DUENIO: Formulario editable */
                 <form action={updateProfile} className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-[#001F58] mb-1">
@@ -210,7 +229,6 @@ export default async function ProfileDashboardPage({
                   </Button>
                 </form>
               ) : (
-                /* MODO VISITANTE: Datos de lectura */
                 <div className="space-y-4 text-sm text-[#001F58]">
                   <div>
                     <span className="block text-xs font-semibold text-[#001F58]/60 uppercase">
@@ -246,7 +264,6 @@ export default async function ProfileDashboardPage({
             </div>
           </div>
 
-          {/* COLUMNA DERECHA: Listado de Aeronaves */}
           <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -336,7 +353,6 @@ export default async function ProfileDashboardPage({
                               : `$${Number(listing.price).toLocaleString("es-AR")}`}
                           </p>
 
-                          {/* Banderas de estado (Solo visibles/relevantes para el dueño) */}
                           {isOwner && (
                             <div className="mt-2 flex items-center gap-2">
                               {listing.status === "PENDING_PAYMENT" ? (
@@ -367,9 +383,7 @@ export default async function ProfileDashboardPage({
                         </div>
                       </div>
 
-                      {/* Acciones */}
                       <div className="flex flex-wrap sm:flex-col items-end gap-2 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-[#001F58]/10">
-                        {/* Botón Extender: Solo para el dueño */}
                         {isOwner && (
                           <form action={extendListing} className="w-full sm:w-auto">
                             <input type="hidden" name="listingId" value={listing.id} />
@@ -378,7 +392,7 @@ export default async function ProfileDashboardPage({
                               size="sm"
                               className="w-full sm:w-auto bg-[#001F58] hover:bg-[#001F58]/90 text-white text-xs font-medium rounded-xl px-3 py-1.5"
                             >
-                              ➕ Extender 45 días (2 créd.)
+                              ➕ Extender 45 días (1 cupo)
                             </Button>
                           </form>
                         )}
@@ -391,7 +405,6 @@ export default async function ProfileDashboardPage({
                             Ver Publicación
                           </Link>
 
-                          {/* Botón Editar: Solo para el dueño */}
                           {isOwner && (
                             <>
                               <span className="text-[#001F58]/20">•</span>

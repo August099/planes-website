@@ -1,10 +1,15 @@
-datasource db {
+ datasource db {
+
   provider = "postgresql"
 }
 
+
 generator client {
+
   provider = "prisma-client-js"
 }
+
+
 
 // ==========================================
 // 1. AUTENTICACIÓN Y USUARIOS (NextAuth)
@@ -21,17 +26,18 @@ model User {
   isAdmin       Boolean   @default(false)
   createdAt     DateTime  @default(now())
 
-  // Billetera de Créditos Unificada
-  creditsBalance Int @default(0)
+  // Contadores / Balances de publicaciones disponibles
+  aircraftListingsBalance   Int @default(0)
+  sparePartsListingsBalance Int @default(0)
 
   // Relaciones
-  accounts      Account[]
-  sessions      Session[]
-  aircrafts     Aircraft[]
-  spareParts    SparePart[]
-  purchases     Purchase[]
-  subscriptions Subscription[]
-  favorites     Favorite[]
+  accounts   Account[]
+  sessions   Session[]
+  aircrafts  Aircraft[]
+  spareParts SparePart[]
+  purchases  Purchase[]
+  favorites  Favorite[]
+  adBanners  AdBanner[]
 }
 
 model Account {
@@ -71,12 +77,13 @@ model VerificationToken {
 }
 
 // ==========================================
-// 2. SISTEMA DE PLANES, PAGOS Y CRÉDITOS
+// 2. SISTEMA DE PLANES, PAGOS Y PACKS
 // ==========================================
 
 enum PlanType {
-  CREDIT_PACK
-  SUBSCRIPTION
+  AIRCRAFT_PACK
+  SPARE_PART_PACK
+  AD_BANNER
 }
 
 enum PaymentStatus {
@@ -85,65 +92,80 @@ enum PaymentStatus {
   REJECTED
 }
 
-enum SubscriptionStatus {
-  ACTIVE
-  PAUSED
-  CANCELLED
-  EXPIRED
-}
-
 model Plan {
-  id                   String   @id @default(cuid())
-  name                 String
-  type                 PlanType
-  price                Decimal  @db.Decimal(12, 2)
-  credits              Int?     // Créditos otorgados (si es CREDIT_PACK)
-  savingsPercent       Int?     // Ej: 11, 20, 30 (para badges de % OFF)
-  usageDescription     String?  // Ej: "Ideal para publicar 1 avión o 10 repuestos"
-  includesVerifiedBadge Boolean @default(false)
-  isActive             Boolean  @default(true)
+  id                    String   @id @default(cuid())
+  name                  String
+  type                  PlanType
+  price                 Decimal  @db.Decimal(12, 2)
+  savingsPercent        Int?     // Ej: 10, 20 para badges de descuento
+  usageDescription      String?  // Ej: "Pack de 3 publicaciones de aviones"
+  includesVerifiedBadge Boolean  @default(false)
+  isActive              Boolean  @default(true)
 
-  // Permisos para Suscripciones Ilimitadas
-  allowsAircrafts      Boolean  @default(false)
-  allowsSpareParts     Boolean  @default(true)
+  // Cantidad de publicaciones que otorga el pack (si aplica)
+  aircraftListingsCount   Int @default(0)
+  sparePartsListingsCount Int @default(0)
 
-  purchases     Purchase[]
-  subscriptions Subscription[]
+  purchases Purchase[]
 }
 
 model Purchase {
-  id               String        @id @default(cuid())
-  userId           String
-  planId           String
-  creditsTotal     Int
-  creditsRemaining Int           @default(0)
-  mpPreferenceId   String?
-  paymentStatus    PaymentStatus @default(PENDING)
-  createdAt        DateTime      @default(now())
+  id                          String        @id @default(cuid())
+  userId                      String
+  planId                      String
+  
+  // Seguimiento de cupos adquiridos en esta compra
+  aircraftListingsTotal       Int           @default(0)
+  aircraftListingsRemaining   Int           @default(0)
+  sparePartsListingsTotal     Int           @default(0)
+  sparePartsListingsRemaining Int           @default(0)
+
+  mpPreferenceId              String?
+  paymentStatus               PaymentStatus @default(PENDING)
+  createdAt                   DateTime      @default(now())
 
   user       User        @relation(fields: [userId], references: [id])
   plan       Plan        @relation(fields: [planId], references: [id])
   aircrafts  Aircraft[]
   spareParts SparePart[]
-}
-
-model Subscription {
-  id                   String             @id @default(cuid())
-  userId               String
-  planId               String
-  mpPreapprovalId      String?            @unique
-  status               SubscriptionStatus @default(ACTIVE)
-  currentPeriodStartsAt DateTime           @default(now())
-  currentPeriodEndsAt   DateTime
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
-  plan Plan @relation(fields: [planId], references: [id])
+  adBanners  AdBanner[]
 }
 
 // ==========================================
-// 3. AERONAVES
+// 3. PUBLICIDAD / BANNERS (Pago único)
+// ==========================================
+
+enum AdBannerStatus {
+  PENDING_PAYMENT
+  PENDING_REVIEW
+  ACTIVE
+  EXPIRED
+  REJECTED
+}
+
+model AdBanner {
+  id             String         @id @default(cuid())
+  userId         String
+  purchaseId     String?
+  
+  // Información del banner y del mensaje/comentario del usuario
+  title          String?
+  description    String         // Comentario / Mensaje descriptivo para el banner o instrucciones
+  bannerImageUrl String?        // URL de la imagen del banner
+  linkUrl        String?        // Enlace de destino al hacer clic en el banner
+  
+  status         AdBannerStatus @default(PENDING_PAYMENT)
+  startsAt       DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  purchase Purchase? @relation(fields: [purchaseId], references: [id])
+}
+
+// ==========================================
+// 4. AERONAVES
 // ==========================================
 
 enum AircraftStatus {
@@ -155,10 +177,8 @@ enum AircraftStatus {
 }
 
 enum AircraftCategory {
-  BIMOTOR
-  MONOMOTOR
-  FUMIGADOR_PISTON
-  FUMIGADOR_TURBOHELICE
+  PISTON
+  TURBOHELICE
   EXPERIMENTAL
   HELICOPTERO
   PROYECTO
@@ -204,18 +224,16 @@ model Aircraft {
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
 
-  // Vinculación opcional a compra previa de créditos
   purchaseId         String?
 
-  // Relaciones
-  seller             User               @relation(fields: [sellerId], references: [id])
-  purchase           Purchase?          @relation(fields: [purchaseId], references: [id])
-  images             AircraftImage[]
-  documents          AircraftDocument[]
-  leads              Lead[]
-  favorites          Favorite[]
-  reports            Report[]
-  tags               Tag[]              @relation("AircraftToTag")
+  seller    User               @relation(fields: [sellerId], references: [id])
+  purchase  Purchase?          @relation(fields: [purchaseId], references: [id])
+  images    AircraftImage[]
+  documents AircraftDocument[]
+  leads     Lead[]
+  favorites Favorite[]
+  reports   Report[]
+  tags      Tag[]              @relation("AircraftToTag")
 
   @@index([brand, model])
   @@index([price])
@@ -244,7 +262,7 @@ model AircraftDocument {
 }
 
 // ==========================================
-// 4. REPUESTOS Y ACCESORIOS
+// 5. REPUESTOS Y ACCESORIOS
 // ==========================================
 
 enum SparePartStatus {
@@ -290,16 +308,14 @@ model SparePart {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  // Vinculación opcional a compra previa de créditos
   purchaseId         String?
 
-  // Relaciones
-  seller             User               @relation(fields: [sellerId], references: [id])
-  purchase           Purchase?          @relation(fields: [purchaseId], references: [id])
-  images             SparePartImage[]
-  leads              SparePartLead[]
-  favorites          Favorite[]
-  reports            Report[]
+  seller    User             @relation(fields: [sellerId], references: [id])
+  purchase  Purchase?        @relation(fields: [purchaseId], references: [id])
+  images    SparePartImage[]
+  leads     SparePartLead[]
+  favorites Favorite[]
+  reports   Report[]
 
   @@index([category])
   @@index([condition])
@@ -309,16 +325,16 @@ model SparePart {
 }
 
 model SparePartImage {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   sparePartId String
   url         String
-  order       Int       @default(0)
+  order       Int      @default(0)
 
   sparePart SparePart @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
 }
 
 // ==========================================
-// 5. INTERACCIONES (Leads, Favoritos, Reportes y Tags)
+// 6. INTERACCIONES (Leads, Favoritos, Reportes y Tags)
 // ==========================================
 
 model Lead {
@@ -334,13 +350,13 @@ model Lead {
 }
 
 model SparePartLead {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   sparePartId String
   buyerName   String
   buyerEmail  String
   buyerPhone  String?
   message     String
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime @default(now())
 
   sparePart SparePart @relation(fields: [sparePartId], references: [id])
 }
