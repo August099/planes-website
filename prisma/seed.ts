@@ -4,7 +4,8 @@ import {
   AircraftCategory, 
   SparePartCategory, 
   SparePartCondition,
-  PlanType
+  PlanType,
+  AdBannerStatus
 } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { faker } from "@faker-js/faker";
@@ -36,11 +37,10 @@ const BRANDS_WITH_MODELS: { brand: AircraftBrand; models: string[] }[] = [
   { brand: "BEECHCRAFT", models: ["Bonanza V35", "King Air 200", "Baron 58"] },
 ];
 
+// Actualizado al nuevo Schema
 const AIRCRAFT_CATEGORIES: AircraftCategory[] = [
-  "BIMOTOR",
-  "MONOMOTOR",
-  "FUMIGADOR_PISTON",
-  "FUMIGADOR_TURBOHELICE",
+  "PISTON",
+  "TURBOHELICE",
   "EXPERIMENTAL",
   "HELICOPTERO",
   "PROYECTO"
@@ -63,7 +63,8 @@ const SPARE_PART_CONDITIONS: SparePartCondition[] = [
 async function main() {
   console.log("🌱 Empezando el seed...");
 
-  // Limpieza inicial en orden de dependencias de Claves Foráneas
+  // 0. Limpieza inicial (OJO: Se eliminó Subscription y se agregó AdBanner)
+  console.log("🧹 Limpiando la base de datos...");
   await prisma.sparePartImage.deleteMany({});
   await prisma.sparePartLead.deleteMany({});
   await prisma.sparePart.deleteMany({});
@@ -71,93 +72,72 @@ async function main() {
   await prisma.aircraftDocument.deleteMany({});
   await prisma.lead.deleteMany({});
   await prisma.aircraft.deleteMany({});
-  await prisma.subscription.deleteMany({});
+  await prisma.adBanner.deleteMany({});
   await prisma.purchase.deleteMany({});
   await prisma.plan.deleteMany({});
   await prisma.favorite.deleteMany({});
   await prisma.report.deleteMany({});
   await prisma.user.deleteMany({});
 
-  // 1. Crear Planes y Suscripciones Unificados
-  console.log("📦 Insertando planes y suscripciones...");
+  // 1. Crear Planes (Packs de Aviones, Packs de Repuestos y Banners)
+  console.log("📦 Insertando planes y packs...");
   await prisma.plan.createMany({
     data: [
-      // PACKS DE CRÉDITOS MINORISTAS
+      // PACKS PARA AERONAVES
       {
-        name: "Pack Básico",
-        type: PlanType.CREDIT_PACK,
-        price: 4500,
-        credits: 1,
+        name: "Pack 1 Aeronave",
+        type: PlanType.AIRCRAFT_PACK,
+        price: 25000,
         savingsPercent: 0,
-        usageDescription: "Ideal para publicar 1 repuesto o accesorio puntual.",
+        usageDescription: "Publica 1 aeronave hasta que se venda.",
+        aircraftListingsCount: 1,
+        sparePartsListingsCount: 0,
       },
       {
-        name: "Pack Estándar",
-        type: PlanType.CREDIT_PACK,
-        price: 20000,
-        credits: 5,
-        savingsPercent: 11,
-        usageDescription: "Perfecto para vender varios repuestos o equipamiento de aviónica.",
-      },
-      {
-        name: "Pack Aeronave / Pro",
-        type: PlanType.CREDIT_PACK,
-        price: 36000,
-        credits: 10,
-        savingsPercent: 20,
-        usageDescription: "Suficiente para 1 aeronave completa o hasta 10 repuestos.",
+        name: "Pack 3 Aeronaves",
+        type: PlanType.AIRCRAFT_PACK,
+        price: 65000,
+        savingsPercent: 13,
+        usageDescription: "Publica hasta 3 aeronaves. Ideal para agencias.",
+        aircraftListingsCount: 3,
+        sparePartsListingsCount: 0,
       },
 
-      // PACKS DE CRÉDITOS MAYORISTAS
+      // PACKS PARA REPUESTOS
       {
-        name: "Pack Mayorista S",
-        type: PlanType.CREDIT_PACK,
-        price: 95000,
-        credits: 30,
-        savingsPercent: 30,
-        usageDescription: "Para rotación frecuente de repuestos e instrumental aeronáutico.",
+        name: "Pack 1 Repuesto",
+        type: PlanType.SPARE_PART_PACK,
+        price: 4500,
+        savingsPercent: 0,
+        usageDescription: "Publica 1 repuesto, accesorio o instrumental.",
+        aircraftListingsCount: 0,
+        sparePartsListingsCount: 1,
       },
       {
-        name: "Pack Mayorista M",
-        type: PlanType.CREDIT_PACK,
-        price: 200000,
-        credits: 70,
-        savingsPercent: 36,
-        usageDescription: "Ideal para publicar varias aeronaves o un catálogo variado de insumos.",
-      },
-      {
-        name: "Pack Mayorista L",
-        type: PlanType.CREDIT_PACK,
-        price: 380000,
-        credits: 150,
-        savingsPercent: 43,
-        usageDescription: "Volumen pensado para hangares, talleres y grandes inventarios.",
+        name: "Pack 10 Repuestos",
+        type: PlanType.SPARE_PART_PACK,
+        price: 35000,
+        savingsPercent: 22,
+        usageDescription: "Volumen pensado para talleres y rotación frecuente.",
+        aircraftListingsCount: 0,
+        sparePartsListingsCount: 10,
       },
 
-      // SUSCRIPCIONES MENSUALES
+      // PUBLICIDAD / BANNERS
       {
-        name: "Suscripción Taller / Repuestos",
-        type: PlanType.SUBSCRIPTION,
-        price: 45000,
-        includesVerifiedBadge: true,
-        allowsAircrafts: false,
-        allowsSpareParts: true,
-        usageDescription: "Publicaciones ilimitadas de Repuestos, Accesorios e Instrumental. Perfil con distintivo verificado.",
-      },
-      {
-        name: "Suscripción Dealer / Broker",
-        type: PlanType.SUBSCRIPTION,
-        price: 120000,
-        includesVerifiedBadge: true,
-        allowsAircrafts: true,
-        allowsSpareParts: true,
-        usageDescription: "Publicaciones ilimitadas de Aeronaves completas y Repuestos + Presencia destacada.",
-      },
+        name: "Banner Publicitario Main",
+        type: PlanType.AD_BANNER,
+        price: 80000,
+        savingsPercent: 0,
+        usageDescription: "Espacio publicitario destacado en la página de inicio por 30 días.",
+        aircraftListingsCount: 0,
+        sparePartsListingsCount: 0,
+      }
     ],
   });
 
-  // 2. Crear Usuarios (Todos con el mismo tipo unificado)
-  console.log("👤 Creado usuarios vendedores...");
+  // 2. Crear Usuarios con sus contadores separados
+  console.log("👤 Creando usuarios...");
   const sellers = await Promise.all(
     Array.from({ length: 5 }).map((_, i) =>
       prisma.user.create({
@@ -166,7 +146,9 @@ async function main() {
           passwordHash: "temp_hash_no_usar_en_produccion",
           name: faker.person.fullName(),
           phone: faker.phone.number(),
-          creditsBalance: faker.number.int({ min: 0, max: 20 }), // Saldo inicial aleatorio
+          // Se les asigna saldo de publicaciones al azar para simular compras previas
+          aircraftListingsBalance: faker.number.int({ min: 0, max: 3 }),
+          sparePartsListingsBalance: faker.number.int({ min: 0, max: 15 }),
         },
       })
     )
@@ -186,13 +168,13 @@ async function main() {
 
     const isProyecto = category === "PROYECTO";
     const shortDesc = isProyecto 
-      ? `Aeronave en estado de Proyecto. Desarmada, ideal para restauración o repuestos estructurales faltantes.`
-      : `${brand.replace("_", " ")} ${model}, motorizado, listo para operar en próxima campaña.`;
+      ? `Aeronave en estado de Proyecto. Desarmada, ideal para restauración o repuestos.`
+      : `${brand.replace("_", " ")} ${model}, en excelente estado general y listo para operar.`;
 
     await prisma.aircraft.create({
       data: {
         sellerId: seller.id,
-        title: `${brand.replace("_", " ")} ${model} ${isProyecto ? "(Proyecto / Desarmado)" : faker.number.int({ min: 1975, max: 2024 })}`,
+        title: `${brand.replace("_", " ")} ${model} ${isProyecto ? "(Proyecto)" : faker.number.int({ min: 1975, max: 2024 })}`,
         shortDescription: shortDesc,
         priceOnRequest: isPriceOnRequest,
         price: isPriceOnRequest ? null : faker.number.int({ min: 45000, max: 850000 }),
@@ -232,8 +214,8 @@ async function main() {
     await prisma.sparePart.create({
       data: {
         sellerId: seller.id,
-        title: `Repuesto ${category.replace("_", " ")} - Estado ${condition}`,
-        shortDescription: `Excelente oportunidad. Repuesto certificado en categoría ${category.toLowerCase()} disponible para entrega inmediata.`,
+        title: `Repuesto ${category.replace("_", " ")} - ${condition}`,
+        shortDescription: `Repuesto certificado disponible para entrega inmediata.`,
         priceOnRequest: isPriceOnRequest,
         price: isPriceOnRequest ? null : faker.number.int({ min: 500, max: 25000 }),
         category,
@@ -257,7 +239,25 @@ async function main() {
     });
   }
 
-  console.log("✅ Seed completo: Base de datos limpia con 8 planes/suscripciones, 5 usuarios, 25 aviones y 15 repuestos.");
+  // 5. Generar algunos Banners de prueba
+  console.log("📢 Generando banners publicitarios de prueba...");
+  for (let i = 0; i < 3; i++) {
+    const seller = faker.helpers.arrayElement(sellers);
+    await prisma.adBanner.create({
+      data: {
+        userId: seller.id,
+        title: `Banner Test ${i + 1}`,
+        description: `Hola admin, quiero que este banner redirija a mi web. Usar los colores de mi logo.`,
+        bannerImageUrl: `https://picsum.photos/seed/banner-${i}/1200/200`,
+        linkUrl: "https://ejemplo.com",
+        status: i === 0 ? AdBannerStatus.ACTIVE : AdBannerStatus.PENDING_REVIEW, // Uno activo, otros pendientes
+        startsAt: i === 0 ? new Date() : null,
+        expiresAt: i === 0 ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
+      }
+    });
+  }
+
+  console.log("✅ Seed completo exitosamente.");
 }
 
 main()

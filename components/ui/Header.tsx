@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { User, Search, Menu } from "lucide-react";
 import { auth, signOut } from "@/lib/auth";
-import { getAvailableCredits } from "@/lib/credits";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,20 +13,15 @@ import { Input } from "@/components/ui/input";
 
 export async function Header() {
   const session = await auth();
-  const credits = session?.user?.id
-    ? await getAvailableCredits(session.user.id)
-    : null;
 
   const linkClass =
     "text-sm font-medium text-[#001F58] hover:text-primary transition-colors";
 
-  // Evaluación estricta de la sesión para el link de Vender
   const sellLink = session?.user ? "/planes/publish" : "/login";
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-sm">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-        {/* LOGO: Muestra logo-full en desktop y logo-mark en móvil */}
         <Link href="/" className="flex items-center">
           <div className="hidden md:block">
             <Image
@@ -49,13 +43,11 @@ export async function Header() {
           </div>
         </Link>
 
-        {/* BARRA DE BÚSQUEDA (Desktop) */}
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar aviones..." className="pl-9 w-56" disabled />
         </div>
 
-        {/* NAVEGACIÓN DESKTOP (Hidden en mobile) */}
         <nav className="hidden md:flex items-center gap-6">
           <Link href="/" className={linkClass}>
             Inicio
@@ -72,16 +64,6 @@ export async function Header() {
 
           {session?.user ? (
             <div className="flex items-center gap-3">
-              {credits !== null && (
-                <Link
-                  href="/plans"
-                  className="flex items-center gap-1.5 rounded-full border border-primary/25 px-3 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/5"
-                >
-                  {credits} {credits === 1 ? "crédito" : "créditos"}
-                </Link>
-              )}
-
-              {/* MENÚ DE USUARIO DESKTOP */}
               <DropdownMenu>
                 <DropdownMenuTrigger
                   className={`${linkClass} flex items-center gap-2 outline-none cursor-pointer`}
@@ -90,13 +72,13 @@ export async function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white min-w-[180px]">
                   <DropdownMenuItem className="p-0">
-                    <Link href="/panel" className="w-full px-2 py-1.5 text-sm">
-                      Mi Panel
+                    <Link href={`/profile/${session.user.id}`} className="w-full px-2 py-1.5 text-sm">
+                      Mi Cuenta
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="p-0">
                     <Link href="/plans" className="w-full px-2 py-1.5 text-sm">
-                      Comprar créditos
+                      Comprar posteos
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -127,7 +109,7 @@ export async function Header() {
           )}
         </nav>
 
-        {/* MENÚ MÓVIL DESPLEGABLE CON BASE-UI */}
+        {/* Menú Móvil */}
         <div className="block md:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger className="p-2 rounded-lg border border-slate-200 text-[#001F58] hover:bg-slate-50 outline-none cursor-pointer">
@@ -166,27 +148,16 @@ export async function Header() {
 
               <DropdownMenuSeparator />
 
-              {/* Opciones de Cuenta / Sesión */}
               {session?.user ? (
                 <>
-                  {credits !== null && (
-                    <div className="px-2 py-1.5">
-                      <Link
-                        href="/plans"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors"
-                      >
-                        {credits} {credits === 1 ? "crédito" : "créditos"}
-                      </Link>
-                    </div>
-                  )}
                   <DropdownMenuItem className="p-0">
-                    <Link href="/profile" className="w-full px-2 py-1.5 text-sm font-medium">
+                    <Link href={`/profile/${session.user.id}`} className="w-full px-2 py-1.5 text-sm font-medium">
                       Mi Cuenta
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="p-0">
                     <Link href="/plans" className="w-full px-2 py-1.5 text-sm font-medium">
-                      Comprar créditos
+                      Comprar posteos
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
