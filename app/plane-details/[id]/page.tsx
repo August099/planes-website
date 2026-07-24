@@ -123,22 +123,22 @@ export default async function PlaneDetailsPage({
               >
                 Reportar
               </span>
-              <TriangleAlert className="text-red-600 cursor-pointer"/>
+              <TriangleAlert className="text-primary cursor-pointer"/>
             </div>
           </div>
 
           <Separator className="my-4" />
             <h4><b>{aircraft.title}</b></h4>
-            <h3 className="ml-2"><b>Precio:</b> {aircraft.price ? `$${aircraft.price}` : "A consultar"}</h3>
-            <h3 className="ml-2"><b>Horas totales:</b> {aircraft.totalTimeHours}</h3>
-            <h3 className="ml-2"><b>año:</b> {aircraft.year}</h3>
+            <h4 className="ml-2">{aircraft.price ? `$${aircraft.price}` : "A consultar"}</h4>
+            {aircraft.totalTimeHours && <h5 className="ml-2">{aircraft.totalTimeHours}hs totales</h5>}
+            <h6 className="ml-2"><b>Publicado </b>{aircraft.createdAt.toLocaleDateString("es-AR")}</h6>
           <Separator className="my-4" />
 
           <h1><b>Datos del vendedor</b></h1>
           <h3 className="ml-2"><b>Vendedor:</b> {seller.name}</h3>
           <h3 className="ml-2"><b>Provincia:</b> {aircraft.province}</h3>
           <h3 className="ml-2"><b>Ciudad:</b> {aircraft.city}</h3>
-          <a className="w-min text-nowrap ml-2" href={`/user/${seller.id}`}>{seller.image && <img src={seller.image} alt="Foto de perfil" />} Ver perfil</a>
+          <a className="w-min text-nowrap ml-2" href={`/profile/${seller.id}`}>{seller.image && <img src={seller.image} alt="Foto de perfil" />} Ver perfil</a>
           
           <Separator className="my-4" />
 
