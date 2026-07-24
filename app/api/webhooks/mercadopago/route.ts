@@ -47,7 +47,6 @@ export async function POST(req: NextRequest) {
         where: { id: purchase.id },
         data: {
           paymentStatus: "APPROVED",
-          creditsRemaining: purchase.creditsTotal,
         },
       });
     }
