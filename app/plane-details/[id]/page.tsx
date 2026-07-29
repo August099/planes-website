@@ -14,7 +14,15 @@ export default async function PlaneDetailsPage({
 
   const aircraft = await prisma.aircraft.findUnique({
     where: { id },
-    include: { images: { orderBy: { order: "asc" } } },
+    include: {
+      images: {
+        orderBy: {
+          order: "asc"
+        }
+      },
+      engines: true,
+      documents: true
+    },
   });
 
   if (!aircraft) {
@@ -45,7 +53,7 @@ export default async function PlaneDetailsPage({
           <div className="border border-gray-300 rounded-md mt-10 p-4">
             <h1 className="text-xl font-bold mb-3">Descripción</h1>
             <p className="whitespace-pre-line">
-              {aircraft.shortDescription}
+              {aircraft.description}
             </p>
           </div>
         </div>
@@ -148,7 +156,7 @@ export default async function PlaneDetailsPage({
             <h4><b>Datos del motor</b></h4>
             <h5 className="ml-2"><b>Marca:</b> marca del motor</h5>
             <h5 className="ml-2"><b>Modelo:</b> modelo del motor</h5>
-            {aircraft.totalTimeHours && <h5 className="ml-2"><b>Horas totales: </b> {aircraft.engineHours}</h5>}
+            {aircraft.totalTimeHours && <h5 className="ml-2"><b>Horas totales: </b> {"poner"}</h5>}
           <Separator className="my-4" />
 
           <h4><b>Datos del vendedor</b></h4>
@@ -190,7 +198,7 @@ export default async function PlaneDetailsPage({
             <DetailRow label="Horas totales (célula)" value={aircraft.totalTimeHours} />
             <DetailRow label="Marca del motor" value={"— placeholder —"} />
             <DetailRow label="Modelo del motor" value={"— placeholder —"} />
-            <DetailRow label="Horas del motor" value={aircraft.engineHours} last />
+            <DetailRow label="Horas del motor" value={"poner"} last />
           </div>
         </div>
 

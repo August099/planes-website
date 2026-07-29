@@ -8,7 +8,6 @@ type SparePartCardProps = {
   id: string;
   title: string;
   price: number | null;
-  priceOnRequest?: boolean;
   category: string | null;
   condition: string | null; // NUEVO, USADO, REMANUFACTURADO
   brand?: string | null;
@@ -22,7 +21,6 @@ export function SparePartCard({
   id,
   title,
   price,
-  priceOnRequest,
   category,
   condition,
   brand,
@@ -32,7 +30,7 @@ export function SparePartCard({
   imageUrl,
 }: SparePartCardProps) {
   const formattedPrice =
-    !priceOnRequest && price
+    price
       ? new Intl.NumberFormat("es-AR", {
           style: "currency",
           currency: "USD",

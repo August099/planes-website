@@ -63,7 +63,6 @@ export default async function SparePartsPage({ searchParams }: Props) {
             id={sparePart.id}
             title={sparePart.title}
             price={sparePart.price ? Number(sparePart.price) : null}
-            priceOnRequest={sparePart.priceOnRequest}
             category={sparePart.category}
             condition={sparePart.condition}
             city={sparePart.city}
