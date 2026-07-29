@@ -5,7 +5,8 @@ import {
   SparePartCategory, 
   SparePartCondition,
   PlanType,
-  AdBannerStatus
+  AircraftStatus,
+  SparePartStatus
 } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { faker } from "@faker-js/faker";
@@ -37,7 +38,6 @@ const BRANDS_WITH_MODELS: { brand: AircraftBrand; models: string[] }[] = [
   { brand: "BEECHCRAFT", models: ["Bonanza V35", "King Air 200", "Baron 58"] },
 ];
 
-// Actualizado al nuevo Schema
 const AIRCRAFT_CATEGORIES: AircraftCategory[] = [
   "PISTON",
   "TURBOHELICE",
@@ -63,13 +63,15 @@ const SPARE_PART_CONDITIONS: SparePartCondition[] = [
 async function main() {
   console.log("🌱 Empezando el seed...");
 
-  // 0. Limpieza inicial (OJO: Se eliminó Subscription y se agregó AdBanner)
+  // 0. Limpieza inicial en orden para respetar FK constraints
   console.log("🧹 Limpiando la base de datos...");
   await prisma.sparePartImage.deleteMany({});
   await prisma.sparePartLead.deleteMany({});
   await prisma.sparePart.deleteMany({});
   await prisma.aircraftImage.deleteMany({});
   await prisma.aircraftDocument.deleteMany({});
+  await prisma.aircraftEngine.deleteMany({});
+  await prisma.aircraftPropeller.deleteMany({});
   await prisma.lead.deleteMany({});
   await prisma.aircraft.deleteMany({});
   await prisma.adBanner.deleteMany({});
@@ -79,11 +81,10 @@ async function main() {
   await prisma.report.deleteMany({});
   await prisma.user.deleteMany({});
 
-  // 1. Crear Planes (Packs de Aviones, Packs de Repuestos y Banners)
+  // 1. Crear Planes (Packs de Aviones y Repuestos)
   console.log("📦 Insertando planes y packs...");
   await prisma.plan.createMany({
     data: [
-      // PACKS PARA AERONAVES
       {
         name: "Pack 1 Aeronave",
         type: PlanType.AIRCRAFT_PACK,
@@ -102,8 +103,6 @@ async function main() {
         aircraftListingsCount: 3,
         sparePartsListingsCount: 0,
       },
-
-      // PACKS PARA REPUESTOS
       {
         name: "Pack 1 Repuesto",
         type: PlanType.SPARE_PART_PACK,
@@ -122,31 +121,19 @@ async function main() {
         aircraftListingsCount: 0,
         sparePartsListingsCount: 10,
       },
-
-      // PUBLICIDAD / BANNERS
-      {
-        name: "Banner Publicitario Main",
-        type: PlanType.AD_BANNER,
-        price: 80000,
-        savingsPercent: 0,
-        usageDescription: "Espacio publicitario destacado en la página de inicio por 30 días.",
-        aircraftListingsCount: 0,
-        sparePartsListingsCount: 0,
-      }
     ],
   });
 
-  // 2. Crear Usuarios con sus contadores separados
+  // 2. Crear Usuarios Vendedores
   console.log("👤 Creando usuarios...");
   const sellers = await Promise.all(
-    Array.from({ length: 5 }).map((_, i) =>
+    Array.from({ length: 5 }).map(() =>
       prisma.user.create({
         data: {
-          email: faker.internet.email(),
+          email: faker.internet.email().toLowerCase(),
           passwordHash: "temp_hash_no_usar_en_produccion",
           name: faker.person.fullName(),
           phone: faker.phone.number(),
-          // Se les asigna saldo de publicaciones al azar para simular compras previas
           aircraftListingsBalance: faker.number.int({ min: 0, max: 3 }),
           sparePartsListingsBalance: faker.number.int({ min: 0, max: 15 }),
         },
@@ -154,7 +141,7 @@ async function main() {
     )
   );
 
-  // 3. Generar Aviones
+  // 3. Generar Aeronaves
   console.log("✈️ Generando aeronaves...");
   for (let i = 0; i < 25; i++) {
     const { brand, models } = faker.helpers.arrayElement(BRANDS_WITH_MODELS);
@@ -167,27 +154,24 @@ async function main() {
     const locCity = faker.helpers.arrayElement(locProv.cities);
 
     const isProyecto = category === "PROYECTO";
-    const shortDesc = isProyecto 
-      ? `Aeronave en estado de Proyecto. Desarmada, ideal para restauración o repuestos.`
-      : `${brand.replace("_", " ")} ${model}, en excelente estado general y listo para operar.`;
+    const year = faker.number.int({ min: 1975, max: 2024 });
 
     await prisma.aircraft.create({
       data: {
         sellerId: seller.id,
-        title: `${brand.replace("_", " ")} ${model} ${isProyecto ? "(Proyecto)" : faker.number.int({ min: 1975, max: 2024 })}`,
-        shortDescription: shortDesc,
-        priceOnRequest: isPriceOnRequest,
-        price: isPriceOnRequest ? null : faker.number.int({ min: 45000, max: 850000 }),
+        title: `${brand.replace("_", " ")} ${model} ${isProyecto ? "(Proyecto)" : year}`,
+        description: isProyecto 
+          ? `Aeronave en estado de Proyecto. Desarmada, ideal para restauración o repuestos. ${faker.lorem.paragraphs(1)}`
+          : `${brand.replace("_", " ")} ${model}, en excelente estado general y listo para operar. ${faker.lorem.paragraphs(1)}`,
         brand,
         model,
-        year: isProyecto ? null : faker.number.int({ min: 1975, max: 2024 }),
+        year,
         category,
-        totalTimeHours: isProyecto ? null : faker.number.int({ min: 200, max: 14000 }),
-        engineHours: isProyecto ? null : faker.number.int({ min: 50, max: 2200 }),
+        totalTimeHours: faker.number.int({ min: 200, max: 14000 }),
+        price: isPriceOnRequest ? null : faker.number.int({ min: 45000, max: 850000 }),
         city: locCity,
         province: locProv.province,
-        extraDescription: faker.lorem.paragraphs(2),
-        status: "ACTIVE",
+        status: AircraftStatus.ACTIVE,
         listingStartsAt: new Date(),
         listingExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         images: {
@@ -196,6 +180,24 @@ async function main() {
             order,
           })),
         },
+        engines: {
+          create: [
+            {
+              engineHours: faker.number.int({ min: 50, max: 1800 }),
+              TBO: 2000,
+              brand: faker.helpers.arrayElement(["Pratt & Whitney", "Lycoming", "Continental"]),
+              model: "Mod-Engine-1",
+            }
+          ]
+        },
+        propeller: {
+          create: [
+            {
+              propellerHours: faker.number.int({ min: 30, max: 1000 }),
+              model: "Hartzell 3-Blade",
+            }
+          ]
+        }
       },
     });
   }
@@ -215,18 +217,17 @@ async function main() {
       data: {
         sellerId: seller.id,
         title: `Repuesto ${category.replace("_", " ")} - ${condition}`,
-        shortDescription: `Repuesto certificado disponible para entrega inmediata.`,
-        priceOnRequest: isPriceOnRequest,
+        description: `Repuesto certificado disponible para entrega inmediata. ${faker.lorem.paragraph()}`,
         price: isPriceOnRequest ? null : faker.number.int({ min: 500, max: 25000 }),
         category,
         condition,
+        stock: faker.number.int({ min: 1, max: 5 }),
         city: locCity,
         province: locProv.province,
         brand: faker.helpers.arrayElement(["Garmin", "Bendix", "Bose", "Air Tractor Co.", "Cessna Parts"]),
         model: `Mod-${faker.string.alphanumeric(5).toUpperCase()}`,
         partNumber: `PN-${faker.number.int({ min: 10000, max: 99999 })}-${faker.string.alpha(2).toUpperCase()}`,
-        extraDescription: faker.lorem.paragraph(),
-        status: "ACTIVE",
+        status: SparePartStatus.ACTIVE,
         listingStartsAt: new Date(),
         listingExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         images: {
@@ -239,25 +240,7 @@ async function main() {
     });
   }
 
-  // 5. Generar algunos Banners de prueba
-  console.log("📢 Generando banners publicitarios de prueba...");
-  for (let i = 0; i < 3; i++) {
-    const seller = faker.helpers.arrayElement(sellers);
-    await prisma.adBanner.create({
-      data: {
-        userId: seller.id,
-        title: `Banner Test ${i + 1}`,
-        description: `Hola admin, quiero que este banner redirija a mi web. Usar los colores de mi logo.`,
-        bannerImageUrl: `https://picsum.photos/seed/banner-${i}/1200/200`,
-        linkUrl: "https://ejemplo.com",
-        status: i === 0 ? AdBannerStatus.ACTIVE : AdBannerStatus.PENDING_REVIEW, // Uno activo, otros pendientes
-        startsAt: i === 0 ? new Date() : null,
-        expiresAt: i === 0 ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
-      }
-    });
-  }
-
-  console.log("✅ Seed completo exitosamente.");
+  console.log("✅ Seed completado con éxito.");
 }
 
 main()

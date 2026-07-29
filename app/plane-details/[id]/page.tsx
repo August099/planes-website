@@ -2,8 +2,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AircraftGallery } from "../../../components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
-import { Phone, Mail, Heart, Share2, Printer, TriangleAlert } from "lucide-react";
 import Link from "next/link";
+import { Phone, Mail, Heart, Share2, Printer, TriangleAlert, IdCard, Wrench, FileText, MapPin } from "lucide-react";
+import { DetailRow } from "@/components/ui/DetailRow";
 
 export default async function PlaneDetailsPage({
   params,
@@ -14,7 +15,15 @@ export default async function PlaneDetailsPage({
 
   const aircraft = await prisma.aircraft.findUnique({
     where: { id },
-    include: { images: { orderBy: { order: "asc" } } },
+    include: {
+      images: {
+        orderBy: {
+          order: "asc"
+        }
+      },
+      engines: true,
+      documents: true
+    },
   });
 
   if (!aircraft) {
@@ -41,6 +50,13 @@ export default async function PlaneDetailsPage({
       <section className="flex gap-6">
         <div className="w-2/3">
           <AircraftGallery images={aircraft.images} />
+
+          <div className="border border-gray-300 rounded-md mt-10 p-4">
+            <h1 className="text-xl font-bold mb-3">Descripción</h1>
+            <p className="whitespace-pre-line">
+              {aircraft.description}
+            </p>
+          </div>
         </div>
         <div className="w-1/3 flex flex-col border-2 rounded-[10] bg-white p-5 gap-2">
           <div className="w-full flex justify-between gap-3">
@@ -134,22 +150,31 @@ export default async function PlaneDetailsPage({
             </Link>
           </div>
           </div>
-
-          <Separator className="my-4" />
-            <h4><b>{aircraft.title}</b></h4>
-            <h3 className="ml-2"><b>Precio:</b> {aircraft.price ? `$${aircraft.price}` : "A consultar"}</h3>
-            <h3 className="ml-2"><b>Horas totales:</b> {aircraft.totalTimeHours}</h3>
-            <h3 className="ml-2"><b>año:</b> {aircraft.year}</h3>
           <Separator className="my-4" />
 
-          <h1><b>Datos del vendedor</b></h1>
-          <h3 className="ml-2"><b>Vendedor:</b> {seller.name}</h3>
-          <h3 className="ml-2"><b>Provincia:</b> {aircraft.province}</h3>
-          <h3 className="ml-2"><b>Ciudad:</b> {aircraft.city}</h3>
+            <h4><b>Datos de la aeronave</b></h4>
+            <h5 className="ml-2"><b>Precio: {aircraft.price ? `$${aircraft.price}` : "A consultar"}</b></h5>
+            <h5 className="ml-2"><b>Año:</b> {aircraft.year}</h5>
+            <h5 className="ml-2"><b>Marca:</b> {aircraft.brand}</h5>
+            <h5 className="ml-2"><b>Modelo:</b> {aircraft.model}</h5>
+            {aircraft.totalTimeHours && <h5 className="ml-2"><b>Horas totales: </b> {aircraft.totalTimeHours}</h5>}
+            <h6 className="ml-2"><b>Publicado </b>{aircraft.createdAt.toLocaleDateString("es-AR")}</h6>
+          <Separator className="my-4" />
+
+            <h4><b>Datos del motor</b></h4>
+            <h5 className="ml-2"><b>Marca:</b> marca del motor</h5>
+            <h5 className="ml-2"><b>Modelo:</b> modelo del motor</h5>
+            {aircraft.totalTimeHours && <h5 className="ml-2"><b>Horas totales: </b> {"poner"}</h5>}
+          <Separator className="my-4" />
+
+          <h4><b>Datos del vendedor</b></h4>
+          <h5 className="ml-2"><b>Vendedor:</b> {seller.name}</h5>
+          <h5 className="ml-2"><b>Provincia:</b> {aircraft.province}</h5>
+          <h5 className="ml-2"><b>Ciudad:</b> {aircraft.city}</h5>
           <a className="w-min text-nowrap ml-2" href={`/profile/${seller.id}`}>{seller.image && <img src={seller.image} alt="Foto de perfil" />} Ver perfil</a>
           <Separator className="my-4" />
 
-          <h1><b>Contactos</b></h1>
+          <h4><b>Contactos</b></h4>
           <div className="flex gap-2 ml-2">
             <Phone/ >
             <a href={`tel:${seller.phone}`} className="text-blue-600 hover:underline">
@@ -164,22 +189,32 @@ export default async function PlaneDetailsPage({
           </div>
         </div>
       </section>
-      <section>
-        <div className="border-1 border-gray-700 rounded-md p-3">
-          <h1><b>Descripción</b></h1>
-          <p
-          className="
-            max-h-40
-            mt-3
-            overflow-hidden
-            whitespace-nowrap
-            overflow-y-auto
-          ">
-            {aircraft.shortDescription}
-          </p>
-        </div>
+      <section className="flex flex-col gap-8">
+        <h2 className="text-2xl font-semibold mb-4">Información adicional</h2>
         <div>
+          <h2 className="text-2xl font-semibold mb-3">General</h2>
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <DetailRow label="Matrícula" value={"Matricula"} />
+            <DetailRow label="Categoría" value={aircraft.category} />
+            <DetailRow label="Provincia / Ciudad" value={`${aircraft.province} - ${aircraft.city}`} />
+          </div>
+        </div>
 
+        <div>
+          <h2 className="text-2xl font-semibold mb-3">Motor y célula</h2>
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <DetailRow label="Horas totales (célula)" value={aircraft.totalTimeHours} />
+            <DetailRow label="Marca del motor" value={"— placeholder —"} />
+            <DetailRow label="Modelo del motor" value={"— placeholder —"} />
+            <DetailRow label="Horas del motor" value={"poner"} last />
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-2xl font-semibold mb-3">Modificaciones</h2>
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <DetailRow label="Modificaciones" value={"— placeholder —"} multiline last />
+          </div>
         </div>
       </section>
     </main>

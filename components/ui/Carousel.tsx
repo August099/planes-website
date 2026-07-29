@@ -38,8 +38,8 @@ export function AircraftGallery({ images }: GalleryProps) {
     if (!container) return;
 
     const handleWheel = (e: WheelEvent) => {
-      if (!swiperRef.current) return;
-      e.preventDefault();
+      if (!swiperRef.current || (e.deltaY > 0 && zoomLevel.current <= MIN_ZOOM)) return;
+      e.preventDefault();      
 
       const delta = e.deltaY < 0 ? STEP : -STEP;
       zoomLevel.current = Math.min(
@@ -47,7 +47,6 @@ export function AircraftGallery({ images }: GalleryProps) {
         Math.max(MIN_ZOOM, zoomLevel.current + delta)
       );
 
-      console.log(zoomLevel.current)
       if (zoomLevel.current <= MIN_ZOOM) {
         swiperRef.current.zoom.out();
         zoomLevel.current = MIN_ZOOM;

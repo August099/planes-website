@@ -348,7 +348,7 @@ export default async function ProfileDashboardPage({
                             {listing.title}
                           </h3>
                           <p className="text-sm font-extrabold text-[#001F58]">
-                            {listing.priceOnRequest || !listing.price
+                            {!listing.price
                               ? "Consultar Precio"
                               : `$${Number(listing.price).toLocaleString("es-AR")}`}
                           </p>

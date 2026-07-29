@@ -23,6 +23,8 @@ model User {
   passwordHash  String?
   image         String?
   phone         String?
+  instagram     String?
+  facebook      String?
   isAdmin       Boolean   @default(false)
   createdAt     DateTime  @default(now())
 
@@ -37,6 +39,7 @@ model User {
   spareParts SparePart[]
   purchases  Purchase[]
   favorites  Favorite[]
+  reports    Report[]
   adBanners  AdBanner[]
 }
 
@@ -191,45 +194,48 @@ enum AircraftBrand {
   PZL
   GRUMMAN
   EMBRAER
-  OTHER
   BELL
   CICARE
   AIRBUS
   AERO_BOERO
   BEECHCRAFT
+  OTHER
 }
 
 model Aircraft {
-  id                 String            @id @default(cuid())
-  sellerId           String
-  title              String
-  shortDescription   String
-  extraDescription   String?
-  modifications      String?
-  brand              AircraftBrand?
-  customBrand        String?
-  model              String?
-  year               Int?
-  totalTimeHours     Int?
-  engineHours        Int?
-  category           AircraftCategory?
-  price              Decimal?          @db.Decimal(12, 2)
-  priceOnRequest     Boolean           @default(false)
-  city               String
-  province           String
-  status             AircraftStatus    @default(PENDING_PAYMENT)
-  listingStartsAt    DateTime?
-  listingExpiresAt   DateTime?
-  renewalEmailSentAt DateTime?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  id                        String            @id @default(cuid())
+  sellerId                  String
+  title                     String
+  description               String
+  modifications             String? // analizar si es necesario o como va
+  brand                     AircraftBrand
+  customBrand               String?
+  model                     String
+  year                      Int
+  totalTimeHours            Int
+  category                  AircraftCategory?
+  fuselageDescription       String?
+  fuselageModifications     String?
+  avionics                  String?
+  extraEquipment            String?
+  price                     Decimal?          @db.Decimal(12, 2) // si es nulo el precio es a consultar
+  city                      String
+  province                  String
+  status                    AircraftStatus    @default(PENDING_PAYMENT)
+  listingStartsAt           DateTime?
+  listingExpiresAt          DateTime?
+  renewalEmailSentAt        DateTime?
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
 
-  purchaseId         String?
+  purchaseId                String?
 
   seller    User               @relation(fields: [sellerId], references: [id])
   purchase  Purchase?          @relation(fields: [purchaseId], references: [id])
   images    AircraftImage[]
   documents AircraftDocument[]
+  engines   AircraftEngine[]
+  propeller AircraftPropeller[]
   leads     Lead[]
   favorites Favorite[]
   reports   Report[]
@@ -257,6 +263,26 @@ model AircraftDocument {
   url        String
   name       String
   uploadedAt DateTime @default(now())
+
+  aircraft Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+}
+
+model AircraftEngine {
+  id            String   @id @default(cuid())
+  aircraftId    String
+  engineHours   Int?
+  TBO           Int
+  brand         String? // ver si son marcas diferentes a las de aviones
+  model         String?
+
+  aircraft Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+}
+
+model AircraftPropeller {
+  id                String   @id @default(cuid())
+  aircraftId        String
+  propellerHours    Int?
+  model             String?
 
   aircraft Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
 }
@@ -290,18 +316,17 @@ model SparePart {
   id                 String             @id @default(cuid())
   sellerId           String
   title              String
-  shortDescription   String
-  extraDescription   String?
-  brand              String?
-  model              String?
+  description        String
+  brand              String
+  model              String
   partNumber         String?
   category           SparePartCategory
   condition          SparePartCondition
   price              Decimal?           @db.Decimal(12, 2)
-  priceOnRequest     Boolean            @default(false)
   city               String
   province           String
   status             SparePartStatus    @default(PENDING_PAYMENT)
+  stock              Int                @default(1)
   listingStartsAt    DateTime?
   listingExpiresAt   DateTime?
   renewalEmailSentAt DateTime?
@@ -382,6 +407,7 @@ enum ReportStatus {
 
 model Report {
   id            String       @id @default(cuid())
+  userId        String
   aircraftId    String?
   sparePartId   String?
   reason        String
@@ -390,6 +416,7 @@ model Report {
   status        ReportStatus @default(PENDING)
   createdAt     DateTime     @default(now())
 
+  user      User       @relation(fields: [userId], references: [id])
   aircraft  Aircraft?  @relation(fields: [aircraftId], references: [id])
   sparePart SparePart? @relation(fields: [sparePartId], references: [id])
 }
