@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { AircraftGallery } from "../../../components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
 import { Phone, Mail, Heart, Share2, Printer, TriangleAlert } from "lucide-react";
+import Link from "next/link";
 
 export default async function PlaneDetailsPage({
   params,
@@ -105,7 +106,11 @@ export default async function PlaneDetailsPage({
                 </span>
               </div>
             </div>
-            <div className="group flex">
+            <div className="group flex items-center">
+            <Link
+              href={`/report?aircraftId=${aircraft.id}&title=${encodeURIComponent(aircraft.title)}`}
+              className="flex items-center text-red-600 hover:text-red-700"
+            >
               <span
                 className="
                   mr-0
@@ -119,12 +124,15 @@ export default async function PlaneDetailsPage({
                   group-hover:mr-2
                   group-hover:max-w-40
                   group-hover:opacity-100
+                  text-sm
+                  font-medium
                 "
               >
                 Reportar
               </span>
-              <TriangleAlert className="text-red-600 cursor-pointer"/>
-            </div>
+              <TriangleAlert className="cursor-pointer shrink-0" />
+            </Link>
+          </div>
           </div>
 
           <Separator className="my-4" />
