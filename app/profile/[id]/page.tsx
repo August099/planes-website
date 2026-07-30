@@ -1,9 +1,7 @@
-import Image from "next/image";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
-import { Button } from "@/components/ui/button";
+import ProfileDashboardClient from "./profile-client";
 
 export default async function ProfileDashboardPage({
   params,
@@ -13,7 +11,6 @@ export default async function ProfileDashboardPage({
   const { id } = await params;
 
   const currentUser = await getCurrentUser();
-
   const isOwner = currentUser?.id === id;
 
   const userProfile = await prisma.user.findUnique({
@@ -24,6 +21,10 @@ export default async function ProfileDashboardPage({
       email: true,
       image: true,
       phone: true,
+      instagram: true,
+      facebook: true,
+      city: true,
+      state: true,
       createdAt: true,
       aircraftListingsBalance: true,
       sparePartsListingsBalance: true,
@@ -34,10 +35,7 @@ export default async function ProfileDashboardPage({
     notFound();
   }
 
-  const aircraftBalance = isOwner ? (userProfile.aircraftListingsBalance ?? 0) : 0;
-  const partsBalance = isOwner ? (userProfile.sparePartsListingsBalance ?? 0) : 0;
-
-  const userListings = await prisma.aircraft.findMany({
+  const rawUserListings = await prisma.aircraft.findMany({
     where: {
       sellerId: id,
       ...(!isOwner && { status: "ACTIVE" }),
@@ -51,37 +49,72 @@ export default async function ProfileDashboardPage({
     orderBy: { createdAt: "desc" },
   });
 
+  // Convertimos el tipo Decimal de Prisma a number nativo para TypeScript y para evitar errores de serialización
+  const userListings = rawUserListings.map((listing) => ({
+    ...listing,
+    price: listing.price ? listing.price.toNumber() : null,
+  }));
+
   async function updateProfile(formData: FormData) {
     "use server";
-    if (!currentUser || currentUser.id !== id) {
-      throw new Error("No autorizado");
-    }
+    if (!currentUser || currentUser.id !== id) throw new Error("No autorizado");
 
     const name = formData.get("name") as string;
     const phone = formData.get("phone") as string;
+    const city = formData.get("city") as string;
+    const state = formData.get("state") as string;
+    const instagram = formData.get("instagram") as string;
+    const facebook = formData.get("facebook") as string;
 
     await prisma.user.update({
       where: { id },
-      data: { name, phone },
+      data: { name, phone, city, state, instagram, facebook },
     });
 
     redirect(`/profile/${id}?updated=true`);
   }
 
+  async function deleteProfileImage() {
+    "use server";
+    if (!currentUser || currentUser.id !== id) throw new Error("No autorizado");
+
+    await prisma.user.update({
+      where: { id },
+      data: { image: null },
+    });
+
+    redirect(`/profile/${id}?image_deleted=true`);
+  }
+
+  async function uploadProfileImage(formData: FormData) {
+    "use server";
+    if (!currentUser || currentUser.id !== id) throw new Error("No autorizado");
+
+    const file = formData.get("avatar") as File;
+    if (!file || file.size === 0) return;
+
+    // Aquí guardas el archivo en tu proveedor (Cloudinary, AWS S3, Vercel Blob, etc.)
+    const imageUrl = "/uploads/" + file.name; // Reemplazar por tu función de subida real
+
+    await prisma.user.update({
+      where: { id },
+      data: { image: imageUrl },
+    });
+
+    redirect(`/profile/${id}?image_updated=true`);
+  }
+
   async function extendListing(formData: FormData) {
     "use server";
-    if (!currentUser || currentUser.id !== id) {
-      throw new Error("No autorizado");
-    }
+    if (!currentUser || currentUser.id !== id) throw new Error("No autorizado");
 
     const listingId = formData.get("listingId") as string;
+    const RENEWAL_COST = 1;
 
     const dbUser = await prisma.user.findUniqueOrThrow({
       where: { id: currentUser.id },
       select: { aircraftListingsBalance: true },
     });
-
-    const RENEWAL_COST = 1;
 
     if ((dbUser.aircraftListingsBalance ?? 0) < RENEWAL_COST) {
       redirect("/planes?error=insufficient_aircraft_credits");
@@ -100,16 +133,11 @@ export default async function ProfileDashboardPage({
     await prisma.$transaction([
       prisma.user.update({
         where: { id: currentUser.id },
-        data: {
-          aircraftListingsBalance: { decrement: RENEWAL_COST },
-        },
+        data: { aircraftListingsBalance: { decrement: RENEWAL_COST } },
       }),
       prisma.aircraft.update({
         where: { id: listingId },
-        data: {
-          listingExpiresAt: newExpiresAt,
-          status: "ACTIVE",
-        },
+        data: { listingExpiresAt: newExpiresAt, status: "ACTIVE" },
       }),
     ]);
 
@@ -117,315 +145,14 @@ export default async function ProfileDashboardPage({
   }
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16">
-      <Image
-        src="/bkg-plans.jpg"
-        alt="Fondo Perfil"
-        fill
-        priority
-        className="-z-20 object-cover opacity-60"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85 backdrop-blur-[2px]" />
-
-      <div className="container mx-auto px-4 pt-16 pb-36 max-w-6xl">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10 pb-8 border-b border-[#001F58]/15">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-[#001F58] text-white flex items-center justify-center font-bold text-2xl shadow-md uppercase shrink-0">
-              {userProfile.name ? userProfile.name.charAt(0) : "U"}
-            </div>
-            <div>
-              <h1 className="font-heading text-2xl sm:text-3xl font-bold text-[#001F58]">
-                {userProfile.name || "Vendedor"}
-              </h1>
-              <p className="text-sm text-[#001F58]/70">
-                {isOwner ? userProfile.email : `Miembro desde ${new Date(userProfile.createdAt).getFullYear()}`}
-              </p>
-            </div>
-          </div>
-
-          {isOwner && (
-            <div className="bg-white/80 backdrop-blur-md border border-[#001F58]/15 rounded-2xl p-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 shadow-sm">
-              <div className="flex items-center gap-6">
-                <div>
-                  <p className="text-[10px] uppercase font-bold tracking-wider text-[#001F58]/60">
-                    Publicaciones Aviones
-                  </p>
-                  <p className="font-heading text-2xl font-black text-[#001F58]">
-                    {aircraftBalance}{" "}
-                    <span className="text-xs font-normal text-[#001F58]/70">
-                      cupo{aircraftBalance !== 1 ? "s" : ""}
-                    </span>
-                  </p>
-                </div>
-                <div className="h-8 w-[1px] bg-[#001F58]/15" />
-                <div>
-                  <p className="text-[10px] uppercase font-bold tracking-wider text-[#001F58]/60">
-                    Publicaciones Repuestos
-                  </p>
-                  <p className="font-heading text-2xl font-black text-[#001F58]">
-                    {partsBalance}{" "}
-                    <span className="text-xs font-normal text-[#001F58]/70">
-                      cupo{partsBalance !== 1 ? "s" : ""}
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              <Link
-                href="/plans"
-                className="w-full sm:w-auto text-center px-4 py-2.5 rounded-xl bg-[#E70F1F] hover:bg-[#c00d1a] text-white font-medium text-sm transition-all shadow-sm"
-              >
-                Cargar Cupos
-              </Link>
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-[#001F58]/15 shadow-sm sticky top-24">
-              <h2 className="font-heading font-bold text-lg text-[#001F58] mb-1">
-                {isOwner ? "Mis Datos de Perfil" : "Información del Vendedor"}
-              </h2>
-              <p className="text-xs text-[#001F58]/70 mb-6">
-                {isOwner
-                  ? "Información personal asociada a tus publicaciones."
-                  : "Datos de contacto directo para realizar consultas."}
-              </p>
-
-              {isOwner ? (
-                <form action={updateProfile} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-[#001F58] mb-1">
-                      Nombre o Nombre Comercial
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      defaultValue={userProfile.name || ""}
-                      className="w-full px-3.5 py-2 rounded-xl border border-[#001F58]/20 bg-white text-sm text-[#001F58] focus:outline-none focus:ring-2 focus:ring-[#001F58]/30"
-                      placeholder="Ej. Aerotaller San Fernando"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[#001F58] mb-1">
-                      Teléfono de Contacto
-                    </label>
-                    <input
-                      type="text"
-                      name="phone"
-                      defaultValue={userProfile.phone || ""}
-                      className="w-full px-3.5 py-2 rounded-xl border border-[#001F58]/20 bg-white text-sm text-[#001F58] focus:outline-none focus:ring-2 focus:ring-[#001F58]/30"
-                      placeholder="Ej. +54 11 1234-5678"
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-[#001F58] hover:bg-[#001F58]/90 text-white rounded-xl py-2.5 font-medium text-sm mt-2"
-                  >
-                    Guardar Datos
-                  </Button>
-                </form>
-              ) : (
-                <div className="space-y-4 text-sm text-[#001F58]">
-                  <div>
-                    <span className="block text-xs font-semibold text-[#001F58]/60 uppercase">
-                      Nombre
-                    </span>
-                    <p className="font-medium text-base">{userProfile.name || "No especificado"}</p>
-                  </div>
-
-                  {userProfile.phone && (
-                    <div>
-                      <span className="block text-xs font-semibold text-[#001F58]/60 uppercase">
-                        Teléfono
-                      </span>
-                      <a
-                        href={`https://wa.me/${userProfile.phone.replace(/[^0-9]/g, "")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 mt-1 text-emerald-700 font-semibold hover:underline"
-                      >
-                        📱 {userProfile.phone}
-                      </a>
-                    </div>
-                  )}
-
-                  <div>
-                    <span className="block text-xs font-semibold text-[#001F58]/60 uppercase">
-                      Email
-                    </span>
-                    <p className="font-medium">{userProfile.email}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="font-heading font-bold text-xl text-[#001F58]">
-                  {isOwner ? "Mis Publicaciones" : `Aeronaves de ${userProfile.name || "este vendedor"}`}
-                </h2>
-                <p className="text-xs text-[#001F58]/70">
-                  {isOwner
-                    ? "Gestión y control de vigencia de tus avisos."
-                    : "Explora la lista de aeronaves disponibles."}
-                </p>
-              </div>
-
-              {isOwner && (
-                <Link
-                  href="/publish"
-                  className="px-4 py-2 rounded-xl bg-[#001F58] text-white text-xs font-medium hover:bg-[#001F58]/90 transition-all shadow-sm"
-                >
-                  + Nueva Publicación
-                </Link>
-              )}
-            </div>
-
-            {userListings.length === 0 ? (
-              <div className="bg-white/60 backdrop-blur-md rounded-2xl p-10 text-center border border-[#001F58]/15">
-                <p className="text-base font-semibold text-[#001F58] mb-2">
-                  {isOwner
-                    ? "Aún no tienes aeronaves publicadas"
-                    : "Este vendedor no tiene publicaciones activas"}
-                </p>
-                {isOwner && (
-                  <Link
-                    href="/publish"
-                    className="inline-block mt-4 px-5 py-2.5 rounded-xl bg-[#001F58] text-white text-sm font-medium hover:bg-[#001F58]/90 transition-all"
-                  >
-                    Publicar Ahora
-                  </Link>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {userListings.map((listing) => {
-                  const now = new Date();
-                  const expiresAt = listing.listingExpiresAt
-                    ? new Date(listing.listingExpiresAt)
-                    : null;
-
-                  let diffDays = 0;
-                  let isExpired = false;
-
-                  if (expiresAt) {
-                    const diffTime = expiresAt.getTime() - now.getTime();
-                    diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    isExpired = diffDays <= 0;
-                  }
-
-                  const firstImageUrl = listing.images[0]?.url;
-
-                  return (
-                    <div
-                      key={listing.id}
-                      className="bg-white/80 backdrop-blur-md border border-[#001F58]/15 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-[#001F58]/10">
-                          {firstImageUrl ? (
-                            <Image
-                              src={firstImageUrl}
-                              alt={listing.title}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[10px] text-[#001F58]/40 font-bold">
-                              SIN FOTO
-                            </div>
-                          )}
-                        </div>
-
-                        <div>
-                          <h3 className="font-heading font-bold text-base text-[#001F58] mb-1 line-clamp-1">
-                            {listing.title}
-                          </h3>
-                          <p className="text-sm font-extrabold text-[#001F58]">
-                            {!listing.price
-                              ? "Consultar Precio"
-                              : `$${Number(listing.price).toLocaleString("es-AR")}`}
-                          </p>
-
-                          {isOwner && (
-                            <div className="mt-2 flex items-center gap-2">
-                              {listing.status === "PENDING_PAYMENT" ? (
-                                <span className="text-[10px] bg-yellow-100 text-yellow-800 px-2.5 py-0.5 rounded-md font-semibold border border-yellow-200">
-                                  ⏳ Pendiente de Pago
-                                </span>
-                              ) : isExpired ? (
-                                <span className="text-[10px] bg-red-100 text-red-800 px-2.5 py-0.5 rounded-md font-semibold border border-red-200">
-                                  ⚠️ Vencida
-                                </span>
-                              ) : expiresAt ? (
-                                <span
-                                  className={`text-[10px] px-2.5 py-0.5 rounded-md font-semibold border ${
-                                    diffDays <= 7
-                                      ? "bg-amber-100 text-amber-900 border-amber-200"
-                                      : "bg-emerald-100 text-emerald-900 border-emerald-200"
-                                  }`}
-                                >
-                                  ⏳ Quedan {diffDays} días
-                                </span>
-                              ) : (
-                                <span className="text-[10px] bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-md font-semibold">
-                                  Estado: {listing.status}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap sm:flex-col items-end gap-2 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-[#001F58]/10">
-                        {isOwner && (
-                          <form action={extendListing} className="w-full sm:w-auto">
-                            <input type="hidden" name="listingId" value={listing.id} />
-                            <Button
-                              type="submit"
-                              size="sm"
-                              className="w-full sm:w-auto bg-[#001F58] hover:bg-[#001F58]/90 text-white text-xs font-medium rounded-xl px-3 py-1.5"
-                            >
-                              ➕ Extender 45 días (1 cupo)
-                            </Button>
-                          </form>
-                        )}
-
-                        <div className="flex items-center gap-2 w-full justify-end">
-                          <Link
-                            href={`/publicacion/${listing.id}`}
-                            className="text-xs font-medium text-[#001F58]/80 hover:text-[#001F58] underline px-1"
-                          >
-                            Ver Publicación
-                          </Link>
-
-                          {isOwner && (
-                            <>
-                              <span className="text-[#001F58]/20">•</span>
-                              <Link
-                                href={`/editar-publicacion/${listing.id}`}
-                                className="text-xs font-medium text-[#001F58]/80 hover:text-[#001F58] underline px-1"
-                              >
-                                Editar
-                              </Link>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </main>
+    <ProfileDashboardClient
+      userProfile={userProfile}
+      userListings={userListings}
+      isOwner={isOwner}
+      updateProfile={updateProfile}
+      extendListing={extendListing}
+      deleteProfileImage={deleteProfileImage}
+      uploadProfileImage={uploadProfileImage}
+    />
   );
 }

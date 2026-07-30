@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { User, Search, Menu } from "lucide-react";
+import { User, Search, Menu, ShieldCheck } from "lucide-react";
 import { auth, signOut } from "@/lib/auth";
 import {
   DropdownMenu,
@@ -18,6 +18,8 @@ export async function Header() {
     "text-sm font-medium text-[#001F58] hover:text-primary transition-colors";
 
   const sellLink = session?.user ? "/planes/publish" : "/login";
+  
+  const isAdmin = Boolean((session?.user as any)?.isAdmin);
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-sm">
@@ -71,6 +73,21 @@ export async function Header() {
                   <User className="h-5 w-5" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white min-w-[180px]">
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuItem className="p-0">
+                        <Link
+                          href="/admin"
+                          className="w-full px-2 py-1.5 text-sm font-bold text-[#E70F1F] hover:bg-red-50 flex items-center gap-2"
+                        >
+                          <ShieldCheck className="h-4 w-4" />
+                          Panel Admin
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+
                   <DropdownMenuItem className="p-0">
                     <Link href={`/profile/${session.user.id}`} className="w-full px-2 py-1.5 text-sm">
                       Mi Cuenta
@@ -109,14 +126,12 @@ export async function Header() {
           )}
         </nav>
 
-        {/* Menú Móvil */}
         <div className="block md:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger className="p-2 rounded-lg border border-slate-200 text-[#001F58] hover:bg-slate-50 outline-none cursor-pointer">
               <Menu className="h-6 w-6" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72 bg-white p-2 space-y-1">
-              {/* Buscador interno para dispositivos móviles */}
               <div className="relative my-1 px-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Buscar aviones..." className="pl-9 w-full text-xs" disabled />
@@ -124,7 +139,6 @@ export async function Header() {
 
               <DropdownMenuSeparator />
 
-              {/* Enlaces Principales de Navegación */}
               <DropdownMenuItem className="p-0">
                 <Link href="/" className="w-full px-2 py-1.5 text-sm font-medium">
                   Inicio
@@ -150,6 +164,18 @@ export async function Header() {
 
               {session?.user ? (
                 <>
+                  {isAdmin && (
+                    <DropdownMenuItem className="p-0">
+                      <Link
+                        href="/admin/dashboard"
+                        className="w-full px-2 py-1.5 text-sm font-bold text-[#E70F1F] bg-red-50/50 hover:bg-red-50 flex items-center gap-2 rounded-md"
+                      >
+                        <ShieldCheck className="h-4 w-4" />
+                        Panel Admin
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+
                   <DropdownMenuItem className="p-0">
                     <Link href={`/profile/${session.user.id}`} className="w-full px-2 py-1.5 text-sm font-medium">
                       Mi Cuenta

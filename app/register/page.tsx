@@ -57,14 +57,12 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
       if (error instanceof AuthError) {
         return redirect("/login?error=CredentialsSignin");
       }
-      // Re-lanzar error de redirección de Next.js
       throw error;
     }
   }
 
   return (
     <main className="relative isolate overflow-hidden min-h-screen -mb-16 flex items-center justify-center py-16">
-      {/* Fondo optimizado con la imagen bkg-register.jpg */}
       <Image
         src="/bkg-register.jpg"
         alt="Fondo Registro"
@@ -77,7 +75,6 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
       <div className="container mx-auto px-4 max-w-md">
         <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-8 backdrop-blur-sm shadow-xl space-y-6">
           
-          {/* Encabezado */}
           <div className="text-center space-y-1.5">
             <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#001F58]">
               CREAR CUENTA
@@ -87,7 +84,6 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
             </p>
           </div>
 
-          {/* Alertas de error */}
           {errorMessage === "EmailExists" && (
             <div className="rounded-xl bg-red-50 p-3 text-xs sm:text-sm text-red-600 border border-red-200">
               Ya existe una cuenta registrada con ese correo electrónico.
@@ -99,7 +95,6 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
             </div>
           )}
 
-          {/* Formulario de registro */}
           <form action={register} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="name" className="text-xs font-semibold text-[#001F58]">
@@ -149,7 +144,6 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
             </Button>
           </form>
 
-          {/* Enlace para iniciar sesión */}
           <p className="text-center text-xs sm:text-sm text-[#001F58]/70 pt-2 border-t border-[#001F58]/10">
             ¿Ya tenés cuenta?{" "}
             <Link

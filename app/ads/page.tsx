@@ -9,8 +9,7 @@ export default function AdsPage() {
     {
       id: "ad-banner-lateral",
       name: "Banner Lateral / Búsqueda",
-      price: "$25.000",
-      duration: "por 30 días",
+      duration: "30 días de exposición",
       badge: null,
       description: "Ideal para empresas, talleres o servicios aeronáuticos que buscan presencia continua.",
       popular: false,
@@ -25,13 +24,12 @@ export default function AdsPage() {
     {
       id: "ad-banner-principal",
       name: "Banner Principal Home",
-      price: "$55.000",
-      duration: "por 30 días",
+      duration: "30 días de exposición",
       badge: "Máxima Visibilidad",
       description: "Ubicación VIP en la portada principal del sitio. Cautiva a todos los visitantes que ingresan.",
       popular: true,
       features: [
-        "Ubicación privilegiada en la página de inicio (Home)",
+        "Ubicación privileged en la página de inicio (Home)",
         "Formato horizontal panorámico HD",
         "Enlace directo personalizado a tu oferta",
         "Soporte de diseño para adaptar tu pieza publicitaria",
@@ -42,9 +40,8 @@ export default function AdsPage() {
     {
       id: "ad-pack-anual",
       name: "Sponsor Institucional",
-      price: "$180.000",
-      duration: "por 6 meses",
-      badge: "Ahorrá 45%",
+      duration: "6 meses de exposición",
+      badge: "Plan Semestral",
       description: "Para marcas y empresas que desean posicionamiento líder en la industria aeronáutica.",
       popular: false,
       features: [
@@ -60,7 +57,6 @@ export default function AdsPage() {
 
   return (
     <main className="relative isolate overflow-hidden min-h-screen -mb-16">
-      {/* Fondo optimizado con la imagen bkg-ads.jpg */}
       <Image
         src="/bkg-ads.jpg"
         alt="Fondo Publicidad"
@@ -71,7 +67,6 @@ export default function AdsPage() {
       <div className="absolute inset-0 -z-10 bg-background/85" />
 
       <div className="container mx-auto px-4 pt-16 pb-36 max-w-6xl">
-        {/* Encabezado Principal */}
         <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#001F58]/10 border border-[#001F58]/20 text-[#001F58] text-xs font-semibold uppercase tracking-wider mb-4">
             <Megaphone className="w-4 h-4 text-red-600" />
@@ -81,11 +76,10 @@ export default function AdsPage() {
             ESPACIOS PUBLICITARIOS
           </h1>
           <p className="text-sm sm:text-base text-[#001F58]/80 leading-relaxed">
-            Llegá directamente a pilotos, propietarios de aeronaves, escuelas de vuelo y empresas del sector aeronáutico en todo el país.
+            Llegá directamente a pilotos, propietarios de aeronaves, escuelas de vuelo y empresas del sector aeronáutico en todo el país. Todo desde $ARS 25.000/mes.
           </p>
         </div>
 
-        {/* Pilares del Servicio Publicitario */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
           <div className="bg-white/80 border border-[#001F58]/20 rounded-xl p-4 backdrop-blur-sm flex items-center gap-3">
             <div className="bg-[#001F58]/10 p-2.5 rounded-lg text-[#001F58] shrink-0">
@@ -118,7 +112,6 @@ export default function AdsPage() {
           </div>
         </div>
 
-        {/* Grilla de Planes de Publicidad */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-16">
           {adPlans.map((plan) => (
             <div
@@ -129,14 +122,12 @@ export default function AdsPage() {
                   : "bg-white/90 text-[#001F58] border-[#001F58]/20 hover:bg-white shadow-md backdrop-blur-sm"
               }`}
             >
-              {/* Insignia de Más Elegido / Destacado */}
               {plan.popular && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[11px] font-bold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-sm">
                   {plan.badge}
                 </div>
               )}
 
-              {/* Título y Descripción */}
               <div className="mb-6">
                 <div className="flex justify-between items-start mb-2">
                   <h3
@@ -146,11 +137,7 @@ export default function AdsPage() {
                   >
                     {plan.name}
                   </h3>
-                  {!plan.popular && plan.badge && (
-                    <span className="text-xs font-bold px-2 py-0.5 rounded border bg-red-50 text-red-600 border-red-200">
-                      {plan.badge}
-                    </span>
-                  )}
+                  
                 </div>
                 <p
                   className={`text-xs sm:text-sm h-10 leading-relaxed ${
@@ -161,31 +148,14 @@ export default function AdsPage() {
                 </p>
               </div>
 
-              {/* Precio */}
               <div
                 className={`mb-6 pb-6 border-b ${
                   plan.popular ? "border-white/15" : "border-[#001F58]/15"
                 }`}
               >
-                <div className="flex items-baseline gap-1">
-                  <span
-                    className={`font-heading text-4xl font-bold ${
-                      plan.popular ? "text-white" : "text-[#001F58]"
-                    }`}
-                  >
-                    {plan.price}
-                  </span>
-                  <span
-                    className={`text-xs ${
-                      plan.popular ? "text-white/70" : "text-[#001F58]/60"
-                    }`}
-                  >
-                    / {plan.duration}
-                  </span>
-                </div>
+                
               </div>
 
-              {/* Beneficios */}
               <ul className="space-y-3 mb-8 flex-1">
                 {plan.features.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm">
@@ -202,10 +172,17 @@ export default function AdsPage() {
                   </li>
                 ))}
               </ul>
-
-              {/* Botón de Acción */}
+              <div className="flex flex-col">
+                  <span
+                    className={`text-xs mt-1 py-2 font-semibold text-center flex items-center justify-center font-medium ${
+                      plan.popular ? "text-white/80" : "text-[#001F58]/70"
+                    }`}
+                  >
+                    {plan.duration}
+                  </span>
+              </div>
               <Link
-                href={`/contact?reason=advertising&plan=${plan.id}`}
+                href={`/banners?plan=${plan.id}`}
                 className={`w-full py-3 px-5 rounded-xl font-medium text-sm text-center transition-all duration-200 flex items-center justify-center gap-2 ${
                   plan.popular
                     ? "bg-red-600 hover:bg-red-700 text-white shadow-md"
@@ -219,7 +196,6 @@ export default function AdsPage() {
           ))}
         </div>
 
-        {/* Banner o Consultas Personalizadas */}
         <div className="bg-white/80 border border-[#001F58]/20 rounded-2xl p-6 backdrop-blur-sm max-w-3xl mx-auto flex flex-col sm:flex-row items-center gap-5 shadow-sm">
           <div className="bg-[#001F58] p-3 rounded-xl text-white shrink-0">
             <ShieldCheck className="w-6 h-6" />
@@ -229,7 +205,10 @@ export default function AdsPage() {
               ¿Necesitás una propuesta a medida?
             </h4>
             <p className="text-xs sm:text-sm text-[#001F58]/80 leading-relaxed">
-              Diseñamos campañas específicas para eventos aeronáuticos, marcas globales o lanzamientos de productos. Escribinos directamente a <a href="mailto:aeronauticasventas@gmail.com" className="font-semibold underline hover:text-[#001F58]">aeronauticasventas@gmail.com</a>.
+              Diseñamos campañas específicas para eventos aeronáuticos, marcas globales o lanzamientos de productos. Escribinos directamente a{" "}
+              <a href="mailto:aeronauticasventas@gmail.com" className="font-semibold underline hover:text-[#001F58]">
+                aeronauticasventas@gmail.com
+              </a>.
             </p>
           </div>
         </div>
