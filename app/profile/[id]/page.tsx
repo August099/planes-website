@@ -24,7 +24,7 @@ export default async function ProfileDashboardPage({
       instagram: true,
       facebook: true,
       city: true,
-      state: true,
+      province: true,
       createdAt: true,
       aircraftListingsBalance: true,
       sparePartsListingsBalance: true,

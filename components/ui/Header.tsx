@@ -87,7 +87,7 @@ export async function Header() {
                       <DropdownMenuSeparator />
                     </>
                   )}
-
+                  
                   <DropdownMenuItem className="p-0">
                     <Link href={`/profile/${session.user.id}`} className="w-full px-2 py-1.5 text-sm">
                       Mi Cuenta
