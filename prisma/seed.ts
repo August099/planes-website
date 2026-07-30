@@ -118,7 +118,7 @@ async function main() {
   const createdTags = await Promise.all(
     SAMPLE_TAGS.map((name) =>
       prisma.tag.create({
-        data: { name }
+        data: { name, slug: name.replaceAll(" ", "-") }
       })
     )
   );
