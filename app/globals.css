@@ -51,6 +51,7 @@
   --background: hsl(210 60% 97%);
   --foreground: hsl(217 47% 17%);
   --primary: hsl(357 89% 48%);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
   --primary-foreground: hsl(0 0% 100%);
   --secondary: hsl(219 53% 27%);
   --secondary-foreground: hsl(0 0% 100%);

@@ -21,6 +21,8 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   passwordHash  String?
+  city          String?
+  province      String?
   image         String?
   phone         String?
   instagram     String?
@@ -41,6 +43,7 @@ model User {
   favorites  Favorite[]
   reports    Report[]
   adBanners  AdBanner[]
+  questions  Question[]
 }
 
 model Account {
@@ -239,6 +242,7 @@ model Aircraft {
   leads     Lead[]
   favorites Favorite[]
   reports   Report[]
+  questions Question[]
   tags      Tag[]              @relation("AircraftToTag")
 
   @@index([brand, model])
@@ -341,6 +345,7 @@ model SparePart {
   leads     SparePartLead[]
   favorites Favorite[]
   reports   Report[]
+  questions Question[]
 
   @@index([category])
   @@index([condition])
@@ -426,4 +431,28 @@ model Tag {
   name      String     @unique
   slug      String     @unique
   aircrafts Aircraft[] @relation("AircraftToTag")
+}
+
+// ==========================================
+// 7. PREGUNTAS Y RESPUESTAS (Modelo Único)
+// ==========================================
+
+model Question {
+  id          String    @id @default(cuid())
+  userId      String    
+  aircraftId  String?   
+  sparePartId String?   
+  
+  question    String    
+  answer      String?   
+  answeredAt  DateTime? 
+  createdAt   DateTime  @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aircraft  Aircraft?  @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+  sparePart SparePart? @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId])
+  @@index([sparePartId])
+  @@index([userId])
 }
