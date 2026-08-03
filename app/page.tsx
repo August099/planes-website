@@ -6,6 +6,7 @@ import { SellerCta } from "@/components/ui/SellerCta";
 import { TrustBlock } from "@/components/ui/TrustBlock";
 import { SparePartCategoriesCarousel } from "@/components/ui/SparePartCategoriesCarousel";
 import { FeaturedAircraftCarousel } from "@/components/ui/FeaturedAircraftCarousel";
+import { HeroBanner } from "@/components/ui/hero-banner";
 
 export default async function HomePage() {
   const featuredAircraftsFromDb = await prisma.aircraft.findMany({
@@ -29,7 +30,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <ScrollVideoHero />
+      <HeroBanner />
 
       <HowItWorks />
 

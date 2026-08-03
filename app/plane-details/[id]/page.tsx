@@ -4,6 +4,10 @@ import { AircraftGallery } from "../../../components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
 import { Phone, Mail, Heart, Share2, Printer, TriangleAlert, FileText } from "lucide-react";
 import { DetailRow } from "@/components/ui/DetailRow";
+import { QnaSection } from "@/components/ui/QnaSection";
+import { auth } from "@/lib/auth";
+import { AIRCRAFT_CATEGORY_LABELS } from "@/lib/constants";
+
 
 const tags = [
   {
@@ -61,26 +65,34 @@ export default async function PlaneDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const session = await auth();
 
   const aircraft = await prisma.aircraft.findUnique({
-    where: { id },
+    where: { id }, 
     include: {
       images: {
-        orderBy: {
-          order: "asc"
-        }
+        orderBy: { order: "asc" }
       },
       engines: true,
       propeller: true,
       documents: true,
-      tags: true
+      tags: true,
+      questions: {
+        orderBy: {
+          createdAt: "desc"
+        },
+        include: {
+          user: {
+            select: { name: true }
+          }
+        }
+      }
     },
   });
 
   if (!aircraft) {
-    notFound()
+    notFound();
   }
-
   const seller = await prisma.user.findUnique({
     where: { id: aircraft.sellerId },
   });
@@ -161,7 +173,11 @@ export default async function PlaneDetailsPage({
         <div className="w-1/3 flex flex-col">
           <div className="flex justify-between border-2 border-b-0 rounded-t-[10] bg-white p-2">  
             <p className="text-sm text-nowrap">Publicado el {aircraft.createdAt.toLocaleDateString("es-AR")}</p>
-            <h6><b>{aircraft.category}</b></h6>
+            <h6>
+              <b>
+                {aircraft.category ? AIRCRAFT_CATEGORY_LABELS[aircraft.category] : "Sin categoría"}
+              </b>
+            </h6>
           </div>
           <div className="flex flex-col border-2 rounded-b-[10] rounded-t-[0] bg-white p-5 pt-3 gap-2">
             <div className="w-full flex justify-between gap-3">
@@ -313,6 +329,14 @@ export default async function PlaneDetailsPage({
           </div>
         </div>
       </section>
+      <QnaSection
+        entityId={aircraft.id}
+        entityType="AIRCRAFT"
+        questions={aircraft.questions || []}
+        sellerName={seller.name ?? "El vendedor"}
+        sellerId={aircraft.sellerId}         
+        currentUserId={session?.user?.id} 
+      />
     </main>
   );
 }
