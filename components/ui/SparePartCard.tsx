@@ -49,7 +49,7 @@ export function SparePartCard({
   const brandAndModel = [brand, model].filter(Boolean).join(" ");
 
   return (
-    <Link href={`/sparepart-details/${id}`}>
+    <Link href={`/store/spareparts-details/${id}`}>
       <Card className="overflow-hidden bg-[#001F58]/[0.025] border-[#001F58]/10 hover:border-primary/40 hover:shadow-lg transition-all group">
         <div className="relative w-full h-48">
           <Image

@@ -1,50 +1,64 @@
 import { prisma } from "@/lib/prisma";
-import { SparePartCard } from "@/components/ui/SparePartCard";
+import { AircraftCard } from "@/components/ui/AircraftCard";
 import Link from "next/link";
 
 interface Props {
   searchParams: Promise<{ page?: string }>;
 }
 
-export default async function SparePartsPage({ searchParams }: Props) {
+export default async function AvionesPage({ searchParams }: Props) {
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
-  const itemsPerPage = 12;
+  const itemsPerPage = 20;
   const skip = (currentPage - 1) * itemsPerPage;
 
-  const [spareParts, totalSpareParts] = await Promise.all([
+  const [aircrafts, spareParts] = await Promise.all([
+    prisma.aircraft.findMany({
+      where: { status: "ACTIVE" },
+      include: { images: { orderBy: { order: "asc" }, take: 1 } },
+      orderBy: { createdAt: "desc" }
+    }),
     prisma.sparePart.findMany({
       where: { status: "ACTIVE" },
-      include: { images: { orderBy: { order: "asc" }, take: 1 } }, // 👈 Cambiado 'images' a 'SparePartImage'
-      orderBy: { createdAt: "desc" },
-      take: itemsPerPage,
-      skip: skip,
-    }),
-    prisma.sparePart.count({
-      where: { status: "ACTIVE" },
+      include: { images: { orderBy: { order: "asc" }, take: 1 } },
+      orderBy: { createdAt: "desc" }
     }),
   ]);
 
-  const totalPages = Math.ceil(totalSpareParts / itemsPerPage);
+  const combined = [
+    ...aircrafts.map((a) => ({ ...a, type: "aircraft" as const })),
+    ...spareParts.map((s) => ({ ...s, type: "sparePart" as const })),
+  ];
+
+  combined.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  const totalCards = combined.length
+
+  const totalPages = Math.ceil(totalCards / itemsPerPage);
   const hasNextPage = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
 
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
-    const maxVisiblePages = 5;
+    const maxVisiblePages = 5; 
 
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
+      // Siempre incluir la primera página
       pages.push(1);
+
       if (currentPage > 3) pages.push("...");
 
+      // Calcular el rango alrededor de la página actual
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
 
       for (let i = start; i <= end; i++) pages.push(i);
 
       if (currentPage < totalPages - 2) pages.push("...");
+
+      // Siempre incluir la última página
       pages.push(totalPages);
     }
     return pages;
@@ -53,22 +67,23 @@ export default async function SparePartsPage({ searchParams }: Props) {
   return (
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-medium mb-6">
-        Repuestos en venta ({totalSpareParts})
+        Aviones en venta ({totalCards})
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-        {spareParts.map((sparePart) => (
-          <SparePartCard
-            key={sparePart.id}
-            id={sparePart.id}
-            title={sparePart.title}
-            price={sparePart.price ? Number(sparePart.price) : null}
-            category={sparePart.category}
-            condition={sparePart.condition}
-            city={sparePart.city}
-            province={sparePart.province}
-            imageUrl={sparePart.images[0]?.url ?? "/placeholder.png"} // 👈 Cambiado 'images' a 'SparePartImage'
-          />
+        {aircrafts.map((aircraft) => (
+        <AircraftCard
+          key={aircraft.id}
+          id={aircraft.id}
+          title={aircraft.title}
+          price={aircraft.price ? Number(aircraft.price) : null}
+          year={aircraft.year}
+          category={aircraft.category}
+          totalTimeHours={aircraft.totalTimeHours}
+          city={aircraft.city}
+          province={aircraft.province}
+          imageUrl={aircraft.images[0]?.url ?? "/placeholder.png"}
+        />
         ))}
       </div>
 

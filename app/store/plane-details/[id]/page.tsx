@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { AircraftGallery } from "../../../components/ui/Carousel";
+import { AircraftGallery } from "../../../../components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
 import { Phone, Mail, Heart, Share2, Printer, TriangleAlert, FileText } from "lucide-react";
 import { DetailRow } from "@/components/ui/DetailRow";
@@ -45,13 +45,6 @@ const tags = [
   {
     id: 10,
     name: "tag10"
-  }
-]
-
-const documentos = [
-  {
-    id: 1,
-    url: "../../../../public/Diseño del sistema y arquitectura.pdf"
   }
 ]
 
@@ -227,7 +220,7 @@ export default async function PlaneDetailsPage({
                   </span>
                 </div>
               </div>
-              <div className="group flex">
+              <a href={`/report`} className="group flex">
                 <span
                   className="
                     mr-0
@@ -246,7 +239,7 @@ export default async function PlaneDetailsPage({
                   Reportar
                 </span>
                 <TriangleAlert className="text-primary cursor-pointer"/>
-              </div>
+              </a>
             </div>
 
             <Separator className="mb-3 mt-2" />
