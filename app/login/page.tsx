@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
+
 interface LoginPageProps {
   searchParams: Promise<{ error?: string }>;
 }
@@ -48,7 +49,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <form
               action={async () => {
                 "use server";
-                await signIn("google", { redirectTo: "/panel" });
+                await signIn("google", { redirectTo: "/" });
               }}
             >
               <Button
@@ -82,7 +83,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <form
               action={async () => {
                 "use server";
-                await signIn("facebook", { redirectTo: "/panel" });
+                await signIn("facebook", { redirectTo: "/" });
               }}
             >
               <Button
@@ -123,7 +124,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 await signIn("credentials", {
                   email,
                   password,
-                  redirectTo: "/panel",
+                  redirectTo: "/",
                 });
               } catch (error) {
                 if (error instanceof AuthError) {

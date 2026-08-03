@@ -51,7 +51,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
       await signIn("credentials", {
         email,
         password,
-        redirectTo: "/panel",
+        redirectTo: "/",
       });
     } catch (error) {
       if (error instanceof AuthError) {

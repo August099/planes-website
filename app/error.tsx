@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { Repeat, Plane } from "lucide-react";
 
 export default function Error({
   error,
@@ -42,16 +43,18 @@ export default function Error({
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
             onClick={() => reset()}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#001F58] hover:bg-[#001F58]/90 text-white font-medium text-sm transition-all shadow-md active:scale-[0.98]"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#001F58] hover:bg-[#001F58]/90 text-white font-medium text-sm transition-all shadow-md active:scale-[0.98]"
           >
-            🔄 Reintentar
+            <Repeat className="w-4 h-4" />
+            <span>Reintentar</span>
           </button>
 
           <Link
             href="/"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/80 hover:bg-white border border-[#001F58]/20 text-[#001F58] font-medium text-sm transition-all shadow-sm"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white/80 hover:bg-white border border-[#001F58]/20 text-[#001F58] font-medium text-sm transition-all shadow-sm"
           >
-            ✈️ Volver a la Base
+            <Plane className="w-4 h-4" />
+            <span>Volver a la base</span>
           </Link>
         </div>
       </div>
