@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { SparePartCard } from "@/components/ui/SparePartCard";
+import { SparePartFiltersSidebar } from "@/components/ui/SparePartFiltersSidebar";
 import Link from "next/link";
 
 interface Props {
@@ -57,85 +58,90 @@ export default async function AvionesPage({ searchParams }: Props) {
   return (
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-medium mb-6">
-        Aviones en venta ({totalSpareParts})
+        Repuestos en venta ({totalSpareParts})
       </h1>
+      <section className="flex items-start gap-6">
+        <SparePartFiltersSidebar/>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-        {spareParts.map((sparePart) => (
-        <SparePartCard
-          key={sparePart.id}
-          id={sparePart.id}
-          title={sparePart.title}
-          price={sparePart.price ? Number(sparePart.price) : null}
-          brand={sparePart.brand}
-          model={sparePart.model}
-          category={sparePart.category}
-          condition={sparePart.condition}
-          city={sparePart.city}
-          province={sparePart.province}
-          imageUrl={sparePart.images[0]?.url ?? "/placeholder.png"}
-        />
-        ))}
-      </div>
+        <div className="w-6/7">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            {spareParts.map((sparePart) => (
+            <SparePartCard
+              key={sparePart.id}
+              id={sparePart.id}
+              title={sparePart.title}
+              price={sparePart.price ? Number(sparePart.price) : null}
+              brand={sparePart.brand}
+              model={sparePart.model}
+              category={sparePart.category}
+              condition={sparePart.condition}
+              city={sparePart.city}
+              province={sparePart.province}
+              imageUrl={sparePart.images[0]?.url ?? "/placeholder.png"}
+            />
+            ))}
+          </div>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-8 border-t pt-4 flex-wrap">
-          {hasPrevPage ? (
-            <Link
-              href={`?page=${currentPage - 1}`}
-              className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors"
-            >
-              Anterior
-            </Link>
-          ) : (
-            <span className="px-3 py-2 border rounded-md text-neutral-400 text-sm font-medium cursor-not-allowed bg-neutral-50">
-              Anterior
-            </span>
-          )}
-
-          {getPageNumbers().map((page, index) => {
-            if (page === "...") {
-              return (
-                <span
-                  key={`ellipsis-${index}`}
-                  className="px-3 py-2 text-sm text-neutral-400 font-medium"
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-8 border-t pt-4 flex-wrap">
+              {hasPrevPage ? (
+                <Link
+                  href={`?page=${currentPage - 1}`}
+                  className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors"
                 >
-                  ...
+                  Anterior
+                </Link>
+              ) : (
+                <span className="px-3 py-2 border rounded-md text-neutral-400 text-sm font-medium cursor-not-allowed bg-neutral-50">
+                  Anterior
                 </span>
-              );
-            }
+              )}
 
-            const isCurrent = page === currentPage;
+              {getPageNumbers().map((page, index) => {
+                if (page === "...") {
+                  return (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="px-3 py-2 text-sm text-neutral-400 font-medium"
+                    >
+                      ...
+                    </span>
+                  );
+                }
 
-            return (
-              <Link
-                key={`page-${page}`}
-                href={`?page=${page}`}
-                className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
-                  isCurrent
-                    ? "bg-neutral-900 text-white border-neutral-900 pointer-events-none"
-                    : "hover:bg-neutral-100 text-neutral-700"
-                }`}
-              >
-                {page}
-              </Link>
-            );
-          })}
+                const isCurrent = page === currentPage;
 
-          {hasNextPage ? (
-            <Link
-              href={`?page=${currentPage + 1}`}
-              className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors"
-            >
-              Siguiente
-            </Link>
-          ) : (
-            <span className="px-3 py-2 border rounded-md text-neutral-400 text-sm font-medium cursor-not-allowed bg-neutral-50">
-              Siguiente
-            </span>
+                return (
+                  <Link
+                    key={`page-${page}`}
+                    href={`?page=${page}`}
+                    className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
+                      isCurrent
+                        ? "bg-neutral-900 text-white border-neutral-900 pointer-events-none"
+                        : "hover:bg-neutral-100 text-neutral-700"
+                    }`}
+                  >
+                    {page}
+                  </Link>
+                );
+              })}
+
+              {hasNextPage ? (
+                <Link
+                  href={`?page=${currentPage + 1}`}
+                  className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors"
+                >
+                  Siguiente
+                </Link>
+              ) : (
+                <span className="px-3 py-2 border rounded-md text-neutral-400 text-sm font-medium cursor-not-allowed bg-neutral-50">
+                  Siguiente
+                </span>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </section>
     </main>
   );
 }

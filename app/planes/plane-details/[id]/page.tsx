@@ -262,7 +262,13 @@ export default async function PlaneDetailsPage({
 
             <h3><b>{aircraft.title}</b></h3>
 
-            <h3 className="text-(--sidebar-primary)"><b>{aircraft.price ? `US$ ${aircraft.price}` : "Precio a consultar"}</b></h3>
+            <h3 className="text-(--sidebar-primary)"><b>{`${aircraft.price ? 
+              new Intl.NumberFormat("es-AR", {
+                style: "currency",
+                currency: "USD",
+                maximumFractionDigits: 0,
+              }).format(Number(aircraft.price))
+              : "Consultar precio"}`}</b></h3>
             <Separator className="my-3" />
 
             <h4 className="text-(--secondary)"><b>Datos de la aeronave</b></h4>

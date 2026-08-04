@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { AircraftCard } from "@/components/ui/AircraftCard";
+import { PlanesFiltersSidebar } from "@/components/ui/PlanesFiltersSidebar";
 import Link from "next/link";
 
 interface Props {
@@ -59,82 +60,85 @@ export default async function AvionesPage({ searchParams }: Props) {
       <h1 className="text-2xl font-medium mb-6">
         Aviones en venta ({totalAircrafts})
       </h1>
+      <section className="flex items-start gap-6">
+        <PlanesFiltersSidebar/>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-        {aircrafts.map((aircraft) => (
-        <AircraftCard
-          key={aircraft.id}
-          id={aircraft.id}
-          title={aircraft.title}
-          price={aircraft.price ? Number(aircraft.price) : null}
-          year={aircraft.year}
-          category={aircraft.category}
-          totalTimeHours={aircraft.totalTimeHours}
-          city={aircraft.city}
-          province={aircraft.province}
-          imageUrl={aircraft.images[0]?.url ?? "/placeholder.png"}
-        />
-        ))}
-      </div>
-
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-8 border-t pt-4 flex-wrap">
-          {hasPrevPage ? (
-            <Link
-              href={`?page=${currentPage - 1}`}
-              className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors"
-            >
-              Anterior
-            </Link>
-          ) : (
-            <span className="px-3 py-2 border rounded-md text-neutral-400 text-sm font-medium cursor-not-allowed bg-neutral-50">
-              Anterior
-            </span>
-          )}
-
-          {getPageNumbers().map((page, index) => {
-            if (page === "...") {
-              return (
-                <span
-                  key={`ellipsis-${index}`}
-                  className="px-3 py-2 text-sm text-neutral-400 font-medium"
-                >
-                  ...
-                </span>
-              );
-            }
-
-            const isCurrent = page === currentPage;
-
-            return (
-              <Link
-                key={`page-${page}`}
-                href={`?page=${page}`}
-                className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
-                  isCurrent
-                    ? "bg-neutral-900 text-white border-neutral-900 pointer-events-none"
-                    : "hover:bg-neutral-100 text-neutral-700"
-                }`}
-              >
-                {page}
-              </Link>
-            );
-          })}
-
-          {hasNextPage ? (
-            <Link
-              href={`?page=${currentPage + 1}`}
-              className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors"
-            >
-              Siguiente
-            </Link>
-          ) : (
-            <span className="px-3 py-2 border rounded-md text-neutral-400 text-sm font-medium cursor-not-allowed bg-neutral-50">
-              Siguiente
-            </span>
-          )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+          {aircrafts.map((aircraft) => (
+          <AircraftCard
+            key={aircraft.id}
+            id={aircraft.id}
+            title={aircraft.title}
+            price={aircraft.price ? Number(aircraft.price) : null}
+            year={aircraft.year}
+            category={aircraft.category}
+            totalTimeHours={aircraft.totalTimeHours}
+            city={aircraft.city}
+            province={aircraft.province}
+            imageUrl={aircraft.images[0]?.url ?? "/placeholder.png"}
+          />
+          ))}
         </div>
-      )}
+
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-8 border-t pt-4 flex-wrap">
+            {hasPrevPage ? (
+              <Link
+                href={`?page=${currentPage - 1}`}
+                className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors"
+              >
+                Anterior
+              </Link>
+            ) : (
+              <span className="px-3 py-2 border rounded-md text-neutral-400 text-sm font-medium cursor-not-allowed bg-neutral-50">
+                Anterior
+              </span>
+            )}
+
+            {getPageNumbers().map((page, index) => {
+              if (page === "...") {
+                return (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="px-3 py-2 text-sm text-neutral-400 font-medium"
+                  >
+                    ...
+                  </span>
+                );
+              }
+
+              const isCurrent = page === currentPage;
+
+              return (
+                <Link
+                  key={`page-${page}`}
+                  href={`?page=${page}`}
+                  className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
+                    isCurrent
+                      ? "bg-neutral-900 text-white border-neutral-900 pointer-events-none"
+                      : "hover:bg-neutral-100 text-neutral-700"
+                  }`}
+                >
+                  {page}
+                </Link>
+              );
+            })}
+
+            {hasNextPage ? (
+              <Link
+                href={`?page=${currentPage + 1}`}
+                className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors"
+              >
+                Siguiente
+              </Link>
+            ) : (
+              <span className="px-3 py-2 border rounded-md text-neutral-400 text-sm font-medium cursor-not-allowed bg-neutral-50">
+                Siguiente
+              </span>
+            )}
+          </div>
+        )}
+      </section>
     </main>
   );
 }
