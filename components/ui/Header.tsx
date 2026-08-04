@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { User, Search, Menu, ShieldCheck } from "lucide-react";
 import { auth, signOut } from "@/lib/auth";
 import {
@@ -11,6 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { HeaderWrapper } from "./header-wrapper";
+import { HeaderLogo } from "./header-logo";
+import { AnimatedSearch } from "./animated-search";
 
 export async function Header() {
   const session = await auth();
@@ -18,50 +19,19 @@ export async function Header() {
   const linkClass =
     "text-sm font-medium hover:text-red-400 transition-colors";
 
-  const sellLink = session?.user ? "/planes/publish" : "/login";
+  const sellLink = session?.user ? "/publish" : "/login";
   
   const isAdmin = Boolean((session?.user as any)?.isAdmin);
 
   return (
     <HeaderWrapper>
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-        <Link href="/" className="flex items-center">
-          <div className="hidden md:block">
-            <Image
-              src="/logo-full.png"
-              alt="Ventas Aeronáuticas"
-              width={220}
-              height={52}
-              priority
-            />
-          </div>
-          <div className="block md:hidden">
-            <Image
-              src="/logo-mark.png"
-              alt="Ventas Aeronáuticas"
-              width={48}
-              height={48}
-              priority
-            />
-          </div>
-        </Link>
 
-        {/* Buscador Desktop: Siempre blanco y con texto oscuro */}
-        <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
-          <Input 
-            placeholder="Buscar aviones..." 
-            className="pl-9 w-56 bg-white text-slate-800 placeholder:text-slate-400 border-none shadow-sm focus-visible:ring-0" 
-            disabled 
-          />
-        </div>
+        <HeaderLogo />
 
         <nav className="hidden md:flex items-center gap-6">
           <Link href="/" className={linkClass}>
             Inicio
-          </Link>
-          <Link href="/store" className={linkClass}>
-            Explorar
           </Link>
           <Link href="/planes" className={linkClass}>
             Aviones
@@ -72,6 +42,8 @@ export async function Header() {
           <Link href={sellLink} className={linkClass}>
             Vender
           </Link>
+
+          <AnimatedSearch />
 
           {session?.user ? (
             <div className="flex items-center gap-3">
@@ -105,7 +77,12 @@ export async function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem className="p-0">
                     <Link href="/plans" className="w-full px-2 py-1.5 text-sm">
-                      Comprar posteos
+                      Obtener posteos
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="p-0">
+                    <Link href="/favs" className="w-full px-2 py-1.5 text-sm">
+                      Favoritos
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -201,7 +178,12 @@ export async function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem className="p-0">
                     <Link href="/plans" className="w-full px-2 py-1.5 text-sm font-medium">
-                      Comprar posteos
+                      Obtener posteos
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="p-0">
+                    <Link href="/favs" className="w-full px-2 py-1.5 text-sm font-medium">
+                      Favoritos
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

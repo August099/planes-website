@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Raleway:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -59,6 +60,9 @@
   --muted-foreground: hsl(217 30% 35%);
   --border: hsl(214 20% 88%);
   --radius: 0.5rem;
+
+  --font-display: 'Montserrat', sans-serif; 
+  --font-body: 'Raleway', sans-serif;
 }
 
 .dark {
