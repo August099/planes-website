@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { AircraftGallery } from "../../../components/ui/Carousel";
+import { AircraftGallery } from "../../../../components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
 import { Phone, Mail, Heart, Share2, Printer, TriangleAlert, FileText } from "lucide-react";
 import { DetailRow } from "@/components/ui/DetailRow";
@@ -49,13 +49,6 @@ const tags = [
   {
     id: 10,
     name: "tag10"
-  }
-]
-
-const documentos = [
-  {
-    id: 1,
-    url: "../../../../public/Diseño del sistema y arquitectura.pdf"
   }
 ]
 
@@ -243,7 +236,7 @@ export default async function PlaneDetailsPage({
                   </span>
                 </div>
               </div>
-              <div className="group flex">
+              <a href={`/report`} className="group flex">
                 <span
                   className="
                     mr-0
@@ -262,7 +255,7 @@ export default async function PlaneDetailsPage({
                   Reportar
                 </span>
                 <TriangleAlert className="text-primary cursor-pointer"/>
-              </div>
+              </a>
             </div>
 
             <Separator className="mb-3 mt-2" />
@@ -287,9 +280,14 @@ export default async function PlaneDetailsPage({
             */}
           </div>
           <div className="flex flex-col border-2 rounded-[10] bg-white p-5 mt-5 gap-1">
-            <div className="flex justify-between">
+            <div className="flex items-center justify-between">
               <h4 className="text-(--secondary)"><b>Vendedor</b></h4>
-              <a className="w-min text-nowrap text-blue-600 ml-2" href={`/profile/${seller.id}`}>{seller.image && <img src={seller.image} alt="Foto de perfil" />} Ver perfil</a>
+              <div className="flex items-center">
+                {seller.image && <img className="rounded-full h-10" src={seller.image} alt="Foto de perfil" />}
+                <a className="text-nowrap text-blue-600 ml-2" href={`/profile/${seller.id}`}>
+                  <p>Ver perfil</p>
+                </a>
+              </div>
             </div>
             <h5 className="ml-2 text-(--secondary)">{seller.name}</h5>
             <h6 className="ml-2 mb-4 text-(--secondary)">{`${aircraft.city}, ${aircraft.province}`}</h6>
@@ -306,20 +304,24 @@ export default async function PlaneDetailsPage({
               </a>
             </div>
           </div>
-          <div className="flex flex-col border-2 rounded-[10] bg-white p-5 mt-5 gap-1">
-            {documentos.map(doc => (
-              <a
-                key={doc.id}
-                href={doc.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 border rounded-lg p-3 hover:bg-gray-50 transition-colors w-fit"
-              >
-                <FileText className="w-8 h-8 text-red-600" />
-                <span className="text-sm font-medium">{"Ver documento"}</span>
-              </a>
-            ))}
-          </div>
+          { aircraft.documents.length !== 0 &&
+            <div className="flex flex-col border-2 rounded-[10] bg-white p-5 mt-5 gap-1">
+              <h4 className="text-(--secondary)"><b>Documentacion</b></h4>
+                
+              {aircraft.documents.map(doc => (
+                <a
+                  key={doc.id}
+                  href={doc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 border rounded-lg p-3 hover:bg-gray-50 transition-colors w-fit"
+                >
+                  <FileText className="w-8 h-8 text-red-600" />
+                  <span className="text-sm font-medium">{doc.name}</span>
+                </a>
+              ))}
+            </div>
+          }
           <div className="flex flex-wrap gap-1 mt-3">
             {tags.map(tag => (
               <div key={tag.id} className="p-1 border-2 rounded-xl cursor-pointer bg-(--border)">

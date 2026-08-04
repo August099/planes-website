@@ -62,13 +62,13 @@ export default async function ProfileDashboardPage({
     const name = formData.get("name") as string;
     const phone = formData.get("phone") as string;
     const city = formData.get("city") as string;
-    const state = formData.get("state") as string;
+    const province = formData.get("province") as string;
     const instagram = formData.get("instagram") as string;
     const facebook = formData.get("facebook") as string;
 
     await prisma.user.update({
       where: { id },
-      data: { name, phone, city, state, instagram, facebook },
+      data: { name, phone, city, province, instagram, facebook },
     });
 
     redirect(`/profile/${id}?updated=true`);

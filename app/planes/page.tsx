@@ -9,7 +9,7 @@ interface Props {
 export default async function AvionesPage({ searchParams }: Props) {
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
-  const itemsPerPage = 12;
+  const itemsPerPage = 20;
   const skip = (currentPage - 1) * itemsPerPage;
 
   const [aircrafts, totalAircrafts] = await Promise.all([
@@ -17,19 +17,17 @@ export default async function AvionesPage({ searchParams }: Props) {
       where: { status: "ACTIVE" },
       include: { images: { orderBy: { order: "asc" }, take: 1 } },
       orderBy: { createdAt: "desc" },
-      take: itemsPerPage,
-      skip: skip,
+      skip
     }),
     prisma.aircraft.count({
-      where: { status: "ACTIVE" },
-    }),
+      where: {status: "ACTIVE"}
+    })
   ]);
 
   const totalPages = Math.ceil(totalAircrafts / itemsPerPage);
   const hasNextPage = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
 
-  // Lógica para calcular qué números de página mostrar
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     const maxVisiblePages = 5; 

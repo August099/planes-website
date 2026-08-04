@@ -6,23 +6,22 @@ interface Props {
   searchParams: Promise<{ page?: string }>;
 }
 
-export default async function SparePartsPage({ searchParams }: Props) {
+export default async function AvionesPage({ searchParams }: Props) {
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
-  const itemsPerPage = 12;
+  const itemsPerPage = 20;
   const skip = (currentPage - 1) * itemsPerPage;
 
   const [spareParts, totalSpareParts] = await Promise.all([
     prisma.sparePart.findMany({
       where: { status: "ACTIVE" },
-      include: { images: { orderBy: { order: "asc" }, take: 1 } }, // 👈 Cambiado 'images' a 'SparePartImage'
+      include: { images: { orderBy: { order: "asc" }, take: 1 } },
       orderBy: { createdAt: "desc" },
-      take: itemsPerPage,
-      skip: skip,
+      skip
     }),
     prisma.sparePart.count({
-      where: { status: "ACTIVE" },
-    }),
+      where: { status: "ACTIVE" }
+    })
   ]);
 
   const totalPages = Math.ceil(totalSpareParts / itemsPerPage);
@@ -31,20 +30,25 @@ export default async function SparePartsPage({ searchParams }: Props) {
 
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
-    const maxVisiblePages = 5;
+    const maxVisiblePages = 5; 
 
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
+      // Siempre incluir la primera página
       pages.push(1);
+
       if (currentPage > 3) pages.push("...");
 
+      // Calcular el rango alrededor de la página actual
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
 
       for (let i = start; i <= end; i++) pages.push(i);
 
       if (currentPage < totalPages - 2) pages.push("...");
+
+      // Siempre incluir la última página
       pages.push(totalPages);
     }
     return pages;
@@ -53,22 +57,24 @@ export default async function SparePartsPage({ searchParams }: Props) {
   return (
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-medium mb-6">
-        Repuestos en venta ({totalSpareParts})
+        Aviones en venta ({totalSpareParts})
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
         {spareParts.map((sparePart) => (
-          <SparePartCard
-            key={sparePart.id}
-            id={sparePart.id}
-            title={sparePart.title}
-            price={sparePart.price ? Number(sparePart.price) : null}
-            category={sparePart.category}
-            condition={sparePart.condition}
-            city={sparePart.city}
-            province={sparePart.province}
-            imageUrl={sparePart.images[0]?.url ?? "/placeholder.png"} // 👈 Cambiado 'images' a 'SparePartImage'
-          />
+        <SparePartCard
+          key={sparePart.id}
+          id={sparePart.id}
+          title={sparePart.title}
+          price={sparePart.price ? Number(sparePart.price) : null}
+          brand={sparePart.brand}
+          model={sparePart.model}
+          category={sparePart.category}
+          condition={sparePart.condition}
+          city={sparePart.city}
+          province={sparePart.province}
+          imageUrl={sparePart.images[0]?.url ?? "/placeholder.png"}
+        />
         ))}
       </div>
 

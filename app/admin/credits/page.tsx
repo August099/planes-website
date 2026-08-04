@@ -18,7 +18,6 @@ export async function addCreditsToUser(userEmail: string, amount: number) {
     where: { email: userEmail },
     data: {
       aircraftListingsBalance: { increment: amount },
-      hasPendingCreditNotice: true,
     },
   });
 }
