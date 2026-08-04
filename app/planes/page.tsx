@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { PlanesFiltersSidebar } from "@/components/ui/PlanesFiltersSidebar";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Props {
   searchParams: Promise<{ page?: string }>;
@@ -56,7 +57,15 @@ export default async function AvionesPage({ searchParams }: Props) {
   };
 
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="relative isolate overflow-hidden min-h-screen -mb-16">
+          <Image
+            src="/bkg-forms.png"
+            alt="Fondo Formularios"
+            fill
+            priority
+            className="-z-20 object-cover"
+          />
+          <div className="absolute inset-0 -z-10 bg-background/85" />
       <h1 className="text-2xl font-medium mb-6">
         Aviones en venta ({totalAircrafts})
       </h1>

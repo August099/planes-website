@@ -2,15 +2,29 @@
 
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { Radio, Cog, Shield, Fan, Gauge, Wrench, Package } from "lucide-react";
+import { 
+  Radio, 
+  Cog, 
+  Shield, 
+  Fan,
+  Wrench, 
+  SprayCan, 
+  HelpCircle,
+  Zap, 
+  Armchair,
+  Package,
+} from "lucide-react";
 
 const SPARE_PART_CATEGORIES = [
-  { id: "AVIONICS", label: "Aviónica & Radio", icon: Radio },
+  { id: "AVIONICS_RADIO", label: "Aviónica & Radios", icon: Radio },
   { id: "ENGINE", label: "Motor & Partes", icon: Cog },
   { id: "AIRFRAME", label: "Fuselaje & Estructura", icon: Shield },
+  { id: "SPRAYING", label: "Equipo de Fumigación", icon: SprayCan },
   { id: "PROPELLER", label: "Hélices", icon: Fan },
-  { id: "INSTRUMENTS", label: "Instrumental", icon: Gauge },
   { id: "HARDWARE", label: "Herramental & Varios", icon: Wrench },
+  { id: "ELECTRICAL", label: "Sistema Eléctrico & Luces", icon: Zap },
+  { id: "INTERIOR", label: "Interior & Confort", icon: Armchair },
+  { id: "OTHER", label: "Otros", icon: HelpCircle },
 ];
 
 export function SparePartCategoriesCarousel() {

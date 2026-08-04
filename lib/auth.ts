@@ -50,18 +50,40 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.isAdmin = (user as any).isAdmin;
+        token.aircraftListingsBalance = user.aircraftListingsBalance;
+        token.sparePartsListingsBalance = user.sparePartsListingsBalance;
+      }
+      if (user || trigger === "update") {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.sub },
+          select: {
+            aircraftListingsBalance: true,
+            sparePartsListingsBalance: true,
+            sellerType: true,
+            isAdmin: true,
+            role: true,
+          },
+        });
+
+        if (dbUser) {
+          token.aircraftListingsBalance = dbUser.aircraftListingsBalance;
+          token.sparePartsListingsBalance = dbUser.sparePartsListingsBalance;
+        }
       }
       return token;
     },
 
     async session({ session, token }) {
       if (session.user) {
+        session.user.aircraftListingsBalance = token.aircraftListingsBalance as number;
+        session.user.sparePartsListingsBalance = token.sparePartsListingsBalance as number;
         if (token.id) session.user.id = token.id as string;
         (session.user as any).isAdmin = token.isAdmin ?? false;
+
       }
       return session;
     },
