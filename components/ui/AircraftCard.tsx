@@ -39,7 +39,7 @@ export function AircraftCard({
   const locationText = [city, province].filter(Boolean).join(", ");
 
   return (
-    <Link href={`/store/plane-details/${id}`}>
+    <Link href={`/planes/plane-details/${id}`}>
       <Card className="overflow-hidden bg-[#001F58]/[0.025] border-[#001F58]/10 hover:border-primary/40 hover:shadow-lg transition-all">
         <div className="relative w-full h-48">
           <Image src={imageUrl} alt={title} fill className="object-cover" />

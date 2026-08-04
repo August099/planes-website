@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { AircraftCard } from "@/components/ui/AircraftCard";
+import { SparePartCard } from "@/components/ui/SparePartCard";
 import Link from "next/link";
 
 interface Props {
@@ -12,29 +12,19 @@ export default async function AvionesPage({ searchParams }: Props) {
   const itemsPerPage = 20;
   const skip = (currentPage - 1) * itemsPerPage;
 
-  const [aircrafts, spareParts] = await Promise.all([
-    prisma.aircraft.findMany({
-      where: { status: "ACTIVE" },
-      include: { images: { orderBy: { order: "asc" }, take: 1 } },
-      orderBy: { createdAt: "desc" }
-    }),
+  const [spareParts, totalSpareParts] = await Promise.all([
     prisma.sparePart.findMany({
       where: { status: "ACTIVE" },
       include: { images: { orderBy: { order: "asc" }, take: 1 } },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
+      skip
     }),
+    prisma.sparePart.count({
+      where: { status: "ACTIVE" }
+    })
   ]);
 
-  const combined = [
-    ...aircrafts.map((a) => ({ ...a, type: "aircraft" as const })),
-    ...spareParts.map((s) => ({ ...s, type: "sparePart" as const })),
-  ];
-
-  combined.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-  const totalCards = combined.length
-
-  const totalPages = Math.ceil(totalCards / itemsPerPage);
+  const totalPages = Math.ceil(totalSpareParts / itemsPerPage);
   const hasNextPage = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
 
@@ -67,22 +57,23 @@ export default async function AvionesPage({ searchParams }: Props) {
   return (
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-medium mb-6">
-        Aviones en venta ({totalCards})
+        Aviones en venta ({totalSpareParts})
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-        {aircrafts.map((aircraft) => (
-        <AircraftCard
-          key={aircraft.id}
-          id={aircraft.id}
-          title={aircraft.title}
-          price={aircraft.price ? Number(aircraft.price) : null}
-          year={aircraft.year}
-          category={aircraft.category}
-          totalTimeHours={aircraft.totalTimeHours}
-          city={aircraft.city}
-          province={aircraft.province}
-          imageUrl={aircraft.images[0]?.url ?? "/placeholder.png"}
+        {spareParts.map((sparePart) => (
+        <SparePartCard
+          key={sparePart.id}
+          id={sparePart.id}
+          title={sparePart.title}
+          price={sparePart.price ? Number(sparePart.price) : null}
+          brand={sparePart.brand}
+          model={sparePart.model}
+          category={sparePart.category}
+          condition={sparePart.condition}
+          city={sparePart.city}
+          province={sparePart.province}
+          imageUrl={sparePart.images[0]?.url ?? "/placeholder.png"}
         />
         ))}
       </div>

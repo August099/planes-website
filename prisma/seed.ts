@@ -5,7 +5,11 @@ import {
   SparePartCategory, 
   SparePartCondition,
   AircraftStatus,
-  SparePartStatus
+  SparePartStatus,
+  PlanType,
+  PlanBillingType,
+  BillingInterval,
+  SubscriptionStatus
 } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { faker } from "@faker-js/faker";
@@ -38,19 +42,24 @@ const BRANDS_WITH_MODELS: { brand: AircraftBrand; models: string[] }[] = [
 ];
 
 const AIRCRAFT_CATEGORIES: AircraftCategory[] = [
-  "PISTON",
-  "TURBOHELICE",
+  "MONOMOTOR",
+  "BIMOTOR",
+  "AGRICOLA",
   "EXPERIMENTAL",
   "HELICOPTERO",
   "PROYECTO"
 ];
 
 const SPARE_PART_CATEGORIES: SparePartCategory[] = [
-  "MECANICO",
-  "ESTRUCTURAL",
-  "PIEZA_MOVIL",
-  "AVIONICA_Y_RADIO",
-  "EQUIPO_DE_FUMIGACION"
+  "AVIONICS_RADIO",
+  "ENGINE",
+  "AIRFRAME",
+  "SPRAYING",
+  "PROPELLER",
+  "HARDWARE",
+  "ELECTRICAL",
+  "INTERIOR",
+  "OTHER"
 ];
 
 const SPARE_PART_CONDITIONS: SparePartCondition[] = [
@@ -94,7 +103,7 @@ const SAMPLE_ANSWERS = [
 async function main() {
   console.log("🌱 Empezando el seed...");
 
-  // 0. Limpieza en orden (Respetando constraints y SIN tocar la tabla Plan)
+  // 0. Limpieza en orden respetando FK constraints
   console.log("🧹 Limpiando la base de datos...");
   await prisma.question.deleteMany({});
   await prisma.sparePartImage.deleteMany({});
@@ -107,23 +116,106 @@ async function main() {
   await prisma.lead.deleteMany({});
   await prisma.aircraft.deleteMany({});
   await prisma.adBanner.deleteMany({});
+  await prisma.subscription.deleteMany({});
   await prisma.purchase.deleteMany({});
   await prisma.favorite.deleteMany({});
   await prisma.report.deleteMany({});
   await prisma.tag.deleteMany({});
   await prisma.user.deleteMany({});
+  await prisma.plan.deleteMany({});
 
-  // 1. Crear Tags predeterminados
+  // 1. Crear Planes y Suscripciones predeterminados
+  console.log("💳 Creando planes de pago y suscripciones...");
+  const plansData = [
+    {
+      name: "Plan 1 Avión",
+      type: PlanType.AIRCRAFT_PACK,
+      billingType: PlanBillingType.ONE_TIME,
+      price: 50.0,
+      usageDescription: "Publicación individual de 1 aeronave",
+      aircraftListingsCount: 1,
+      sparePartsListingsCount: 0,
+      isUnlimitedAircraft: false,
+      isUnlimitedSpareParts: false,
+    },
+    {
+      name: "Plan 3 Aviones",
+      type: PlanType.AIRCRAFT_PACK,
+      billingType: PlanBillingType.ONE_TIME,
+      price: 120.0,
+      savingsPercent: 20,
+      usageDescription: "Pack de 3 publicaciones de aeronaves",
+      aircraftListingsCount: 3,
+      sparePartsListingsCount: 0,
+      isUnlimitedAircraft: false,
+      isUnlimitedSpareParts: false,
+    },
+    {
+      name: "Plan 1 Repuesto",
+      type: PlanType.SPARE_PART_PACK,
+      billingType: PlanBillingType.ONE_TIME,
+      price: 15.0,
+      usageDescription: "Publicación individual de 1 repuesto",
+      aircraftListingsCount: 0,
+      sparePartsListingsCount: 1,
+      isUnlimitedAircraft: false,
+      isUnlimitedSpareParts: false,
+    },
+    {
+      name: "Plan 5 Repuestos",
+      type: PlanType.SPARE_PART_PACK,
+      billingType: PlanBillingType.ONE_TIME,
+      price: 50.0,
+      savingsPercent: 33,
+      usageDescription: "Pack de 5 publicaciones de repuestos",
+      aircraftListingsCount: 0,
+      sparePartsListingsCount: 5,
+      isUnlimitedAircraft: false,
+      isUnlimitedSpareParts: false,
+    },
+    {
+      name: "Suscripción Repuestos Ilimitados",
+      type: PlanType.SUBSCRIPTION,
+      billingType: PlanBillingType.SUBSCRIPTION,
+      billingInterval: BillingInterval.MONTHLY,
+      price: 80.0,
+      usageDescription: "Publicación ilimitada de repuestos y accesorios",
+      aircraftListingsCount: 0,
+      sparePartsListingsCount: 0,
+      isUnlimitedAircraft: false,
+      isUnlimitedSpareParts: true,
+      includesVerifiedBadge: true,
+    },
+    {
+      name: "Suscripción Aviones y Repuestos Ilimitados",
+      type: PlanType.SUBSCRIPTION,
+      billingType: PlanBillingType.SUBSCRIPTION,
+      billingInterval: BillingInterval.MONTHLY,
+      price: 250.0,
+      usageDescription: "Publicación ilimitada de aeronaves y repuestos",
+      aircraftListingsCount: 0,
+      sparePartsListingsCount: 0,
+      isUnlimitedAircraft: true,
+      isUnlimitedSpareParts: true,
+      includesVerifiedBadge: true,
+    },
+  ];
+
+  const createdPlans = await Promise.all(
+    plansData.map((plan) => prisma.plan.create({ data: plan }))
+  );
+
+  // 2. Crear Tags predeterminados
   console.log("🏷️ Creando tags...");
   const createdTags = await Promise.all(
     SAMPLE_TAGS.map((name) =>
       prisma.tag.create({
-        data: { name, slug: name.replaceAll(" ", "-") }
+        data: { name, slug: name.replaceAll(" ", "-").toLowerCase() }
       })
     )
   );
 
-  // 2. Crear Usuarios (Vendedores / Compradores)
+  // 3. Crear Usuarios
   console.log("👤 Creando usuarios con ubicación y foto de perfil...");
   const users = await Promise.all(
     Array.from({ length: 8 }).map((_, index) => {
@@ -136,7 +228,7 @@ async function main() {
           passwordHash: "temp_hash_no_usar_en_produccion",
           name: faker.person.fullName(),
           phone: faker.phone.number(),
-          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=user_${index}`, // Foto de perfil simulada
+          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=user_${index}`,
           city: locCity,
           province: locProv.province,
           aircraftListingsBalance: faker.number.int({ min: 0, max: 3 }),
@@ -146,7 +238,39 @@ async function main() {
     })
   );
 
-  // 3. Generar Aeronaves
+  // 4. Asignar Suscripciones simuladas a algunos usuarios (relación 1 a 1)
+  console.log("🔄 Asignando suscripciones de prueba...");
+  const subscriptionPlans = createdPlans.filter(p => p.billingType === PlanBillingType.SUBSCRIPTION);
+  
+  // Asignamos suscripción activa al usuario 0 y al usuario 1
+  if (users.length >= 2 && subscriptionPlans.length >= 2) {
+    const now = new Date();
+    const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    await prisma.subscription.create({
+      data: {
+        userId: users[0].id,
+        planId: subscriptionPlans[0].id, // Repuestos Ilimitados
+        status: SubscriptionStatus.ACTIVE,
+        mpSubscriptionId: `mp_sub_${faker.string.alphanumeric(10)}`,
+        currentPeriodStart: now,
+        currentPeriodEnd: nextMonth,
+      }
+    });
+
+    await prisma.subscription.create({
+      data: {
+        userId: users[1].id,
+        planId: subscriptionPlans[1].id, // Aviones y Repuestos Ilimitados
+        status: SubscriptionStatus.ACTIVE,
+        mpSubscriptionId: `mp_sub_${faker.string.alphanumeric(10)}`,
+        currentPeriodStart: now,
+        currentPeriodEnd: nextMonth,
+      }
+    });
+  }
+
+  // 5. Generar Aeronaves
   console.log("✈️ Generando aeronaves con tags y preguntas...");
   const createdAircrafts = [];
 
@@ -163,7 +287,6 @@ async function main() {
     const isProyecto = category === "PROYECTO";
     const year = faker.number.int({ min: 1975, max: 2024 });
 
-    // Seleccionar de 2 a 4 tags aleatorios sin repetir
     const randomTags = faker.helpers.arrayElements(createdTags, faker.number.int({ min: 2, max: 4 }));
 
     const aircraft = await prisma.aircraft.create({
@@ -217,7 +340,7 @@ async function main() {
     createdAircrafts.push(aircraft);
   }
 
-  // 4. Generar Repuestos
+  // 6. Generar Repuestos
   console.log("🛠️ Generando repuestos...");
   const createdSpareParts = [];
 
@@ -259,7 +382,7 @@ async function main() {
     createdSpareParts.push(sparePart);
   }
 
-  // 5. Generar Preguntas y Respuestas (Q&A)
+  // 7. Generar Preguntas y Respuestas (Q&A)
   console.log("❓ Generando preguntas y respuestas...");
 
   // Preguntas para Aeronaves
@@ -267,11 +390,10 @@ async function main() {
     const questionsCount = faker.number.int({ min: 1, max: 3 });
 
     for (let j = 0; j < questionsCount; j++) {
-      // Elegir un usuario comprador que NO sea el vendedor de la aeronave
       const potentialBuyers = users.filter((u) => u.id !== aircraft.sellerId);
       const buyer = faker.helpers.arrayElement(potentialBuyers);
 
-      const hasAnswer = faker.datatype.boolean({ probability: 0.75 }); // 75% de probabilidad de tener respuesta
+      const hasAnswer = faker.datatype.boolean({ probability: 0.75 });
       const questionDate = faker.date.recent({ days: 15 });
 
       await prisma.question.create({
@@ -280,7 +402,7 @@ async function main() {
           userId: buyer.id,
           question: faker.helpers.arrayElement(SAMPLE_QUESTIONS),
           answer: hasAnswer ? faker.helpers.arrayElement(SAMPLE_ANSWERS) : null,
-          answeredAt: hasAnswer ? new Date(questionDate.getTime() + 1000 * 60 * 60 * 4) : null, // Respondida 4 horas después
+          answeredAt: hasAnswer ? new Date(questionDate.getTime() + 1000 * 60 * 60 * 4) : null,
           createdAt: questionDate,
         }
       });

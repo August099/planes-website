@@ -60,13 +60,10 @@ export async function Header() {
           <Link href="/" className={linkClass}>
             Inicio
           </Link>
-          <Link href="/store" className={linkClass}>
-            Explorar
-          </Link>
           <Link href="/planes" className={linkClass}>
             Aviones
           </Link>
-          <Link href="/store" className={linkClass}>
+          <Link href="/spareparts" className={linkClass}>
             Repuestos
           </Link>
           <Link href={sellLink} className={linkClass}>
