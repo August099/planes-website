@@ -113,7 +113,7 @@ export function SparePartCard({
   };
 
   return (
-    <Link href={`/sparepart-details/${id}`} className="group block h-full">
+    <Link href={`/spareparts/sparepart-details/${id}`} className="group block h-full">
       <Card className="h-full flex flex-col p-3 rounded-2xl bg-[#001F58]/[0.02] border border-[#001F58]/10 hover:border-[#001F58]/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
         
         <div className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100">
