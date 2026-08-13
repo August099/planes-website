@@ -107,13 +107,19 @@ export default async function AdminDashboardPage() {
               href="/admin/users"
               className="px-4 py-2.5 rounded-xl bg-white/80 hover:bg-white text-[#001F58] font-semibold text-xs border border-[#001F58]/20 transition-all shadow-sm"
             >
-              Gestionar Usuarios
+              Gestionar usuarios
+            </Link>
+            <Link
+              href="/admin/fields"
+              className="px-4 py-2.5 rounded-xl bg-white/80 hover:bg-white text-[#001F58] font-semibold text-xs border border-[#001F58]/20 transition-all shadow-sm"
+            >
+              Gestionar campos
             </Link>
             <Link
               href="/publish"
               className="px-4 py-2.5 rounded-xl bg-[#001F58] hover:bg-[#001F58]/90 text-white font-semibold text-xs transition-all shadow-sm"
             >
-              + Publicar Oficial
+              + Publicar oficial
             </Link>
           </div>
         </div>
@@ -314,76 +320,6 @@ export default async function AdminDashboardPage() {
                 </div>
               )}
             </div>
-          </div>
-
-          <div className="lg:col-span-1 space-y-8">
-            <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-[#001F58]/15 shadow-sm sticky top-24">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#001F58]/10">
-                <h2 className="font-heading font-bold text-base text-[#001F58]">
-                  👤 Últimos Usuarios
-                </h2>
-                <Link
-                  href="/admin/users"
-                  className="text-xs text-[#001F58] font-bold hover:underline"
-                >
-                  Ver todos →
-                </Link>
-              </div>
-
-              <div className="space-y-4">
-                {recentUsers.map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between gap-3 pb-3 border-b border-[#001F58]/10 last:border-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="w-9 h-9 rounded-full bg-[#001F58] text-white font-bold flex items-center justify-center text-xs shrink-0 uppercase">
-                        {user.name ? user.name.charAt(0) : "U"}
-                      </div>
-                      <div className="truncate">
-                        <p className="text-xs font-bold text-[#001F58] truncate">
-                          {user.name || "Usuario sin nombre"}
-                        </p>
-                        <p className="text-[11px] text-[#001F58]/60 truncate">
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <span className="text-[10px] block font-semibold text-[#001F58]/70">
-                        Aviones: {user._count.aircrafts ?? 0}
-                      </span>
-                      <span className="text-[10px] block font-semibold text-[#001F58]/70">
-                        Repuestos: {user._count.spareParts ?? 0}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-[#001F58]/15 bg-[#001F58]/5 -mx-6 -mb-6 p-6 rounded-b-2xl">
-                <h3 className="text-xs font-bold text-[#001F58] uppercase tracking-wider mb-2">
-                  Acciones Rápidas
-                </h3>
-                <div className="space-y-2">
-                  <Link
-                    href="/admin/credits"
-                    className="block w-full text-center py-2 px-3 rounded-xl bg-white hover:bg-slate-50 border border-[#001F58]/20 text-[#001F58] text-xs font-semibold transition-all"
-                  >
-                    Cargar Cupos a un Usuario
-                  </Link>
-                  <Link
-                    href="/admin/banners"
-                    className="block w-full text-center py-2 px-3 rounded-xl bg-white hover:bg-slate-50 border border-[#001F58]/20 text-[#001F58] text-xs font-semibold transition-all"
-                  >
-                    Configurar Banners Activos
-                  </Link>
-                </div>
-              </div>
-
-            </div>
-
           </div>
 
         </div>

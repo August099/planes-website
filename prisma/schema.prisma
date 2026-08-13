@@ -15,11 +15,18 @@ generator client {
 // 1. AUTENTICACIÓN Y USUARIOS (NextAuth)
 // ==========================================
 
+enum UserType {
+  PARTICULAR
+  RESELLER
+  FACTORY
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
   emailVerified DateTime?
+  userType      UserType  @default(PARTICULAR)
   passwordHash  String?
   city          String?
   province      String?
@@ -225,63 +232,19 @@ enum AircraftStatus {
   PENDING_PAYMENT
 }
 
-enum AircraftCategory {
-  MONOMOTOR
-  BIMOTOR
-  AGRICOLA
-  EXPERIMENTAL
-  HELICOPTERO
-  PROYECTO
-}
-
-enum AircraftBrand {
-  AERO_BOERO
-  BEECHCRAFT
-  CESSNA
-  CIRRUS
-  DIAMOND
-  GRUMMAN
-  MAULE
-  MOONEY
-  PIPER
-  TECNAM
-  AIR_TRACTOR
-  THRUSH
-  PZL
-  EMBRAER
-  BOMBARDIER
-  DASSAULT
-  GULFSTREAM
-  PILATUS
-  HONDA
-  DAHER
-  DE_HAVILLAND
-  AIRBUS
-  BELL
-  CICARE
-  LEONARDO
-  ROBINSON
-  SIKORSKY
-  MD_HELICOPTERS
-  ENSTROM
-  ATR
-  FOKKER
-  SAAB
-  OTHER
-}
-
 model Aircraft {
   id                        String            @id @default(cuid())
   sellerId                  String
   title                     String
   description               String
-  modifications             String? // analizar si es necesario o como va
-  brand                     AircraftBrand
+  modifications             String?
   customBrand               String?
-  model                     String
+  customModel               String?
+  brandId                   String
+  modelId                   String
+  categoryId                String
   year                      Int
   totalTimeHours            Int
-  category                  AircraftCategory?
   fuselageDescription       String?
   fuselageModifications     String?
   avionics                  String?
@@ -290,6 +253,8 @@ model Aircraft {
   city                      String
   province                  String
   status                    AircraftStatus    @default(PENDING_PAYMENT)
+  trade                     Boolean           @default(false)
+  financing                 Boolean           @default(false)
   listingStartsAt           DateTime?
   listingExpiresAt          DateTime?
   renewalEmailSentAt        DateTime?
@@ -299,6 +264,7 @@ model Aircraft {
   purchaseId                String?
 
   seller    User               @relation(fields: [sellerId], references: [id])
+  category  Category          @relation(fields: [categoryId], references: [id])
   purchase  Purchase?          @relation(fields: [purchaseId], references: [id])
   images    AircraftImage[]
   documents AircraftDocument[]
@@ -310,9 +276,7 @@ model Aircraft {
   questions Question[]
   tags      Tag[]              @relation("AircraftToTag")
 
-  @@index([brand, model])
   @@index([price])
-  @@index([category])
   @@index([status])
   @@index([province, city])
 }
@@ -360,6 +324,53 @@ model AircraftPropeller {
 // 5. REPUESTOS Y ACCESORIOS
 // ==========================================
 
+model Category {
+  id                        String            @id @default(cuid())
+  name                      String            @unique
+
+  spareParts SparePart[]
+  aircrafts  Aircraft[]
+  subCategories   SubCategory[]
+}
+
+model SubCategory {
+  id                        String            @id @default(cuid())
+  categoryId                String            @unique
+  name                      String            @unique
+
+  category                  Category? @relation(fields: [categoryId], references: [id])
+  fields                    Field[]
+}
+
+enum FieldType {
+  STRING
+  NUMBER
+}
+
+enum FieldRangeType {
+  SLIDE_BAR
+  INPUTS_RANGE
+  SINGLE
+}
+
+model Field {
+  id                        String            @id @default(cuid())
+  subCategoryId             String?           @unique
+  parentFieldId             String?           @unique
+  name                      String            @unique
+  type                      FieldType
+  list                      Boolean           @default(false)
+  
+  range                     Boolean?          @default(false)
+  rangeType                 FieldRangeType    @default(INPUTS_RANGE)
+  min                       Decimal
+  max                       Decimal
+  
+  subCategory               SubCategory?      @relation(fields: [subCategoryId], references: [id])
+  parent                    Field?            @relation("CategoryHierarchy",fields: [parentFieldId], references: [id])
+  listValues                Field[]           @relation("CategoryHierarchy")
+}
+
 enum SparePartStatus {
   PENDING_PAYMENT
   ACTIVE
@@ -367,34 +378,13 @@ enum SparePartStatus {
   SOLD
 }
 
-enum SparePartCategory {
-  AVIONICS_RADIO
-  ENGINE
-  AIRFRAME
-  SPRAYING
-  PROPELLER
-  HARDWARE
-  ELECTRICAL
-  INTERIOR
-  OTHER
-}
-
-enum SparePartCondition {
-  NUEVO
-  USADO
-  REMANUFACTURADO
-}
-
 model SparePart {
   id                 String             @id @default(cuid())
   sellerId           String
   title              String
   description        String
-  brand              String
-  model              String
+  categoryId         String
   partNumber         String?
-  category           SparePartCategory
-  condition          SparePartCondition
   price              Decimal?           @db.Decimal(12, 2)
   city               String
   province           String
@@ -408,16 +398,15 @@ model SparePart {
 
   purchaseId         String?
 
-  seller    User             @relation(fields: [sellerId], references: [id])
-  purchase  Purchase?        @relation(fields: [purchaseId], references: [id])
+  seller    User              @relation(fields: [sellerId], references: [id])
+  purchase  Purchase?         @relation(fields: [purchaseId], references: [id])
+  category  Category          @relation(fields: [categoryId], references: [id])
   images    SparePartImage[]
   leads     SparePartLead[]
   favorites Favorite[]
   reports   Report[]
   questions Question[]
 
-  @@index([category])
-  @@index([condition])
   @@index([price])
   @@index([status])
   @@index([province, city])

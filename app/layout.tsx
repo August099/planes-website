@@ -31,11 +31,9 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <SessionProvider>
-          <Header />
+        <Header />
           <div className="flex-1">{children}</div>
-          <Footer />
-        </SessionProvider>
+        <Footer />
       </body>
     </html>
   );

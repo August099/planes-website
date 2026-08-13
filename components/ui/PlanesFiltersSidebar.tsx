@@ -2,7 +2,7 @@
 
 import { AircraftBrand, AircraftCategory } from "@prisma/client";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Separator } from "@/components/ui/separator";
 import { X } from "lucide-react";
 
@@ -11,13 +11,13 @@ export function PlanesFiltersSidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Estado local del formulario, inicializado desde la URL actual
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") ?? "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") ?? "");
   const [categories, setCategories] = useState<string[]>(
     searchParams.getAll("category")
   );
   const [brands, setBrands] = useState<string[]>(searchParams.getAll("brand"));
+  const [models, setModels] = useState<string[]>(searchParams.getAll("model"));
   const [province, setProvince] = useState(searchParams.get("province") ?? "");
 
   const aircraftCategories = Object.values(AircraftCategory).map(cat => cat.toLowerCase().replaceAll("_", " "))
@@ -94,25 +94,6 @@ export function PlanesFiltersSidebar() {
       <Separator />
 
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium">Categoría</h3>
-        <div className="flex flex-col gap-1.5">
-          {aircraftCategories.map((cat) => (
-            <label key={cat} className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={categories.includes(cat)}
-                onChange={() => toggleValue(categories, setCategories, cat)}
-                className="rounded"
-              />
-              {cat}
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <Separator />
-
-      <div className="flex flex-col gap-2">
         <h3 className="text-sm font-medium">Marca</h3>
         <div className="flex flex-col gap-1.5">
           {aircraftBrands.map((brand) => (
@@ -124,6 +105,25 @@ export function PlanesFiltersSidebar() {
                 className="rounded"
               />
               {brand}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      <div className="flex flex-col gap-2">
+        <h3 className="text-sm font-medium">Categoría</h3>
+        <div className="flex flex-col gap-1.5">
+          {aircraftCategories.map((cat) => (
+            <label key={cat} className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={categories.includes(cat)}
+                onChange={() => toggleValue(categories, setCategories, cat)}
+                className="rounded"
+              />
+              {cat}
             </label>
           ))}
         </div>

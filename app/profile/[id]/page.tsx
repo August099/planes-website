@@ -11,6 +11,7 @@ export default async function ProfileDashboardPage({
   const { id } = await params;
 
   const currentUser = await getCurrentUser();
+
   const isOwner = currentUser?.id === id;
 
   const userProfile = await prisma.user.findUnique({
