@@ -20,8 +20,8 @@ export function PlanesFiltersSidebar() {
   const [models, setModels] = useState<string[]>(searchParams.getAll("model"));
   const [province, setProvince] = useState(searchParams.get("province") ?? "");
 
-  const aircraftCategories = Object.values(AircraftCategory).map(cat => cat.toLowerCase().replaceAll("_", " "))
-  const aircraftBrands = Object.values(AircraftBrand).map(brand => brand.toLowerCase().replaceAll("_", " "))
+  //const aircraftCategories = Object.values(AircraftCategory).map(cat => cat.toLowerCase().replaceAll("_", " "))
+  //const aircraftBrands = Object.values(AircraftBrand).map(brand => brand.toLowerCase().replaceAll("_", " "))
 
   const toggleValue = (list: string[], setList: (v: string[]) => void, value: string) => {
     setList(

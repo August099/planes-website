@@ -335,7 +335,7 @@ model Category {
 
 model SubCategory {
   id                        String            @id @default(cuid())
-  categoryId                String            @unique
+  categoryId                String
   name                      String            @unique
 
   category                  Category? @relation(fields: [categoryId], references: [id])
@@ -356,19 +356,21 @@ enum FieldRangeType {
 model Field {
   id                        String            @id @default(cuid())
   subCategoryId             String?           @unique
-  parentFieldId             String?           @unique
-  name                      String            @unique
+  parentFieldId             String?
+  name                      String
   type                      FieldType
   list                      Boolean           @default(false)
   
   range                     Boolean?          @default(false)
   rangeType                 FieldRangeType    @default(INPUTS_RANGE)
-  min                       Decimal
-  max                       Decimal
+  min                       Decimal?
+  max                       Decimal?
   
   subCategory               SubCategory?      @relation(fields: [subCategoryId], references: [id])
   parent                    Field?            @relation("CategoryHierarchy",fields: [parentFieldId], references: [id])
   listValues                Field[]           @relation("CategoryHierarchy")
+
+  @@unique([subCategoryId, name])
 }
 
 enum SparePartStatus {

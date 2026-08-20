@@ -11,7 +11,7 @@ type AircraftCardProps = {
   title: string;
   price: number | null;
   year: number | null;
-  category: string | null;
+  //category: string | null;
   totalTimeHours: number | null;
   city?: string | null;
   province?: string | null;
@@ -25,7 +25,7 @@ export function AircraftCard({
   title,
   price,
   year,
-  category,
+  //category,
   totalTimeHours,
   city,
   province,
