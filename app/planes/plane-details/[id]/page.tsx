@@ -6,7 +6,6 @@ import { Phone, Mail, Heart, Share2, Printer, TriangleAlert, FileText } from "lu
 import { DetailRow } from "@/components/ui/DetailRow";
 import { QnaSection } from "@/components/ui/QnaSection";
 import { auth } from "@/lib/auth";
-import { AIRCRAFT_CATEGORY_LABELS } from "@/lib/constants";
 
 
 const tags = [
@@ -94,9 +93,9 @@ export default async function PlaneDetailsPage({
     notFound()
   }
 
-  const subject = encodeURIComponent(`Consulta por ${aircraft.model}`);
+  const subject = encodeURIComponent(`Consulta por avión`);
   const body = encodeURIComponent(
-    `Hola, estoy interesado en el avión ${aircraft.model} publicado en Ventas Aeronáuticas.`
+    `Hola, estoy interesado en el avión publicado en Ventas Aeronáuticas.`
   );
 
 
@@ -121,7 +120,6 @@ export default async function PlaneDetailsPage({
               <div className="border border-gray-200 rounded-lg overflow-hidden">
                 <DetailRow label="Provincia" value={aircraft.province} />
                 <DetailRow label="Ciudad" value={aircraft.city} />
-                {aircraft.category && <DetailRow label="Modificaciones" value={aircraft.category} />}
                 {aircraft.modifications && <DetailRow label="Modificaciones" value={aircraft.modifications} />}
               </div>
             </div>
@@ -166,11 +164,6 @@ export default async function PlaneDetailsPage({
         <div className="w-1/3 flex flex-col">
           <div className="flex justify-between border-2 border-b-0 rounded-t-[10] bg-white p-2">  
             <p className="text-sm text-nowrap">Publicado el {aircraft.createdAt.toLocaleDateString("es-AR")}</p>
-            <h6>
-              <b>
-                {aircraft.category ? AIRCRAFT_CATEGORY_LABELS[aircraft.category] : "Sin categoría"}
-              </b>
-            </h6>
           </div>
           <div className="flex flex-col border-2 rounded-b-[10] rounded-t-[0] bg-white p-5 pt-3 gap-2">
             <div className="w-full flex justify-between gap-3">
@@ -273,17 +266,8 @@ export default async function PlaneDetailsPage({
 
             <h4 className="text-(--secondary)"><b>Datos de la aeronave</b></h4>
             <h5 className="ml-2 text-(--secondary)"><b>Año:</b> {aircraft.year}</h5>
-            <h5 className="ml-2 text-(--secondary)"><b>Marca:</b> {aircraft.brand}</h5>
-            <h5 className="ml-2 text-(--secondary)"><b>Modelo:</b> {aircraft.model}</h5>
             {aircraft.totalTimeHours && <h5 className="ml-2 text-(--secondary)"><b>Horas totales: </b> {aircraft.totalTimeHours}</h5>}
             
-            {/*
-            <Separator className="my-3" />
-            <h4><b>Datos del motor</b></h4>
-            <h5 className="ml-2"><b>Marca:</b> marca del motor</h5>
-            <h5 className="ml-2"><b>Modelo:</b> modelo del motor</h5>
-            {aircraft.totalTimeHours && <h5 className="ml-2"><b>Horas totales: </b> {"poner"}</h5>}
-            */}
           </div>
           <div className="flex flex-col border-2 rounded-[10] bg-white p-5 mt-5 gap-1">
             <div className="flex items-center justify-between">

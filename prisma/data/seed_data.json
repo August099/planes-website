@@ -1,0 +1,2510 @@
+{
+  "AircraftCategories": [
+    {
+      "id": "MP",
+      "name": "Monomotor Pistón"
+    },
+    {
+      "id": "MT",
+      "name": "Monomotor Turbohélice"
+    },
+    {
+      "id": "BP",
+      "name": "Bimotor Pistón"
+    },
+    {
+      "id": "BT",
+      "name": "Bimotor Turbohélice"
+    },
+    {
+      "id": "A",
+      "name": "Agrícola"
+    },
+    {
+      "id": "H",
+      "name": "Helicóptero"
+    },
+    {
+      "id": "E",
+      "name": "Experimental / Avión Ligero (LSA)"
+    },
+    {
+      "id": "PR",
+      "name": "Proyecto"
+    },
+    {
+      "id": "S/C",
+      "name": "Sin categoría asignada"
+    }
+  ],
+  "AircraftBrands": [
+    {
+      "name": "CESSNA",
+      "models": [
+        {
+          "name": "C-140",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-150",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-152",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-170",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-172",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-172 RG",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-177 Cardinal",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-177 RG",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-180",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-182",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-182 RG",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-185",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-188",
+          "category": "A",
+          "subModels": [
+            {
+              "name": "C-188 AgPickUp",
+              "category": "PR"
+            },
+            {
+              "name": "C-188 AgWagon",
+              "category": "PR"
+            },
+            {
+              "name": "C-188 AgTruck",
+              "category": "PR"
+            },
+            {
+              "name": "C-188 AgHusky",
+              "category": "PR"
+            }
+          ]
+        },
+        {
+          "name": "C-190",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-195",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-205",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-206",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-207",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "Caravan / Gran Caravan",
+          "category": "MT",
+          "subModels": []
+        },
+        {
+          "name": "C-210 Centurion",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "C-310",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "C-320",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "C-337 Skymaster",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "C-340",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "C-401",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "C-402",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "C-421",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "C-425 Conquest",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "Citation",
+          "category": "JET) (S/C",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "PIPER",
+      "models": [
+        {
+          "name": "J-3 Cub",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-11",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-12",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-18 Super Cub",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-20 Pacer",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-21 Tripacer",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-23 Apache",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "PA-23 Azteca",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "PA-24 Comanche",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-25 Pawnee",
+          "category": "A",
+          "subModels": []
+        },
+        {
+          "name": "PA-28",
+          "category": "MP",
+          "subModels": [
+            {
+              "name": "PA-28 Cherokee",
+              "category": "PR"
+            },
+            {
+              "name": "PA-28 Arrow",
+              "category": "PR"
+            },
+            {
+              "name": "PA-28 Cherokee 140",
+              "category": "PR"
+            },
+            {
+              "name": "PA-28 Warrior",
+              "category": "PR"
+            },
+            {
+              "name": "PA-28-161 Warrior II / Warrior III",
+              "category": "PR"
+            },
+            {
+              "name": "PA-28-180 Cherokee C",
+              "category": "PR"
+            },
+            {
+              "name": "PA-28-181 Archer II / Archer III",
+              "category": "PR"
+            },
+            {
+              "name": "PA-28-235 Cherokee Pathfinder",
+              "category": "PR"
+            },
+            {
+              "name": "PA-28-236 Dakota",
+              "category": "PR"
+            }
+          ]
+        },
+        {
+          "name": "PA-30 Twin Comanche",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "PA-31 Navajo",
+          "category": "BP",
+          "subModels": [
+            {
+              "name": "PA-31-350 Chieftain",
+              "category": "PR"
+            }
+          ]
+        },
+        {
+          "name": "PA-31T Cheyenne",
+          "category": "BT",
+          "subModels": []
+        },
+        {
+          "name": "PA-32 Cherokee Six",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-32R Saratoga",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-32 Lance",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-34 Seneca",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "PA-36 Brave",
+          "category": "A",
+          "subModels": []
+        },
+        {
+          "name": "PA-38 Tomahawk",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-39 Twin Comanche",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "PA-42 Cheyenne III / Cheyenne IV",
+          "category": "BT",
+          "subModels": []
+        },
+        {
+          "name": "PA-44 Seminole",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "PA-46 Malibu",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-46 350P Mirage",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "PA-46 500TP Meridian",
+          "category": "MT",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "BEECHCRAFT",
+      "models": [
+        {
+          "name": "Model 18",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "Musketeer",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "T-34 Mentor",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "Debonair",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "Bonanza",
+          "category": "MP",
+          "subModels": [
+            {
+              "name": "Bonanza 33",
+              "category": "PR"
+            },
+            {
+              "name": "Bonanza 35 V Tail",
+              "category": "PR"
+            },
+            {
+              "name": "Bonanza 36",
+              "category": "PR"
+            }
+          ]
+        },
+        {
+          "name": "Twin Bonanza",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "Baron 55",
+          "category": "BP",
+          "subModels": [
+            {
+              "name": "Baron 55T",
+              "category": "PR"
+            }
+          ]
+        },
+        {
+          "name": "Baron 58",
+          "category": "BP",
+          "subModels": [
+            {
+              "name": "Baron 58T",
+              "category": "PR"
+            }
+          ]
+        },
+        {
+          "name": "Duke",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "Queen Air",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "King Air",
+          "category": "BT",
+          "subModels": [
+            {
+              "name": "King Air 90",
+              "category": "PR"
+            },
+            {
+              "name": "King Air 200",
+              "category": "PR"
+            },
+            {
+              "name": "King Air 350",
+              "category": "PR"
+            },
+            {
+              "name": "King Air 360",
+              "category": "PR"
+            }
+          ]
+        },
+        {
+          "name": "T-6 Texan",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "AIR TRACTOR",
+      "models": [
+        {
+          "name": "AT-401",
+          "category": "A",
+          "subModels": []
+        },
+        {
+          "name": "AT-402",
+          "category": "A",
+          "subModels": [
+            {
+              "name": "AT-402 A",
+              "category": "PR"
+            },
+            {
+              "name": "AT-402 B",
+              "category": "PR"
+            }
+          ]
+        },
+        {
+          "name": "AT-502",
+          "category": "A",
+          "subModels": [
+            {
+              "name": "AT-502 A",
+              "category": "PR"
+            },
+            {
+              "name": "AT-502 B",
+              "category": "PR"
+            },
+            {
+              "name": "AT-502 XP",
+              "category": "A"
+            }
+          ]
+        },
+        {
+          "name": "AT-504",
+          "category": "A",
+          "subModels": []
+        },
+        {
+          "name": "AT-602",
+          "category": "A",
+          "subModels": []
+        },
+        {
+          "name": "AT-802",
+          "category": "A",
+          "subModels": [
+            {
+              "name": "AT-802 A",
+              "category": "PR"
+            },
+            {
+              "name": "AT-802 F",
+              "category": "PR"
+            },
+            {
+              "name": "AT-802 FIRE BOSS",
+              "category": "A"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GRUMMAN",
+      "models": [
+        {
+          "name": "Ag-Cat",
+          "category": "A",
+          "subModels": [
+            {
+              "name": "Ag-Cat G164A",
+              "category": "PR"
+            },
+            {
+              "name": "Ag-Cat G164B",
+              "category": "PR"
+            },
+            {
+              "name": "Ag-Cat G164C",
+              "category": "PR"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "THRUSH",
+      "models": [
+        {
+          "name": "510",
+          "category": "A",
+          "subModels": [
+            {
+              "name": "510 P2",
+              "category": "PR"
+            },
+            {
+              "name": "510 P2+",
+              "category": "PR"
+            }
+          ]
+        },
+        {
+          "name": "710",
+          "category": "A",
+          "subModels": [
+            {
+              "name": "710 P",
+              "category": "PR"
+            },
+            {
+              "name": "710 P FIRE BIRD",
+              "category": "PR"
+            }
+          ]
+        },
+        {
+          "name": "S2R",
+          "category": "A",
+          "subModels": []
+        },
+        {
+          "name": "AYRES S-2R",
+          "category": "A",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "EMBRAER",
+      "models": [
+        {
+          "name": "Ipanema",
+          "category": "A",
+          "subModels": [
+            {
+              "name": "202",
+              "category": "PR"
+            },
+            {
+              "name": "203",
+              "category": "PR"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "LAVIASA",
+      "models": [
+        {
+          "name": "PA-25 Puelche",
+          "category": "A",
+          "subModels": [
+            {
+              "name": "PUELCHE 1 PA-25",
+              "category": "PR"
+            },
+            {
+              "name": "PUELCHE 2 PA-25",
+              "category": "PR"
+            },
+            {
+              "name": "PUELCHE 3 PA-25",
+              "category": "PR"
+            }
+          ]
+        },
+        {
+          "name": "Puelche Biplaza",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "AERO BOERO",
+      "models": [
+        {
+          "name": "AB-95",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "AB-115",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "AB-150",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "AB-180",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "CIRRUS",
+      "models": [
+        {
+          "name": "SR-20",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "SR-22",
+          "category": "MP",
+          "subModels": [
+            {
+              "name": "SR-22T",
+              "category": "PR"
+            }
+          ]
+        },
+        {
+          "name": "Vision Jet",
+          "category": "S/C",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "TECNAM",
+      "models": [
+        {
+          "name": "P92",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "P2002",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "P2004",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "P2008",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "P2010",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "P-Mentor",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "P2006T",
+          "category": "BP",
+          "subModels": []
+        },
+        {
+          "name": "P2012",
+          "category": "BP",
+          "subModels": [
+            {
+              "name": "P2012 STOL",
+              "category": "PR"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MOONEY",
+      "models": [
+        {
+          "name": "M20",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "WEATHERLY",
+      "models": [
+        {
+          "name": "620B",
+          "category": "A",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "PZL",
+      "models": [
+        {
+          "name": "M-18 Dromader",
+          "category": "A",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "ANTONOV",
+      "models": [
+        {
+          "name": "AN-2",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "BELLANCA",
+      "models": [
+        {
+          "name": "Champ",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "Citabria",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "Decathlon",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "Scout",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "AERONCA",
+      "models": [
+        {
+          "name": "7 Champion",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "11 Chief",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "PITTS",
+      "models": [
+        {
+          "name": "S-2",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "BOYERO",
+      "models": [
+        {
+          "name": "IA-20",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "COMMANDER",
+      "models": [
+        {
+          "name": "Aero Commander 100",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "Aero Commander",
+          "category": "PISTÓN Y TURBOHÉLICE) (BP",
+          "subModels": []
+        },
+        {
+          "name": "Aero Commander 500",
+          "category": "PR",
+          "subModels": []
+        },
+        {
+          "name": "Turbo Commander 680",
+          "category": "PR",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "ERCOUPE",
+      "models": [
+        {
+          "name": "415-C",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "LUSCOMBE",
+      "models": [
+        {
+          "name": "Model 8",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "PIPISTREL",
+      "models": [
+        {
+          "name": "Virus",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "Explorer",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "Panthera",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "Alpha Trainer",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "RANS",
+      "models": [
+        {
+          "name": "S-6 Coyote",
+          "category": "E",
+          "subModels": []
+        },
+        {
+          "name": "S-9 Chaos",
+          "category": "E",
+          "subModels": []
+        },
+        {
+          "name": "S-12 Airaile",
+          "category": "E",
+          "subModels": []
+        },
+        {
+          "name": "S-19 Venterra",
+          "category": "E",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "VANS",
+      "models": [
+        {
+          "name": "RV-3",
+          "category": "E",
+          "subModels": []
+        },
+        {
+          "name": "RV-4",
+          "category": "E",
+          "subModels": []
+        },
+        {
+          "name": "RV-6",
+          "category": "E",
+          "subModels": []
+        },
+        {
+          "name": "RV-7",
+          "category": "E",
+          "subModels": []
+        },
+        {
+          "name": "RV-8",
+          "category": "E",
+          "subModels": []
+        },
+        {
+          "name": "RV-9",
+          "category": "E",
+          "subModels": []
+        },
+        {
+          "name": "RV-10",
+          "category": "E",
+          "subModels": []
+        },
+        {
+          "name": "RV-12",
+          "category": "E",
+          "subModels": []
+        },
+        {
+          "name": "RV-14",
+          "category": "E",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "ZENITH",
+      "models": []
+    },
+    {
+      "name": "BRISTELL",
+      "models": [
+        {
+          "name": "Bristell RG",
+          "category": "MP",
+          "subModels": []
+        },
+        {
+          "name": "B23",
+          "category": "MP",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "MITSUBISHI",
+      "models": []
+    },
+    {
+      "name": "PILATUS",
+      "models": [
+        {
+          "name": "PC-6",
+          "category": "MT",
+          "subModels": []
+        },
+        {
+          "name": "PC-12",
+          "category": "BT",
+          "subModels": [
+            {
+              "name": "PC-12/45",
+              "category": "PR"
+            },
+            {
+              "name": "PC-12/47",
+              "category": "PR"
+            },
+            {
+              "name": "PC-12 NG",
+              "category": "PR"
+            },
+            {
+              "name": "PC-12 NGX",
+              "category": "PR"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AIRBUS",
+      "models": [
+        {
+          "name": "H125",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "H130",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "H135",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "H145",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "H155",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "H160",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "H225",
+          "category": "H",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "BELL",
+      "models": [
+        {
+          "name": "206 / 206 L",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "222",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "230",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "407",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "412",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "427",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "429",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "430",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "505 Jet Ranger",
+          "category": "H",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "CICARE",
+      "models": [
+        {
+          "name": "CH-7",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "CH-8",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "CH-12",
+          "category": "H",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "ROBINSON",
+      "models": [
+        {
+          "name": "R-22",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "R-44",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "R-66",
+          "category": "H",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "EUROCOPTER",
+      "models": [
+        {
+          "name": "EC130",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "EC135",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "EC155",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "EC175",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "EC225",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "AS350",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "AS355",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "AS365",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "BO105",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "BK117",
+          "category": "H",
+          "subModels": []
+        }
+      ]
+    },
+    {
+      "name": "SIKORSKY",
+      "models": [
+        {
+          "name": "S-76",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "UH-60",
+          "category": "H",
+          "subModels": []
+        },
+        {
+          "name": "S-92",
+          "category": "H",
+          "subModels": []
+        }
+      ]
+    }
+  ],
+  "SparePartsCategories": [
+    {
+      "name": "Motor, Repuestos, Hélice",
+      "slug": "motor-repuestos-helice",
+      "children": [
+        {
+          "name": "Motores",
+          "slug": "motores",
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "TEXT"
+            },
+            {
+              "name": "Modelo",
+              "slug": "modelo",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado",
+                "Recorrido"
+              ]
+            },
+            {
+              "name": "Potencia HP",
+              "slug": "potencia-hp",
+              "type": "RANGE",
+              "config": {
+                "unit": "HP"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Repuestos de Motor",
+          "slug": "repuestos-motor",
+          "children": [
+            {
+              "name": "Cilindros",
+              "slug": "cilindros"
+            },
+            {
+              "name": "Blocks y Cigüeñales",
+              "slug": "blocks-ciguenales"
+            },
+            {
+              "name": "Repuestos Generales",
+              "slug": "repuestos-generales"
+            }
+          ],
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "TEXT"
+            },
+            {
+              "name": "Modelo",
+              "slug": "modelo",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado",
+                "Recorrido"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Accesorios de Motor",
+          "slug": "accesorios-motor",
+          "children": [
+            {
+              "name": "Sistema de Escape",
+              "slug": "sistema-escape"
+            },
+            {
+              "name": "Sistema de Encendido, Magnetos y Bujías",
+              "slug": "sistema-encendido",
+              "filters": [
+                {
+                  "name": "Tipo Componente",
+                  "slug": "tipo-componente",
+                  "type": "SELECT",
+                  "options": [
+                    "Magnetos",
+                    "Cableras",
+                    "Bujías",
+                    "Dinastars",
+                    "Otros"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Filtros, Combustible y Aceite",
+              "slug": "filtros-combustible-aceite"
+            },
+            {
+              "name": "Turbocompresores",
+              "slug": "turbocompresores"
+            },
+            {
+              "name": "Otros Accesorios",
+              "slug": "otros-accesorios"
+            }
+          ],
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "TEXT"
+            },
+            {
+              "name": "Modelo",
+              "slug": "modelo",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado",
+                "Recorrido"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Hélices",
+          "slug": "helices",
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "TEXT"
+            },
+            {
+              "name": "Modelo",
+              "slug": "modelo",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado",
+                "Recorrido"
+              ]
+            },
+            {
+              "name": "Material",
+              "slug": "material",
+              "type": "SELECT",
+              "options": [
+                "Aluminio",
+                "Madera",
+                "Materiales Compuestos"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sistema Eléctrico, Luces",
+      "slug": "sistema-electrico-luces",
+      "children": [
+        {
+          "name": "Iluminación",
+          "slug": "iluminacion",
+          "filters": [
+            {
+              "name": "Ubicación",
+              "slug": "ubicacion",
+              "type": "SELECT",
+              "options": [
+                "Exterior",
+                "Interior"
+              ]
+            },
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "SELECT",
+              "options": [
+                "Aeroflash",
+                "Aeroleds",
+                "Air Tractor",
+                "Cessna",
+                "General Electric",
+                "Grimmes",
+                "K-Four Switches",
+                "Norman",
+                "Piper",
+                "Specialty Parts",
+                "Westach",
+                "Whelen",
+                "Otras"
+              ]
+            },
+            {
+              "name": "Modelo",
+              "slug": "modelo",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Sistema Eléctrico y Baterías",
+          "slug": "sistema-electrico-baterias",
+          "children": [
+            {
+              "name": "Baterías",
+              "slug": "baterias",
+              "filters": [
+                {
+                  "name": "Voltaje",
+                  "slug": "voltaje",
+                  "type": "SELECT",
+                  "options": [
+                    "12V",
+                    "24V"
+                  ]
+                },
+                {
+                  "name": "Marca",
+                  "slug": "marca",
+                  "type": "SELECT",
+                  "options": [
+                    "Gill",
+                    "Concorde",
+                    "Air Tractor",
+                    "Otras"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Componentes Eléctricos Generales",
+              "slug": "componentes-electricos-generales"
+            }
+          ],
+          "filters": [
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Materiales, Ferretería, Conductos",
+      "slug": "materiales-ferreteria-conductos",
+      "children": [
+        {
+          "name": "Bulonería, Broches y Remaches",
+          "slug": "buloneria-broches-remaches",
+          "children": [
+            {
+              "name": "Bulones y Tornillos",
+              "slug": "bulones-tornillos",
+              "filters": [
+                {
+                  "name": "Medida",
+                  "slug": "medida",
+                  "type": "TEXT"
+                }
+              ]
+            },
+            {
+              "name": "Tuercas y Arandelas",
+              "slug": "tuercas-arandelas",
+              "filters": [
+                {
+                  "name": "Medida",
+                  "slug": "medida",
+                  "type": "TEXT"
+                }
+              ]
+            },
+            {
+              "name": "Chavetas",
+              "slug": "chavetas",
+              "filters": [
+                {
+                  "name": "Medida",
+                  "slug": "medida",
+                  "type": "TEXT"
+                }
+              ]
+            }
+          ],
+          "filters": [
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Conductos, Mangueras y Cables",
+          "slug": "conductos-mangueras-cables",
+          "filters": [
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Sellos y Juntas",
+          "slug": "sellos-juntas",
+          "children": [
+            {
+              "name": "O'Rings",
+              "slug": "orings",
+              "filters": [
+                {
+                  "name": "Material",
+                  "slug": "material",
+                  "type": "SELECT",
+                  "options": [
+                    "Viton",
+                    "Nitrilo",
+                    "Silicona"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Juntas",
+              "slug": "juntas",
+              "filters": [
+                {
+                  "name": "Material",
+                  "slug": "material",
+                  "type": "SELECT",
+                  "options": [
+                    "Cartón",
+                    "Aluminio",
+                    "Goma/Corcho",
+                    "Fibra"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Otros",
+              "slug": "otros-sellos"
+            }
+          ],
+          "filters": [
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tren de Aterrizaje, Frenos, Cubiertas",
+      "slug": "tren-aterrizaje-frenos-cubiertas",
+      "children": [
+        {
+          "name": "Cubiertas y Cámaras",
+          "slug": "cubiertas-camaras",
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "SELECT",
+              "options": [
+                "Goodyear",
+                "Air Hawk",
+                "Michelin",
+                "Firestone",
+                "Otras"
+              ]
+            },
+            {
+              "name": "Medida",
+              "slug": "medida",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Llantas, Frenos y Tren de Aterrizaje",
+          "slug": "llantas-frenos-tren-aterrizaje",
+          "children": [
+            {
+              "name": "Llantas",
+              "slug": "llantas",
+              "filters": [
+                {
+                  "name": "Marca",
+                  "slug": "marca",
+                  "type": "TEXT"
+                },
+                {
+                  "name": "Medida",
+                  "slug": "medida",
+                  "type": "TEXT"
+                },
+                {
+                  "name": "Condición",
+                  "slug": "condicion",
+                  "type": "SELECT",
+                  "options": [
+                    "Nuevo",
+                    "Usado"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Frenos",
+              "slug": "frenos",
+              "filters": [
+                {
+                  "name": "Marca",
+                  "slug": "marca",
+                  "type": "SELECT",
+                  "options": [
+                    "APS",
+                    "Cleveland",
+                    "Cessna",
+                    "BFGoodrich",
+                    "AirFrames Alaska",
+                    "Goodyear",
+                    "Aravia",
+                    "Otras"
+                  ]
+                },
+                {
+                  "name": "Condición",
+                  "slug": "condicion",
+                  "type": "SELECT",
+                  "options": [
+                    "Nuevo",
+                    "Usado",
+                    "Recorrido"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Tren de Aterrizaje Estructural",
+              "slug": "tren-aterrizaje-estructural",
+              "filters": [
+                {
+                  "name": "Aeronave Compatible Marca",
+                  "slug": "aeronave-compatible-marca",
+                  "type": "TEXT"
+                },
+                {
+                  "name": "Aeronave Compatible Modelo",
+                  "slug": "aeronave-compatible-modelo",
+                  "type": "TEXT"
+                },
+                {
+                  "name": "Condición",
+                  "slug": "condicion",
+                  "type": "SELECT",
+                  "options": [
+                    "Nuevo",
+                    "Usado",
+                    "Recorrido"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Herramientas y Equipamiento Taller",
+      "slug": "herramientas-equipamiento-taller",
+      "children": [
+        {
+          "name": "Herramientas Manuales",
+          "slug": "herramientas-manuales"
+        },
+        {
+          "name": "Herramientas Neumáticas",
+          "slug": "herramientas-neumaticas"
+        },
+        {
+          "name": "Herramientas Eléctricas",
+          "slug": "herramientas-electricas"
+        },
+        {
+          "name": "Instrumentos de Medición",
+          "slug": "instrumentos-medicion"
+        },
+        {
+          "name": "Herramientas Especiales",
+          "slug": "herramientas-especiales"
+        },
+        {
+          "name": "Otras",
+          "slug": "otras-herramientas"
+        }
+      ],
+      "filters": [
+        {
+          "name": "Marca",
+          "slug": "marca",
+          "type": "TEXT"
+        },
+        {
+          "name": "Condición",
+          "slug": "condicion",
+          "type": "SELECT",
+          "options": [
+            "Nuevo",
+            "Usado"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Aviónica, Instrumentos, GPS",
+      "slug": "avionica-instrumentos-gps",
+      "children": [
+        {
+          "name": "GPS y Navegadores",
+          "slug": "gps-navegadores",
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "SELECT",
+              "options": [
+                "Garmin",
+                "Otras"
+              ]
+            },
+            {
+              "name": "Modelo",
+              "slug": "modelo",
+              "type": "TEXT"
+            },
+            {
+              "name": "Tipo",
+              "slug": "tipo",
+              "type": "SELECT",
+              "options": [
+                "Homologado",
+                "Experimental"
+              ]
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Comunicación y Vuelo",
+          "slug": "comunicacion-vuelo",
+          "filters": [
+            {
+              "name": "Aeronave / Marca Compatible",
+              "slug": "aeronave-marca-compatible",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Instrumentos de Motor y Combustible",
+          "slug": "instrumentos-motor-combustible",
+          "filters": [
+            {
+              "name": "Aeronave / Marca Compatible",
+              "slug": "aeronave-marca-compatible",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Otros Instrumentos",
+          "slug": "otros-instrumentos",
+          "filters": [
+            {
+              "name": "Aeronave / Marca Compatible",
+              "slug": "aeronave-marca-compatible",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Implementos Agrícolas",
+      "slug": "implementos-agricolas",
+      "children": [
+        {
+          "name": "Bombas, Llaves y Compuertas",
+          "slug": "bombas-llaves-compuertas",
+          "children": [
+            {
+              "name": "Bombas",
+              "slug": "bombas"
+            },
+            {
+              "name": "Llaves",
+              "slug": "llaves"
+            },
+            {
+              "name": "Compuertas",
+              "slug": "compuertas",
+              "filters": [
+                {
+                  "name": "Tamaño / Apertura",
+                  "slug": "tamano-apertura",
+                  "type": "TEXT"
+                }
+              ]
+            }
+          ],
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "SELECT",
+              "options": [
+                "Tecmoliq",
+                "Zanoni Equipamientos",
+                "Transland",
+                "Travicar",
+                "Otras"
+              ]
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Picos y Atomizadores",
+          "slug": "picos-atomizadores",
+          "children": [
+            {
+              "name": "Picos",
+              "slug": "picos"
+            },
+            {
+              "name": "Atomizadores",
+              "slug": "atomizadores"
+            }
+          ],
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "SELECT",
+              "options": [
+                "CP Products",
+                "Micronair",
+                "Zanoni Equipamientos",
+                "Semat",
+                "TeeJet",
+                "Tecmoliq",
+                "Travicar",
+                "Grosso",
+                "Otras"
+              ]
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Banderilleros Satelitales",
+          "slug": "banderilleros-satelitales",
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "SELECT",
+              "options": [
+                "Ag-Nav",
+                "Satloc",
+                "TeeJet / DyN",
+                "Travicar",
+                "Otras"
+              ]
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Barras y Dispersores",
+          "slug": "barras-dispersores",
+          "children": [
+            {
+              "name": "Barras de Pulverización",
+              "slug": "barras-pulverizacion"
+            },
+            {
+              "name": "Dispersores de Sólidos",
+              "slug": "dispersores-solidos"
+            }
+          ],
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "SELECT",
+              "options": [
+                "Transland",
+                "Travicar",
+                "Zanoni Equipamientos",
+                "Otras"
+              ]
+            },
+            {
+              "name": "Material",
+              "slug": "material",
+              "type": "SELECT",
+              "options": [
+                "Acero Inoxidable",
+                "Aluminio"
+              ]
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Accesorios Agrícolas",
+          "slug": "accesorios-agricolas",
+          "children": [
+            {
+              "name": "Filtros",
+              "slug": "filtros"
+            },
+            {
+              "name": "Tanques Inox",
+              "slug": "tanques-inox"
+            },
+            {
+              "name": "Otros",
+              "slug": "otros-accesorios-agricolas"
+            }
+          ],
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Lubricantes, Selladores, Pintura, Limpieza",
+      "slug": "lubricantes-selladores-pintura-limpieza",
+      "children": [
+        {
+          "name": "Lubricantes y Fluidos",
+          "slug": "lubricantes-fluidos",
+          "children": [
+            {
+              "name": "Aceites de Motor",
+              "slug": "aceites-motor",
+              "filters": [
+                {
+                  "name": "Tipo Motor",
+                  "slug": "tipo-motor",
+                  "type": "SELECT",
+                  "options": [
+                    "Pistón",
+                    "Turbina"
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Fluidos Hidráulicos y OTAN",
+              "slug": "fluidos-hidraulicos-otan"
+            }
+          ],
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "SELECT",
+              "options": [
+                "AeroShell",
+                "Phillips 66",
+                "Mobil 1",
+                "Otras"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Selladores y Pegamentos",
+          "slug": "selladores-pegamentos",
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Pintura y Acabados",
+          "slug": "pintura-acabados",
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "SELECT",
+              "options": [
+                "Poly-Fiber",
+                "Randolph",
+                "Otras"
+              ]
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Limpieza y Detailing",
+          "slug": "limpieza-detailing",
+          "children": [
+            {
+              "name": "Interior",
+              "slug": "interior"
+            },
+            {
+              "name": "Exterior",
+              "slug": "exterior"
+            }
+          ],
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "SELECT",
+              "options": [
+                "3M",
+                "Cessna",
+                "Aravia",
+                "Piper",
+                "Otras"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Otros Químicos",
+          "slug": "otros-quimicos"
+        }
+      ]
+    },
+    {
+      "name": "Fuselaje y Estructura",
+      "slug": "fuselaje-estructura",
+      "children": [
+        {
+          "name": "Entelado y Recubrimiento",
+          "slug": "entelado-recubrimiento",
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "SELECT",
+              "options": [
+                "Poly-Fiber",
+                "Otras"
+              ]
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Partes Estructurales",
+          "slug": "partes-estructurales",
+          "filters": [
+            {
+              "name": "Aeronave Compatible Marca",
+              "slug": "aeronave-compatible-marca",
+              "type": "TEXT"
+            },
+            {
+              "name": "Aeronave Compatible Modelo",
+              "slug": "aeronave-compatible-modelo",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado",
+                "Recorrido/Ensayado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Interior y Cabina",
+          "slug": "interior-cabina",
+          "children": [
+            {
+              "name": "Volantes y Comandos",
+              "slug": "volantes-comandos"
+            },
+            {
+              "name": "Cinturones y Arneses",
+              "slug": "cinturones-arneses"
+            },
+            {
+              "name": "Burletes y Sellos",
+              "slug": "burletes-sellos"
+            },
+            {
+              "name": "Sistemas de Oxígeno",
+              "slug": "sistemas-oxigeno"
+            },
+            {
+              "name": "Otros",
+              "slug": "otros-interior"
+            }
+          ],
+          "filters": [
+            {
+              "name": "Aeronave Compatible Marca",
+              "slug": "aeronave-compatible-marca",
+              "type": "TEXT"
+            },
+            {
+              "name": "Aeronave Compatible Modelo",
+              "slug": "aeronave-compatible-modelo",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado",
+                "Recorrido"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Otros Componentes de Fuselaje",
+          "slug": "otros-componentes-fuselaje",
+          "filters": [
+            {
+              "name": "Aeronave Compatible Marca",
+              "slug": "aeronave-compatible-marca",
+              "type": "TEXT"
+            },
+            {
+              "name": "Aeronave Compatible Modelo",
+              "slug": "aeronave-compatible-modelo",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado",
+                "Recorrido"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Accesorios Piloto y Equipamiento",
+      "slug": "accesorios-piloto-equipamiento",
+      "children": [
+        {
+          "name": "Cascos y Auriculares",
+          "slug": "cascos-auriculares",
+          "children": [
+            {
+              "name": "Cascos",
+              "slug": "cascos"
+            },
+            {
+              "name": "Auriculares / Headsets",
+              "slug": "auriculares"
+            },
+            {
+              "name": "Viseras y Repuestos",
+              "slug": "viseras-repuestos"
+            }
+          ],
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "SELECT",
+              "options": [
+                "David Clark",
+                "Bose",
+                "Lightspeed",
+                "Aravia",
+                "Otras"
+              ]
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Accesorios para la Aeronave",
+          "slug": "accesorios-aeronave",
+          "filters": [
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Otros Productos",
+          "slug": "otros-productos",
+          "children": [
+            {
+              "name": "Libros y Manuales",
+              "slug": "libros-manuales"
+            },
+            {
+              "name": "Merchandising",
+              "slug": "merchandising"
+            },
+            {
+              "name": "Otros Accesorios",
+              "slug": "otros-accesorios"
+            }
+          ],
+          "filters": [
+            {
+              "name": "Marca",
+              "slug": "marca",
+              "type": "TEXT"
+            },
+            {
+              "name": "Condición",
+              "slug": "condicion",
+              "type": "SELECT",
+              "options": [
+                "Nuevo",
+                "Usado"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

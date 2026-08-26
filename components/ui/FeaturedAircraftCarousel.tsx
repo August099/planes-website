@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 
+// Tipado flexible para soportar objetos de categoría, strings o nulos
+type CategoryProp = { id?: string; name: string } | string | null;
+
 type AircraftItem = {
   id: string;
   title: string;
   price: number | null;
-  year: number | null; // 👈 Cambiado a 'number | null'
-  category: string | null; // 👈 Cambiado a 'string | null'
-  totalTimeHours: number | null; // 👈 Cambiado a 'number | null'
+  year: number | null;
+  category: CategoryProp; // 👈 Actualizado aquí para que coincida exactamente con el HomePage
+  totalTimeHours: number | null;
   city?: string | null;
   province?: string | null;
   imageUrl: string;

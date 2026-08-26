@@ -11,7 +11,10 @@ import { HeroBanner } from "@/components/ui/hero-banner";
 export default async function HomePage() {
   const featuredAircraftsFromDb = await prisma.aircraft.findMany({
     where: { status: "ACTIVE" },
-    include: { images: { orderBy: { order: "asc" }, take: 1 } },
+    include: { 
+      images: { orderBy: { order: "asc" }, take: 1 },
+      category: true, // Incluimos la relación con la categoría para obtener el objeto con su nombre
+    },
     orderBy: { createdAt: "desc" },
     take: 8,
   });
@@ -21,7 +24,8 @@ export default async function HomePage() {
     title: aircraft.title,
     price: aircraft.price ? Number(aircraft.price) : null,
     year: aircraft.year,
-    category: aircraft.category,
+    // Pasamos el objeto de la categoría completo o su nombre para que la tarjeta lo lea bien
+    category: aircraft.category ? { id: aircraft.category.id, name: aircraft.category.name } : null,
     totalTimeHours: aircraft.totalTimeHours,
     city: aircraft.city,
     province: aircraft.province,

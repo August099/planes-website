@@ -80,7 +80,6 @@ export default async function AvionesPage({ searchParams }: Props) {
             title={aircraft.title}
             price={aircraft.price ? Number(aircraft.price) : null}
             year={aircraft.year}
-            category={aircraft.category}
             totalTimeHours={aircraft.totalTimeHours}
             city={aircraft.city}
             province={aircraft.province}

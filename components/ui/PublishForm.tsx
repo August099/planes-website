@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SparePartCategory, SparePartCondition, AircraftCategory, AircraftBrand } from "@prisma/client";
+import { SparePartCondition } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { 
@@ -13,8 +13,7 @@ import {
     Gauge, 
     FileText,
     AlertTriangle,
-    ArrowRight,
-    Loader2
+    ArrowRight
 } from "lucide-react";
 
 interface SelectOptions {

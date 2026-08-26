@@ -10,6 +10,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "*.supabase.co", // Permite URLs del storage de Supabase
       },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      }
     ],
   },
 };

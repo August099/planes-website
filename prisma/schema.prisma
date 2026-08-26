@@ -1,18 +1,13 @@
- datasource db {
-
+datasource db {
   provider = "postgresql"
 }
 
-
 generator client {
-
   provider = "prisma-client-js"
 }
 
-
-
 // ==========================================
-// 1. AUTENTICACIÓN Y USUARIOS (NextAuth)
+// 1. USUARIOS Y AUTENTICACIÓN
 // ==========================================
 
 enum UserType {
@@ -37,21 +32,19 @@ model User {
   isAdmin       Boolean   @default(false)
   createdAt     DateTime  @default(now())
 
-  // Contadores / Balances de publicaciones disponibles
   aircraftListingsBalance   Int @default(0)
   sparePartsListingsBalance Int @default(0)
 
-  // Relaciones
   Subscription Subscription?
-  accounts   Account[]
-  sessions   Session[]
-  aircrafts  Aircraft[]
-  spareParts SparePart[]
-  purchases  Purchase[]
-  favorites  Favorite[]
-  reports    Report[]
-  adBanners  AdBanner[]
-  questions  Question[]
+  accounts     Account[]
+  sessions     Session[]
+  aircrafts    Aircraft[]
+  spareParts   SparePart[]
+  purchases    Purchase[]
+  favorites    Favorite[]
+  reports      Report[]
+  adBanners    AdBanner[]
+  questions    Question[]
 }
 
 model Account {
@@ -91,7 +84,7 @@ model VerificationToken {
 }
 
 // ==========================================
-// 2. SISTEMA DE PLANES, PAGOS, PACKS Y SUSCRIPCIONES
+// 2. PLANES Y SUSCRIPCIONES
 // ==========================================
 
 enum PlanType {
@@ -102,8 +95,8 @@ enum PlanType {
 }
 
 enum PlanBillingType {
-  ONE_TIME     // Pack por publicación (pago único)
-  SUBSCRIPTION // Suscripción mensual / anual recurrente
+  ONE_TIME
+  SUBSCRIPTION
 }
 
 enum BillingInterval {
@@ -125,38 +118,34 @@ enum SubscriptionStatus {
 }
 
 model Plan {
-  id                   String          @id @default(cuid())
-  name                 String
-  type                 PlanType
-  billingType          PlanBillingType @default(ONE_TIME)
-  billingInterval      BillingInterval? // Obligatorio si billingType == SUBSCRIPTION
-  price                Decimal         @db.Decimal(12, 2)
-  savingsPercent       Int?            // Ej: 10, 20 para badges de descuento
-  usageDescription     String?         // Ej: "1 Avión", "3 Aviones", "Suscripción Aviones e Repuestos Ilimitados"
-  includesVerifiedBadge Boolean        @default(false)
-  isActive             Boolean         @default(true)
+  id                    String          @id @default(cuid())
+  name                  String
+  type                  PlanType
+  billingType           PlanBillingType @default(ONE_TIME)
+  billingInterval       BillingInterval?
+  price                 Decimal         @db.Decimal(12, 2)
+  savingsPercent        Int?
+  usageDescription      String?
+  includesVerifiedBadge Boolean         @default(false)
+  isActive              Boolean         @default(true)
 
-  // Cantidad de publicaciones (para packs finitos o planes limitados)
-  aircraftListingsCount   Int          @default(0)
-  sparePartsListingsCount Int          @default(0)
+  aircraftListingsCount   Int           @default(0)
+  sparePartsListingsCount Int           @default(0)
 
-  // Banderas para suscripciones con cupo ilimitado
-  isUnlimitedAircraft   Boolean        @default(false)
-  isUnlimitedSpareParts Boolean        @default(false)
+  isUnlimitedAircraft   Boolean         @default(false)
+  isUnlimitedSpareParts Boolean         @default(false)
 
   purchases     Purchase[]
   subscriptions Subscription[]
 }
 
-// Para pagos únicos de packs o banners
 model Purchase {
-  id                          String        @id @default(cuid())
-  userId                      String
-  planId                      String
-
-  mpPreferenceId              String?
-  paymentStatus               PaymentStatus @default(PENDING)
-  createdAt                   DateTime      @default(now())
+  id             String        @id @default(cuid())
+  userId         String
+  planId         String
+  mpPreferenceId String?
+  paymentStatus  PaymentStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
 
   user       User        @relation(fields: [userId], references: [id])
   plan       Plan        @relation(fields: [planId], references: [id])
@@ -165,30 +154,27 @@ model Purchase {
   adBanners  AdBanner[]
 }
 
-// Para el seguimiento de las suscripciones recurrentes activas
 model Subscription {
-  id                  String             @id @default(cuid())
-  userId              String             @unique
-  planId              String
-  status              SubscriptionStatus @default(ACTIVE)
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  planId               String
+  status               SubscriptionStatus @default(ACTIVE)
+  mpSubscriptionId     String?            @unique
+  stripeSubscriptionId String?            @unique
 
-  // Identificadores de la pasarela de pago (MercadoPago / Stripe)
-  mpSubscriptionId    String?            @unique
-  stripeSubscriptionId String?           @unique
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
 
-  currentPeriodStart  DateTime
-  currentPeriodEnd    DateTime
-  cancelAtPeriodEnd   Boolean            @default(false)
-
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id])
   plan Plan @relation(fields: [planId], references: [id])
 }
 
 // ==========================================
-// 3. PUBLICIDAD / BANNERS (Pago único)
+// 3. PUBLICIDAD
 // ==========================================
 
 enum AdBannerStatus {
@@ -203,13 +189,10 @@ model AdBanner {
   id             String         @id @default(cuid())
   userId         String
   purchaseId     String?
-  
-  // Información del banner y del mensaje/comentario del usuario
   title          String?
-  description    String         // Comentario / Mensaje descriptivo para el banner o instrucciones
-  bannerImageUrl String?        // URL de la imagen del banner
-  linkUrl        String?        // Enlace de destino al hacer clic en el banner
-  
+  description    String
+  bannerImageUrl String?
+  linkUrl        String?
   status         AdBannerStatus @default(PENDING_PAYMENT)
   startsAt       DateTime?
   expiresAt      DateTime?
@@ -221,8 +204,54 @@ model AdBanner {
 }
 
 // ==========================================
-// 4. AERONAVES
+// 4. TAXONOMÍA Y MODELO DE AERONAVES
 // ==========================================
+
+model AircraftCategory {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  aircrafts Aircraft[]
+}
+
+model AircraftBrand {
+  id        String          @id @default(cuid())
+  name      String          @unique
+  models    AircraftModel[]
+  aircrafts Aircraft[]
+}
+
+model AircraftModel {
+  id        String             @id @default(cuid())
+  brandId   String
+  name      String
+  
+  brand     AircraftBrand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  variants  AircraftSubModel[]
+  aircrafts Aircraft[]
+
+  @@unique([brandId, name])
+}
+
+model AircraftSubModel {
+  id        String        @id @default(cuid())
+  modelId   String
+  name      String
+  
+  model     AircraftModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  aircrafts Aircraft[]
+
+  @@unique([modelId, name])
+}
+
+enum EngineType {
+  PISTON
+  TURBOPROP
+}
+
+enum AircraftCondition {
+  NUEVO
+  USADO
+}
 
 enum AircraftStatus {
   ACTIVE
@@ -233,52 +262,61 @@ enum AircraftStatus {
 }
 
 model Aircraft {
-  id                        String            @id @default(cuid())
-  sellerId                  String
-  title                     String
-  description               String
-  modifications             String?
-  customBrand               String?
-  customModel               String?
-  brandId                   String
-  modelId                   String
-  categoryId                String
-  year                      Int
-  totalTimeHours            Int
-  fuselageDescription       String?
-  fuselageModifications     String?
-  avionics                  String?
-  extraEquipment            String?
-  price                     Decimal?          @db.Decimal(12, 2) // si es nulo el precio es a consultar
-  city                      String
-  province                  String
-  status                    AircraftStatus    @default(PENDING_PAYMENT)
-  trade                     Boolean           @default(false)
-  financing                 Boolean           @default(false)
-  listingStartsAt           DateTime?
-  listingExpiresAt          DateTime?
-  renewalEmailSentAt        DateTime?
-  createdAt                 DateTime          @default(now())
-  updatedAt                 DateTime          @updatedAt
+  id                    String            @id @default(cuid())
+  sellerId              String
+  title                 String
+  description           String
+  
+  categoryId            String
+  category              AircraftCategory  @relation(fields: [categoryId], references: [id])
 
-  purchaseId                String?
+  brandId               String?
+  brand                 AircraftBrand?    @relation(fields: [brandId], references: [id])
+  modelId               String?
+  model                 AircraftModel?    @relation(fields: [modelId], references: [id])
+  subModelId            String?
+  subModel              AircraftSubModel? @relation(fields: [subModelId], references: [id])
 
-  seller    User               @relation(fields: [sellerId], references: [id])
-  category  Category          @relation(fields: [categoryId], references: [id])
-  purchase  Purchase?          @relation(fields: [purchaseId], references: [id])
-  images    AircraftImage[]
-  documents AircraftDocument[]
-  engines   AircraftEngine[]
-  propeller AircraftPropeller[]
-  leads     Lead[]
-  favorites Favorite[]
-  reports   Report[]
-  questions Question[]
-  tags      Tag[]              @relation("AircraftToTag")
+  customBrand           String?
+  customModel           String?
+
+  engineType            EngineType?
+  condition             AircraftCondition @default(USADO)
+  year                  Int
+  totalTimeHours        Int
+  price                 Decimal?          @db.Decimal(12, 2)
+  
+  trade                 Boolean           @default(false)
+  financing             Boolean           @default(false)
+
+  city                  String
+  province              String
+  
+  status                AircraftStatus    @default(PENDING_PAYMENT)
+  listingStartsAt       DateTime?
+  listingExpiresAt      DateTime?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  purchaseId            String?
+  purchase              Purchase?         @relation(fields: [purchaseId], references: [id])
+  seller                User              @relation(fields: [sellerId], references: [id])
+
+  images                AircraftImage[]
+  documents             AircraftDocument[]
+  engines               AircraftEngine[]
+  propeller             AircraftPropeller[]
+  leads                 Lead[]
+  favorites             Favorite[]
+  reports               Report[]
+  questions             Question[]
+  tags                  Tag[]             @relation("AircraftToTag")
 
   @@index([price])
   @@index([status])
+  @@index([brandId, modelId])
   @@index([province, city])
+  @@index([year])
 }
 
 model AircraftImage {
@@ -301,77 +339,29 @@ model AircraftDocument {
 }
 
 model AircraftEngine {
-  id            String   @id @default(cuid())
-  aircraftId    String
-  engineHours   Int?
-  TBO           Int
-  brand         String? // ver si son marcas diferentes a las de aviones
-  model         String?
+  id          String   @id @default(cuid())
+  aircraftId  String
+  engineHours Int?
+  TBO         Int
+  brand       String?
+  model       String?
 
   aircraft Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
 }
 
 model AircraftPropeller {
-  id                String   @id @default(cuid())
-  aircraftId        String
-  propellerHours    Int?
-  model             String?
+  id             String   @id @default(cuid())
+  aircraftId     String
+  propellerHours Int?
+  model          String?
 
   aircraft Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
 }
 
 // ==========================================
-// 5. REPUESTOS Y ACCESORIOS
+// 5. REPUESTOS Y ACCESORIOS (Doble Árbol + JsonB)
 // ==========================================
 
-model Category {
-  id                        String            @id @default(cuid())
-  name                      String            @unique
-
-  spareParts SparePart[]
-  aircrafts  Aircraft[]
-  subCategories   SubCategory[]
-}
-
-model SubCategory {
-  id                        String            @id @default(cuid())
-  categoryId                String
-  name                      String            @unique
-
-  category                  Category? @relation(fields: [categoryId], references: [id])
-  fields                    Field[]
-}
-
-enum FieldType {
-  STRING
-  NUMBER
-}
-
-enum FieldRangeType {
-  SLIDE_BAR
-  INPUTS_RANGE
-  SINGLE
-}
-
-model Field {
-  id                        String            @id @default(cuid())
-  subCategoryId             String?           @unique
-  parentFieldId             String?
-  name                      String
-  type                      FieldType
-  list                      Boolean           @default(false)
-  
-  range                     Boolean?          @default(false)
-  rangeType                 FieldRangeType    @default(INPUTS_RANGE)
-  min                       Decimal?
-  max                       Decimal?
-  
-  subCategory               SubCategory?      @relation(fields: [subCategoryId], references: [id])
-  parent                    Field?            @relation("CategoryHierarchy",fields: [parentFieldId], references: [id])
-  listValues                Field[]           @relation("CategoryHierarchy")
-
-  @@unique([subCategoryId, name])
-}
 
 enum SparePartStatus {
   PENDING_PAYMENT
@@ -380,34 +370,165 @@ enum SparePartStatus {
   SOLD
 }
 
+// ==========================================
+// SISTEMA DE FILTROS DINÁMICOS
+// ==========================================
+// Patrón: estructura relacional + config en JSON (metadata-driven)
+// Pensado para que se puedan crear/editar filtros desde un admin
+// sin necesidad de migraciones de base de datos.
+
+enum FilterType {
+  SELECT        // Dropdown de una sola opción
+  MULTI_SELECT  // Checkboxes, múltiples opciones
+  RANGE         // Rango numérico (precio, año, etc.)
+  BOOLEAN       // Sí / No, toggle
+  COLOR         // Selector de color
+  TEXT          // Búsqueda de texto libre
+}
+
+// Categorías de productos (o la entidad que estés filtrando)
+model Category {
+  id       String     @id @default(cuid())
+  name     String
+  slug     String     @unique
+
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+
+  // Qué grupos de filtros aplican a esta categoría
+  filterGroups FilterGroup[] @relation("CategoryFilterGroups")
+  products     SparePart[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Agrupador visual de filtros
+// (ej: "Especificaciones técnicas", "Precio y disponibilidad")
+model FilterGroup {
+  id    String @id @default(cuid())
+  name  String
+  slug  String @unique
+  order Int    @default(0)
+
+  filters    Filter[]
+  categories Category[] @relation("CategoryFilterGroups")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Definición de un filtro individual
+model Filter {
+  id    String     @id @default(cuid())
+  name  String
+  slug  String
+  type  FilterType
+  order Int        @default(0)
+
+  groupId String
+  group   FilterGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Auto-relación: esto resuelve "filtros dentro de filtros"
+  parentId String?
+  parent   Filter?  @relation("FilterHierarchy", fields: [parentId], references: [id])
+  children Filter[] @relation("FilterHierarchy")
+
+  // Acá vive todo lo "variable" según el tipo de filtro:
+  // RANGE -> { min, max, step, unit }
+  // TEXT  -> { placeholder, maxLength }
+  // SELECT/MULTI_SELECT -> { allowMultipleGroups: true, ... }
+  // Agregar un filtro nuevo = insertar una fila, no migrar el schema.
+  config Json?
+
+  options FilterOption[]
+  values  EntityFilterValue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([groupId, slug])
+  @@index([parentId])
+}
+
+// Opciones fijas para filtros tipo SELECT / MULTI_SELECT / COLOR
+model FilterOption {
+  id    String @id @default(cuid())
+  label String
+  value String
+  order Int    @default(0)
+
+  filterId String
+  filter   Filter @relation(fields: [filterId], references: [id], onDelete: Cascade)
+
+  // Metadata extra: hex de color, ícono, etc.
+  extra Json?
+
+  entityValues EntityFilterValue[]
+
+  @@unique([filterId, value])
+}
+
+// El valor real que tiene cada producto para cada filtro.
+// Columnas tipadas (en vez de todo JSON) para poder indexar y
+// hacer queries de filtrado rápidas.
+model EntityFilterValue {
+  id String @id @default(cuid())
+
+  productId String
+  product   SparePart @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  filterId String
+  filter   Filter @relation(fields: [filterId], references: [id], onDelete: Cascade)
+
+  optionId String?
+  option   FilterOption? @relation(fields: [optionId], references: [id])
+
+  // Se usa solo una de estas tres según el FilterType
+  valueString  String?
+  valueNumber  Float?
+  valueBoolean Boolean?
+
+  @@unique([productId, filterId, optionId])
+  @@index([productId])
+  @@index([filterId])
+}
+
 model SparePart {
-  id                 String             @id @default(cuid())
+  id                 String               @id @default(cuid())
   sellerId           String
   title              String
   description        String
-  categoryId         String
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
   partNumber         String?
-  price              Decimal?           @db.Decimal(12, 2)
+  price              Decimal?             @db.Decimal(12, 2)
+  stock              Int                  @default(1)
+  
+  // Atributos dinámicos en JsonB
+  attributes         Json                 @default("{}")
+
   city               String
   province           String
-  status             SparePartStatus    @default(PENDING_PAYMENT)
-  stock              Int                @default(1)
+  status             SparePartStatus      @default(PENDING_PAYMENT)
   listingStartsAt    DateTime?
   listingExpiresAt   DateTime?
-  renewalEmailSentAt DateTime?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 
   purchaseId         String?
-
-  seller    User              @relation(fields: [sellerId], references: [id])
-  purchase  Purchase?         @relation(fields: [purchaseId], references: [id])
-  category  Category          @relation(fields: [categoryId], references: [id])
-  images    SparePartImage[]
-  leads     SparePartLead[]
-  favorites Favorite[]
-  reports   Report[]
-  questions Question[]
+  purchase           Purchase?            @relation(fields: [purchaseId], references: [id])
+  seller             User                 @relation(fields: [sellerId], references: [id])
+  
+  images             SparePartImage[]
+  leads              SparePartLead[]
+  favorites          Favorite[]
+  reports            Report[]
+  questions          Question[]
+  filterValues EntityFilterValue[]
 
   @@index([price])
   @@index([status])
@@ -424,7 +545,7 @@ model SparePartImage {
 }
 
 // ==========================================
-// 6. INTERACCIONES (Leads, Favoritos, Reportes y Tags)
+// 6. INTERACCIONES Y COMUNICACIÓN
 // ==========================================
 
 model Lead {
@@ -492,10 +613,6 @@ model Tag {
   slug      String     @unique
   aircrafts Aircraft[] @relation("AircraftToTag")
 }
-
-// ==========================================
-// 7. PREGUNTAS Y RESPUESTAS (Modelo Único)
-// ==========================================
 
 model Question {
   id          String    @id @default(cuid())
