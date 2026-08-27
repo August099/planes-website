@@ -20,7 +20,7 @@ export function Footer() {
               className="mb-3"
             />
             <p className="text-white/70 text-sm">
-              Marketplace de aviones agrícolas en Argentina.
+              ¿Necesitás algo para aviación? Buscalo acá.
             </p>
           </div>
 

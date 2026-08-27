@@ -14,7 +14,6 @@ const termsSections = [
 export default function TerminosPage() {
   return (
     <main className="relative isolate overflow-hidden min-h-screen -mb-16">
-      {/* Fondo optimizado con la imagen solicitada */}
       <Image
         src="/bkg-terms.jpg"
         alt=""
@@ -27,7 +26,6 @@ export default function TerminosPage() {
       <div className="container mx-auto px-4 pt-20 pb-36 max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           
-          {/* MENÚ LATERAL: Índices de Términos y Condiciones */}
           <aside className="md:col-span-1 flex flex-col gap-2 border-l border-[#001F58]/20 pl-4 md:sticky md:top-24">
             <p className="text-xs font-semibold text-[#001F58]/50 uppercase tracking-wider mb-2">
               Índice
@@ -43,7 +41,6 @@ export default function TerminosPage() {
             ))}
           </aside>
 
-          {/* CUERPO PRINCIPAL */}
           <section className="md:col-span-3">
             <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-[#001F58] mb-2">
               TÉRMINOS Y CONDICIONES DE USO
@@ -58,7 +55,6 @@ export default function TerminosPage() {
                 Bienvenido a <strong>Ventas Aeronáuticas</strong>. Al acceder, registrarse o utilizar nuestro sitio web, usted acepta cumplir y estar sujeto a los siguientes Términos y Condiciones. Si no está de acuerdo con alguna parte de estos términos, no deberá utilizar nuestros servicios.
               </p>
 
-              {/* SECCIÓN 1 */}
               <div id="naturaleza" className="flex flex-col gap-3 scroll-mt-24">
                 <h2 className="font-heading text-xl font-semibold text-[#001F58]">
                   1. Naturaleza del Servicio
@@ -70,7 +66,6 @@ export default function TerminosPage() {
                 </ul>
               </div>
 
-              {/* SECCIÓN 2 */}
               <div id="registro" className="flex flex-col gap-3 scroll-mt-24">
                 <h2 className="font-heading text-xl font-semibold text-[#001F58]">
                   2. Registro de Usuarios y Obligaciones

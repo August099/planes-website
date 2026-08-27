@@ -1,159 +1,125 @@
-import { notFound, redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
-import ProfileDashboardClient from "./profile-client";
+import { getCurrentUser } from "@/lib/auth-helpers";
+import { notFound } from "next/navigation";
+import { ProfileView } from "@/components/ui/ProfileView";
+import Image from "next/image";
 
-export default async function ProfileDashboardPage({
-  params,
-}: {
+interface Props {
   params: Promise<{ id: string }>;
-}) {
+}
+
+export default async function ProfilePage({ params }: Props) {
   const { id } = await params;
-
   const currentUser = await getCurrentUser();
-
   const isOwner = currentUser?.id === id;
 
-  const userProfile = await prisma.user.findUnique({
+  const rawProfileUser = await prisma.user.findUnique({
     where: { id },
     select: {
       id: true,
       name: true,
-      email: true,
+      email: isOwner,
+      phone: isOwner,
       image: true,
-      phone: true,
-      instagram: true,
-      facebook: true,
       city: true,
       province: true,
+      userType: true,
+      facebook: true,
+      instagram: true,
       createdAt: true,
-      aircraftListingsBalance: true,
-      sparePartsListingsBalance: true,
+      aircrafts: {
+        where: isOwner ? undefined : { status: "ACTIVE" },
+        include: {
+          category: { select: { id: true, name: true } },
+          images: { orderBy: { order: "asc" }, take: 1 },
+          ...(isOwner && {
+            _count: {
+              select: {
+                favorites: true,
+                leads: true,
+                analyticsEvents: true,
+              },
+            },
+          }),
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      spareParts: {
+        where: isOwner ? undefined : { status: "ACTIVE" },
+        include: {
+          category: { select: { id: true, name: true } },
+          images: { orderBy: { order: "asc" }, take: 1 },
+          ...(isOwner && {
+            _count: {
+              select: {
+                favorites: true,
+                leads: true,
+                analyticsEvents: true,
+              },
+            },
+          }),
+        },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
-  if (!userProfile) {
+  if (!rawProfileUser) {
     notFound();
   }
 
-  const rawUserListings = await prisma.aircraft.findMany({
-    where: {
-      sellerId: id,
-      ...(!isOwner && { status: "ACTIVE" }),
-    },
-    include: {
-      images: {
-        orderBy: { order: "asc" },
-        take: 1,
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  // Sanitización de objetos Prisma (Decimal y Date) para el Client Component 
+  // Esto es un fix del chat, me pioló
+  const profileUser = {
+    ...rawProfileUser,
+    createdAt: rawProfileUser.createdAt.toISOString(),
+    aircrafts: rawProfileUser.aircrafts.map((a) => ({
+      ...a,
+      price: a.price ? Number(a.price) : null,
+      createdAt: a.createdAt.toISOString(),
+      updatedAt: a.updatedAt.toISOString(),
+      listingStartsAt: a.listingStartsAt?.toISOString() ?? null,
+      listingExpiresAt: a.listingExpiresAt?.toISOString() ?? null,
+    })),
+    spareParts: rawProfileUser.spareParts.map((s) => ({
+      ...s,
+      price: s.price ? Number(s.price) : null,
+      createdAt: s.createdAt.toISOString(),
+      updatedAt: s.updatedAt.toISOString(),
+      listingStartsAt: s.listingStartsAt?.toISOString() ?? null,
+      listingExpiresAt: s.listingExpiresAt?.toISOString() ?? null,
+    })),
+  };
 
-  // Convertimos el tipo Decimal de Prisma a number nativo para TypeScript y para evitar errores de serialización
-  const userListings = rawUserListings.map((listing) => ({
-    ...listing,
-    price: listing.price ? listing.price.toNumber() : null,
-  }));
-
-  async function updateProfile(formData: FormData) {
-    "use server";
-    if (!currentUser || currentUser.id !== id) throw new Error("No autorizado");
-
-    const name = formData.get("name") as string;
-    const phone = formData.get("phone") as string;
-    const city = formData.get("city") as string;
-    const province = formData.get("province") as string;
-    const instagram = formData.get("instagram") as string;
-    const facebook = formData.get("facebook") as string;
-
-    await prisma.user.update({
-      where: { id },
-      data: { name, phone, city, province, instagram, facebook },
+  let currentUserFavIds: string[] = [];
+  if (currentUser) {
+    const userFavs = await prisma.favorite.findMany({
+      where: { userId: currentUser.id },
+      select: { aircraftId: true, sparePartId: true },
     });
-
-    redirect(`/profile/${id}?updated=true`);
-  }
-
-  async function deleteProfileImage() {
-    "use server";
-    if (!currentUser || currentUser.id !== id) throw new Error("No autorizado");
-
-    await prisma.user.update({
-      where: { id },
-      data: { image: null },
-    });
-
-    redirect(`/profile/${id}?image_deleted=true`);
-  }
-
-  async function uploadProfileImage(formData: FormData) {
-    "use server";
-    if (!currentUser || currentUser.id !== id) throw new Error("No autorizado");
-
-    const file = formData.get("avatar") as File;
-    if (!file || file.size === 0) return;
-
-    // Aquí guardas el archivo en tu proveedor (Cloudinary, AWS S3, Vercel Blob, etc.)
-    const imageUrl = "/uploads/" + file.name; // Reemplazar por tu función de subida real
-
-    await prisma.user.update({
-      where: { id },
-      data: { image: imageUrl },
-    });
-
-    redirect(`/profile/${id}?image_updated=true`);
-  }
-
-  async function extendListing(formData: FormData) {
-    "use server";
-    if (!currentUser || currentUser.id !== id) throw new Error("No autorizado");
-
-    const listingId = formData.get("listingId") as string;
-    const RENEWAL_COST = 1;
-
-    const dbUser = await prisma.user.findUniqueOrThrow({
-      where: { id: currentUser.id },
-      select: { aircraftListingsBalance: true },
-    });
-
-    if ((dbUser.aircraftListingsBalance ?? 0) < RENEWAL_COST) {
-      redirect("/planes?error=insufficient_aircraft_credits");
-    }
-
-    const listing = await prisma.aircraft.findUniqueOrThrow({
-      where: { id: listingId },
-    });
-
-    const currentExpiration = listing.listingExpiresAt
-      ? new Date(listing.listingExpiresAt)
-      : new Date();
-    const baseDate = currentExpiration > new Date() ? currentExpiration : new Date();
-    const newExpiresAt = new Date(baseDate.getTime() + 45 * 24 * 60 * 60 * 1000);
-
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: currentUser.id },
-        data: { aircraftListingsBalance: { decrement: RENEWAL_COST } },
-      }),
-      prisma.aircraft.update({
-        where: { id: listingId },
-        data: { listingExpiresAt: newExpiresAt, status: "ACTIVE" },
-      }),
-    ]);
-
-    redirect(`/profile/${id}?renewed=true`);
+    currentUserFavIds = userFavs
+      .flatMap((f) => [f.aircraftId, f.sparePartId])
+      .filter((favId): favId is string => Boolean(favId));
   }
 
   return (
-    <ProfileDashboardClient
-      userProfile={userProfile}
-      userListings={userListings}
-      isOwner={isOwner}
-      updateProfile={updateProfile}
-      extendListing={extendListing}
-      deleteProfileImage={deleteProfileImage}
-      uploadProfileImage={uploadProfileImage}
-    />
+    <main className="relative min-h-[calc(100vh-80px)] container mx-auto px-4 py-8 pb-16">
+      <div className="fixed inset-0 -z-10 pointer-events-none">
+        <Image
+          src="/bkg-forms.png"
+          alt="Fondo Perfil"
+          fill
+          priority
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-background/85" />
+      </div>
+
+      <ProfileView
+        profileUser={profileUser}
+        isOwner={isOwner}
+        currentUserFavIds={currentUserFavIds}
+      />
+    </main>
   );
 }

@@ -1,58 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-
-const BANNER_MESSAGES = [
-  {
-    title: "Bienvenido a",
-    highlight: "Ventas Aeronáuticas",
-    subtitle: "El marketplace líder para la aviación general y comercial.",
-    buttonText: "Ver aviones",
-    buttonLink: "/planes",
-  },
-  {
-    title: "Próximamente:",
-    highlight: "servicios aeronáuticos",
-    subtitle: "Encontrá mecánicos, fabricantes, hangares y más.",
-  },
-];
+import HomeHeroFilter from "./HomeFilter";
 
 interface HeroBannerProps {
   positionConfig?: {
     vertical?: string;
     horizontal?: string;
   };
-  intervalMs?: number;
 }
 
 export function HeroBanner({
   positionConfig = {
-    vertical: "35%",  
+    vertical: "50%",  
     horizontal: "70%", 
   },
-  intervalMs = 6000,
 }: HeroBannerProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [fadeState, setFadeState] = useState<"in" | "out">("in");
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setFadeState("out");
-
-      setTimeout(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % BANNER_MESSAGES.length);
-        setFadeState("in");
-      }, 500);
-    }, intervalMs);
-
-    return () => clearInterval(timer);
-  }, [intervalMs]);
-
-  const currentMsg = BANNER_MESSAGES[currentIndex];
-
   return (
     <section className="relative w-full h-screen min-h-[550px] sm:min-h-[600px] overflow-hidden">
       {/* Imagen de Fondo */}
@@ -82,37 +45,18 @@ export function HeroBanner({
           } as React.CSSProperties
         }
       >
-        <div
-          className={`transition-opacity duration-500 ${
-            fadeState === "in" ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight md:leading-none">
-            <span className="block text-white">
-              {currentMsg.title}
-            </span>
-            
-            {/* Mobile: rompe línea si no entra / Desktop: mantenido en una sola línea */}
-            <span className="block whitespace-normal md:whitespace-nowrap bg-gradient-to-r from-white via-red-100 to-[#E70F1F] bg-clip-text text-transparent">
-              {currentMsg.highlight}
+        <div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight md:leading-none whitespace-normal md:whitespace-nowrap">
+            <span className="text-white">Bienvenido </span>
+            <span className="bg-gradient-to-r from-white via-red-100 to-[#E70F1F] bg-clip-text text-transparent">
+              a bordo
             </span>
           </h1>
 
-          <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg-nowrap text-white font-medium drop-shadow-md max-w-md mx-auto md:mx-0">
-            {currentMsg.subtitle}
-          </p>
+          {/* Espaciador entre el texto y los filtros */}
+          <span className="block h-6 sm:h-8 md:h-10" />
 
-          {currentMsg.buttonText && (
-            <div className="mt-5 sm:mt-6">
-              <Link
-                href={currentMsg.buttonLink}
-                className="inline-flex items-center gap-2 bg-[#E70F1F] hover:bg-red-700 text-white font-semibold px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base rounded-lg shadow-lg hover:shadow-red-900/30 transition-all duration-200 transform hover:-translate-y-0.5"
-              >
-                {currentMsg.buttonText}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          )}
+          <HomeHeroFilter />
         </div>
       </div>
     </section>

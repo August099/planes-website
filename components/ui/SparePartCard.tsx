@@ -4,15 +4,16 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Heart, Share2 } from "lucide-react";
+import { MapPin, Heart, Share2, Loader2 } from "lucide-react";
+import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
+import { useRouter } from "next/navigation";
 
 type SparePartCardProps = {
   id: string;
   title: string;
   price: number | null;
-  // Ahora category es un string directo que viene del modelo Category de la BD
-  category: string | null; 
-  condition: string | null;
+  category: { name: string } | string | null;
+  condition?: string | null;
   brand?: string | null;
   model?: string | null;
   city?: string | null;
@@ -37,6 +38,8 @@ export function SparePartCard({
   onFavoriteToggle,
 }: SparePartCardProps) {
   const [isFavorite, setIsFavorite] = useState(isFavoriteInitial);
+  const [loadingFav, setLoadingFav] = useState(false);
+  const router = useRouter();
 
   const formattedPrice = price
     ? new Intl.NumberFormat("es-AR", {
@@ -47,22 +50,36 @@ export function SparePartCard({
     : "Consultar";
 
   const locationText = [city, province].filter(Boolean).join(", ");
-  
-  // Como la categoría ahora viene de la base de datos como nombre real, lo usamos directo
-  const categoryLabel = category;
-
+  const categoryLabel = typeof category === "object" && category !== null ? category.name : category;
   const formattedCondition = condition ? condition.replace(/_/g, " ") : null;
   const brandAndModel = [brand, model].filter(Boolean).join(" ");
-
   const specs = [categoryLabel, brandAndModel].filter(Boolean);
 
-  const handleFavoriteClick = (e: React.MouseEvent) => {
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (loadingFav) return;
+
     const nextState = !isFavorite;
     setIsFavorite(nextState);
-    if (onFavoriteToggle) {
-      onFavoriteToggle(id, nextState);
+    setLoadingFav(true);
+
+    try {
+      const res = await toggleFavoriteAction(id, "SPARE_PART"); 
+      
+      setIsFavorite(res.isFavorite);
+      
+      if (onFavoriteToggle) {
+        onFavoriteToggle(id, res.isFavorite);
+      }
+    } catch (error: any) {
+      setIsFavorite(!nextState);
+      if (error.message === "UNAUTHENTICATED") {
+        router.push("/login");
+      }
+    } finally {
+      setLoadingFav(false);
     }
   };
 
@@ -70,7 +87,7 @@ export function SparePartCard({
     e.preventDefault();
     e.stopPropagation();
 
-    const shareUrl = `${window.location.origin}/sparepart-details/${id}`;
+    const shareUrl = `${window.location.origin}/spareparts/sparepart-details/${id}`;
 
     if (navigator.share) {
       try {
@@ -78,19 +95,16 @@ export function SparePartCard({
           title: title,
           url: shareUrl,
         });
-      } catch (error) {
-      }
+      } catch (error) {}
     } else {
       await navigator.clipboard.writeText(shareUrl);
-      alert("Enlace copiado al portapapeles");
+      alert("¡Enlace copiado al portapapeles!");
     }
   };
 
   return (
     <Link href={`/spareparts/sparepart-details/${id}`} className="group block h-full">
-      {/* ACÁ VA EL COLOR */}
-      <Card className="h-full flex flex-col p-3 rounded-2xl bg-[#FFFFFF]/[0.4] border border-[#001F58]/10 hover:border-[#001F58]/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-        
+      <Card className="h-full flex flex-col p-3 rounded-2xl bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
         <div className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100">
           <Image
             src={imageUrl}
@@ -112,7 +126,7 @@ export function SparePartCard({
               type="button"
               onClick={handleShareClick}
               aria-label="Compartir"
-              className="p-2 rounded-full bg-white/80 backdrop-blur-md text-slate-700 hover:text-blue-600 hover:bg-white shadow-sm transition-all duration-200"
+              className="p-2 rounded-full bg-white/80 backdrop-blur-md text-slate-700 hover:text-blue-600 hover:bg-white shadow-sm transition-all duration-200 cursor-pointer"
             >
               <Share2 className="w-4 h-4" />
             </button>
@@ -120,22 +134,27 @@ export function SparePartCard({
             <button
               type="button"
               onClick={handleFavoriteClick}
+              disabled={loadingFav}
               aria-label="Añadir a favoritos"
-              className="p-2 rounded-full bg-white/80 backdrop-blur-md text-slate-700 hover:text-red-600 hover:bg-white shadow-sm transition-all duration-200"
+              className="p-2 rounded-full bg-white/80 backdrop-blur-md text-slate-700 hover:text-red-600 hover:bg-white shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50"
             >
-              <Heart
-                className={`w-4 h-4 transition-colors ${
-                  isFavorite ? "fill-red-600 text-red-600" : ""
-                }`}
-              />
+              {loadingFav ? (
+                <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+              ) : (
+                <Heart
+                  className={`w-4 h-4 transition-colors ${
+                    isFavorite ? "fill-red-600 text-red-600" : ""
+                  }`}
+                />
+              )}
             </button>
           </div>
         </div>
 
         <CardContent className="p-3 pt-4 flex flex-col flex-1 justify-between gap-4">
           <div className="space-y-1">
-            <h3 
-              className="font-heading font-semibold text-base text-[#001F58] line-clamp-1 group-hover:text-primary transition-colors" 
+            <h3
+              className="font-heading font-semibold text-base text-[#001F58] line-clamp-1 group-hover:text-primary transition-colors"
               title={title}
             >
               {title}

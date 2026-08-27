@@ -11,7 +11,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { HeaderWrapper } from "./header-wrapper";
 import { HeaderLogo } from "./header-logo";
-import { AnimatedSearch } from "./animated-search";
+import HeaderSearchBar from "./HeaderSearchBar";
+
 
 export async function Header() {
   const session = await auth();
@@ -29,6 +30,10 @@ export async function Header() {
 
         <HeaderLogo />
 
+        <div className="flex-1 max-w-md mx-4 hidden sm:block">
+          <HeaderSearchBar />
+        </div>      
+
         <nav className="hidden md:flex items-center gap-6">
           <Link href="/" className={linkClass}>
             Inicio
@@ -42,8 +47,6 @@ export async function Header() {
           <Link href={sellLink} className={linkClass}>
             Vender
           </Link>
-
-          <AnimatedSearch />
 
           {session?.user ? (
             <div className="flex items-center gap-3">

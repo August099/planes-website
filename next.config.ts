@@ -8,7 +8,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "*.supabase.co", // Permite URLs del storage de Supabase
+        hostname: "**.supabase.co", // Permite URLs del storage de Supabase
       },
       {
         protocol: 'https',
@@ -16,6 +16,13 @@ const nextConfig = {
       }
     ],
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "30mb", // Aumenta el límite a 10MB (o "20mb" si subes fotos muy pesadas)
+    },
+  },
 };
 
 module.exports = nextConfig;
+
+

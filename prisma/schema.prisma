@@ -1,50 +1,39 @@
-datasource db {
-  provider = "postgresql"
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// ==========================================
-// 1. USUARIOS Y AUTENTICACIÓN
-// ==========================================
-
-enum UserType {
-  PARTICULAR
-  RESELLER
-  FACTORY
+datasource db {
+  provider = "postgresql"
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  userType      UserType  @default(PARTICULAR)
-  passwordHash  String?
-  city          String?
-  province      String?
-  image         String?
-  phone         String?
-  instagram     String?
-  facebook      String?
-  isAdmin       Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-
-  aircraftListingsBalance   Int @default(0)
-  sparePartsListingsBalance Int @default(0)
-
-  Subscription Subscription?
-  accounts     Account[]
-  sessions     Session[]
-  aircrafts    Aircraft[]
-  spareParts   SparePart[]
-  purchases    Purchase[]
-  favorites    Favorite[]
-  reports      Report[]
-  adBanners    AdBanner[]
-  questions    Question[]
+  id                        String        @id @default(cuid())
+  name                      String?
+  email                     String        @unique
+  emailVerified             DateTime?
+  passwordHash              String?
+  image                     String?
+  phone                     String?
+  isAdmin                   Boolean       @default(false)
+  createdAt                 DateTime      @default(now())
+  aircraftListingsBalance   Int           @default(0)
+  sparePartsListingsBalance Int           @default(0)
+  facebook                  String?
+  instagram                 String?
+  city                      String?
+  province                  String?
+  userType                  UserType      @default(PARTICULAR)
+  accounts                  Account[]
+  adBanners                 AdBanner[]
+  aircrafts                 Aircraft[]
+  favorites                 Favorite[]
+  purchases                 Purchase[]
+  questions                 Question[]
+  reports                   Report[]
+  sessions                  Session[]
+  spareParts                SparePart[]
+  Subscription              Subscription?
+  analyticsEvents AnalyticsEvent[]
 }
 
 model Account {
@@ -60,8 +49,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -71,8 +59,7 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -83,15 +70,393 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// ==========================================
-// 2. PLANES Y SUSCRIPCIONES
-// ==========================================
+model Plan {
+  id                      String           @id @default(cuid())
+  name                    String
+  type                    PlanType
+  price                   Decimal          @db.Decimal(12, 2)
+  savingsPercent          Int?
+  usageDescription        String?
+  includesVerifiedBadge   Boolean          @default(false)
+  isActive                Boolean          @default(true)
+  aircraftListingsCount   Int              @default(0)
+  sparePartsListingsCount Int              @default(0)
+  billingInterval         BillingInterval?
+  billingType             PlanBillingType  @default(ONE_TIME)
+  isUnlimitedAircraft     Boolean          @default(false)
+  isUnlimitedSpareParts   Boolean          @default(false)
+  purchases               Purchase[]
+  subscriptions           Subscription[]
+}
+
+model Purchase {
+  id             String        @id @default(cuid())
+  userId         String
+  planId         String
+  mpPreferenceId String?
+  paymentStatus  PaymentStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  adBanners      AdBanner[]
+  aircrafts      Aircraft[]
+  plan           Plan          @relation(fields: [planId], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
+  spareParts     SparePart[]
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  planId               String
+  status               SubscriptionStatus @default(ACTIVE)
+  mpSubscriptionId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  plan                 Plan               @relation(fields: [planId], references: [id])
+  user                 User               @relation(fields: [userId], references: [id])
+}
+
+model AdBanner {
+  id             String         @id @default(cuid())
+  userId         String
+  purchaseId     String?
+  title          String?
+  description    String
+  bannerImageUrl String?
+  linkUrl        String?
+  status         AdBannerStatus @default(PENDING_PAYMENT)
+  startsAt       DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  purchase       Purchase?      @relation(fields: [purchaseId], references: [id])
+  user           User           @relation(fields: [userId], references: [id])
+}
+
+model AircraftCategory {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  aircrafts Aircraft[]
+}
+
+model AircraftBrand {
+  id        String          @id @default(cuid())
+  name      String          @unique
+  aircrafts Aircraft[]
+  models    AircraftModel[]
+}
+
+model AircraftModel {
+  id        String             @id @default(cuid())
+  brandId   String
+  name      String
+  aircrafts Aircraft[]
+  brand     AircraftBrand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  variants  AircraftSubModel[]
+
+  @@unique([brandId, name])
+}
+
+model AircraftSubModel {
+  id        String        @id @default(cuid())
+  modelId   String
+  name      String
+  aircrafts Aircraft[]
+  model     AircraftModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([modelId, name])
+}
+
+model Aircraft {
+  id               String              @id @default(cuid())
+  sellerId         String
+  title            String
+  customBrand      String?
+  year             Int
+  totalTimeHours   Int
+  price            Decimal?            @db.Decimal(12, 2)
+  city             String
+  province         String
+  status           AircraftStatus      @default(PENDING_PAYMENT)
+  listingStartsAt  DateTime?
+  listingExpiresAt DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  purchaseId       String?
+  description      String
+  categoryId       String
+  customModel      String?
+  financing        Boolean             @default(false)
+  trade            Boolean             @default(false)
+  brandId          String?
+  condition        AircraftCondition   @default(USADO)
+  engineType       EngineType?
+  modelId          String?
+  subModelId       String?
+  brand            AircraftBrand?      @relation(fields: [brandId], references: [id])
+  category         AircraftCategory    @relation(fields: [categoryId], references: [id])
+  model            AircraftModel?      @relation(fields: [modelId], references: [id])
+  purchase         Purchase?           @relation(fields: [purchaseId], references: [id])
+  seller           User                @relation(fields: [sellerId], references: [id])
+  subModel         AircraftSubModel?   @relation(fields: [subModelId], references: [id])
+  documents        AircraftDocument[]
+  engines          AircraftEngine[]
+  images           AircraftImage[]
+  propeller        AircraftPropeller[]
+  favorites        Favorite[]
+  leads            Lead[]
+  questions        Question[]
+  reports          Report[]
+  tags             Tag[]               @relation("AircraftToTag")
+  analyticsEvents AnalyticsEvent[]
+
+  @@index([price])
+  @@index([status])
+  @@index([brandId, modelId])
+  @@index([province, city])
+  @@index([year])
+}
+
+model AircraftImage {
+  id         String   @id @default(cuid())
+  aircraftId String
+  url        String
+  order      Int      @default(0)
+  aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+}
+
+model AircraftDocument {
+  id         String   @id @default(cuid())
+  aircraftId String
+  url        String
+  name       String
+  uploadedAt DateTime @default(now())
+  aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+}
+
+model AircraftEngine {
+  id          String   @id @default(cuid())
+  aircraftId  String
+  engineHours Int?
+  TBO         Int
+  brand       String?
+  model       String?
+  aircraft    Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+}
+
+model AircraftPropeller {
+  id             String   @id @default(cuid())
+  aircraftId     String
+  propellerHours Int?
+  model          String?
+  aircraft       Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  parentId     String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  parent       Category?     @relation("CategoryTree", fields: [parentId], references: [id])
+  children     Category[]    @relation("CategoryTree")
+  products     SparePart[]
+  filterGroups FilterGroup[] @relation("CategoryFilterGroups")
+}
+
+model FilterGroup {
+  id         String     @id @default(cuid())
+  name       String
+  slug       String     @unique
+  order      Int        @default(0)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  filters    Filter[]
+  categories Category[] @relation("CategoryFilterGroups")
+}
+
+model Filter {
+  id        String              @id @default(cuid())
+  name      String
+  slug      String
+  type      FilterType
+  order     Int                 @default(0)
+  groupId   String
+  parentId  String?
+  config    Json?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  values    EntityFilterValue[]
+  group     FilterGroup         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  parent    Filter?             @relation("FilterHierarchy", fields: [parentId], references: [id])
+  children  Filter[]            @relation("FilterHierarchy")
+  options   FilterOption[]
+
+  @@unique([groupId, slug])
+  @@index([parentId])
+}
+
+model FilterOption {
+  id           String              @id @default(cuid())
+  label        String
+  value        String
+  order        Int                 @default(0)
+  filterId     String
+  extra        Json?
+  entityValues EntityFilterValue[]
+  filter       Filter              @relation(fields: [filterId], references: [id], onDelete: Cascade)
+
+  @@unique([filterId, value])
+}
+
+model EntityFilterValue {
+  id           String        @id @default(cuid())
+  productId    String
+  filterId     String
+  optionId     String?
+  valueString  String?
+  valueNumber  Float?
+  valueBoolean Boolean?
+  filter       Filter        @relation(fields: [filterId], references: [id], onDelete: Cascade)
+  option       FilterOption? @relation(fields: [optionId], references: [id])
+  product      SparePart     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, filterId, optionId])
+  @@index([productId])
+  @@index([filterId])
+}
+
+model SparePart {
+  id               String              @id @default(cuid())
+  sellerId         String
+  title            String
+  partNumber       String?
+  price            Decimal?            @db.Decimal(12, 2)
+  city             String
+  province         String
+  status           SparePartStatus     @default(PENDING_PAYMENT)
+  listingStartsAt  DateTime?
+  listingExpiresAt DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  purchaseId       String?
+  description      String
+  stock            Int                 @default(1)
+  categoryId       String
+  attributes       Json                @default("{}")
+  filterValues     EntityFilterValue[]
+  favorites        Favorite[]
+  questions        Question[]
+  reports          Report[]
+  category         Category            @relation(fields: [categoryId], references: [id])
+  purchase         Purchase?           @relation(fields: [purchaseId], references: [id])
+  seller           User                @relation(fields: [sellerId], references: [id])
+  images           SparePartImage[]
+  leads            SparePartLead[]
+  analyticsEvents AnalyticsEvent[]
+
+  @@index([price])
+  @@index([status])
+  @@index([province, city])
+}
+
+model SparePartImage {
+  id          String    @id @default(cuid())
+  sparePartId String
+  url         String
+  order       Int       @default(0)
+  sparePart   SparePart @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+}
+
+model Lead {
+  id         String   @id @default(cuid())
+  aircraftId String
+  buyerName  String
+  buyerEmail String
+  buyerPhone String?
+  message    String
+  createdAt  DateTime @default(now())
+  aircraft   Aircraft @relation(fields: [aircraftId], references: [id])
+}
+
+model SparePartLead {
+  id          String    @id @default(cuid())
+  sparePartId String
+  buyerName   String
+  buyerEmail  String
+  buyerPhone  String?
+  message     String
+  createdAt   DateTime  @default(now())
+  sparePart   SparePart @relation(fields: [sparePartId], references: [id])
+}
+
+model Favorite {
+  id          String     @id @default(cuid())
+  userId      String
+  aircraftId  String?
+  sparePartId String?
+  aircraft    Aircraft?  @relation(fields: [aircraftId], references: [id])
+  sparePart   SparePart? @relation(fields: [sparePartId], references: [id])
+  user        User       @relation(fields: [userId], references: [id])
+
+  @@unique([userId, aircraftId, sparePartId])
+}
+
+model Report {
+  id            String       @id @default(cuid())
+  aircraftId    String?
+  sparePartId   String?
+  reason        String
+  details       String?
+  reporterEmail String?
+  status        ReportStatus @default(PENDING)
+  createdAt     DateTime     @default(now())
+  userId        String
+  aircraft      Aircraft?    @relation(fields: [aircraftId], references: [id])
+  sparePart     SparePart?   @relation(fields: [sparePartId], references: [id])
+  user          User         @relation(fields: [userId], references: [id])
+}
+
+model Tag {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  slug      String     @unique
+  aircrafts Aircraft[] @relation("AircraftToTag")
+}
+
+model Question {
+  id          String     @id @default(cuid())
+  userId      String
+  aircraftId  String?
+  sparePartId String?
+  question    String
+  answer      String?
+  answeredAt  DateTime?
+  createdAt   DateTime   @default(now())
+  aircraft    Aircraft?  @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+  sparePart   SparePart? @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId])
+  @@index([sparePartId])
+  @@index([userId])
+}
+
+enum UserType {
+  PARTICULAR
+  RESELLER
+  FACTORY
+}
 
 enum PlanType {
   AIRCRAFT_PACK
   SPARE_PART_PACK
-  SUBSCRIPTION
   AD_BANNER
+  SUBSCRIPTION
 }
 
 enum PlanBillingType {
@@ -117,130 +482,12 @@ enum SubscriptionStatus {
   EXPIRED
 }
 
-model Plan {
-  id                    String          @id @default(cuid())
-  name                  String
-  type                  PlanType
-  billingType           PlanBillingType @default(ONE_TIME)
-  billingInterval       BillingInterval?
-  price                 Decimal         @db.Decimal(12, 2)
-  savingsPercent        Int?
-  usageDescription      String?
-  includesVerifiedBadge Boolean         @default(false)
-  isActive              Boolean         @default(true)
-
-  aircraftListingsCount   Int           @default(0)
-  sparePartsListingsCount Int           @default(0)
-
-  isUnlimitedAircraft   Boolean         @default(false)
-  isUnlimitedSpareParts Boolean         @default(false)
-
-  purchases     Purchase[]
-  subscriptions Subscription[]
-}
-
-model Purchase {
-  id             String        @id @default(cuid())
-  userId         String
-  planId         String
-  mpPreferenceId String?
-  paymentStatus  PaymentStatus @default(PENDING)
-  createdAt      DateTime      @default(now())
-
-  user       User        @relation(fields: [userId], references: [id])
-  plan       Plan        @relation(fields: [planId], references: [id])
-  aircrafts  Aircraft[]
-  spareParts SparePart[]
-  adBanners  AdBanner[]
-}
-
-model Subscription {
-  id                   String             @id @default(cuid())
-  userId               String             @unique
-  planId               String
-  status               SubscriptionStatus @default(ACTIVE)
-  mpSubscriptionId     String?            @unique
-  stripeSubscriptionId String?            @unique
-
-  currentPeriodStart   DateTime
-  currentPeriodEnd     DateTime
-  cancelAtPeriodEnd    Boolean            @default(false)
-
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
-  plan Plan @relation(fields: [planId], references: [id])
-}
-
-// ==========================================
-// 3. PUBLICIDAD
-// ==========================================
-
 enum AdBannerStatus {
   PENDING_PAYMENT
   PENDING_REVIEW
   ACTIVE
   EXPIRED
   REJECTED
-}
-
-model AdBanner {
-  id             String         @id @default(cuid())
-  userId         String
-  purchaseId     String?
-  title          String?
-  description    String
-  bannerImageUrl String?
-  linkUrl        String?
-  status         AdBannerStatus @default(PENDING_PAYMENT)
-  startsAt       DateTime?
-  expiresAt      DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-
-  user     User      @relation(fields: [userId], references: [id])
-  purchase Purchase? @relation(fields: [purchaseId], references: [id])
-}
-
-// ==========================================
-// 4. TAXONOMÍA Y MODELO DE AERONAVES
-// ==========================================
-
-model AircraftCategory {
-  id        String     @id @default(cuid())
-  name      String     @unique
-  aircrafts Aircraft[]
-}
-
-model AircraftBrand {
-  id        String          @id @default(cuid())
-  name      String          @unique
-  models    AircraftModel[]
-  aircrafts Aircraft[]
-}
-
-model AircraftModel {
-  id        String             @id @default(cuid())
-  brandId   String
-  name      String
-  
-  brand     AircraftBrand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  variants  AircraftSubModel[]
-  aircrafts Aircraft[]
-
-  @@unique([brandId, name])
-}
-
-model AircraftSubModel {
-  id        String        @id @default(cuid())
-  modelId   String
-  name      String
-  
-  model     AircraftModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
-  aircrafts Aircraft[]
-
-  @@unique([modelId, name])
 }
 
 enum EngineType {
@@ -261,108 +508,6 @@ enum AircraftStatus {
   PENDING_PAYMENT
 }
 
-model Aircraft {
-  id                    String            @id @default(cuid())
-  sellerId              String
-  title                 String
-  description           String
-  
-  categoryId            String
-  category              AircraftCategory  @relation(fields: [categoryId], references: [id])
-
-  brandId               String?
-  brand                 AircraftBrand?    @relation(fields: [brandId], references: [id])
-  modelId               String?
-  model                 AircraftModel?    @relation(fields: [modelId], references: [id])
-  subModelId            String?
-  subModel              AircraftSubModel? @relation(fields: [subModelId], references: [id])
-
-  customBrand           String?
-  customModel           String?
-
-  engineType            EngineType?
-  condition             AircraftCondition @default(USADO)
-  year                  Int
-  totalTimeHours        Int
-  price                 Decimal?          @db.Decimal(12, 2)
-  
-  trade                 Boolean           @default(false)
-  financing             Boolean           @default(false)
-
-  city                  String
-  province              String
-  
-  status                AircraftStatus    @default(PENDING_PAYMENT)
-  listingStartsAt       DateTime?
-  listingExpiresAt      DateTime?
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-
-  purchaseId            String?
-  purchase              Purchase?         @relation(fields: [purchaseId], references: [id])
-  seller                User              @relation(fields: [sellerId], references: [id])
-
-  images                AircraftImage[]
-  documents             AircraftDocument[]
-  engines               AircraftEngine[]
-  propeller             AircraftPropeller[]
-  leads                 Lead[]
-  favorites             Favorite[]
-  reports               Report[]
-  questions             Question[]
-  tags                  Tag[]             @relation("AircraftToTag")
-
-  @@index([price])
-  @@index([status])
-  @@index([brandId, modelId])
-  @@index([province, city])
-  @@index([year])
-}
-
-model AircraftImage {
-  id         String   @id @default(cuid())
-  aircraftId String
-  url        String
-  order      Int      @default(0)
-
-  aircraft Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
-}
-
-model AircraftDocument {
-  id         String   @id @default(cuid())
-  aircraftId String
-  url        String
-  name       String
-  uploadedAt DateTime @default(now())
-
-  aircraft Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
-}
-
-model AircraftEngine {
-  id          String   @id @default(cuid())
-  aircraftId  String
-  engineHours Int?
-  TBO         Int
-  brand       String?
-  model       String?
-
-  aircraft Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
-}
-
-model AircraftPropeller {
-  id             String   @id @default(cuid())
-  aircraftId     String
-  propellerHours Int?
-  model          String?
-
-  aircraft Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
-}
-
-// ==========================================
-// 5. REPUESTOS Y ACCESORIOS (Doble Árbol + JsonB)
-// ==========================================
-
-
 enum SparePartStatus {
   PENDING_PAYMENT
   ACTIVE
@@ -370,219 +515,13 @@ enum SparePartStatus {
   SOLD
 }
 
-// ==========================================
-// SISTEMA DE FILTROS DINÁMICOS
-// ==========================================
-// Patrón: estructura relacional + config en JSON (metadata-driven)
-// Pensado para que se puedan crear/editar filtros desde un admin
-// sin necesidad de migraciones de base de datos.
-
 enum FilterType {
-  SELECT        // Dropdown de una sola opción
-  MULTI_SELECT  // Checkboxes, múltiples opciones
-  RANGE         // Rango numérico (precio, año, etc.)
-  BOOLEAN       // Sí / No, toggle
-  COLOR         // Selector de color
-  TEXT          // Búsqueda de texto libre
-}
-
-// Categorías de productos (o la entidad que estés filtrando)
-model Category {
-  id       String     @id @default(cuid())
-  name     String
-  slug     String     @unique
-
-  parentId String?
-  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryTree")
-
-  // Qué grupos de filtros aplican a esta categoría
-  filterGroups FilterGroup[] @relation("CategoryFilterGroups")
-  products     SparePart[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Agrupador visual de filtros
-// (ej: "Especificaciones técnicas", "Precio y disponibilidad")
-model FilterGroup {
-  id    String @id @default(cuid())
-  name  String
-  slug  String @unique
-  order Int    @default(0)
-
-  filters    Filter[]
-  categories Category[] @relation("CategoryFilterGroups")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Definición de un filtro individual
-model Filter {
-  id    String     @id @default(cuid())
-  name  String
-  slug  String
-  type  FilterType
-  order Int        @default(0)
-
-  groupId String
-  group   FilterGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  // Auto-relación: esto resuelve "filtros dentro de filtros"
-  parentId String?
-  parent   Filter?  @relation("FilterHierarchy", fields: [parentId], references: [id])
-  children Filter[] @relation("FilterHierarchy")
-
-  // Acá vive todo lo "variable" según el tipo de filtro:
-  // RANGE -> { min, max, step, unit }
-  // TEXT  -> { placeholder, maxLength }
-  // SELECT/MULTI_SELECT -> { allowMultipleGroups: true, ... }
-  // Agregar un filtro nuevo = insertar una fila, no migrar el schema.
-  config Json?
-
-  options FilterOption[]
-  values  EntityFilterValue[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([groupId, slug])
-  @@index([parentId])
-}
-
-// Opciones fijas para filtros tipo SELECT / MULTI_SELECT / COLOR
-model FilterOption {
-  id    String @id @default(cuid())
-  label String
-  value String
-  order Int    @default(0)
-
-  filterId String
-  filter   Filter @relation(fields: [filterId], references: [id], onDelete: Cascade)
-
-  // Metadata extra: hex de color, ícono, etc.
-  extra Json?
-
-  entityValues EntityFilterValue[]
-
-  @@unique([filterId, value])
-}
-
-// El valor real que tiene cada producto para cada filtro.
-// Columnas tipadas (en vez de todo JSON) para poder indexar y
-// hacer queries de filtrado rápidas.
-model EntityFilterValue {
-  id String @id @default(cuid())
-
-  productId String
-  product   SparePart @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  filterId String
-  filter   Filter @relation(fields: [filterId], references: [id], onDelete: Cascade)
-
-  optionId String?
-  option   FilterOption? @relation(fields: [optionId], references: [id])
-
-  // Se usa solo una de estas tres según el FilterType
-  valueString  String?
-  valueNumber  Float?
-  valueBoolean Boolean?
-
-  @@unique([productId, filterId, optionId])
-  @@index([productId])
-  @@index([filterId])
-}
-
-model SparePart {
-  id                 String               @id @default(cuid())
-  sellerId           String
-  title              String
-  description        String
-
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id])
-
-  partNumber         String?
-  price              Decimal?             @db.Decimal(12, 2)
-  stock              Int                  @default(1)
-  
-  // Atributos dinámicos en JsonB
-  attributes         Json                 @default("{}")
-
-  city               String
-  province           String
-  status             SparePartStatus      @default(PENDING_PAYMENT)
-  listingStartsAt    DateTime?
-  listingExpiresAt   DateTime?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-
-  purchaseId         String?
-  purchase           Purchase?            @relation(fields: [purchaseId], references: [id])
-  seller             User                 @relation(fields: [sellerId], references: [id])
-  
-  images             SparePartImage[]
-  leads              SparePartLead[]
-  favorites          Favorite[]
-  reports            Report[]
-  questions          Question[]
-  filterValues EntityFilterValue[]
-
-  @@index([price])
-  @@index([status])
-  @@index([province, city])
-}
-
-model SparePartImage {
-  id          String   @id @default(cuid())
-  sparePartId String
-  url         String
-  order       Int      @default(0)
-
-  sparePart SparePart @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
-}
-
-// ==========================================
-// 6. INTERACCIONES Y COMUNICACIÓN
-// ==========================================
-
-model Lead {
-  id         String   @id @default(cuid())
-  aircraftId String
-  buyerName  String
-  buyerEmail String
-  buyerPhone String?
-  message    String
-  createdAt  DateTime @default(now())
-
-  aircraft Aircraft @relation(fields: [aircraftId], references: [id])
-}
-
-model SparePartLead {
-  id          String   @id @default(cuid())
-  sparePartId String
-  buyerName   String
-  buyerEmail  String
-  buyerPhone  String?
-  message     String
-  createdAt   DateTime @default(now())
-
-  sparePart SparePart @relation(fields: [sparePartId], references: [id])
-}
-
-model Favorite {
-  id          String     @id @default(cuid())
-  userId      String
-  aircraftId  String?
-  sparePartId String?
-
-  user      User       @relation(fields: [userId], references: [id])
-  aircraft  Aircraft?  @relation(fields: [aircraftId], references: [id])
-  sparePart SparePart? @relation(fields: [sparePartId], references: [id])
-
-  @@unique([userId, aircraftId, sparePartId])
+  SELECT
+  MULTI_SELECT
+  RANGE
+  BOOLEAN
+  COLOR
+  TEXT
 }
 
 enum ReportStatus {
@@ -591,45 +530,51 @@ enum ReportStatus {
   DISMISSED
 }
 
-model Report {
-  id            String       @id @default(cuid())
-  userId        String
-  aircraftId    String?
-  sparePartId   String?
-  reason        String
-  details       String?
-  reporterEmail String?
-  status        ReportStatus @default(PENDING)
-  createdAt     DateTime     @default(now())
-
-  user      User       @relation(fields: [userId], references: [id])
-  aircraft  Aircraft?  @relation(fields: [aircraftId], references: [id])
-  sparePart SparePart? @relation(fields: [sparePartId], references: [id])
+enum AnalyticsEventType {
+  PAGE_VIEW
+  AIRCRAFT_VIEW
+  SPARE_PART_VIEW
+  SEARCH
+  FILTER_APPLIED
+  CONTACT_SELLER
+  WHATSAPP_CLICK
+  PHONE_CLICK
+  EMAIL_CLICK
+  CREATE_AIRCRAFT_LISTING
+  CREATE_SPARE_PART_LISTING
 }
 
-model Tag {
-  id        String     @id @default(cuid())
-  name      String     @unique
-  slug      String     @unique
-  aircrafts Aircraft[] @relation("AircraftToTag")
-}
-
-model Question {
-  id          String    @id @default(cuid())
-  userId      String    
-  aircraftId  String?   
-  sparePartId String?   
+model AnalyticsEvent {
+  id          String             @id @default(cuid())
+  eventType   AnalyticsEventType
   
-  question    String    
-  answer      String?   
-  answeredAt  DateTime? 
-  createdAt   DateTime  @default(now())
+  // Identificación del usuario/visitante (opcionales)
+  userId      String?
+  user        User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  anonymousId String?            // Para tracking de visitantes no autenticados (almacenado en cookie/localStorage)
+  
+  // Relaciones opcionales a los recursos medidos
+  aircraftId  String?
+  aircraft    Aircraft?          @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+  
+  sparePartId String?
+  sparePart   SparePart?         @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
 
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  aircraft  Aircraft?  @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
-  sparePart SparePart? @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+  // Datos flexibles para búsquedas, filtros, rutas, etc.
+  metadata    Json               @default("{}")
 
-  @@index([aircraftId])
-  @@index([sparePartId])
+  // Atribución / Origen de tráfico
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+
+  createdAt   DateTime           @default(now())
+
+  // Índices optimizados para las consultas requeridas
+  @@index([eventType, createdAt])
+  @@index([aircraftId, eventType])
+  @@index([sparePartId, eventType])
   @@index([userId])
+  @@index([anonymousId])
 }
