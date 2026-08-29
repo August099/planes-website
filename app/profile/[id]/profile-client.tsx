@@ -75,7 +75,7 @@ export default function ProfileDashboardClient({
   return (
     <main className="relative isolate overflow-hidden min-h-screen -mb-16">
       <Image
-        src="/bkg-plans.jpg"
+        src="/bkg-profile.jpg"
         alt="Fondo Perfil"
         fill
         priority
