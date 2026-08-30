@@ -8,15 +8,27 @@ import { HeroBanner } from "@/components/ui/hero-banner";
 import HomeServicesCards from "@/components/ui/HomeServiceCards";
 
 export default async function HomePage() {
-  const featuredAircraftsFromDb = await prisma.aircraft.findMany({
-    where: { status: "ACTIVE" },
-    include: { 
-      images: { orderBy: { order: "asc" }, take: 1 },
-      category: true, // Incluimos la relación con la categoría para obtener el objeto con su nombre
-    },
-    orderBy: { createdAt: "desc" },
-    take: 8,
-  });
+  const [featuredAircraftsFromDb, sparePartCategories] = await Promise.all([
+    prisma.aircraft.findMany({
+      where: { status: "ACTIVE" },
+      include: {
+        images: { orderBy: { order: "asc" }, take: 1 },
+        category: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+    }),
+    prisma.category.findMany({
+      where: { parentId: null }, // Traemos solo categorías principales de repuestos
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        icon: true,
+      },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   const formattedAircrafts = featuredAircraftsFromDb.map((aircraft) => ({
     id: aircraft.id,
@@ -34,11 +46,10 @@ export default async function HomePage() {
     <>
       <HeroBanner />
 
-
       <main className="container mx-auto px-4 py-8 space-y-12">
         <FeaturedAircraftCarousel aircrafts={formattedAircrafts} />
 
-        <SparePartCategoriesCarousel />
+        <SparePartCategoriesCarousel categories={sparePartCategories} />
       </main>
 
       <SellerCta />
