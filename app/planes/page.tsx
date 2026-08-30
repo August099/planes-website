@@ -1,58 +1,84 @@
 import { prisma } from "@/lib/prisma";
 import { AircraftCard } from "@/components/ui/AircraftCard";
-import { PlanesFiltersSidebar } from "@/components/ui/PlanesFiltersSidebar";
-// Te lo borré de momento shad
+import { SortDropdown } from "@/components/ui/SortDropdown";
+import { AircraftFiltersWrapper } from "@/components/ui/AircraftFiltersWrapper";
+import { Prisma } from "@prisma/client";
 import Link from "next/link";
 import Image from "next/image";
 
 interface Props {
-  searchParams: Promise<{
-    category?: string;
-    brand?: string;
-    model?: string;
-    price?: string;
-    page?: string;
-  }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+// Convierte un searchParam que puede venir como string o string[] siempre a array
+function toArray(value: string | string[] | undefined): string[] {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
 }
 
 export default async function AvionesPage({ searchParams }: Props) {
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
-  const itemsPerPage = 20;
+  const itemsPerPage = 21;
   const skip = (currentPage - 1) * itemsPerPage;
 
-  // Construcción dinámica de filtros para la BD
-  const whereClause: any = {
-    status: "ACTIVE",
+  const categoryIds = toArray(params.category);
+  const brandIds = toArray(params.brand);
+  const modelIds = toArray(params.model);
+  const subModelIds = toArray(params.subModel);
+  const conditions = toArray(params.condition);
+  const minPrice = params.minPrice ? Number(params.minPrice) : undefined;
+  const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
+
+  const sort = (params.sort as string) ?? "recent";
+
+  const orderByMap: Record<string, Prisma.AircraftOrderByWithRelationInput> = {
+    price_desc: { price: "desc" },
+    price_asc: { price: "asc" },
+    recent: { createdAt: "desc" },
+    oldest: { createdAt: "asc" },
+    az: { title: "asc" },
+    za: { title: "desc" },
   };
 
-  if (params.category) whereClause.categoryId = params.category;
-  if (params.brand) whereClause.brandId = params.brand;
-  if (params.model) whereClause.modelId = params.model;
+  const orderBy = orderByMap[sort] ?? orderByMap.recent;
 
-  if (params.price) {
-    if (params.price === "0-100k") {
-      whereClause.price = { lte: 100000 };
-    } else if (params.price === "100k-300k") {
-      whereClause.price = { gte: 100000, lte: 300000 };
-    } else if (params.price === "300k+") {
-      whereClause.price = { gte: 300000 };
-    }
-  }
+  const whereClause: Prisma.AircraftWhereInput = {
+    status: "ACTIVE",
+    ...(categoryIds.length > 0 && { categoryId: { in: categoryIds } }),
+    ...(brandIds.length > 0 && { brandId: { in: brandIds } }),
+    ...(modelIds.length > 0 && { modelId: { in: modelIds } }),
+    ...(subModelIds.length > 0 && { subModelId: { in: subModelIds } }),
+    ...(conditions.length > 0 && { condition: { in: conditions as any } }),
+    ...((minPrice !== undefined || maxPrice !== undefined) && {
+      price: {
+        ...(minPrice !== undefined && { gte: minPrice }),
+        ...(maxPrice !== undefined && { lte: maxPrice }),
+      },
+    }),
+  };
 
-  const [aircrafts, totalAircrafts] = await Promise.all([
+  const [aircrafts, totalAircrafts, categories, brands] = await Promise.all([
     prisma.aircraft.findMany({
       where: whereClause,
       include: {
         category: { select: { id: true, name: true } },
         images: { orderBy: { order: "asc" }, take: 1 },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy,
       skip,
       take: itemsPerPage,
     }),
-    prisma.aircraft.count({
-      where: whereClause,
+    prisma.aircraft.count({ where: whereClause }),
+    prisma.aircraftCategory.findMany({ orderBy: { name: "asc" } }),
+    prisma.aircraftBrand.findMany({
+      orderBy: { name: "asc" },
+      include: {
+        models: {
+          orderBy: { name: "asc" },
+          include: { variants: { orderBy: { name: "asc" } } },
+        },
+      },
     }),
   ]);
 
@@ -60,13 +86,17 @@ export default async function AvionesPage({ searchParams }: Props) {
   const hasNextPage = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
 
-  // Helper para preservar parametros en los links de paginación
+  // Helper para preservar TODOS los filtros activos al cambiar de página
   const createPageUrl = (pageNumber: number) => {
     const urlParams = new URLSearchParams();
-    if (params.category) urlParams.set("category", params.category);
-    if (params.brand) urlParams.set("brand", params.brand);
-    if (params.model) urlParams.set("model", params.model);
-    if (params.price) urlParams.set("price", params.price);
+    categoryIds.forEach((c) => urlParams.append("category", c));
+    brandIds.forEach((b) => urlParams.append("brand", b));
+    modelIds.forEach((m) => urlParams.append("model", m));
+    subModelIds.forEach((s) => urlParams.append("subModel", s));
+    conditions.forEach((c) => urlParams.append("condition", c));
+    if (minPrice !== undefined) urlParams.set("minPrice", String(minPrice));
+    if (maxPrice !== undefined) urlParams.set("maxPrice", String(maxPrice));
+    urlParams.set("sort", sort);
     urlParams.set("page", pageNumber.toString());
     return `?${urlParams.toString()}`;
   };
@@ -80,12 +110,9 @@ export default async function AvionesPage({ searchParams }: Props) {
     } else {
       pages.push(1);
       if (currentPage > 3) pages.push("...");
-
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
-
       for (let i = start; i <= end; i++) pages.push(i);
-
       if (currentPage < totalPages - 2) pages.push("...");
       pages.push(totalPages);
     }
@@ -93,21 +120,21 @@ export default async function AvionesPage({ searchParams }: Props) {
   };
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16 container mx-auto px-4 py-8">
-      <Image
-        src="/bkg-forms.png"
-        alt="Fondo Formularios"
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
+    <main className="relative isolate min-h-screen px-4 py-8">
+      <div className="absolute inset-0 -z-20 overflow-hidden">
+        <Image src="/bkg-forms.png" alt="Fondo Formularios" fill priority className="object-cover" />
+      </div>
       <div className="absolute inset-0 -z-10 bg-background/85" />
 
-      <h1 className="text-2xl font-medium mb-6">
-        Aviones en venta ({totalAircrafts})
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-medium">
+          Aviones en venta ({totalAircrafts})
+        </h1>
+        <SortDropdown />
+      </div>
 
       <section className="flex items-start gap-6">
+        <AircraftFiltersWrapper categories={categories} brands={brands} />
 
         <div className="w-full">
           {aircrafts.length === 0 ? (
@@ -115,7 +142,7 @@ export default async function AvionesPage({ searchParams }: Props) {
               No se encontraron aeronaves con los criterios de búsqueda seleccionados.
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-6 mb-8">
               {aircrafts.map((aircraft) => (
                 <AircraftCard
                   key={aircraft.id}
@@ -136,10 +163,7 @@ export default async function AvionesPage({ searchParams }: Props) {
           {totalPages > 1 && (
             <div className="flex justify-center items-center gap-2 mt-8 border-t pt-4 flex-wrap">
               {hasPrevPage ? (
-                <Link
-                  href={createPageUrl(currentPage - 1)}
-                  className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors bg-white/80"
-                >
+                <Link href={createPageUrl(currentPage - 1)} className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors bg-white/80">
                   Anterior
                 </Link>
               ) : (
@@ -148,40 +172,28 @@ export default async function AvionesPage({ searchParams }: Props) {
                 </span>
               )}
 
-              {getPageNumbers().map((page, index) => {
-                if (page === "...") {
-                  return (
-                    <span
-                      key={`ellipsis-${index}`}
-                      className="px-3 py-2 text-sm text-neutral-400 font-medium"
-                    >
-                      ...
-                    </span>
-                  );
-                }
-
-                const isCurrent = page === currentPage;
-
-                return (
+              {getPageNumbers().map((page, index) =>
+                page === "..." ? (
+                  <span key={`ellipsis-${index}`} className="px-3 py-2 text-sm text-neutral-400 font-medium">
+                    ...
+                  </span>
+                ) : (
                   <Link
                     key={`page-${page}`}
                     href={createPageUrl(Number(page))}
                     className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
-                      isCurrent
+                      page === currentPage
                         ? "bg-neutral-900 text-white border-neutral-900 pointer-events-none"
                         : "hover:bg-neutral-100 text-neutral-700 bg-white/80"
                     }`}
                   >
                     {page}
                   </Link>
-                );
-              })}
+                )
+              )}
 
               {hasNextPage ? (
-                <Link
-                  href={createPageUrl(currentPage + 1)}
-                  className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors bg-white/80"
-                >
+                <Link href={createPageUrl(currentPage + 1)} className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors bg-white/80">
                   Siguiente
                 </Link>
               ) : (

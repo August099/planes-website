@@ -7,25 +7,26 @@ datasource db {
 }
 
 model User {
-  id                        String        @id @default(cuid())
+  id                        String           @id @default(cuid())
   name                      String?
-  email                     String        @unique
+  email                     String           @unique
   emailVerified             DateTime?
   passwordHash              String?
   image                     String?
   phone                     String?
-  isAdmin                   Boolean       @default(false)
-  createdAt                 DateTime      @default(now())
-  aircraftListingsBalance   Int           @default(0)
-  sparePartsListingsBalance Int           @default(0)
+  isAdmin                   Boolean          @default(false)
+  createdAt                 DateTime         @default(now())
+  aircraftListingsBalance   Int              @default(0)
+  sparePartsListingsBalance Int              @default(0)
   facebook                  String?
   instagram                 String?
   city                      String?
   province                  String?
-  userType                  UserType      @default(PARTICULAR)
+  userType                  UserType         @default(PARTICULAR)
   accounts                  Account[]
   adBanners                 AdBanner[]
   aircrafts                 Aircraft[]
+  analyticsEvents           AnalyticsEvent[]
   favorites                 Favorite[]
   purchases                 Purchase[]
   questions                 Question[]
@@ -33,7 +34,6 @@ model User {
   sessions                  Session[]
   spareParts                SparePart[]
   Subscription              Subscription?
-  analyticsEvents AnalyticsEvent[]
 }
 
 model Account {
@@ -206,12 +206,12 @@ model Aircraft {
   engines          AircraftEngine[]
   images           AircraftImage[]
   propeller        AircraftPropeller[]
+  analyticsEvents  AnalyticsEvent[]
   favorites        Favorite[]
   leads            Lead[]
   questions        Question[]
   reports          Report[]
   tags             Tag[]               @relation("AircraftToTag")
-  analyticsEvents AnalyticsEvent[]
 
   @@index([price])
   @@index([status])
@@ -348,6 +348,7 @@ model SparePart {
   stock            Int                 @default(1)
   categoryId       String
   attributes       Json                @default("{}")
+  analyticsEvents  AnalyticsEvent[]
   filterValues     EntityFilterValue[]
   favorites        Favorite[]
   questions        Question[]
@@ -357,7 +358,6 @@ model SparePart {
   seller           User                @relation(fields: [sellerId], references: [id])
   images           SparePartImage[]
   leads            SparePartLead[]
-  analyticsEvents AnalyticsEvent[]
 
   @@index([price])
   @@index([status])
@@ -444,6 +444,30 @@ model Question {
   @@index([aircraftId])
   @@index([sparePartId])
   @@index([userId])
+}
+
+model AnalyticsEvent {
+  id          String             @id @default(cuid())
+  eventType   AnalyticsEventType
+  userId      String?
+  anonymousId String?
+  aircraftId  String?
+  sparePartId String?
+  metadata    Json               @default("{}")
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  createdAt   DateTime           @default(now())
+  aircraft    Aircraft?          @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+  sparePart   SparePart?         @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+  user        User?              @relation(fields: [userId], references: [id])
+
+  @@index([eventType, createdAt])
+  @@index([aircraftId, eventType])
+  @@index([sparePartId, eventType])
+  @@index([userId])
+  @@index([anonymousId])
 }
 
 enum UserType {
@@ -542,39 +566,4 @@ enum AnalyticsEventType {
   EMAIL_CLICK
   CREATE_AIRCRAFT_LISTING
   CREATE_SPARE_PART_LISTING
-}
-
-model AnalyticsEvent {
-  id          String             @id @default(cuid())
-  eventType   AnalyticsEventType
-  
-  // Identificación del usuario/visitante (opcionales)
-  userId      String?
-  user        User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
-  anonymousId String?            // Para tracking de visitantes no autenticados (almacenado en cookie/localStorage)
-  
-  // Relaciones opcionales a los recursos medidos
-  aircraftId  String?
-  aircraft    Aircraft?          @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
-  
-  sparePartId String?
-  sparePart   SparePart?         @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
-
-  // Datos flexibles para búsquedas, filtros, rutas, etc.
-  metadata    Json               @default("{}")
-
-  // Atribución / Origen de tráfico
-  referrer    String?
-  utmSource   String?
-  utmMedium   String?
-  utmCampaign String?
-
-  createdAt   DateTime           @default(now())
-
-  // Índices optimizados para las consultas requeridas
-  @@index([eventType, createdAt])
-  @@index([aircraftId, eventType])
-  @@index([sparePartId, eventType])
-  @@index([userId])
-  @@index([anonymousId])
 }
