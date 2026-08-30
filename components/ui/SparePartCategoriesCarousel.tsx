@@ -2,34 +2,32 @@
 
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Radio, 
-  Cog, 
-  Shield, 
-  Fan,
-  Wrench, 
-  SprayCan, 
-  HelpCircle,
-  Zap, 
-  Armchair,
-  Package,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { DynamicCategoryIcon } from "@/components/ui/DynamicCategoryIcon";
 
-const SPARE_PART_CATEGORIES = [
-  { id: "AVIONICS_RADIO", label: "Aviónica & Radios", icon: Radio },
-  { id: "ENGINE", label: "Motor & Partes", icon: Cog },
-  { id: "AIRFRAME", label: "Fuselaje & Estructura", icon: Shield },
-  { id: "SPRAYING", label: "Equipo de Fumigación", icon: SprayCan },
-  { id: "PROPELLER", label: "Hélices", icon: Fan },
-  { id: "HARDWARE", label: "Herramental & Varios", icon: Wrench },
-  { id: "ELECTRICAL", label: "Sistema Eléctrico & Luces", icon: Zap },
-  { id: "INTERIOR", label: "Interior & Confort", icon: Armchair },
-  { id: "OTHER", label: "Otros", icon: HelpCircle },
-];
+// Importaciones de Swiper
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper/modules";
 
-export function SparePartCategoriesCarousel() {
+// Estilos de Swiper obligatorios
+import "swiper/css";
+import "swiper/css/navigation";
+
+export interface CategoryItem {
+  id: string;
+  name: string;
+  slug: string;
+  icon?: string | null;
+}
+
+interface Props {
+  categories: CategoryItem[];
+}
+
+export function SparePartCategoriesCarousel({ categories }: Props) {
   return (
-    <section className="py-6">
+    <section className="py-6 relative group">
+      {/* CABECERA */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-heading font-semibold">
@@ -47,28 +45,78 @@ export function SparePartCategoriesCarousel() {
         </Link>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-none">
-        {SPARE_PART_CATEGORIES.map((cat) => {
-          const Icon = cat.icon || Package;
-          return (
-            <Link
-              key={cat.id}
-              href={`/spare-parts?category=${cat.id}`}
-              className="snap-start shrink-0 w-[160px] sm:w-[180px]"
-            >
-              <Card className="h-full bg-card hover:border-primary/50 hover:shadow-md transition-all group cursor-pointer border-border/60">
-                <CardContent className="p-5 flex flex-col items-center text-center justify-center h-full">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200">
-                    <Icon className="h-6 w-6 text-primary group-hover:text-primary-foreground transition-colors" />
-                  </div>
-                  <span className="font-medium text-sm text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                    {cat.label}
-                  </span>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
+      {/* CONTENEDOR DEL CARRUSEL */}
+      <div className="relative px-1">
+        {/* BOTÓN NAVEGACIÓN IZQUIERDA */}
+        <button
+          id="swiper-button-prev-cat"
+          className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-0 disabled:pointer-events-none transition-all duration-200"
+          aria-label="Anterior"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
+        {/* SWIPER */}
+        <Swiper
+          modules={[Navigation]}
+          navigation={{
+            prevEl: "#swiper-button-prev-cat",
+            nextEl: "#swiper-button-next-cat",
+          }}
+          spaceBetween={16}
+          slidesPerView={2} // Para móviles pequeños
+          breakpoints={{
+            480: {
+              slidesPerView: 3,
+              spaceBetween: 16,
+            },
+            640: {
+              slidesPerView: 4,
+              spaceBetween: 16,
+            },
+            768: {
+              slidesPerView: 5,
+              spaceBetween: 20,
+            },
+            1024: {
+              slidesPerView: 6,
+              spaceBetween: 20,
+            },
+          }}
+          className="py-2 !overflow-hidden rounded-2xl"
+        >
+          {categories.map((cat) => (
+            <SwiperSlide key={cat.id} className="h-auto">
+              <Link
+                href={`/spareparts?category=${cat.id}`}
+                className="block h-full"
+              >
+                <Card className="aspect-square w-full bg-white dark:bg-white border-slate-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-200 group/card cursor-pointer rounded-2xl overflow-hidden">
+                  <CardContent className="p-4 flex flex-col items-center text-center justify-center h-full w-full">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover/card:bg-primary group-hover/card:text-white transition-colors duration-200 shrink-0">
+                      <DynamicCategoryIcon
+                        name={cat.icon}
+                        className="h-6 w-6 text-[#001F58] group-hover/card:text-white transition-colors"
+                      />
+                    </div>
+                    <span className="font-semibold text-xs sm:text-sm text-slate-800 group-hover/card:text-primary transition-colors line-clamp-2">
+                      {cat.name}
+                    </span>
+                  </CardContent>
+                </Card>
+              </Link>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+
+        {/* BOTÓN NAVEGACIÓN DERECHA */}
+        <button
+          id="swiper-button-next-cat"
+          className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-0 disabled:pointer-events-none transition-all duration-200"
+          aria-label="Siguiente"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
     </section>
   );

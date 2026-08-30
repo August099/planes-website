@@ -67,7 +67,7 @@ export default async function AdminLayout({
 
       <main className="relative isolate overflow-hidden min-h-screen flex-1 overflow-y-auto p-8 -mb-16">
         <Image
-          src="/bkg-admin.png"
+          src="/bkg-profile.jpg"
           alt=""
           fill
           priority

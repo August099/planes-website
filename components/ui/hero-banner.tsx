@@ -53,7 +53,6 @@ export function HeroBanner({
             </span>
           </h1>
 
-          {/* Espaciador entre el texto y los filtros */}
           <span className="block h-6 sm:h-8 md:h-10" />
 
           <HomeHeroFilter />
