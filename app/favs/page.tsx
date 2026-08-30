@@ -32,7 +32,7 @@ export default async function FavoritesPage() {
   });
 
   return (
-    <main className="relative isolate overflow-hidden h-screen container mx-auto px-4 py-8">
+    <main className="relative isolate overflow-hidden h-screen mx-auto px-4 py-8">
       <Image
         src="/bkg-forms.png"
         alt="Fondo Favoritos"
