@@ -41,13 +41,6 @@ export function FiltersSidebar({
       .flatMap((b) => b.models.map((m) => ({ ...m, brandName: b.name })));
   }, [brandIds, brands]);
 
-  const availableSubModels = useMemo(() => {
-    if (modelIds.length === 0) return [];
-    return availableModels
-      .filter((m) => modelIds.includes(m.id))
-      .flatMap((m) => m.variants.map((v) => ({ ...v, modelName: m.name })));
-  }, [modelIds, availableModels]);
-
   const toggleValue = (list: string[], setList: (v: string[]) => void, value: string) => {
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   };
@@ -55,7 +48,6 @@ export function FiltersSidebar({
   // Al destildar una marca, hay que limpiar los modelos/submodelos que dependían de ella
   const toggleBrand = (brandId: string) => {
     const isRemoving = brandIds.includes(brandId);
-    const newBrandIds = toggleValue(brandIds, setBrandIds, brandId) as unknown as void;
 
     if (isRemoving) {
       const brand = brands.find((b) => b.id === brandId);

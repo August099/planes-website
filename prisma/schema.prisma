@@ -27,6 +27,7 @@ model User {
   adBanners                 AdBanner[]
   aircrafts                 Aircraft[]
   analyticsEvents           AnalyticsEvent[]
+  CouponUsage               CouponUsage[]
   favorites                 Favorite[]
   purchases                 Purchase[]
   questions                 Question[]
@@ -96,8 +97,14 @@ model Purchase {
   mpPreferenceId String?
   paymentStatus  PaymentStatus @default(PENDING)
   createdAt      DateTime      @default(now())
+  couponId       String?
+  discountAmount Decimal       @default(0) @db.Decimal(12, 2)
+  finalPrice     Decimal       @default(0) @db.Decimal(12, 2)
+  originalPrice  Decimal       @default(0) @db.Decimal(12, 2)
   adBanners      AdBanner[]
   aircrafts      Aircraft[]
+  CouponUsage    CouponUsage?
+  Coupon         Coupon?       @relation(fields: [couponId], references: [id])
   plan           Plan          @relation(fields: [planId], references: [id])
   user           User          @relation(fields: [userId], references: [id])
   spareParts     SparePart[]
@@ -145,6 +152,7 @@ model AircraftCategory {
 model AircraftBrand {
   id        String          @id @default(cuid())
   name      String          @unique
+  logoUrl   String?
   aircrafts Aircraft[]
   models    AircraftModel[]
 }
@@ -196,6 +204,7 @@ model Aircraft {
   engineType       EngineType?
   modelId          String?
   subModelId       String?
+  rent             Boolean             @default(false)
   brand            AircraftBrand?      @relation(fields: [brandId], references: [id])
   category         AircraftCategory    @relation(fields: [categoryId], references: [id])
   model            AircraftModel?      @relation(fields: [modelId], references: [id])
@@ -259,12 +268,11 @@ model Category {
   id           String        @id @default(cuid())
   name         String
   slug         String        @unique
-  icon         String?
   parentId     String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   icon         String?
-  parent       Category?     @relation("CategoryTree", fields: [parentId], references: [id])
+  parent       Category?     @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
   children     Category[]    @relation("CategoryTree")
   products     SparePart[]
   filterGroups FilterGroup[] @relation("CategoryFilterGroups")
@@ -350,6 +358,7 @@ model SparePart {
   stock            Int                 @default(1)
   categoryId       String
   attributes       Json                @default("{}")
+  inPesos          Boolean             @default(false)
   analyticsEvents  AnalyticsEvent[]
   filterValues     EntityFilterValue[]
   favorites        Favorite[]
@@ -472,6 +481,40 @@ model AnalyticsEvent {
   @@index([anonymousId])
 }
 
+model Coupon {
+  id             String        @id
+  code           String        @unique
+  type           CouponType    @default(DISCOUNT)
+  discountType   DiscountType?
+  discountValue  Decimal       @default(0) @db.Decimal(12, 2)
+  scope          CouponScope   @default(ALL)
+  maxUses        Int?
+  currentUses    Int           @default(0)
+  maxUsesPerUser Int           @default(1)
+  startsAt       DateTime?
+  expiresAt      DateTime?
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  CouponUsage    CouponUsage[]
+  Purchase       Purchase[]
+}
+
+model CouponUsage {
+  id          String    @id
+  couponId    String
+  userId      String
+  purchaseId  String?   @unique
+  aircraftId  String?
+  sparePartId String?
+  usedAt      DateTime  @default(now())
+  Coupon      Coupon    @relation(fields: [couponId], references: [id])
+  Purchase    Purchase? @relation(fields: [purchaseId], references: [id])
+  User        User      @relation(fields: [userId], references: [id])
+
+  @@index([couponId, userId])
+}
+
 enum UserType {
   PARTICULAR
   RESELLER
@@ -568,4 +611,22 @@ enum AnalyticsEventType {
   EMAIL_CLICK
   CREATE_AIRCRAFT_LISTING
   CREATE_SPARE_PART_LISTING
+}
+
+enum CouponScope {
+  ALL
+  AIRCRAFT
+  SPARE_PART
+  AD_BANNER
+}
+
+enum CouponType {
+  DISCOUNT
+  RENEWAL
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FULL_DISCOUNT
 }

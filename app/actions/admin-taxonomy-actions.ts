@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
+import { FilterType } from "@prisma/client";
 
 async function verifyAdmin() {
   const user = await getCurrentUser();
@@ -195,7 +196,93 @@ export async function updateSparePartCategoryAction(id: string, name: string, ic
 
 export async function deleteSparePartCategoryAction(id: string) {
   await verifyAdmin();
-  await prisma.category.delete({ where: { id } });
+
+  // Buscamos si HAY productos en esta categoría o en cualquiera de sus descendientes
+  const allCategories = await prisma.category.findMany({ select: { id: true, parentId: true } });
+  function getDescendantIds(catId: string): string[] {
+    const children = allCategories.filter((c) => c.parentId === catId);
+    return [catId, ...children.flatMap((c) => getDescendantIds(c.id))];
+  }
+  const affectedIds = getDescendantIds(id);
+
+  const productCount = await prisma.sparePart.count({
+    where: { categoryId: { in: affectedIds } },
+  });
+
+  if (productCount > 0) {
+    throw new Error(
+      `No se puede eliminar: hay ${productCount} repuesto(s) publicado(s) en esta rama de categorías.`
+    );
+  }
+
+  await prisma.category.delete({ where: { id } }); // acá sí, borra toda la rama de categorías vacías
   revalidatePath("/admin/taxonomy");
   return { success: true };
+}
+
+// ==========================================
+// REPUESTOS: Grupos de filtros
+// ==========================================
+
+export async function createFilterGroupAction(name: string, categoryIds: string[]) {
+  const slug = name.toLowerCase().trim().replace(/\s+/g, "-");
+  await prisma.filterGroup.create({
+    data: { name, slug, categories: { connect: categoryIds.map((id) => ({ id })) } },
+  });
+  revalidatePath("/admin/taxonomy");
+}
+
+export async function updateFilterGroupAction(id: string, name: string, categoryIds: string[]) {
+  await prisma.filterGroup.update({
+    where: { id },
+    data: { name, categories: { set: categoryIds.map((id) => ({ id })) } },
+  });
+  revalidatePath("/admin/taxonomy");
+}
+
+export async function deleteFilterGroupAction(id: string) {
+  await prisma.filterGroup.delete({ where: { id } });
+  revalidatePath("/admin/taxonomy");
+}
+
+// ==========================================
+// REPUESTOS: Filtros
+// ==========================================
+
+export async function createFilterAction(
+  groupId: string,
+  name: string,
+  type: FilterType,
+  options: string[],
+  parentId?: string,
+  triggerOptionValue?: string
+) {
+  const slug = name.toLowerCase().trim().replace(/\s+/g, "-");
+  await prisma.filter.create({
+    data: {
+      groupId,
+      name,
+      slug,
+      type,
+      parentId: parentId || undefined,
+      config: parentId && triggerOptionValue ? { triggerOptionValue } : undefined,
+      ...((type === "SELECT" || type === "MULTI_SELECT") && {
+        options: {
+          create: options
+            .filter((o) => o.trim())
+            .map((label, i) => ({
+              label,
+              value: label.toLowerCase().trim().replace(/\s+/g, "-"),
+              order: i,
+            })),
+        },
+      }),
+    },
+  });
+  revalidatePath("/admin/taxonomy");
+}
+
+export async function deleteFilterAction(id: string) {
+  await prisma.filter.delete({ where: { id } });
+  revalidatePath("/admin/taxonomy");
 }
