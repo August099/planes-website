@@ -143,12 +143,6 @@ model AdBanner {
   user           User           @relation(fields: [userId], references: [id])
 }
 
-model AircraftCategory {
-  id        String     @id @default(cuid())
-  name      String     @unique
-  aircrafts Aircraft[]
-}
-
 model AircraftBrand {
   id        String          @id @default(cuid())
   name      String          @unique
@@ -158,24 +152,38 @@ model AircraftBrand {
 }
 
 model AircraftModel {
-  id        String             @id @default(cuid())
-  brandId   String
-  name      String
-  aircrafts Aircraft[]
-  brand     AircraftBrand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  variants  AircraftSubModel[]
+  id                String             @id @default(cuid())
+  brandId           String
+  name              String
+  defaultCategoryId String?            // ← nuevo: categoría por defecto de este modelo
+
+  aircrafts         Aircraft[]
+  brand             AircraftBrand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  defaultCategory   AircraftCategory?  @relation(fields: [defaultCategoryId], references: [id])
+  variants          AircraftSubModel[]
 
   @@unique([brandId, name])
 }
 
 model AircraftSubModel {
-  id        String        @id @default(cuid())
-  modelId   String
-  name      String
-  aircrafts Aircraft[]
-  model     AircraftModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  id                String            @id @default(cuid())
+  modelId           String
+  name              String
+  categoryOverride  String?           // ← nuevo: solo se completa si esta variante difiere del modelo padre
+
+  aircrafts         Aircraft[]
+  model             AircraftModel     @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  categoryOverrideRef AircraftCategory? @relation(fields: [categoryOverride], references: [id])
 
   @@unique([modelId, name])
+}
+
+model AircraftCategory {
+  id                String             @id @default(cuid())
+  name              String             @unique
+  aircrafts         Aircraft[]
+  defaultForModels  AircraftModel[]    // relación inversa
+  overrideForSubModels AircraftSubModel[] // relación inversa
 }
 
 model Aircraft {

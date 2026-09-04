@@ -39,8 +39,6 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-white/70">
               <li><Link href="/planes" className="hover:text-white transition-colors">Aviones en venta</Link></li>
               <li><Link href="/spareparts" className="hover:text-white transition-colors">Repuestos en venta</Link></li>
-              <li><Link href="/plans" className="hover:text-white transition-colors">Planes para publicar</Link></li>
-              <li><Link href="/ads" className="hover:text-white transition-colors">Publicite su negocio</Link></li>
             </ul>
           </div>
 
