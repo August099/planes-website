@@ -3,6 +3,12 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 import { FilterType } from "@prisma/client";
 
 async function verifyAdmin() {
@@ -232,6 +238,35 @@ export async function deleteSparePartCategoryAction(id: string) {
   return { success: true };
 }
 
+export async function uploadBrandLogoAction(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user || !user.isAdmin) throw new Error("UNAUTHORIZED");
+
+  const file = formData.get("file") as File | null;
+  if (!file || file.size === 0) throw new Error("NO_FILE");
+
+  const fileExt = file.name.split(".").pop();
+  const fileName = `brand-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  // Subir imagen al bucket 'brands' (asegúrate de que el bucket sea Público)
+  const { error } = await supabase.storage
+    .from("brands")
+    .upload(fileName, buffer, {
+      contentType: file.type,
+      upsert: true,
+    });
+
+  if (error) throw new Error(error.message);
+
+  const { data: publicUrlData } = supabase.storage
+    .from("brands")
+    .getPublicUrl(fileName);
+
+  return publicUrlData.publicUrl;
+}
 // ==========================================
 // REPUESTOS: Grupos de filtros
 // ==========================================

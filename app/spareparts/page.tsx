@@ -23,7 +23,6 @@ export default async function SparePartsPage({ searchParams }: Props) {
   const itemsPerPage = 20;
   const skip = (currentPage - 1) * itemsPerPage;
 
-<<<<<<< HEAD
   // 1. Obtener el usuario actual
   const user = await getCurrentUser();
 
@@ -34,9 +33,6 @@ export default async function SparePartsPage({ searchParams }: Props) {
       : [params.category]
     : [];
 
-=======
-  const categoryParam = toArray(params.category);
->>>>>>> augusto
   const minPrice = params.minPrice ? Number(params.minPrice) : undefined;
   const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
 
@@ -75,10 +71,6 @@ export default async function SparePartsPage({ searchParams }: Props) {
     where.categoryId = { in: allTargetCategoryIds };
   }
 
-<<<<<<< HEAD
-  // 2. Ejecución paralela de consultas incluyendo los favoritos del usuario
-  const [spareParts, totalSpareParts, userFavorites] = await Promise.all([
-=======
   // ==========================================
   // Filtros dinámicos (filter_<slug> y filter_<slug>_min/_max)
   // ==========================================
@@ -131,8 +123,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
   // ==========================================
   // Ejecución paralela: listado + total + datos para el sidebar
   // ==========================================
-  const [spareParts, totalSpareParts] = await Promise.all([
->>>>>>> augusto
+  const [spareParts, totalSpareParts, userFavorites] = await Promise.all([
     prisma.sparePart.findMany({
       where,
       include: {

@@ -18,19 +18,14 @@ import {
   createSparePartCategoryAction,
   updateSparePartCategoryAction,
   deleteSparePartCategoryAction,
-<<<<<<< HEAD
-  uploadBrandLogoAction,
-} from "@/app/actions/admin-taxonomy-actions";
-import { Plus, Plane, Wrench, CheckCircle2, ExternalLink, Pencil, Trash2, X, Check, ImageIcon, Upload } from "lucide-react";
-=======
+  uploadBrandLogoAction,  
   createFilterGroupAction,
   deleteFilterGroupAction,
   createFilterAction,
   deleteFilterAction,
 } from "@/app/actions/admin-taxonomy-actions";
-import { Plus, Plane, Wrench, CheckCircle2, ExternalLink, Pencil, Trash2, X, Check } from "lucide-react";
+import { Plus, Plane, Wrench, CheckCircle2, ExternalLink, Pencil, Trash2, X, Check, ImageIcon, Upload } from "lucide-react";
 import { FilterType } from "@prisma/client";
->>>>>>> augusto
 
 interface SubModel {
   id: string;
