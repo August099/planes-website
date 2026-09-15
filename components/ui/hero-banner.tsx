@@ -24,7 +24,7 @@ export function HeroBanner({
         alt="Fondo Ventas Aeronáuticas"
         fill
         priority
-        className="object-cover object-right sm:object-center select-none"
+        className="object-cover object-[80%_center] sm:object-[70%_center] md:object-center select-none"
         sizes="100vw"
       />
 

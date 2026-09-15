@@ -1,26 +1,56 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { AuthError } from "next-auth";
+import { useSearchParams } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
+import { signIn } from "next-auth/react";
 
-import { signIn } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
+export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const errorParam = searchParams.get("error");
+  const successParam = searchParams.get("success");
 
-interface LoginPageProps {
-  searchParams: Promise<{ error?: string }>;
-}
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const params = await searchParams;
-  const hasError = params?.error === "CredentialsSignin";
+  const handleCredentialsLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMessage(null);
+
+    const formData = new FormData(e.currentTarget);
+    const email = (formData.get("email") as string)?.trim().toLowerCase();
+    const password = formData.get("password") as string;
+
+    const res = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    setLoading(false);
+
+    if (res?.error) {
+      if (res.error.includes("EmailNotVerified")) {
+        setErrorMessage("EmailNotVerified");
+      } else {
+        setErrorMessage("CredentialsSignin");
+      }
+    } else {
+      window.location.href = "/";
+    }
+  };
 
   return (
     <main className="relative isolate overflow-hidden min-h-screen -mb-16 flex items-center justify-center py-16">
-      {/* Fondo optimizado con la imagen bkg-login.jpg */}
       <Image
         src="/bkg-login.jpg"
         alt="Fondo Iniciar Sesión"
@@ -45,58 +75,43 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
           {/* Botones de Auth Social */}
           <div className="space-y-3">
-            {/* Botón Google */}
-            <form
-              action={async () => {
-                "use server";
-                await signIn("google", { redirectTo: "/" });
-              }}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => signIn("google", { callbackUrl: "/" })}
+              className="w-full gap-2 bg-white/80 border-[#001F58]/20 hover:bg-white text-[#001F58] font-medium rounded-xl shadow-sm cursor-pointer"
             >
-              <Button
-                type="submit"
-                variant="outline"
-                className="w-full gap-2 bg-white/80 border-[#001F58]/20 hover:bg-white text-[#001F58] font-medium rounded-xl shadow-sm"
-              >
-                <svg width="18" height="18" viewBox="0 0 48 48">
-                  <path
-                    fill="#EA4335"
-                    d="M24 9.5c3.9 0 6.6 1.7 8.1 3.1l6-5.9C34.6 3.4 30 1.5 24 1.5 14.9 1.5 7.1 6.9 3.6 14.6l7.1 5.5C12.4 14.1 17.7 9.5 24 9.5z"
-                  />
-                  <path
-                    fill="#4285F4"
-                    d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.6c-.5 3-2.2 5.5-4.7 7.2l7.1 5.5c4.2-3.9 6.5-9.6 6.5-17.2z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M10.7 28.1c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-7.1-5.5C2 16.6 1.5 20.2 1.5 24s.5 7.4 2.1 10.6l7.1 5.5z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M24 46.5c6 0 11-2 14.6-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.5 2.1-6.3 0-11.6-4.6-13.3-10.6l-7.1 5.5C7.1 41.1 14.9 46.5 24 46.5z"
-                  />
-                </svg>
-                Continuar con Google
-              </Button>
-            </form>
-
-            {/* Botón Facebook */}
-            <form
-              action={async () => {
-                "use server";
-                await signIn("facebook", { redirectTo: "/" });
-              }}
+              <svg width="18" height="18" viewBox="0 0 48 48">
+                <path
+                  fill="#EA4335"
+                  d="M24 9.5c3.9 0 6.6 1.7 8.1 3.1l6-5.9C34.6 3.4 30 1.5 24 1.5 14.9 1.5 7.1 6.9 3.6 14.6l7.1 5.5C12.4 14.1 17.7 9.5 24 9.5z"
+                />
+                <path
+                  fill="#4285F4"
+                  d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.6c-.5 3-2.2 5.5-4.7 7.2l7.1 5.5c4.2-3.9 6.5-9.6 6.5-17.2z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M10.7 28.1c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-7.1-5.5C2 16.6 1.5 20.2 1.5 24s.5 7.4 2.1 10.6l7.1 5.5z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M24 46.5c6 0 11-2 14.6-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.5 2.1-6.3 0-11.6-4.6-13.3-10.6l-7.1 5.5C7.1 41.1 14.9 46.5 24 46.5z"
+                />
+              </svg>
+              Continuar con Google
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => signIn("facebook", { callbackUrl: "/" })}
+              className="w-full gap-2 bg-white/80 border-[#001F58]/20 hover:bg-white text-[#001F58] font-medium rounded-xl shadow-sm cursor-pointer"
             >
-              <Button
-                type="submit"
-                variant="outline"
-                className="w-full gap-2 bg-white/80 border-[#001F58]/20 hover:bg-white text-[#001F58] font-medium rounded-xl shadow-sm"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
-                  <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.89v2.26h3.32l-.53 3.49h-2.79V24C19.61 23.09 24 18.1 24 12.07z" />
-                </svg>
-                Continuar con Facebook
-              </Button>
-            </form>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
+                <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.89v2.26h3.32l-.53 3.49h-2.79V24C19.61 23.09 24 18.1 24 12.07z" />
+              </svg>
+              Continuar con Facebook
+            </Button>
           </div>
 
           {/* Separador */}
@@ -106,35 +121,27 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <Separator className="flex-1 bg-[#001F58]/15" />
           </div>
 
-          {/* Alerta de Error */}
-          {hasError && (
+          {/* MENSAJES Y ALERTAS */}
+          {successParam === "EmailVerified" && (
+            <div className="rounded-xl bg-green-50 p-3 text-xs sm:text-sm text-green-700 border border-green-200">
+              ¡Casilla de correo verificada con éxito! Ya podés iniciar sesión.
+            </div>
+          )}
+
+          {(errorMessage === "CredentialsSignin" || errorParam === "CredentialsSignin") && (
             <div className="rounded-xl bg-red-50 p-3 text-xs sm:text-sm text-red-600 border border-red-200">
               Email o contraseña incorrectos. Por favor, verificá tus datos.
             </div>
           )}
 
-          {/* Formulario de Credentials */}
-          <form
-            action={async (formData) => {
-              "use server";
-              const email = (formData.get("email") as string)?.trim().toLowerCase();
-              const password = formData.get("password") as string;
+          {errorMessage === "EmailNotVerified" && (
+            <div className="rounded-xl bg-amber-50 p-3 text-xs sm:text-sm text-amber-700 border border-amber-200">
+              Debés activar tu cuenta desde el link enviado a tu casilla de correo antes de ingresar.
+            </div>
+          )}
 
-              try {
-                await signIn("credentials", {
-                  email,
-                  password,
-                  redirectTo: "/",
-                });
-              } catch (error) {
-                if (error instanceof AuthError) {
-                  return redirect("/login?error=CredentialsSignin");
-                }
-                throw error;
-              }
-            }}
-            className="space-y-4"
-          >
+          {/* Formulario de Credentials */}
+          <form onSubmit={handleCredentialsLogin} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-xs font-semibold text-[#001F58]">
                 Email
@@ -152,24 +159,37 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <Label htmlFor="password" className="text-xs font-semibold text-[#001F58]">
                 Contraseña
               </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="bg-white/80 border-[#001F58]/20 focus-visible:ring-[#001F58]"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  className="bg-white/80 border-[#001F58]/20 focus-visible:ring-[#001F58] pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#001F58] transition-colors p-1"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <Button
               type="submit"
-              className="w-full mt-2 bg-[#E70F1F] hover:bg-[#c00d1a] text-white font-medium py-2.5 rounded-xl shadow-sm transition-colors"
+              disabled={loading}
+              className="w-full mt-2 bg-[#E70F1F] hover:bg-[#c00d1a] text-white font-medium py-2.5 rounded-xl shadow-sm transition-colors cursor-pointer disabled:opacity-70"
             >
-              Continuar con email
+              {loading ? "Ingresando..." : "Continuar con email"}
             </Button>
           </form>
 
-          {/* Enlace para registro */}
           <p className="text-center text-xs sm:text-sm text-[#001F58]/70 pt-2 border-t border-[#001F58]/10">
             ¿No tenés cuenta?{" "}
             <Link

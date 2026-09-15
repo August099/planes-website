@@ -178,3 +178,34 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
   scrollbar-width: thin;
   scrollbar-color: #E70F1F #f1f1f1;
 }
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+@media print {
+  @page {
+    margin: 0 !important; /* Elimina márgenes de la página donde se dibujan los headers/footers del navegador */
+    size: A4 portrait;
+  }
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

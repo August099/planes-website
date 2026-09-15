@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   createAircraftCategoryAction,
   updateAircraftCategoryAction,
@@ -17,8 +18,9 @@ import {
   createSparePartCategoryAction,
   updateSparePartCategoryAction,
   deleteSparePartCategoryAction,
+  uploadBrandLogoAction,
 } from "@/app/actions/admin-taxonomy-actions";
-import { Plus, Plane, Wrench, CheckCircle2, ExternalLink, Pencil, Trash2, X, Check } from "lucide-react";
+import { Plus, Plane, Wrench, CheckCircle2, ExternalLink, Pencil, Trash2, X, Check, ImageIcon, Upload } from "lucide-react";
 
 interface SubModel {
   id: string;
@@ -34,6 +36,7 @@ interface Model {
 interface Brand {
   id: string;
   name: string;
+  logoUrl?: string | null;
   models: Model[];
 }
 
@@ -62,25 +65,31 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editIcon, setEditIcon] = useState("");
+  const [editLogoUrl, setEditLogoUrl] = useState("");
+  const [editFile, setEditFile] = useState<File | null>(null);
 
   const showFeedback = (msg: string) => {
     setSuccessMsg(msg);
     setTimeout(() => setSuccessMsg(""), 3000);
   };
 
-  const startEditing = (id: string, name: string, icon: string = "") => {
+  const startEditing = (id: string, name: string, iconOrLogo: string = "") => {
     setEditingId(id);
     setEditName(name);
-    setEditIcon(icon);
+    setEditIcon(iconOrLogo);
+    setEditLogoUrl(iconOrLogo);
+    setEditFile(null);
   };
 
   const cancelEditing = () => {
     setEditingId(null);
     setEditName("");
     setEditIcon("");
+    setEditLogoUrl("");
+    setEditFile(null);
   };
 
-  // AERONAVES - CATEGORÍAS
+  // AERONAVES: CATEGORÍAS
   const handleAddAircraftCategory = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -91,7 +100,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       form.reset();
       showFeedback("Categoría creada");
     } catch {
-      alert("Error al guardar");
+      alert("Error al guardar la categoría");
     } finally {
       setLoading(false);
     }
@@ -103,7 +112,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       cancelEditing();
       showFeedback("Categoría actualizada");
     } catch {
-      alert("Error al actualizar");
+      alert("Error al actualizar la categoría");
     }
   };
 
@@ -122,25 +131,48 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
     e.preventDefault();
     setLoading(true);
     const form = e.currentTarget;
-    const name = new FormData(form).get("name") as string;
+    const formData = new FormData(form);
+    const name = formData.get("name") as string;
+    const file = formData.get("file") as File;
+    let logoUrl = (formData.get("logoUrl") as string) || "";
+
     try {
-      await createAircraftBrandAction(name);
+      // Si seleccionó archivo desde la PC, lo subimos a Supabase Storage
+      if (file && file.size > 0) {
+        const fileFormData = new FormData();
+        fileFormData.append("file", file);
+        logoUrl = await uploadBrandLogoAction(fileFormData);
+      }
+
+      await createAircraftBrandAction(name, logoUrl);
       form.reset();
-      showFeedback("Marca agregada");
-    } catch {
-      alert("Error al guardar");
+      showFeedback("Marca agregada exitosamente");
+    } catch (err: any) {
+      alert(err?.message || "Error al guardar la marca");
     } finally {
       setLoading(false);
     }
   };
 
   const handleUpdateBrand = async (id: string) => {
+    setLoading(true);
     try {
-      await updateAircraftBrandAction(id, editName);
+      let finalLogoUrl = editLogoUrl;
+
+      // Si seleccionó una imagen nueva en edición, la subimos a Supabase
+      if (editFile && editFile.size > 0) {
+        const fileFormData = new FormData();
+        fileFormData.append("file", editFile);
+        finalLogoUrl = await uploadBrandLogoAction(fileFormData);
+      }
+
+      await updateAircraftBrandAction(id, editName, finalLogoUrl);
       cancelEditing();
       showFeedback("Marca actualizada");
-    } catch {
-      alert("Error al actualizar");
+    } catch (err: any) {
+      alert(err?.message || "Error al actualizar la marca");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -158,7 +190,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
   // MODELOS
   const handleAddModel = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedBrandId) return alert("Selecciona una marca");
+    if (!selectedBrandId) return alert("Selecciona una marca primero");
     setLoading(true);
     const form = e.currentTarget;
     const name = new FormData(form).get("name") as string;
@@ -167,7 +199,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       form.reset();
       showFeedback("Modelo agregado");
     } catch {
-      alert("Error al guardar");
+      alert("Error al guardar el modelo");
     } finally {
       setLoading(false);
     }
@@ -179,7 +211,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       cancelEditing();
       showFeedback("Modelo actualizado");
     } catch {
-      alert("Error al actualizar");
+      alert("Error al actualizar el modelo");
     }
   };
 
@@ -197,7 +229,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
   // SUBMODELOS / VARIANTES
   const handleAddSubModel = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedModelId) return alert("Selecciona un modelo");
+    if (!selectedModelId) return alert("Selecciona un modelo primero");
     setLoading(true);
     const form = e.currentTarget;
     const name = new FormData(form).get("name") as string;
@@ -206,7 +238,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       form.reset();
       showFeedback("Submodelo agregado");
     } catch {
-      alert("Error al guardar");
+      alert("Error al guardar el submodelo");
     } finally {
       setLoading(false);
     }
@@ -218,7 +250,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       cancelEditing();
       showFeedback("Submodelo actualizado");
     } catch {
-      alert("Error al actualizar");
+      alert("Error al actualizar el submodelo");
     }
   };
 
@@ -246,7 +278,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       await createSparePartCategoryAction(name, parentId, icon);
       form.reset();
       setSelectedSpareParentId("");
-      showFeedback("Categoría agregada");
+      showFeedback("Categoría de repuesto agregada");
     } catch {
       alert("Error al guardar");
     } finally {
@@ -279,6 +311,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
 
   return (
     <div className="space-y-6 max-w-5xl">
+      {/* TABS PRINCIPALES */}
       <div className="flex border-b border-slate-200 gap-6">
         <button
           onClick={() => setActiveTab("aircrafts")}
@@ -302,13 +335,14 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
         </button>
       </div>
 
+      {/* FEEDBACK FEED */}
       {successMsg && (
         <div className="p-3 bg-green-50 text-green-700 text-xs font-semibold rounded-xl border border-green-200 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4" /> {successMsg}
         </div>
       )}
 
-      {/* AERONAVES */}
+      {/* VISTA DE AERONAVES */}
       {activeTab === "aircrafts" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* CATEGORÍAS */}
@@ -367,56 +401,106 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
             </div>
           </div>
 
-          {/* MARCAS */}
+          {/* MARCAS Y LOGO (SUBIR DESDE LA PC) */}
           <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Marcas de Aeronave</h3>
-            <form onSubmit={handleAddBrand} className="flex gap-2">
+            
+            <form onSubmit={handleAddBrand} className="space-y-2">
               <input
                 type="text"
                 name="name"
-                placeholder="Ej: Cirrus, Embraer"
+                placeholder="Nombre de marca (Ej: Cessna)"
                 required
-                className="flex-1 px-3 py-2 text-xs border rounded-xl bg-white"
+                className="w-full px-3 py-2 text-xs border rounded-xl bg-white"
               />
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 bg-[#001F58] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center gap-1 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" /> Crear
-              </button>
+              
+              <div className="flex items-center gap-2">
+                <label className="flex-1 px-3 py-2 border rounded-xl bg-white text-xs text-slate-500 cursor-pointer flex items-center justify-between hover:bg-slate-50">
+                  <span className="truncate">Subir foto desde PC...</span>
+                  <Upload className="w-3.5 h-3.5 text-slate-400" />
+                  <input type="file" name="file" accept="image/*" className="hidden" />
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 bg-[#001F58] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Crear
+                </button>
+              </div>
             </form>
 
-            <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
               {aircraftBrands.map((brand) => (
-                <div key={brand.id} className="flex items-center justify-between p-2 bg-slate-50 rounded-xl text-xs">
+                <div key={brand.id} className="p-2 bg-slate-50 rounded-xl text-xs space-y-1.5 border border-slate-100">
                   {editingId === brand.id ? (
-                    <div className="flex items-center gap-2 w-full">
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="flex-1 px-2 py-1 text-xs border rounded-lg bg-white"
-                      />
-                      <button onClick={() => handleUpdateBrand(brand.id)} className="text-green-600">
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button onClick={cancelEditing} className="text-slate-400">
-                        <X className="w-4 h-4" />
-                      </button>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          placeholder="Nombre"
+                          className="flex-1 px-2 py-1 text-xs border rounded-lg bg-white"
+                        />
+                        <button onClick={() => handleUpdateBrand(brand.id)} className="text-green-600 p-1">
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button onClick={cancelEditing} className="text-slate-400 p-1">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <label className="flex items-center justify-between px-2 py-1 border rounded-lg bg-white text-[11px] text-slate-500 cursor-pointer hover:bg-slate-50">
+                        <span className="truncate">
+                          {editFile ? editFile.name : "Cambiar logo desde PC..."}
+                        </span>
+                        <Upload className="w-3 h-3 text-slate-400" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) setEditFile(e.target.files[0]);
+                          }}
+                        />
+                      </label>
                     </div>
                   ) : (
-                    <>
-                      <span className="font-medium text-slate-700">{brand.name}</span>
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => startEditing(brand.id, brand.name)} className="text-slate-400 hover:text-blue-600">
+                        {brand.logoUrl ? (
+                          <div className="relative w-6 h-6 rounded border bg-white overflow-hidden shrink-0 flex items-center justify-center">
+                            <img
+                              src={brand.logoUrl}
+                              alt={brand.name}
+                              className="w-full h-full object-contain p-0.5"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 rounded bg-slate-200 flex items-center justify-center shrink-0">
+                            <ImageIcon className="w-3 h-3 text-slate-400" />
+                          </div>
+                        )}
+                        <span className="font-bold text-slate-800">{brand.name}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => startEditing(brand.id, brand.name, brand.logoUrl || "")}
+                          className="text-slate-400 hover:text-blue-600"
+                        >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => handleDeleteBrand(brand.id)} className="text-slate-400 hover:text-red-600">
+                        <button
+                          onClick={() => handleDeleteBrand(brand.id)}
+                          className="text-slate-400 hover:text-red-600"
+                        >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
               ))}
@@ -496,7 +580,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
             </div>
           </div>
 
-          {/* SUBMODELOS */}
+          {/* SUBMODELOS / VARIANTES */}
           <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Variantes / Submodelos</h3>
             <select
@@ -569,7 +653,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
         </div>
       )}
 
-      {/* REPUESTOS */}
+      {/* VISTA DE REPUESTOS */}
       {activeTab === "spareparts" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">

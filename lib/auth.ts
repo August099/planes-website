@@ -1,73 +1,80 @@
+// lib/auth.ts
 import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
+import FacebookProvider from "next-auth/providers/facebook";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
   providers: [
-    Credentials({
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    }),
+    FacebookProvider({
+      clientId: process.env.AUTH_FACEBOOK_ID,
+      clientSecret: process.env.AUTH_FACEBOOK_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    }),
+    CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Contraseña", type: "password" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-
-        const email = credentials.email as string;
-        const password = credentials.password as string;
+        if (!credentials?.email || !credentials?.password) return null;
 
         const user = await prisma.user.findUnique({
-          where: { email },
+          where: { email: (credentials.email as string).toLowerCase() },
         });
 
-        if (!user || !user.passwordHash) {
-          return null;
-        }
+        if (!user || !user.passwordHash) return null;
 
-        const isPasswordValid = await bcrypt.compare(
-          password,
+        const isValidPassword = await bcrypt.compare(
+          credentials.password as string,
           user.passwordHash
         );
 
-        if (!isPasswordValid) {
-          return null;
+        if (!isValidPassword) return null;
+
+        if (!user.emailVerified) {
+          throw new Error("EmailNotVerified");
         }
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          isAdmin: user.isAdmin
-        };
+        return user;
       },
     }),
   ],
+  session: { strategy: "jwt" },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.isAdmin = (user as any).isAdmin;
       }
-      
+
+      if (token?.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+          select: { isAdmin: true },
+        });
+        if (dbUser) {
+          token.isAdmin = dbUser.isAdmin;
+        }
+      }
+
       return token;
     },
-
     async session({ session, token }) {
-      if (session.user) {
-        if (token.id) session.user.id = token.id as string;
-        (session.user as any).isAdmin = token.isAdmin ?? false;
-
+      if (token && session.user) {
+        session.user.id = token.sub as string;
+        session.user.isAdmin = (token.isAdmin as boolean) || false;
       }
       return session;
     },
-  },
-  pages: {
-    signIn: "/login",
   },
 });

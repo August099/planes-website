@@ -15,6 +15,7 @@ model User {
   image                     String?
   phone                     String?
   isAdmin                   Boolean          @default(false)
+  isFoundingMember          Boolean          @default(false)
   createdAt                 DateTime         @default(now())
   aircraftListingsBalance   Int              @default(0)
   sparePartsListingsBalance Int              @default(0)
@@ -27,6 +28,7 @@ model User {
   adBanners                 AdBanner[]
   aircrafts                 Aircraft[]
   analyticsEvents           AnalyticsEvent[]
+  couponUsages              CouponUsage[]
   favorites                 Favorite[]
   purchases                 Purchase[]
   questions                 Question[]
@@ -96,8 +98,14 @@ model Purchase {
   mpPreferenceId String?
   paymentStatus  PaymentStatus @default(PENDING)
   createdAt      DateTime      @default(now())
+  couponId       String?
+  discountAmount Decimal       @default(0) @db.Decimal(12, 2)
+  finalPrice     Decimal       @default(0) @db.Decimal(12, 2)
+  originalPrice  Decimal       @default(0) @db.Decimal(12, 2)
   adBanners      AdBanner[]
   aircrafts      Aircraft[]
+  couponUsage    CouponUsage?
+  coupon         Coupon?       @relation(fields: [couponId], references: [id])
   plan           Plan          @relation(fields: [planId], references: [id])
   user           User          @relation(fields: [userId], references: [id])
   spareParts     SparePart[]
@@ -137,35 +145,42 @@ model AdBanner {
 }
 
 model AircraftCategory {
-  id        String     @id @default(cuid())
-  name      String     @unique
-  aircrafts Aircraft[]
+  id               String             @id @default(cuid())
+  name             String             @unique
+  aircrafts        Aircraft[]
+  AircraftModel    AircraftModel[]
+  AircraftSubModel AircraftSubModel[]
 }
 
 model AircraftBrand {
   id        String          @id @default(cuid())
   name      String          @unique
+  logoUrl   String?
   aircrafts Aircraft[]
   models    AircraftModel[]
 }
 
 model AircraftModel {
-  id        String             @id @default(cuid())
-  brandId   String
-  name      String
-  aircrafts Aircraft[]
-  brand     AircraftBrand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  variants  AircraftSubModel[]
+  id                String             @id @default(cuid())
+  brandId           String
+  name              String
+  defaultCategoryId String?
+  aircrafts         Aircraft[]
+  brand             AircraftBrand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  AircraftCategory  AircraftCategory?  @relation(fields: [defaultCategoryId], references: [id])
+  variants          AircraftSubModel[]
 
   @@unique([brandId, name])
 }
 
 model AircraftSubModel {
-  id        String        @id @default(cuid())
-  modelId   String
-  name      String
-  aircrafts Aircraft[]
-  model     AircraftModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  id               String            @id @default(cuid())
+  modelId          String
+  name             String
+  categoryOverride String?
+  aircrafts        Aircraft[]
+  AircraftCategory AircraftCategory? @relation(fields: [categoryOverride], references: [id])
+  model            AircraftModel     @relation(fields: [modelId], references: [id], onDelete: Cascade)
 
   @@unique([modelId, name])
 }
@@ -196,6 +211,7 @@ model Aircraft {
   engineType       EngineType?
   modelId          String?
   subModelId       String?
+  rent             Boolean             @default(false)
   brand            AircraftBrand?      @relation(fields: [brandId], references: [id])
   category         AircraftCategory    @relation(fields: [categoryId], references: [id])
   model            AircraftModel?      @relation(fields: [modelId], references: [id])
@@ -259,12 +275,11 @@ model Category {
   id           String        @id @default(cuid())
   name         String
   slug         String        @unique
-  icon         String?
   parentId     String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   icon         String?
-  parent       Category?     @relation("CategoryTree", fields: [parentId], references: [id])
+  parent       Category?     @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
   children     Category[]    @relation("CategoryTree")
   products     SparePart[]
   filterGroups FilterGroup[] @relation("CategoryFilterGroups")
@@ -350,6 +365,7 @@ model SparePart {
   stock            Int                 @default(1)
   categoryId       String
   attributes       Json                @default("{}")
+  inPesos          Boolean             @default(false)
   analyticsEvents  AnalyticsEvent[]
   filterValues     EntityFilterValue[]
   favorites        Favorite[]
@@ -470,6 +486,58 @@ model AnalyticsEvent {
   @@index([sparePartId, eventType])
   @@index([userId])
   @@index([anonymousId])
+}
+
+model Coupon {
+  id             String        @id @default(cuid())
+  code           String        @unique
+  type           CouponType    @default(DISCOUNT)
+  discountType   DiscountType?
+  discountValue  Decimal       @default(0) @db.Decimal(12, 2)
+  scope          CouponScope   @default(ALL)
+  maxUses        Int?
+  currentUses    Int           @default(0)
+  maxUsesPerUser Int           @default(1)
+  startsAt       DateTime?
+  expiresAt      DateTime?
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  usages         CouponUsage[]
+  purchases      Purchase[]
+}
+
+model CouponUsage {
+  id          String    @id @default(cuid())
+  couponId    String
+  userId      String
+  purchaseId  String?   @unique
+  aircraftId  String?
+  sparePartId String?
+  usedAt      DateTime  @default(now())
+  coupon      Coupon    @relation(fields: [couponId], references: [id])
+  purchase    Purchase? @relation(fields: [purchaseId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([couponId, userId])
+}
+
+enum CouponType {
+  DISCOUNT
+  RENEWAL
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FULL_DISCOUNT
+}
+
+enum CouponScope {
+  ALL
+  AIRCRAFT
+  SPARE_PART
+  AD_BANNER
 }
 
 enum UserType {

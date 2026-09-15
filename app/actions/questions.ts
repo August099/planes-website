@@ -84,3 +84,58 @@ export async function createQuestionAction({
 
   return { success: true, data: newQuestion };
 }
+
+export async function getUserQuestionsAction() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("UNAUTHENTICATED");
+  }
+
+  const userId = session.user.id;
+
+  // 1. Preguntas que le hicieron al usuario (como vendedor)
+  const receivedQuestions = await prisma.question.findMany({
+    where: {
+      OR: [
+        { aircraft: { sellerId: userId } },
+        { sparePart: { sellerId: userId } },
+      ],
+    },
+    include: {
+      user: { select: { id: true, name: true, image: true } },
+      aircraft: { select: { id: true, title: true, images: { take: 1 } } },
+      sparePart: { select: { id: true, title: true, images: { take: 1 } } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  // 2. Preguntas que hizo el usuario (como comprador)
+  const sentQuestions = await prisma.question.findMany({
+    where: { userId },
+    include: {
+      aircraft: {
+        select: {
+          id: true,
+          title: true,
+          seller: { select: { name: true } },
+          images: { take: 1 },
+        },
+      },
+      sparePart: {
+        select: {
+          id: true,
+          title: true,
+          seller: { select: { name: true } },
+          images: { take: 1 },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return {
+    receivedQuestions,
+    sentQuestions,
+  };
+}

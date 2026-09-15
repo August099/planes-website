@@ -23,11 +23,12 @@ export function HeaderLogo() {
       </div>
       <div className="block md:hidden">
         <Image
-          src="/logo-mark-red.png"
-          alt="Ventas Aeronáuticas"
-          width={48}
-          height={48}
+          src="/logo-mark.svg"
+          alt="Ventas Aeronáuticas Icono"
+          width={20}
+          height={20}
           priority
+          className="block md:hidden h-9 w-auto object-contain shrink-0"
         />
       </div>
     </Link>

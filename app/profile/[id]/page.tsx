@@ -24,6 +24,7 @@ export default async function ProfilePage({ params }: Props) {
       city: true,
       province: true,
       userType: true,
+      isFoundingMember: true,
       facebook: true,
       instagram: true,
       createdAt: true,
@@ -68,8 +69,34 @@ export default async function ProfilePage({ params }: Props) {
     notFound();
   }
 
+  // Obtener los cupones guardados/utilizados por el usuario si es el propietario
+  let userCoupons: any[] = [];
+  if (isOwner) {
+    const usages = await prisma.couponUsage.findMany({
+      where: { userId: id },
+      include: {
+        coupon: true,
+      },
+      orderBy: { usedAt: "desc" },
+    });
+
+    userCoupons = usages.map((u) => ({
+      usageId: u.id,
+      usedAt: u.usedAt.toISOString(),
+      code: u.coupon.code,
+      type: u.coupon.type,
+      discountType: u.coupon.discountType,
+      discountValue: Number(u.coupon.discountValue),
+      scope: u.coupon.scope,
+      isActive: u.coupon.isActive,
+      expiresAt: u.coupon.expiresAt?.toISOString() ?? null,
+      purchaseId: u.purchaseId,
+      aircraftId: u.aircraftId,
+      sparePartId: u.sparePartId,
+    }));
+  }
+
   // Sanitización de objetos Prisma (Decimal y Date) para el Client Component 
-  // Esto es un fix del chat, me pioló
   const profileUser = {
     ...rawProfileUser,
     createdAt: rawProfileUser.createdAt.toISOString(),
@@ -119,6 +146,7 @@ export default async function ProfilePage({ params }: Props) {
         profileUser={profileUser}
         isOwner={isOwner}
         currentUserFavIds={currentUserFavIds}
+        userCoupons={userCoupons}
       />
     </main>
   );

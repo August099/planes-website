@@ -38,7 +38,7 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
           </p>
         </div>
         <Link
-          href="/spare-parts"
+          href="/spareparts"
           className="text-sm font-medium text-primary hover:underline hidden sm:block"
         >
           Ver todo el catálogo →

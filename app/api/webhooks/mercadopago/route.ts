@@ -22,7 +22,11 @@ function verifySignature(
     .update(template)
     .digest("hex");
 
-  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(expectedHash));
+  try {
+    return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(expectedHash));
+  } catch {
+    return false;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -40,15 +44,30 @@ export async function POST(req: NextRequest) {
   if (payment.status === "approved" && payment.external_reference) {
     const purchase = await prisma.purchase.findUnique({
       where: { id: payment.external_reference },
+      include: { plan: true },
     });
 
     if (purchase && purchase.paymentStatus === "PENDING") {
+      // 1. Marcar la compra como APROBADA
       await prisma.purchase.update({
         where: { id: purchase.id },
-        data: {
-          paymentStatus: "APPROVED",
-        },
+        data: { paymentStatus: "APPROVED" },
       });
+
+      // 2. Aumentar el balance del usuario según las publicaciones del plan
+      if (purchase.plan) {
+        await prisma.user.update({
+          where: { id: purchase.userId },
+          data: {
+            aircraftListingsBalance: {
+              increment: purchase.plan.aircraftListingsCount,
+            },
+            sparePartsListingsBalance: {
+              increment: purchase.plan.sparePartsListingsCount,
+            },
+          },
+        });
+      }
     }
   }
 

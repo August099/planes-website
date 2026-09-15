@@ -20,7 +20,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="w-full bg-secondary text-white py-16">
+    <section className="w-full bg-[#001F58] text-white py-16">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl font-heading font-semibold mb-10 text-center text-white">
           Cómo funciona
@@ -29,7 +29,7 @@ export function HowItWorks() {
           {STEPS.map((step, i) => (
             <div key={step.title} className="text-center group">
               {/* Círculo con fondo oscuro translúcido */}
-              <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-white/10 group-hover:bg-primary/20 flex items-center justify-center transition-colors duration-300 border border-white/10 group-hover:border-primary/50">
+              <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-white/50 group-hover:bg-primary/20 flex items-center justify-center transition-colors duration-300 border border-white/10 group-hover:border-primary/50">
                 <step.icon className="h-7 w-7 text-primary" />
               </div>
 

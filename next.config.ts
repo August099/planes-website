@@ -13,14 +13,28 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'placehold.co',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'graph.facebook.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   experimental: {
     serverActions: {
+      allowedDevOrigins: ['*.loca.lt', 'localhost:3000'],
       bodySizeLimit: "30mb", // Aumenta el límite a 10MB (o "20mb" si subes fotos muy pesadas)
     },
   },
+  staticPageGenerationTimeout: 120,
 };
 
 module.exports = nextConfig;

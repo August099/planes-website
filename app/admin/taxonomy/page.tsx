@@ -19,6 +19,7 @@ export default async function AdminTaxonomyPage() {
       select: {
         id: true,
         name: true,
+        logoUrl: true,
         models: {
           select: {
             id: true,

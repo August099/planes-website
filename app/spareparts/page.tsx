@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 //import { SparePartFiltersSidebar } from "@/components/ui/SparePartFiltersSidebar";
 import Link from "next/link";
@@ -22,6 +23,9 @@ export default async function SparePartsPage({ searchParams }: Props) {
   const currentPage = Number(params.page) || 1;
   const itemsPerPage = 20;
   const skip = (currentPage - 1) * itemsPerPage;
+
+  // 1. Obtener el usuario actual
+  const user = await getCurrentUser();
 
   // Normalizar parámetros que pueden venir como string o Array
   const categoryParam = params.category
@@ -59,8 +63,8 @@ export default async function SparePartsPage({ searchParams }: Props) {
     where.categoryId = { in: allTargetCategoryIds };
   }
 
-  // Ejecución paralela de consultas
-  const [spareParts, totalSpareParts] = await Promise.all([
+  // 2. Ejecución paralela de consultas incluyendo los favoritos del usuario
+  const [spareParts, totalSpareParts, userFavorites] = await Promise.all([
     prisma.sparePart.findMany({
       where,
       include: {
@@ -72,7 +76,16 @@ export default async function SparePartsPage({ searchParams }: Props) {
       take: itemsPerPage,
     }),
     prisma.sparePart.count({ where }),
+    user
+      ? prisma.favorite.findMany({
+          where: { userId: user.id, sparePartId: { not: null } },
+          select: { sparePartId: true },
+        })
+      : Promise.resolve([]),
   ]);
+
+  // Set con los IDs de los repuestos guardados como favoritos
+  const userFavIds = new Set(userFavorites.map((f) => f.sparePartId));
 
   const totalPages = Math.ceil(totalSpareParts / itemsPerPage);
   const hasNextPage = currentPage < totalPages;
@@ -134,11 +147,14 @@ export default async function SparePartsPage({ searchParams }: Props) {
                   key={sparePart.id}
                   id={sparePart.id}
                   title={sparePart.title}
+                  inPesos={sparePart.inPesos}
                   price={sparePart.price ? Number(sparePart.price) : null}
                   category={sparePart.category}
                   city={sparePart.city}
                   province={sparePart.province}
                   imageUrl={sparePart.images[0]?.url ?? "/placeholder.png"}
+                  /* 3. Pasar la propiedad de favorito inicial */
+                  isFavoriteInitial={userFavIds.has(sparePart.id)}
                 />
               ))}
             </div>

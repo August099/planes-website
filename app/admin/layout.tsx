@@ -8,7 +8,9 @@ import {
   TrendingUp, 
   ListFilter,
   ShieldAlert,
-  Tag
+  Tag,
+  Receipt,
+  FileExclamationPoint
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
@@ -33,7 +35,9 @@ export default async function AdminLayout({
     { label: "Fuentes", href: "/admin/traffic", icon: Globe2 },
     { label: "Oportunidades", href: "/admin/opportunities", icon: TrendingUp },
     { label: "Eventos", href: "/admin/events", icon: ListFilter },
+    { label: "Reportes", href: "/admin/report", icon: FileExclamationPoint },
     { label: "Añadir taxonomía", href: "/admin/taxonomy", icon: Tag },
+    { label: "Cupones", href: "/admin/coupons", icon: Receipt },
   ];
 
   return (

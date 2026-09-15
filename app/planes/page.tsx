@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SortDropdown } from "@/components/ui/SortDropdown";
 import { AircraftFiltersWrapper } from "@/components/ui/AircraftFiltersWrapper";
@@ -10,7 +11,6 @@ interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-// Convierte un searchParam que puede venir como string o string[] siempre a array
 function toArray(value: string | string[] | undefined): string[] {
   if (!value) return [];
   return Array.isArray(value) ? value : [value];
@@ -21,6 +21,9 @@ export default async function AvionesPage({ searchParams }: Props) {
   const currentPage = Number(params.page) || 1;
   const itemsPerPage = 21;
   const skip = (currentPage - 1) * itemsPerPage;
+
+  // 1. Obtener el usuario actual
+  const user = await getCurrentUser();
 
   const categoryIds = toArray(params.category);
   const brandIds = toArray(params.brand);
@@ -42,9 +45,14 @@ export default async function AvionesPage({ searchParams }: Props) {
   };
 
   const orderBy = orderByMap[sort] ?? orderByMap.recent;
+  const now = new Date();
 
   const whereClause: Prisma.AircraftWhereInput = {
     status: "ACTIVE",
+    OR: [
+      { listingExpiresAt: { gte: now } },
+      { listingExpiresAt: null },
+    ],
     ...(categoryIds.length > 0 && { categoryId: { in: categoryIds } }),
     ...(brandIds.length > 0 && { brandId: { in: brandIds } }),
     ...(modelIds.length > 0 && { modelId: { in: modelIds } }),
@@ -58,7 +66,8 @@ export default async function AvionesPage({ searchParams }: Props) {
     }),
   };
 
-  const [aircrafts, totalAircrafts, categories, brands] = await Promise.all([
+  // 2. Traer los favoritos del usuario en paralelo si está autenticado
+  const [aircrafts, totalAircrafts, categories, brands, userFavorites] = await Promise.all([
     prisma.aircraft.findMany({
       where: whereClause,
       include: {
@@ -80,13 +89,21 @@ export default async function AvionesPage({ searchParams }: Props) {
         },
       },
     }),
+    user
+      ? prisma.favorite.findMany({
+          where: { userId: user.id, aircraftId: { not: null } },
+          select: { aircraftId: true },
+        })
+      : Promise.resolve([]),
   ]);
+
+  // Crear un Set con los IDs de los aviones favoritos para una búsqueda rápida (O(1))
+  const userFavIds = new Set(userFavorites.map((f) => f.aircraftId));
 
   const totalPages = Math.ceil(totalAircrafts / itemsPerPage);
   const hasNextPage = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
 
-  // Helper para preservar TODOS los filtros activos al cambiar de página
   const createPageUrl = (pageNumber: number) => {
     const urlParams = new URLSearchParams();
     categoryIds.forEach((c) => urlParams.append("category", c));
@@ -155,6 +172,8 @@ export default async function AvionesPage({ searchParams }: Props) {
                   city={aircraft.city}
                   province={aircraft.province}
                   imageUrl={aircraft.images[0]?.url ?? "/placeholder.png"}
+                  /* 3. Pasar el booleano si la publicación está guardada en favoritos */
+                  isFavoriteInitial={userFavIds.has(aircraft.id)}
                 />
               ))}
             </div>

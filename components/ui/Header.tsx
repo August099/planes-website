@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { User, Menu, ShieldCheck } from "lucide-react";
 import { auth, signOut } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,22 @@ export async function Header() {
   const linkClass = "text-sm font-medium hover:text-red-400 transition-colors";
   const sellLink = session?.user ? "/publish" : "/login";
   const isAdmin = Boolean((session?.user as any)?.isAdmin);
+
+  // Consultar si el usuario tiene preguntas recibidas sin responder
+  let hasUnansweredQuestions = false;
+
+  if (session?.user?.id) {
+    const unansweredCount = await prisma.question.count({
+      where: {
+        answer: null,
+        OR: [
+          { aircraft: { sellerId: session.user.id } },
+          { sparePart: { sellerId: session.user.id } },
+        ],
+      },
+    });
+    hasUnansweredQuestions = unansweredCount > 0;
+  }
 
   return (
     <HeaderWrapper>
@@ -52,10 +69,14 @@ export async function Header() {
             <div className="flex items-center gap-3">
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  className="flex items-center justify-center p-2.5 rounded-lg bg-[#E70F1F] hover:bg-red-700 text-white transition-colors outline-none cursor-pointer shadow-sm border-none"
+                  className="relative flex items-center justify-center p-2.5 rounded-lg bg-[#E70F1F] hover:bg-red-700 text-white transition-colors outline-none cursor-pointer shadow-sm border-none"
                   aria-label="Menú de usuario"
                 >
                   <User className="h-4 w-4" />
+                  {/* Puntito Rojo de Notificación en el Botón Desktop */}
+                  {hasUnansweredQuestions && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full animate-pulse" />
+                  )}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white text-slate-900 min-w-[180px]">
                   {isAdmin && (
@@ -78,11 +99,17 @@ export async function Header() {
                       Mi Cuenta
                     </Link>
                   </DropdownMenuItem>
+
                   <DropdownMenuItem className="p-0">
-                    <Link href="/plans" className="w-full px-2 py-1.5 text-sm">
-                      Obtener posteos
+                    <Link href="/questions" className="w-full px-2 py-1.5 text-sm flex items-center justify-between">
+                      <span>Mis consultas</span>
+                      {/* Indicador junto al texto en Desktop */}
+                      {hasUnansweredQuestions && (
+                        <span className="w-2 h-2 bg-red-600 rounded-full" />
+                      )}
                     </Link>
                   </DropdownMenuItem>
+
                   <DropdownMenuItem className="p-0">
                     <Link href="/favs" className="w-full px-2 py-1.5 text-sm">
                       Favoritos
@@ -124,8 +151,12 @@ export async function Header() {
           <MobileHeaderSearchBar />
 
           <DropdownMenu>
-            <DropdownMenuTrigger className="p-2 rounded-lg border-none hover:bg-white/10 outline-none cursor-pointer">
+            <DropdownMenuTrigger className="relative p-2 rounded-lg border-none hover:bg-white/10 outline-none cursor-pointer">
               <Menu className="h-6 w-6" />
+              {/* Puntito Rojo de Notificación en el Botón Hamburger Mobile */}
+              {hasUnansweredQuestions && (
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-600 border border-white rounded-full animate-pulse" />
+              )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64 bg-white text-slate-900 p-2 space-y-1">
               <DropdownMenuItem className="p-0">
@@ -175,11 +206,17 @@ export async function Header() {
                       Mi Cuenta
                     </Link>
                   </DropdownMenuItem>
+                  
                   <DropdownMenuItem className="p-0">
-                    <Link href="/plans" className="w-full px-2 py-1.5 text-sm font-medium">
-                      Obtener posteos
+                    <Link href="/questions" className="w-full px-2 py-1.5 text-sm font-medium flex items-center justify-between">
+                      <span>Mis consultas</span>
+                      {/* Indicador junto al texto en Mobile */}
+                      {hasUnansweredQuestions && (
+                        <span className="w-2 h-2 bg-red-600 rounded-full" />
+                      )}
                     </Link>
                   </DropdownMenuItem>
+                  
                   <DropdownMenuItem className="p-0">
                     <Link href="/favs" className="w-full px-2 py-1.5 text-sm font-medium">
                       Favoritos

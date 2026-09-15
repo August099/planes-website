@@ -3,6 +3,12 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 async function verifyAdmin() {
   const user = await getCurrentUser();
@@ -51,28 +57,40 @@ export async function deleteAircraftCategoryAction(id: string) {
 // AERONAVES: Marcas, Modelos y Variantes
 // ==========================================
 
-export async function createAircraftBrandAction(name: string) {
+// ==========================================
+// AERONAVES: Marcas, Modelos y Variantes
+// ==========================================
+
+export async function createAircraftBrandAction(name: string, logoUrl?: string) {
   await verifyAdmin();
   if (!name.trim()) throw new Error("Nombre requerido");
 
   await prisma.aircraftBrand.create({
-    data: { name: name.trim() },
+    data: { 
+      name: name.trim(),
+      logoUrl: logoUrl ? logoUrl.trim() : null,
+    },
   });
 
   revalidatePath("/admin/taxonomy");
+  revalidatePath("/"); // Limpia caché de la Home para actualizar marcas destacadas
   return { success: true };
 }
 
-export async function updateAircraftBrandAction(id: string, name: string) {
+export async function updateAircraftBrandAction(id: string, name: string, logoUrl?: string) {
   await verifyAdmin();
   if (!id || !name.trim()) throw new Error("Datos incompletos");
 
   await prisma.aircraftBrand.update({
     where: { id },
-    data: { name: name.trim() },
+    data: { 
+      name: name.trim(),
+      logoUrl: logoUrl ? logoUrl.trim() : null,
+    },
   });
 
   revalidatePath("/admin/taxonomy");
+  revalidatePath("/"); // Limpia caché de la Home
   return { success: true };
 }
 
@@ -198,4 +216,34 @@ export async function deleteSparePartCategoryAction(id: string) {
   await prisma.category.delete({ where: { id } });
   revalidatePath("/admin/taxonomy");
   return { success: true };
+}
+
+export async function uploadBrandLogoAction(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user || !user.isAdmin) throw new Error("UNAUTHORIZED");
+
+  const file = formData.get("file") as File | null;
+  if (!file || file.size === 0) throw new Error("NO_FILE");
+
+  const fileExt = file.name.split(".").pop();
+  const fileName = `brand-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  // Subir imagen al bucket 'brands' (asegúrate de que el bucket sea Público)
+  const { error } = await supabase.storage
+    .from("brands")
+    .upload(fileName, buffer, {
+      contentType: file.type,
+      upsert: true,
+    });
+
+  if (error) throw new Error(error.message);
+
+  const { data: publicUrlData } = supabase.storage
+    .from("brands")
+    .getPublicUrl(fileName);
+
+  return publicUrlData.publicUrl;
 }

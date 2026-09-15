@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
+import bcrypt from "bcryptjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,7 +49,7 @@ export async function updateAvatarAction(formData: FormData) {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
-  // Subir imagen al bucket de avartars (siempre creá los buckets públicos aug)
+  // Subir imagen al bucket de avatars
   const { error } = await supabase.storage
     .from("avatars")
     .upload(filePath, buffer, {
@@ -85,4 +86,64 @@ export async function removeAvatarAction() {
 
   revalidatePath(`/profile/${user.id}`);
   return { success: true };
+}
+
+const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
+interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export async function changePasswordAction({ currentPassword, newPassword }: ChangePasswordInput) {
+  try {
+    // 1. Obtener usuario autenticado usando tu helper existente
+    const userSession = await getCurrentUser();
+
+    if (!userSession?.id) {
+      return { error: "No estás autenticado." };
+    }
+
+    // 2. Buscar al usuario en la BD mediante prisma
+    const user = await prisma.user.findUnique({
+      where: { id: userSession.id },
+    });
+
+    if (!user || !user.passwordHash) {
+      return { error: "Usuario no encontrado o autenticado por proveedor externo (Google/Facebook)." };
+    }
+
+    // 3. Verificar la contraseña actual
+    const isCurrentPasswordCorrect = await bcrypt.compare(currentPassword, user.passwordHash);
+
+    if (!isCurrentPasswordCorrect) {
+      return { error: "La contraseña actual es incorrecta." };
+    }
+
+    // 4. Validar la complejidad de la nueva contraseña con el regex
+    if (!PASSWORD_REGEX.test(newPassword)) {
+      return { error: "La nueva contraseña no cumple con los requisitos de seguridad." };
+    }
+
+    // 5. Validar que la contraseña nueva no sea igual a la actual
+    const isSamePassword = await bcrypt.compare(newPassword, user.passwordHash);
+    if (isSamePassword) {
+      return { error: "La nueva contraseña no puede ser igual a la clave actual." };
+    }
+
+    // 6. Hashear la nueva contraseña y actualizar mediante prisma
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+      },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error al cambiar la contraseña:", error);
+    return { error: "Ocurrió un error inesperado en el servidor." };
+  }
 }
