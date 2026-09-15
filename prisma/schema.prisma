@@ -597,7 +597,6 @@ enum FilterType {
   MULTI_SELECT
   RANGE
   BOOLEAN
-  COLOR
   TEXT
 }
 

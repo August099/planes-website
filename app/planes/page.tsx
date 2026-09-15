@@ -29,6 +29,9 @@ export default async function AvionesPage({ searchParams }: Props) {
   const conditions = toArray(params.condition);
   const minPrice = params.minPrice ? Number(params.minPrice) : undefined;
   const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
+  const financing = params.financing === "true";
+  const trade = params.trade === "true";
+  const rent = params.rent === "true";
 
   const sort = (params.sort as string) ?? "recent";
 
@@ -50,6 +53,9 @@ export default async function AvionesPage({ searchParams }: Props) {
     ...(modelIds.length > 0 && { modelId: { in: modelIds } }),
     ...(subModelIds.length > 0 && { subModelId: { in: subModelIds } }),
     ...(conditions.length > 0 && { condition: { in: conditions as any } }),
+    ...(financing && { financing: true }),
+    ...(trade && { trade: true }),
+    ...(rent && { rent: true }),
     ...((minPrice !== undefined || maxPrice !== undefined) && {
       price: {
         ...(minPrice !== undefined && { gte: minPrice }),
@@ -96,6 +102,9 @@ export default async function AvionesPage({ searchParams }: Props) {
     conditions.forEach((c) => urlParams.append("condition", c));
     if (minPrice !== undefined) urlParams.set("minPrice", String(minPrice));
     if (maxPrice !== undefined) urlParams.set("maxPrice", String(maxPrice));
+    if (financing) urlParams.set("financing", "true");
+    if (trade) urlParams.set("trade", "true");
+    if (rent) urlParams.set("rent", "true");
     urlParams.set("sort", sort);
     urlParams.set("page", pageNumber.toString());
     return `?${urlParams.toString()}`;

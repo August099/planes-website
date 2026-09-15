@@ -5,10 +5,11 @@ import { useState, useCallback, useMemo } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X, ChevronDown, ChevronRight } from "lucide-react";
+import Image from "next/image";
 
-type SubModel = { id: string; name: string };
-type Model = { id: string; name: string; variants: SubModel[] };
-type Brand = { id: string; name: string; models: Model[] };
+type SubModel = { id: string; name: string; categoryOverride?: string | null };
+type Model = { id: string; name: string; defaultCategoryId?: string | null; variants: SubModel[] };
+type Brand = { id: string; name: string; logoUrl?: string | null; models: Model[] };
 type Category = { id: string; name: string };
 
 export function FiltersSidebar({
@@ -29,11 +30,12 @@ export function FiltersSidebar({
   const [modelIds, setModelIds] = useState<string[]>(searchParams.getAll("model"));
   const [subModelIds, setSubModelIds] = useState<string[]>(searchParams.getAll("subModel"));
   const [condition, setCondition] = useState<string[]>(searchParams.getAll("condition"));
+  const [financing, setFinancing] = useState(searchParams.get("financing") === "true");
+  const [trade, setTrade] = useState(searchParams.get("trade") === "true");
+  const [rent, setRent] = useState(searchParams.get("rent") === "true");
 
-  // Qué marcas están con su lista de modelos desplegada en el acordeón
   const [expandedBrands, setExpandedBrands] = useState<string[]>([]);
 
-  // --- La parte clave: modelos disponibles según las marcas tildadas ---
   const availableModels = useMemo(() => {
     if (brandIds.length === 0) return [];
     return brands
@@ -45,9 +47,9 @@ export function FiltersSidebar({
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   };
 
-  // Al destildar una marca, hay que limpiar los modelos/submodelos que dependían de ella
   const toggleBrand = (brandId: string) => {
     const isRemoving = brandIds.includes(brandId);
+    toggleValue(brandIds, setBrandIds, brandId);
 
     if (isRemoving) {
       const brand = brands.find((b) => b.id === brandId);
@@ -63,7 +65,6 @@ export function FiltersSidebar({
     }
   };
 
-  // Al destildar un modelo, limpiar sus submodelos
   const toggleModel = (modelId: string) => {
     const isRemoving = modelIds.includes(modelId);
     toggleValue(modelIds, setModelIds, modelId);
@@ -85,10 +86,13 @@ export function FiltersSidebar({
     modelIds.forEach((m) => params.append("model", m));
     subModelIds.forEach((s) => params.append("subModel", s));
     condition.forEach((c) => params.append("condition", c));
+    if (financing) params.set("financing", "true");
+    if (trade) params.set("trade", "true");
+    if (rent) params.set("rent", "true");
     params.set("page", "1");
 
     router.push(`${pathname}?${params.toString()}`);
-  }, [minPrice, maxPrice, categoryIds, brandIds, modelIds, subModelIds, condition, router, pathname]);
+  }, [minPrice, maxPrice, categoryIds, brandIds, modelIds, subModelIds, condition, financing, trade, rent, router, pathname]);
 
   const clearFilters = () => {
     setMinPrice("");
@@ -98,13 +102,16 @@ export function FiltersSidebar({
     setModelIds([]);
     setSubModelIds([]);
     setCondition([]);
+    setFinancing(false);
+    setTrade(false);
+    setRent(false);
     setExpandedBrands([]);
     router.push(pathname);
   };
 
   const hasActiveFilters = Boolean(
-    minPrice || maxPrice || categoryIds.length || brandIds.length || modelIds.length || condition.length
-  )
+    minPrice || maxPrice || categoryIds.length || brandIds.length || modelIds.length || condition.length || financing || trade || rent
+  );
 
   return (
     <aside className="w-full lg:w-72 shrink-0 border border-[#001F58]/10 bg-[var(--primary-foreground)] rounded-xl p-5 h-fit flex flex-col gap-5">
@@ -144,7 +151,7 @@ export function FiltersSidebar({
 
       <Separator />
 
-      {/* Categoría */}
+      {/* Categoría — independiente, sigue siendo el categoryId real del Aircraft */}
       <div className="flex flex-col gap-2">
         <h3 className="text-sm font-medium">Categoría</h3>
         <div className="flex flex-col gap-1.5">
@@ -166,7 +173,6 @@ export function FiltersSidebar({
       <Separator />
 
       {/* Marca → despliega Modelos → despliega Submodelos */}
-      
       <div className="flex flex-col gap-2">
         <h3 className="text-sm font-medium">Marca</h3>
         <div className="flex flex-col gap-1 max-h-[280px] overflow-y-auto pr-1">
@@ -199,7 +205,6 @@ export function FiltersSidebar({
                   )}
                 </div>
 
-                {/* Modelos — solo aparecen si la marca está tildada y expandida */}
                 {isSelected && isExpanded && (
                   <div className="ml-6 mt-1 flex flex-col gap-1 border-l pl-3">
                     {brand.models.map((model) => {
@@ -217,7 +222,6 @@ export function FiltersSidebar({
                             </label>
                           </div>
 
-                          {/* Submodelos — solo si el modelo está tildado */}
                           {modelSelected && model.variants.length > 0 && (
                             <div className="ml-6 flex flex-col gap-1 border-l pl-3 mt-1">
                               {model.variants.map((variant) => (
@@ -242,6 +246,33 @@ export function FiltersSidebar({
               </div>
             );
           })}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Opciones adicionales */}
+      <div className="flex flex-col gap-2">
+        <h3 className="text-sm font-medium">Opciones</h3>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <Checkbox id="financing" checked={financing} onCheckedChange={() => setFinancing((v) => !v)} />
+            <label htmlFor="financing" className="text-sm cursor-pointer flex-1">
+              Acepta financiación
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox id="trade" checked={trade} onCheckedChange={() => setTrade((v) => !v)} />
+            <label htmlFor="trade" className="text-sm cursor-pointer flex-1">
+              Acepta permuta
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox id="rent" checked={rent} onCheckedChange={() => setRent((v) => !v)} />
+            <label htmlFor="rent" className="text-sm cursor-pointer flex-1">
+              Disponible para alquiler
+            </label>
+          </div>
         </div>
       </div>
 
