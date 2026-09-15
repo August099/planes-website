@@ -69,18 +69,10 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
     }
   };
 
-<<<<<<< HEAD
   // Abrir modal o menú nativo de compartir
   const handleShareClick = async () => {
     const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
-=======
-  // Abrir modal o menú nativo
-  const handleShareClick = async () => {
-    const shareUrl = typeof window !== "undefined" ? window.location.href : "";
-
-    // Intentar Web Share API nativa si existe el soporte del navegador
->>>>>>> augusto
     if (typeof window !== "undefined" && navigator.share) {
       try {
         await navigator.share({
@@ -90,18 +82,10 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
         });
         return;
       } catch (err) {
-<<<<<<< HEAD
-=======
-        // Si el usuario cancela la Web Share API no hacemos nada
->>>>>>> augusto
         return;
       }
     }
 
-<<<<<<< HEAD
-=======
-    // Si no soporta Web Share API o falla, abrimos el modal personalizado
->>>>>>> augusto
     setIsShareModalOpen(true);
   };
 
@@ -114,7 +98,6 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
     }
   };
 
-<<<<<<< HEAD
   // Manejador de descarga de PDF / Ficha Técnica
   const handleDownloadPdf = () => {
     if (typeof window !== "undefined") {
@@ -122,8 +105,6 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
     }
   };
 
-=======
->>>>>>> augusto
   const currentUrl = typeof window !== "undefined" ? encodeURIComponent(window.location.href) : "";
   const shareText = encodeURIComponent(`Mirá esta publicación en Ventas Aeronáuticas: ${title}`);
 
@@ -159,15 +140,9 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
             </span>
           </div>
 
-<<<<<<< HEAD
           {/* Descargar PDF (Mantiene el icono Printer) */}
           <div
             onClick={handleDownloadPdf}
-=======
-          {/* Imprimir */}
-          <div
-            onClick={() => typeof window !== "undefined" && window.print()}
->>>>>>> augusto
             className="group flex items-center cursor-pointer select-none"
           >
             <Printer className="hover:text-blue-600 transition-colors text-slate-600" />
@@ -189,11 +164,7 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
         </a>
       </div>
 
-<<<<<<< HEAD
       {/* MODAL DE COMPARTIR PERSONALIZADO */}
-=======
-      {/* MODAL DE COMPARTIR PERSONALIZADO (Bottom Sheet en Mobile) */}
->>>>>>> augusto
       {isShareModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
           <div 
