@@ -3,12 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { FilterType } from "@prisma/client";
 
 async function verifyAdmin() {
   const user = await getCurrentUser();
@@ -213,37 +208,93 @@ export async function updateSparePartCategoryAction(id: string, name: string, ic
 
 export async function deleteSparePartCategoryAction(id: string) {
   await verifyAdmin();
-  await prisma.category.delete({ where: { id } });
+
+  // Buscamos si HAY productos en esta categoría o en cualquiera de sus descendientes
+  const allCategories = await prisma.category.findMany({ select: { id: true, parentId: true } });
+  function getDescendantIds(catId: string): string[] {
+    const children = allCategories.filter((c) => c.parentId === catId);
+    return [catId, ...children.flatMap((c) => getDescendantIds(c.id))];
+  }
+  const affectedIds = getDescendantIds(id);
+
+  const productCount = await prisma.sparePart.count({
+    where: { categoryId: { in: affectedIds } },
+  });
+
+  if (productCount > 0) {
+    throw new Error(
+      `No se puede eliminar: hay ${productCount} repuesto(s) publicado(s) en esta rama de categorías.`
+    );
+  }
+
+  await prisma.category.delete({ where: { id } }); // acá sí, borra toda la rama de categorías vacías
   revalidatePath("/admin/taxonomy");
   return { success: true };
 }
 
-export async function uploadBrandLogoAction(formData: FormData) {
-  const user = await getCurrentUser();
-  if (!user || !user.isAdmin) throw new Error("UNAUTHORIZED");
+// ==========================================
+// REPUESTOS: Grupos de filtros
+// ==========================================
 
-  const file = formData.get("file") as File | null;
-  if (!file || file.size === 0) throw new Error("NO_FILE");
+export async function createFilterGroupAction(name: string, categoryIds: string[]) {
+  const slug = name.toLowerCase().trim().replace(/\s+/g, "-");
+  await prisma.filterGroup.create({
+    data: { name, slug, categories: { connect: categoryIds.map((id) => ({ id })) } },
+  });
+  revalidatePath("/admin/taxonomy");
+}
 
-  const fileExt = file.name.split(".").pop();
-  const fileName = `brand-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+export async function updateFilterGroupAction(id: string, name: string, categoryIds: string[]) {
+  await prisma.filterGroup.update({
+    where: { id },
+    data: { name, categories: { set: categoryIds.map((id) => ({ id })) } },
+  });
+  revalidatePath("/admin/taxonomy");
+}
 
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+export async function deleteFilterGroupAction(id: string) {
+  await prisma.filterGroup.delete({ where: { id } });
+  revalidatePath("/admin/taxonomy");
+}
 
-  // Subir imagen al bucket 'brands' (asegúrate de que el bucket sea Público)
-  const { error } = await supabase.storage
-    .from("brands")
-    .upload(fileName, buffer, {
-      contentType: file.type,
-      upsert: true,
-    });
+// ==========================================
+// REPUESTOS: Filtros
+// ==========================================
 
-  if (error) throw new Error(error.message);
+export async function createFilterAction(
+  groupId: string,
+  name: string,
+  type: FilterType,
+  options: string[],
+  parentId?: string,
+  triggerOptionValue?: string
+) {
+  const slug = name.toLowerCase().trim().replace(/\s+/g, "-");
+  await prisma.filter.create({
+    data: {
+      groupId,
+      name,
+      slug,
+      type,
+      parentId: parentId || undefined,
+      config: parentId && triggerOptionValue ? { triggerOptionValue } : undefined,
+      ...((type === "SELECT" || type === "MULTI_SELECT") && {
+        options: {
+          create: options
+            .filter((o) => o.trim())
+            .map((label, i) => ({
+              label,
+              value: label.toLowerCase().trim().replace(/\s+/g, "-"),
+              order: i,
+            })),
+        },
+      }),
+    },
+  });
+  revalidatePath("/admin/taxonomy");
+}
 
-  const { data: publicUrlData } = supabase.storage
-    .from("brands")
-    .getPublicUrl(fileName);
-
-  return publicUrlData.publicUrl;
+export async function deleteFilterAction(id: string) {
+  await prisma.filter.delete({ where: { id } });
+  revalidatePath("/admin/taxonomy");
 }

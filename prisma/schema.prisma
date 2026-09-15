@@ -144,14 +144,6 @@ model AdBanner {
   user           User           @relation(fields: [userId], references: [id])
 }
 
-model AircraftCategory {
-  id               String             @id @default(cuid())
-  name             String             @unique
-  aircrafts        Aircraft[]
-  AircraftModel    AircraftModel[]
-  AircraftSubModel AircraftSubModel[]
-}
-
 model AircraftBrand {
   id        String          @id @default(cuid())
   name      String          @unique
@@ -183,6 +175,14 @@ model AircraftSubModel {
   model            AircraftModel     @relation(fields: [modelId], references: [id], onDelete: Cascade)
 
   @@unique([modelId, name])
+}
+
+model AircraftCategory {
+  id                String             @id @default(cuid())
+  name              String             @unique
+  aircrafts         Aircraft[]
+  defaultForModels  AircraftModel[]    // relación inversa
+  overrideForSubModels AircraftSubModel[] // relación inversa
 }
 
 model Aircraft {
@@ -515,9 +515,9 @@ model CouponUsage {
   aircraftId  String?
   sparePartId String?
   usedAt      DateTime  @default(now())
-  coupon      Coupon    @relation(fields: [couponId], references: [id])
-  purchase    Purchase? @relation(fields: [purchaseId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
+  Coupon      Coupon    @relation(fields: [couponId], references: [id])
+  Purchase    Purchase? @relation(fields: [purchaseId], references: [id])
+  User        User      @relation(fields: [userId], references: [id])
 
   @@index([couponId, userId])
 }
@@ -614,7 +614,6 @@ enum FilterType {
   MULTI_SELECT
   RANGE
   BOOLEAN
-  COLOR
   TEXT
 }
 
