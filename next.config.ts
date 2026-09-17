@@ -7,6 +7,10 @@ const nextConfig = {
         hostname: "picsum.photos", // Permite URLs de Picsum
       },
       {
+        protocol: 'https',
+        hostname: 'loremflickr.com',
+      },
+      {
         protocol: "https",
         hostname: "**.supabase.co", // Permite URLs del storage de Supabase
       },
@@ -38,5 +42,3 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
-
-

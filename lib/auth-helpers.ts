@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 
 export async function getCurrentUser() {
   const session = await auth();
-  console.log(session?.user)
+  //console.log(session?.user)
   return session?.user ?? null;
 }
 

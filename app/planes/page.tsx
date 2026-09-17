@@ -78,7 +78,7 @@ export default async function AvionesPage({ searchParams }: Props) {
       where: whereClause,
       include: {
         category: { select: { id: true, name: true } },
-        images: { orderBy: { order: "asc" }, take: 1 },
+        images: { orderBy: { order: "asc" } },
       },
       orderBy,
       skip,
@@ -181,7 +181,7 @@ export default async function AvionesPage({ searchParams }: Props) {
                   city={aircraft.city}
                   province={aircraft.province}
                   imageUrl={aircraft.images[0]?.url ?? "/placeholder.png"}
-                  /* 3. Pasar el booleano si la publicación está guardada en favoritos */
+                  images={aircraft.images}
                   isFavoriteInitial={userFavIds.has(aircraft.id)}
                 />
               ))}

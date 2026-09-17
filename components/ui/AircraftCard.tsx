@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { AppImage } from "@/components/ui/AppImage";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -18,6 +17,7 @@ import {
 } from "lucide-react";
 import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
 import { useRouter } from "next/navigation";
+import { ImageCarousel } from "./CardImageCarousel";
 
 // Iconos personalizados para el menú de compartir
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -38,6 +38,13 @@ function TwitterIcon(props: React.SVGProps<SVGSVGElement>) {
 
 type CategoryProp = { id?: string; name: string } | string | null;
 
+type AircraftImage = {
+  id: string;
+  aircraftId: string;
+  order: number;
+  url: string;
+};
+
 type AircraftCardProps = {
   id: string;
   title: string;
@@ -47,7 +54,10 @@ type AircraftCardProps = {
   totalTimeHours: number | null;
   city?: string | null;
   province?: string | null;
+
   imageUrl: string;
+  images?: AircraftImage[];
+
   isFavoriteInitial?: boolean;
   onFavoriteToggle?: (id: string, isFav: boolean) => void;
 };
@@ -62,6 +72,7 @@ export function AircraftCard({
   city,
   province,
   imageUrl,
+  images = [],
   isFavoriteInitial = false,
   onFavoriteToggle,
 }: AircraftCardProps) {
@@ -177,13 +188,10 @@ export function AircraftCard({
       <Link href={`/planes/plane-details/${id}`} className="group block h-full">
         <Card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <div className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100">
-            <AppImage
-              src={imageUrl}
+            <ImageCarousel
+              images={images}
+              fallbackImage={imageUrl}
               alt={title}
-              fill
-              optimizedWidth={600}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
             />
 
             <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">

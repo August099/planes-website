@@ -8,7 +8,7 @@ export function HeaderLogo() {
   const pathname = usePathname();
   const isHome = pathname === "/";
 
-  const fullLogoSrc = isHome ? "/logo-full-white.png" : "/logo-full.png";
+  const fullLogoSrc = isHome ? "/logo-full-white.png" : "/logo-full-blue.png";
 
   return (
     <Link href="/" className="flex items-center">
