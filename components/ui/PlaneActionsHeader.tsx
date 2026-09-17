@@ -101,7 +101,7 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
   // Manejador de descarga de PDF / Ficha Técnica
   const handleDownloadPdf = () => {
     if (typeof window !== "undefined") {
-      window.print();
+      window.open(`/api/aircraft/${aircraftId}/pdf`, "_blank");
     }
   };
 
