@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import { AircraftCondition, EngineType, SparepartCondition } from "@prisma/client";
+import { AircraftCondition, EngineType, SparepartCondition, AnalyticsEventType } from "@prisma/client";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -221,7 +221,7 @@ export async function createListing(formData: FormData) {
         oxygen,
         status: "ACTIVE",
         listingStartsAt: now,
-        listingExpiresAt: expiresAt, // <--- 45 DÍAS ASIGNADOS
+        listingExpiresAt: expiresAt,
         images: {
           create: uploadedUrls.map((url, index) => ({ url, order: index })),
         },
@@ -247,6 +247,19 @@ export async function createListing(formData: FormData) {
         },
       },
     });
+
+    // 📊 REGISTRO DE EVENTO EN ANALYTICS
+    try {
+      await prisma.analyticsEvent.create({
+        data: {
+          eventType: AnalyticsEventType.CREATE_AIRCRAFT_LISTING,
+          userId: user.id,
+          aircraftId: newAircraft.id,
+        },
+      });
+    } catch (err) {
+      console.error("Error al registrar evento CREATE_AIRCRAFT_LISTING:", err);
+    }
 
     revalidatePath("/planes");
     redirectTarget = `/planes/plane-details/${newAircraft.id}`;
@@ -289,12 +302,25 @@ export async function createListing(formData: FormData) {
         aircrafts: aircrafts.length > 0 ? aircrafts : undefined,
         status: "ACTIVE",
         listingStartsAt: now,
-        listingExpiresAt: expiresAt, // <--- 45 DÍAS ASIGNADOS
+        listingExpiresAt: expiresAt,
         images: {
           create: uploadedUrls.map((url, index) => ({ url, order: index })),
         },
       },
     });
+
+    // 📊 REGISTRO DE EVENTO EN ANALYTICS
+    try {
+      await prisma.analyticsEvent.create({
+        data: {
+          eventType: AnalyticsEventType.CREATE_SPARE_PART_LISTING,
+          userId: user.id,
+          sparePartId: newSparePart.id,
+        },
+      });
+    } catch (err) {
+      console.error("Error al registrar evento CREATE_SPARE_PART_LISTING:", err);
+    }
 
     revalidatePath("/spareparts");
     redirectTarget = `/spareparts/sparepart-details/${newSparePart.id}`;

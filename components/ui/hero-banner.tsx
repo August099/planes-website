@@ -18,13 +18,24 @@ export function HeroBanner({
 }: HeroBannerProps) {
   return (
     <section className="relative w-full h-screen min-h-[550px] sm:min-h-[600px] overflow-hidden">
-      {/* Imagen de Fondo */}
+      
+      {/* Imagen de Fondo (Escritorio) */}
       <Image
         src="/bkg-home.png"
         alt="Fondo Ventas Aeronáuticas"
         fill
         priority
-        className="object-cover object-[80%_center] sm:object-[70%_center] md:object-center select-none"
+        className="hidden md:block object-cover object-center select-none"
+        sizes="100vw"
+      />
+
+      {/* Imagen de Fondo (Celulares) */}
+      <Image
+        src="/bkg-home-mobile.png"
+        alt="Fondo Ventas Aeronáuticas Mobile"
+        fill
+        priority
+        className="block md:hidden object-cover object-center select-none"
         sizes="100vw"
       />
 

@@ -451,10 +451,10 @@ model Report {
   reporterEmail String?
   status        ReportStatus @default(PENDING)
   createdAt     DateTime     @default(now())
-  userId        String
+  userId        String?
   aircraft      Aircraft?    @relation(fields: [aircraftId], references: [id])
   sparePart     SparePart?   @relation(fields: [sparePartId], references: [id])
-  user          User         @relation(fields: [userId], references: [id])
+  user          User?         @relation(fields: [userId], references: [id])
 }
 
 model Tag {
@@ -649,6 +649,7 @@ enum ReportStatus {
 }
 
 enum AnalyticsEventType {
+  // Engagement
   PAGE_VIEW
   AIRCRAFT_VIEW
   SPARE_PART_VIEW
@@ -658,6 +659,28 @@ enum AnalyticsEventType {
   WHATSAPP_CLICK
   PHONE_CLICK
   EMAIL_CLICK
+
+  // Listings
   CREATE_AIRCRAFT_LISTING
   CREATE_SPARE_PART_LISTING
+  LISTING_SOLD
+  LISTING_EXPIRED
+  LISTING_RENEWED
+
+  // Monetization
+  CHECKOUT_STARTED
+  PAYMENT_COMPLETED
+  PAYMENT_FAILED
+  REFUND_ISSUED
+
+  // Subscriptions
+  SUBSCRIPTION_STARTED
+  SUBSCRIPTION_RENEWED
+  SUBSCRIPTION_CANCELLED
+
+  // Advertising
+  AD_PURCHASED
+
+  // Users
+  USER_REGISTERED
 }
