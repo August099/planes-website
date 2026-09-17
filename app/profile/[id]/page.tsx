@@ -37,7 +37,7 @@ export default async function ProfilePage({ params }: Props) {
             _count: {
               select: {
                 favorites: true,
-                leads: true,
+                questions: true,
                 analyticsEvents: true,
               },
             },
@@ -54,7 +54,7 @@ export default async function ProfilePage({ params }: Props) {
             _count: {
               select: {
                 favorites: true,
-                leads: true,
+                questions: true,
                 analyticsEvents: true,
               },
             },
@@ -75,7 +75,7 @@ export default async function ProfilePage({ params }: Props) {
     const usages = await prisma.couponUsage.findMany({
       where: { userId: id },
       include: {
-        coupon: true,
+        Coupon: true,
       },
       orderBy: { usedAt: "desc" },
     });
@@ -83,13 +83,13 @@ export default async function ProfilePage({ params }: Props) {
     userCoupons = usages.map((u) => ({
       usageId: u.id,
       usedAt: u.usedAt.toISOString(),
-      code: u.coupon.code,
-      type: u.coupon.type,
-      discountType: u.coupon.discountType,
-      discountValue: Number(u.coupon.discountValue),
-      scope: u.coupon.scope,
-      isActive: u.coupon.isActive,
-      expiresAt: u.coupon.expiresAt?.toISOString() ?? null,
+      code: u.Coupon.code,
+      type: u.Coupon.type,
+      discountType: u.Coupon.discountType,
+      discountValue: Number(u.Coupon.discountValue),
+      scope: u.Coupon.scope,
+      isActive: u.Coupon.isActive,
+      expiresAt: u.Coupon.expiresAt?.toISOString() ?? null,
       purchaseId: u.purchaseId,
       aircraftId: u.aircraftId,
       sparePartId: u.sparePartId,

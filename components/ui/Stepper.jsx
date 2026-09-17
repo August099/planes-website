@@ -11,6 +11,8 @@ export default function Stepper({
   stepCircleContainerClassName = '',
   stepContainerClassName = '',
   contentClassName = '',
+  backButtonProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
+  nextButtonProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
   footerClassName = '',
   backButtonProps = {},
   nextButtonProps = {},

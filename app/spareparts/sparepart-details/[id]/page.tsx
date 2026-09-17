@@ -8,6 +8,7 @@ import { QnaSection } from "@/components/ui/QnaSection";
 import { PlaneActionsHeader } from "@/components/ui/PlaneActionsHeader";
 import { AppImage } from "@/components/ui/AppImage";
 import { auth } from "@/lib/auth";
+import { ContactButtons } from "@/components/ui/ContactButtons";
 
 export default async function SparePartDetailsPage({
   params,
@@ -72,6 +73,7 @@ export default async function SparePartDetailsPage({
     `Hola, estoy interesado en el repuesto "${sparePart.title}" publicado en Ventas Aeronáuticas.`
   );
 
+  const emailUrl = seller.email ? `mailto:${seller.email}?subject=${subject}&body=${body}` : null;
   const cleanPhone = seller.phone ? seller.phone.replace(/\D/g, "") : "";
   const whatsappUrl = cleanPhone
     ? `https://wa.me/${cleanPhone}?text=${body}`
@@ -95,6 +97,9 @@ export default async function SparePartDetailsPage({
   const attributesObj = (sparePart.attributes as Record<string, any>) || {};
   const attributeEntries = Object.entries(attributesObj);
 
+  // Lista de aeronaves compatibles si existen
+  const compatibleAircrafts = Array.isArray(sparePart.aircrafts) ? (sparePart.aircrafts as string[]) : [];
+
   return (
     <>
       {/* VISTA DE IMPRESIÓN / PDF */}
@@ -114,7 +119,7 @@ export default async function SparePartDetailsPage({
 
         <div className="flex justify-between items-start gap-4">
           <h2 className="text-2xl font-black text-black">{sparePart.title}</h2>
-          <span className="text-2xl font-black text-slate-900 shrink-0">
+          <span className="text-2xl font-black text-[var(--sidebar-primary)] text-slate-900 shrink-0">
             {formattedPrice}
           </span>
         </div>
@@ -138,6 +143,8 @@ export default async function SparePartDetailsPage({
                 Datos del Repuesto
               </h3>
               <div className="space-y-1">
+                {sparePart.brand && <p><span className="font-semibold">Marca:</span> {sparePart.brand}</p>}
+                {sparePart.condition && <p><span className="font-semibold">Condición:</span> {sparePart.condition}</p>}
                 {sparePart.category?.parent?.name && <p><span className="font-semibold">Categoría:</span> {sparePart.category.parent.name}</p>}
                 {sparePart.category?.name && <p><span className="font-semibold">Subcategoría:</span> {sparePart.category.name}</p>}
                 <p><span className="font-semibold">Stock:</span> {sparePart.stock} {sparePart.stock === 1 ? "unidad" : "unidades"}</p>
@@ -188,6 +195,16 @@ export default async function SparePartDetailsPage({
             {/* 1. Galería de Imágenes */}
             <AircraftGallery images={sparePart.images} />
 
+            {/* 2. DESCRIPCIÓN GENERAL (Ubicada inmediatamente debajo de las imágenes) */}
+            {sparePart.description && (
+              <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
+                <h1 className="text-xl font-bold mb-3 text-[#001F58]">Descripción General</h1>
+                <p className="whitespace-pre-line text-slate-700 text-sm leading-relaxed">
+                  {sparePart.description}
+                </p>
+              </div>
+            )}
+
             {/* BLOQUES VISIBLES SOLO EN MÓVIL (<lg) */}
             <div className="flex flex-col gap-5 lg:hidden">
               <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
@@ -212,9 +229,15 @@ export default async function SparePartDetailsPage({
 
                 <Separator />
 
-                {/* SOLO CATEGORÍA, SUBCATEGORÍA Y STOCK */}
+                {/* DETALLES PRINCIPALES MÓVIL */}
                 <div className="space-y-1 text-sm text-slate-700">
                   <h4 className="font-bold text-[#001F58] mb-2">Detalles principales</h4>
+                  {sparePart.brand && (
+                    <p><span className="font-semibold text-slate-500">Marca:</span> {sparePart.brand}</p>
+                  )}
+                  {sparePart.condition && (
+                    <p><span className="font-semibold text-slate-500">Condición:</span> {sparePart.condition}</p>
+                  )}
                   {sparePart.category?.parent?.name && (
                     <p><span className="font-semibold text-slate-500">Categoría:</span> {sparePart.category.parent.name}</p>
                   )}
@@ -258,76 +281,75 @@ export default async function SparePartDetailsPage({
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-2">
-                  {seller.phone && (
-                    <div className="flex gap-2">
-                      <a
-                        href={`tel:${seller.phone}`}
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs rounded-xl transition-colors"
-                      >
-                        <Phone className="w-4 h-4" />
-                        Llamar
-                      </a>
-
-                      {whatsappUrl && (
-                        <a
-                          href={whatsappUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-500 text-white hover:bg-emerald-600 font-semibold text-xs rounded-xl transition-colors shadow-xs"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                          WhatsApp
-                        </a>
-                      )}
-                    </div>
-                  )}
-
-                  {seller.email && (
-                    <a
-                      href={`mailto:${seller.email}?subject=${subject}&body=${body}`}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-3 border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-xs rounded-xl transition-colors"
-                    >
-                      <Mail className="w-4 h-4 text-slate-500" />
-                      Enviar Correo
-                    </a>
-                  )}
-                </div>
+                <ContactButtons 
+                  phone={seller.phone} 
+                  email={seller.email} 
+                  whatsappUrl={whatsappUrl} 
+                  emailUrl={emailUrl} 
+                  entityId={sparePart.id} 
+                  entityType="SPARE_PART" 
+                />
               </div>
             </div>
-
-            {/* Descripción */}
-            {sparePart.description && (
-              <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
-                <h1 className="text-xl font-bold mb-3 text-[#001F58]">Descripción</h1>
-                <p className="whitespace-pre-line text-slate-700 text-sm leading-relaxed">
-                  {sparePart.description}
-                </p>
-              </div>
-            )}
 
             {/* Ficha Técnica / Información Adicional */}
             <section className="flex flex-col gap-6">
               <h2 className="text-2xl font-bold text-[#001F58]">Información Adicional</h2>
 
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-slate-800">Especificaciones del Repuesto</h3>
-                <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
-                  {sparePart.partNumber && (
-                    <DetailRow label="Número de Parte (P/N)" value={sparePart.partNumber} />
-                  )}
-                  <DetailRow label="Ubicación" value={locationText} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                
+                {/* Columna 1: Especificaciones principales */}
+                <div className="space-y-6">
+                  <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
+                    {sparePart.brand && <DetailRow label="Marca / Fabricante" value={sparePart.brand} />}
+                    {sparePart.condition && <DetailRow label="Condición" value={sparePart.condition} />}
+                    {sparePart.partNumber && (
+                      <DetailRow label="Número de Parte (P/N)" value={sparePart.partNumber} />
+                    )}
+                    <DetailRow label="Stock Disponible" value={`${sparePart.stock} ${sparePart.stock === 1 ? "unidad" : "unidades"}`} />
+                    <DetailRow label="Ubicación" value={locationText} />
 
-                  {/* Renderizar dinámicamente todos los campos/atributos de la subcategoría */}
-                  {attributeEntries.map(([key, val]) => (
-                    <DetailRow key={key} label={key} value={String(val)} />
-                  ))}
+                    {/* Renderizar dinámicamente todos los campos/atributos del JSON */}
+                    {attributeEntries.map(([key, val]) => (
+                      <DetailRow key={key} label={key} value={String(val)} />
+                    ))}
+                  </div>
                 </div>
+
+                {/* Columna 2: Aeronaves compatibles y Categoría */}
+                <div className="space-y-6">
+                  <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
+                    {sparePart.category?.parent?.name && (
+                      <DetailRow label="Categoría" value={sparePart.category.parent.name} />
+                    )}
+                    {sparePart.category?.name && (
+                      <DetailRow label="Subcategoría" value={sparePart.category.name} />
+                    )}
+                  </div>
+
+                  {/* Aeronaves Compatibles en Chips Azules */}
+                  {compatibleAircrafts.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold text-slate-800">Aeronaves Compatibles</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {compatibleAircrafts.map((modelName, idx) => (
+                          <span
+                            key={idx}
+                            className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#001F58] text-xs font-semibold"
+                          >
+                            {modelName}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
               </div>
             </section>
           </div>
 
-          {/* Columna Derecha (DESKTOP >= lg) */}
+          {/* Columna Derecha (DESKTOP >= lg) - Flujo continuo sin sticky */}
           <div className="hidden lg:flex w-1/3 flex-col gap-5">
             <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
               <div className="flex justify-between items-center text-xs text-slate-400 pb-2 border-b border-slate-100">
@@ -353,6 +375,12 @@ export default async function SparePartDetailsPage({
 
               <div className="space-y-1 text-sm text-slate-700">
                 <h4 className="font-bold text-[#001F58] mb-2">Detalles principales</h4>
+                {sparePart.brand && (
+                  <p><span className="font-semibold text-slate-500">Marca:</span> {sparePart.brand}</p>
+                )}
+                {sparePart.condition && (
+                  <p><span className="font-semibold text-slate-500">Condición:</span> {sparePart.condition}</p>
+                )}
                 {sparePart.category?.parent?.name && (
                   <p><span className="font-semibold text-slate-500">Categoría:</span> {sparePart.category.parent.name}</p>
                 )}
@@ -396,41 +424,14 @@ export default async function SparePartDetailsPage({
                 </div>
               </div>
 
-              <div className="space-y-2 pt-2">
-                {seller.phone && (
-                  <div className="flex gap-2">
-                    <a
-                      href={`tel:${seller.phone}`}
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs rounded-xl transition-colors"
-                    >
-                      <Phone className="w-4 h-4" />
-                      Llamar
-                    </a>
-
-                    {whatsappUrl && (
-                      <a
-                        href={whatsappUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-500 text-white hover:bg-emerald-600 font-semibold text-xs rounded-xl transition-colors shadow-xs"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        WhatsApp
-                      </a>
-                    )}
-                  </div>
-                )}
-
-                {seller.email && (
-                  <a
-                    href={`mailto:${seller.email}?subject=${subject}&body=${body}`}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 px-3 border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-xs rounded-xl transition-colors"
-                  >
-                    <Mail className="w-4 h-4 text-slate-500" />
-                    Enviar Correo
-                  </a>
-                )}
-              </div>
+              <ContactButtons 
+                phone={seller.phone} 
+                email={seller.email} 
+                whatsappUrl={whatsappUrl} 
+                emailUrl={emailUrl} 
+                entityId={sparePart.id} 
+                entityType="AIRCRAFT" 
+              />
             </div>
           </div>
         </section>
