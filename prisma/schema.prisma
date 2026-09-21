@@ -179,11 +179,11 @@ model AircraftSubModel {
 }
 
 model AircraftCategory {
-  id                String             @id @default(cuid())
-  name              String             @unique
-  aircrafts         Aircraft[]
-  defaultForModels  AircraftModel[]    // relación inversa
-  overrideForSubModels AircraftSubModel[] // relación inversa
+  id                   String             @id @default(cuid())
+  name                 String             @unique
+  aircrafts            Aircraft[]
+  defaultForModels     AircraftModel[]
+  overrideForSubModels AircraftSubModel[]
 }
 
 model Aircraft {
@@ -382,7 +382,7 @@ model SparePart {
   categoryId       String
   brand            String
   aircrafts        String[]
-  attributes       Json?                @default("{}")
+  attributes       Json?               @default("{}")
   inPesos          Boolean             @default(false)
   analyticsEvents  AnalyticsEvent[]
   filterValues     EntityFilterValue[]
@@ -684,3 +684,4 @@ enum AnalyticsEventType {
   // Users
   USER_REGISTERED
 }
+

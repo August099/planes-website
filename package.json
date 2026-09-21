@@ -14,6 +14,7 @@
     "@icons-pack/react-simple-icons": "^13.11.1",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.9.0",
+    "@react-pdf/renderer": "^4.9.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.2",
     "bcryptjs": "^3.0.3",
