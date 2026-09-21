@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import { AircraftCondition, EngineType } from "@prisma/client";
+import { AircraftCondition, EngineType, SparepartCondition, AnalyticsEventType } from "@prisma/client";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -15,7 +15,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Configuración de límites para documentos
-const MAX_DOC_SIZE = 10 * 1024 * 1024; // 10 MB en bytes
+const MAX_DOC_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_DOC_TYPES = [
   "application/pdf",
   "application/msword",
@@ -35,9 +35,8 @@ export async function createListing(formData: FormData) {
   const listingType = formData.get("listingType") as string;
   const files = formData.getAll("files") as File[];
 
-  // 1. Subida de imágenes al bucket "listings"
+  // 1. Subida de imágenes a Supabase Storage
   const uploadedUrls: string[] = [];
-
   for (const file of files) {
     if (file && file.size > 0) {
       const fileExt = file.name.split(".").pop();
@@ -63,21 +62,13 @@ export async function createListing(formData: FormData) {
     }
   }
 
-  // 2. Subida de documentos al NUEVO BUCKET "documents" con validaciones
+  // 2. Subida de documentos a Supabase Storage
   const documentFiles = formData.getAll("documents") as File[];
   const uploadedDocs: { name: string; url: string }[] = [];
 
   for (const docFile of documentFiles) {
     if (docFile && docFile.size > 0) {
-      // Validación 1: Tamaño máximo (10 MB)
-      if (docFile.size > MAX_DOC_SIZE) {
-        console.warn(`El archivo ${docFile.name} excede el límite de 10 MB.`);
-        continue;
-      }
-
-      // Validación 2: Tipos de archivo permitidos
-      if (!ALLOWED_DOC_TYPES.includes(docFile.type)) {
-        console.warn(`El archivo ${docFile.name} tiene un formato no permitido.`);
+      if (docFile.size > MAX_DOC_SIZE || !ALLOWED_DOC_TYPES.includes(docFile.type)) {
         continue;
       }
 
@@ -85,7 +76,6 @@ export async function createListing(formData: FormData) {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 6)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
-      // Subida al bucket independiente "documents"
       const { error } = await supabase.storage
         .from("documents")
         .upload(filePath, docFile);
@@ -108,7 +98,14 @@ export async function createListing(formData: FormData) {
     }
   }
 
-// 3. Guardado en la base de datos
+  // Configuración de fechas de vigencia (+45 DÍAS)
+  const now = new Date();
+  const expiresAt = new Date();
+  expiresAt.setDate(now.getDate() + 45);
+
+  let redirectTarget = "";
+
+  // 3. Guardado en la base de datos
   if (listingType === "aircraft") {
     const title = formData.get("title") as string;
     let categoryId = formData.get("categoryId") as string;
@@ -118,55 +115,32 @@ export async function createListing(formData: FormData) {
     const subModelId = formData.get("subModelId") as string;
     const customModel = formData.get("customModel") as string;
 
-    // --- RESOLUCIÓN ROBUSTA DE CATEGORÍA ---
-    // 1. Intentar obtener la categoría desde la base de datos según el submodelo o modelo
+    // Resolución de categoría
     if (subModelId) {
       const subModel = await prisma.aircraftSubModel.findUnique({
         where: { id: subModelId },
-        select: { 
-          categoryOverride: true, 
-          model: { select: { defaultCategoryId: true } } 
-        }
+        select: { categoryOverride: true, model: { select: { defaultCategoryId: true } } }
       });
-
-      if (subModel?.categoryOverride) {
-        categoryId = subModel.categoryOverride;
-      } else if (subModel?.model?.defaultCategoryId) {
-        categoryId = subModel.model.defaultCategoryId;
-      }
+      if (subModel?.categoryOverride) categoryId = subModel.categoryOverride;
+      else if (subModel?.model?.defaultCategoryId) categoryId = subModel.model.defaultCategoryId;
     } else if (modelId && modelId !== "CUSTOM_MODEL") {
       const model = await prisma.aircraftModel.findUnique({
         where: { id: modelId },
         select: { defaultCategoryId: true }
       });
-
-      if (model?.defaultCategoryId) {
-        categoryId = model.defaultCategoryId;
-      }
+      if (model?.defaultCategoryId) categoryId = model.defaultCategoryId;
     }
 
-    // 2. Si el modelo en la BD no tenía defaultCategoryId (o era null),
-    // o si el categoryId recibido del cliente no existe en AircraftCategory, 
-    // verificar que exista en la tabla AircraftCategory:
     let categoryExists = false;
-
     if (categoryId && categoryId.trim() !== "") {
-      const validCategory = await prisma.aircraftCategory.findUnique({
-        where: { id: categoryId }
-      });
-      if (validCategory) {
-        categoryExists = true;
-      }
+      const validCategory = await prisma.aircraftCategory.findUnique({ where: { id: categoryId } });
+      if (validCategory) categoryExists = true;
     }
 
-    // 3. Si sigue sin haber categoría válida, tomar la primera categoría disponible en la BD como respaldo
     if (!categoryExists) {
       const fallbackCategory = await prisma.aircraftCategory.findFirst();
-      if (fallbackCategory) {
-        categoryId = fallbackCategory.id;
-      } else {
-        throw new Error("No hay categorías registradas en la base de datos.");
-      }
+      if (fallbackCategory) categoryId = fallbackCategory.id;
+      else throw new Error("No hay categorías registradas en la base de datos.");
     }
 
     const year = parseInt(formData.get("year") as string, 10);
@@ -177,15 +151,35 @@ export async function createListing(formData: FormData) {
     const province = formData.get("province") as string;
     const description = formData.get("description") as string;
     
-    const condition = (formData.get("condition") as AircraftCondition) || "USADO";
-    
-    const isEngineTypeRequired = categoryId === "M" || categoryId === "B";
+    // Validar AircraftCondition Enum
+    const conditionRaw = (formData.get("condition") as string) || "USADO";
+    const condition = (Object.values(AircraftCondition).includes(conditionRaw as AircraftCondition)
+      ? conditionRaw
+      : AircraftCondition.USADO) as AircraftCondition;
+
+    const isEngineTypeRequired = categoryId === "MP" || categoryId === "BP" || categoryId === "M" || categoryId === "B";
     const rawEngineType = formData.get("engineType") as EngineType;
     const engineType = isEngineTypeRequired && rawEngineType ? rawEngineType : null;
 
     const financing = formData.get("financing") === "true";
     const trade = formData.get("trade") === "true";
     const rent = formData.get("rent") === "true";
+
+    const avDescription = (formData.get("avDescription") as string) || "";
+    const avAaptoifr = formData.get("avAaptoifr") === "true";
+    const avAutopilot = formData.get("avAutopilot") === "true";
+
+    const certified = formData.get("certified") === "true";
+    const certDateRaw = formData.get("certDate") as string;
+    const certDate = certDateRaw ? new Date(certDateRaw) : new Date();
+    const plate = (formData.get("plate") as string) || "";
+
+    const intDescription = (formData.get("intDescription") as string) || "";
+    const extDescription = (formData.get("extDescription") as string) || "";
+    const passengersRaw = formData.get("passengers") as string;
+    const passengers = passengersRaw ? parseInt(passengersRaw, 10) : 0;
+    const airconditioner = formData.get("airconditioner") === "true";
+    const oxygen = formData.get("oxygen") === "true";
 
     const enginesJSON = formData.get("engines") as string;
     const propellersJSON = formData.get("propellers") as string;
@@ -214,18 +208,25 @@ export async function createListing(formData: FormData) {
         financing,
         trade,
         rent,
+        avDescription,
+        avAaptoifr,
+        avAutopilot,
+        certified,
+        certDate,
+        plate,
+        intDescription,
+        extDescription,
+        passengers,
+        airconditioner,
+        oxygen,
         status: "ACTIVE",
+        listingStartsAt: now,
+        listingExpiresAt: expiresAt,
         images: {
-          create: uploadedUrls.map((url, index) => ({
-            url,
-            order: index,
-          })),
+          create: uploadedUrls.map((url, index) => ({ url, order: index })),
         },
         documents: {
-          create: uploadedDocs.map((doc) => ({
-            name: doc.name,
-            url: doc.url,
-          })),
+          create: uploadedDocs.map((doc) => ({ name: doc.name, url: doc.url })),
         },
         engines: {
           create: engines.map((e: any) => ({
@@ -233,23 +234,40 @@ export async function createListing(formData: FormData) {
             model: e.model || null,
             engineHours: e.engineHours ? parseInt(e.engineHours, 10) : null,
             TBO: parseInt(e.TBO || "0", 10),
+            DURG: e.DURG ? parseInt(e.DURG, 10) : null,
+            description: e.description || null,
           })),
         },
         propeller: {
           create: propellers.map((p: any) => ({
             model: p.model || null,
             propellerHours: p.propellerHours ? parseInt(p.propellerHours, 10) : null,
+            description: p.description || null,
           })),
         },
       },
     });
 
+    // 📊 REGISTRO DE EVENTO EN ANALYTICS
+    try {
+      await prisma.analyticsEvent.create({
+        data: {
+          eventType: AnalyticsEventType.CREATE_AIRCRAFT_LISTING,
+          userId: user.id,
+          aircraftId: newAircraft.id,
+        },
+      });
+    } catch (err) {
+      console.error("Error al registrar evento CREATE_AIRCRAFT_LISTING:", err);
+    }
+
     revalidatePath("/planes");
-    redirect(`/planes/plane-details/${newAircraft.id}`);
+    redirectTarget = `/planes/plane-details/${newAircraft.id}`;
   } else {
     // Repuestos
     const title = formData.get("title") as string;
     const categoryId = formData.get("categoryId") as string;
+    const brand = (formData.get("brand") as string) || "";
     const partNumber = formData.get("partNumber") as string;
     const priceRaw = formData.get("price") as string;
     const priceOnRequest = formData.get("priceOnRequest") === "true";
@@ -258,31 +276,59 @@ export async function createListing(formData: FormData) {
     const description = formData.get("description") as string;
     const inPesos = formData.get("inPesos") === "true";
     const stock = parseInt((formData.get("stock") as string) || "1", 10);
+    const aircraftsJSON = formData.get("aircrafts") as string;
+    const aircrafts = aircraftsJSON ? JSON.parse(aircraftsJSON) : [];
+
+    // Validar SparepartCondition Enum
+    const conditionRaw = (formData.get("condition") as string) || "NUEVO";
+    const condition = (Object.values(SparepartCondition).includes(conditionRaw as SparepartCondition)
+      ? conditionRaw
+      : SparepartCondition.NUEVO) as SparepartCondition;
 
     const newSparePart = await prisma.sparePart.create({
       data: {
         sellerId: user.id,
         title,
         categoryId,
+        brand,
         partNumber: partNumber || null,
         price: priceOnRequest || !priceRaw ? null : parseFloat(priceRaw),
         inPesos,
         stock,
+        condition,
         city,
         province,
         description,
+        aircrafts: aircrafts.length > 0 ? aircrafts : undefined,
         status: "ACTIVE",
+        listingStartsAt: now,
+        listingExpiresAt: expiresAt,
         images: {
-          create: uploadedUrls.map((url, index) => ({
-            url,
-            order: index,
-          })),
+          create: uploadedUrls.map((url, index) => ({ url, order: index })),
         },
       },
     });
 
+    // 📊 REGISTRO DE EVENTO EN ANALYTICS
+    try {
+      await prisma.analyticsEvent.create({
+        data: {
+          eventType: AnalyticsEventType.CREATE_SPARE_PART_LISTING,
+          userId: user.id,
+          sparePartId: newSparePart.id,
+        },
+      });
+    } catch (err) {
+      console.error("Error al registrar evento CREATE_SPARE_PART_LISTING:", err);
+    }
+
     revalidatePath("/spareparts");
-    redirect(`/spareparts/sparepart-details/${newSparePart.id}`);
+    redirectTarget = `/spareparts/sparepart-details/${newSparePart.id}`;
+  }
+
+  // Redirección segura fuera de cualquier bloque interno
+  if (redirectTarget) {
+    redirect(redirectTarget);
   }
 }
 
@@ -298,7 +344,7 @@ export async function sendManagedListingEmail(data: {
       to: ["soporte@tu-dominio.com"],
       subject: `Nueva solicitud de publicación asistida: ${data.itemType}`,
       html: `
-        2 Nueva solicitud de publicación asistida</h2>
+        <h2>Nueva solicitud de publicación asistida</h2>
         <p><strong>Nombre:</strong> ${data.name}</p>
         <p><strong>WhatsApp:</strong> ${data.whatsapp}</p>
         <p><strong>Tipo de Producto:</strong> ${data.itemType}</p>

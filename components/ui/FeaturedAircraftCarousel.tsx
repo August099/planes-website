@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   OverlayAircraftCard,
@@ -14,16 +15,39 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
+export interface FeaturedAircraftProps extends AircraftCardProps {
+  viewsCount?: number;
+}
+
 interface Props {
-  aircrafts: AircraftCardProps[];
+  aircrafts: FeaturedAircraftProps[];
 }
 
 export function FeaturedAircraftCarousel({ aircrafts }: Props) {
-  if (!aircrafts || aircrafts.length === 0) return null;
+  const [selectedAircrafts, setSelectedAircrafts] = useState<FeaturedAircraftProps[]>([]);
+
+  useEffect(() => {
+    if (!aircrafts || aircrafts.length === 0) return;
+
+    let pool = [...aircrafts];
+
+    if (pool.length >= 20) {
+      // Si hay 20 o más, tomamos las 10 con más vistas
+      pool.sort((a, b) => (b.viewsCount || 0) - (a.viewsCount || 0));
+      pool = pool.slice(0, 10);
+    }
+
+    // Mezclamos aleatoriamente en el cliente y tomamos 2
+    const shuffled = pool.sort(() => 0.5 - Math.random());
+    setSelectedAircrafts(shuffled.slice(0, 2));
+  }, [aircrafts]);
+
+  // Si no se han seleccionado aún en el cliente, no renderizamos nada para evitar parpadeos/descalces
+  if (selectedAircrafts.length === 0) return null;
 
   return (
     <section className="py-8 relative">
-      {/* ENCABEZADO IDÉNTICO A LA FOTO */}
+      {/* ENCABEZADO */}
       <div className="text-center mb-8">
         <h2 className="text-3xl sm:text-4xl font-bold text-[#001F58] tracking-tight inline-block relative pb-2">
           Aeronaves Destacadas
@@ -59,11 +83,10 @@ export function FeaturedAircraftCarousel({ aircrafts }: Props) {
           }}
           className="py-2"
         >
-          {aircrafts.map((aircraft, index) => (
+          {selectedAircrafts.map((aircraft, index) => (
             <SwiperSlide key={aircraft.id} className="h-auto">
               <OverlayAircraftCard
                 {...aircraft}
-                // Si quieres simular la etiqueta "Dato Destacado" en el primero
                 featuredBadge={index === 0 ? "Dato Destacado" : undefined}
               />
             </SwiperSlide>

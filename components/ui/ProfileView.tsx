@@ -552,7 +552,7 @@ export function ProfileView({
                         </span>
                         <span className="flex items-center gap-0.5" title="Consultas">
                           <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
-                          {item._count?.leads || 0}
+                          {item._count?.questions || 0}
                         </span>
                       </div>
 
@@ -605,35 +605,62 @@ export function ProfileView({
 
                 {isOwner && (
                   <div className="p-3 bg-white/90 rounded-xl border border-slate-200/80 text-[11px] space-y-2 text-slate-600 shadow-2xs">
-                    {/* FECHA DE VENCIMIENTO */}
-                    <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
-                      <span className="flex items-center gap-1 font-medium text-slate-500">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        Vencimiento:
-                      </span>
-                      <span
-                        className={`font-bold px-2 py-0.5 rounded-md ${
-                          remainingStatus.isExpired
-                            ? "bg-red-100 text-red-700"
-                            : remainingStatus.isWarning
-                            ? "bg-amber-100 text-amber-800"
-                            : "bg-emerald-50 text-emerald-700"
-                        }`}
+                    {/* FECHA DE VENCIMIENTO Y BOTÓN DE RENOVAR */}
+                    <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 gap-2">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span
+                          className={`font-bold px-2 py-0.5 rounded-md text-[10px] ${
+                            remainingStatus.isExpired
+                              ? "bg-red-100 text-red-700"
+                              : remainingStatus.isWarning
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-emerald-50 text-emerald-700"
+                          }`}
+                        >
+                          {remainingStatus.text}
+                        </span>
+                      </div>
+
+                      {/* BOTÓN RENOVAR (+45 DÍAS) */}
+                      <button
+                        type="button"
+                        onClick={() => handleRenew(item.id, "sparepart")}
+                        disabled={loadingRenewId === item.id}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                        title="Extender publicación 45 días más"
                       >
-                        {remainingStatus.text}
-                      </span>
+                        {loadingRenewId === item.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <>
+                            <RefreshCw className="w-3 h-3" />
+                            Renovar
+                          </>
+                        )}
+                      </button>
                     </div>
 
-                    {/* METRICAS DE INTERACCIÓN */}
+                    {/* METRICAS DE INTERACCIÓN Y ACCIONES EDITAR/ELIMINAR */}
                     <div className="flex items-center justify-between gap-1">
                       <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-0.5" title="Vistas"><Eye className="w-3.5 h-3.5 text-slate-400" />{item._count?.analyticsEvents || 0}</span>
-                        <span className="flex items-center gap-0.5" title="Favoritos"><Heart className="w-3.5 h-3.5 text-red-500" />{item._count?.favorites || 0}</span>
-                        <span className="flex items-center gap-0.5" title="Consultas"><MessageSquare className="w-3.5 h-3.5 text-blue-500" />{item._count?.leads || 0}</span>
+                        <span className="flex items-center gap-0.5" title="Vistas">
+                          <Eye className="w-3.5 h-3.5 text-slate-400" />
+                          {item._count?.analyticsEvents || 0}
+                        </span>
+                        <span className="flex items-center gap-0.5" title="Favoritos">
+                          <Heart className="w-3.5 h-3.5 text-red-500" />
+                          {item._count?.favorites || 0}
+                        </span>
+                        <span className="flex items-center gap-0.5" title="Consultas">
+                          <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
+                          {item._count?.questions || 0}
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-1 border-l pl-2 border-slate-200">
                         <button
+                          type="button"
                           onClick={() => handleEditOpen(item, "sparepart")}
                           className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
                           title="Editar Publicación"
@@ -641,6 +668,7 @@ export function ProfileView({
                           <Edit className="w-3.5 h-3.5" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDelete(item.id, "sparepart")}
                           className="p-1 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
                           title="Eliminar Publicación"

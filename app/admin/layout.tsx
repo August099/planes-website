@@ -10,7 +10,7 @@ import {
   ShieldAlert,
   Tag,
   Receipt,
-  FileExclamationPoint
+  FileWarning
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
@@ -31,24 +31,23 @@ export default async function AdminLayout({
     { label: "Resumen", href: "/admin", icon: BarChart3 },
     { label: "Publicaciones", href: "/admin/listings", icon: Plane },
     { label: "Búsquedas", href: "/admin/searches", icon: Search },
-    { label: "Contactos", href: "/admin/contacts", icon: MessageSquare },
     { label: "Fuentes", href: "/admin/traffic", icon: Globe2 },
-    { label: "Oportunidades", href: "/admin/opportunities", icon: TrendingUp },
-    { label: "Eventos", href: "/admin/events", icon: ListFilter },
-    { label: "Reportes", href: "/admin/report", icon: FileExclamationPoint },
+    { label: "Métricas", href: "/admin/kpi", icon: ListFilter },
+    { label: "Reportes", href: "/admin/report", icon: FileWarning },
     { label: "Añadir taxonomía", href: "/admin/taxonomy", icon: Tag },
     { label: "Cupones", href: "/admin/coupons", icon: Receipt },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="flex w-full min-h-screen bg-slate-50 overflow-hidden">
+      {/* SIDEBAR */}
       <aside className="w-64 bg-[#001F58] text-white flex flex-col border-r border-white/10 shrink-0">
         <div className="p-6 border-b border-white/10 flex items-center gap-3">
           <ShieldAlert className="w-6 h-6 text-red-500" />
           <span className="font-bold text-lg tracking-wide">PANEL ADMIN</span>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -64,22 +63,25 @@ export default async function AdminLayout({
           })}
         </nav>
 
-        <div className="p-4 border-t border-white/10 text-xs text-white/50 text-center">
+        <div className="p-4 border-t border-white/10 text-xs text-white/50 text-center shrink-0">
           Ventas Aeronáuticas v1.0
         </div>
       </aside> 
 
-      <main className="relative isolate overflow-hidden min-h-screen flex-1 overflow-y-auto p-8 -mb-16">
-        <Image
-          src="/bkg-profile.jpg"
-          alt=""
-          fill
-          priority
-          className="-z-20 object-cover"
-        />
-        <div className="absolute inset-0 -z-10 bg-background/85" />
-        {children}
-      </main>
+      {/* ÁREA DE CONTENIDO */}
+      <div className="relative flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto">
+        <main className="relative flex-1 p-6 sm:p-8 pb-32">
+          <Image
+            src="/bkg-profile.jpg"
+            alt=""
+            fill
+            priority
+            className="-z-20 object-cover"
+          />
+          <div className="absolute inset-0 -z-10 bg-background/85" />
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

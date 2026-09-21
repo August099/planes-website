@@ -37,7 +37,7 @@ export default async function ProfilePage({ params }: Props) {
             _count: {
               select: {
                 favorites: true,
-                leads: true,
+                questions: true,
                 analyticsEvents: true,
               },
             },
@@ -54,7 +54,7 @@ export default async function ProfilePage({ params }: Props) {
             _count: {
               select: {
                 favorites: true,
-                leads: true,
+                questions: true,
                 analyticsEvents: true,
               },
             },

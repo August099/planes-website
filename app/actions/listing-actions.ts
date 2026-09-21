@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { AircraftStatus, SparePartStatus } from "@prisma/client";
+import { AircraftStatus, SparePartStatus, SparepartCondition, AircraftCondition, EngineType } from "@prisma/client";
 
 // ==========================================
 // 1. CREAR AIRCRAFT (Aeronave)
@@ -29,6 +29,17 @@ export async function createAircraft(data: any) {
       financing,
       trade,
       rent,
+      avDescription,
+      avAaptoifr,
+      avAutopilot,
+      certified,
+      certDate,
+      plate,
+      intDescription,
+      extDescription,
+      passengers,
+      airconditioner,
+      oxygen,
       engines,
       propellers,
       images,
@@ -44,11 +55,11 @@ export async function createAircraft(data: any) {
       data: {
         sellerId,
         title,
-        customBrand: customBrand || null,
-        brandId: brandId || null,
-        modelId: modelId || null,
-        subModelId: subModelId || null,
-        customModel: customModel || null,
+        customBrand: customBrand || undefined,
+        brandId: brandId || undefined,
+        modelId: modelId || undefined,
+        subModelId: subModelId || undefined,
+        customModel: customModel || undefined,
         categoryId,
         year: Number(year),
         totalTimeHours: Number(totalTimeHours),
@@ -56,26 +67,40 @@ export async function createAircraft(data: any) {
         city,
         province,
         description,
-        condition,
-        engineType: engineType || null,
+        condition: (condition as AircraftCondition) || "USADO",
+        engineType: engineType || undefined,
         financing: Boolean(financing),
         trade: Boolean(trade),
         rent: Boolean(rent),
+        avDescription: avDescription || undefined,
+        avAaptoifr: Boolean(avAaptoifr),
+        avAutopilot: Boolean(avAutopilot),
+        certified: Boolean(certified),
+        certDate: certDate ? new Date(certDate) : undefined,
+        plate: plate || undefined,
+        intDescription: intDescription || undefined,
+        extDescription: extDescription || undefined,
+        passengers: passengers ? Number(passengers) : undefined,
+        airconditioner: Boolean(airconditioner),
+        oxygen: Boolean(oxygen),
         status: AircraftStatus.ACTIVE,
         listingStartsAt: now,
         listingExpiresAt: expiresAt,
         engines: {
           create: engines?.map((engine: any) => ({
-            engineHours: engine.engineHours ? Number(engine.engineHours) : null,
+            engineHours: engine.engineHours ? Number(engine.engineHours) : undefined,
             TBO: Number(engine.TBO),
-            brand: engine.brand || null,
-            model: engine.model || null,
+            DURG: engine.DURG ? Number(engine.DURG) : undefined,
+            brand: engine.brand || undefined,
+            model: engine.model || undefined,
+            description: engine.description || undefined,
           })),
         },
         propeller: {
           create: propellers?.map((prop: any) => ({
-            propellerHours: prop.propellerHours ? Number(prop.propellerHours) : null,
-            model: prop.model || null,
+            propellerHours: prop.propellerHours ? Number(prop.propellerHours) : undefined,
+            model: prop.model || undefined,
+            description: prop.description || undefined,
           })),
         },
         images: {
@@ -94,7 +119,7 @@ export async function createAircraft(data: any) {
     });
 
     revalidatePath("/profile");
-    revalidatePath("/aircrafts");
+    revalidatePath("/planes");
 
     return { success: true, data: newAircraft };
   } catch (error) {
@@ -111,15 +136,18 @@ export async function createSparePart(data: any) {
     const {
       sellerId,
       title,
+      brand,
       partNumber,
       price,
       inPesos,
+      condition,
       city,
       province,
       description,
       stock,
       categoryId,
       attributes,
+      aircrafts,
       images,
     } = data;
 
@@ -128,19 +156,27 @@ export async function createSparePart(data: any) {
     const expiresAt = new Date();
     expiresAt.setDate(now.getDate() + 45);
 
+    const conditionRaw = condition || "NUEVO";
+    const spareCondition = (Object.values(SparepartCondition).includes(conditionRaw as SparepartCondition)
+      ? conditionRaw
+      : SparepartCondition.NUEVO) as SparepartCondition;
+
     const newSparePart = await prisma.sparePart.create({
       data: {
         sellerId,
         title,
-        partNumber: partNumber || null,
+        brand: brand || undefined,
+        partNumber: partNumber || undefined,
         price: price ? Number(price) : null,
         inPesos: Boolean(inPesos),
+        condition: spareCondition,
         city,
         province,
         description,
         stock: stock ? Number(stock) : 1,
         categoryId,
         attributes: attributes || {},
+        aircrafts: aircrafts && aircrafts.length > 0 ? aircrafts : undefined,
         status: SparePartStatus.ACTIVE,
         listingStartsAt: now,
         listingExpiresAt: expiresAt,
@@ -233,20 +269,18 @@ export async function getListingDetails(id: string, type: "AIRCRAFT" | "SPARE_PA
 }
 
 // ==========================================
-// RENOVAR / EXTENDER PUBLICACIÓN (+45 DÍAS)
+// 5. RENOVAR / EXTENDER PUBLICACIÓN (+45 DÍAS)
 // ==========================================
 export async function renewListingAction(id: string, type: "aircraft" | "sparepart") {
   try {
     const now = new Date();
 
     if (type === "aircraft") {
-      // 1. Buscar la publicación actual para conocer su vencimiento existente
       const current = await prisma.aircraft.findUnique({
         where: { id },
         select: { listingExpiresAt: true },
       });
 
-      // 2. Si tiene una fecha futura válida, sumamos 45 días a esa fecha. Si ya venció o era null, sumamos desde 'now'.
       const baseDate = current?.listingExpiresAt && new Date(current.listingExpiresAt) > now
         ? new Date(current.listingExpiresAt)
         : now;
@@ -263,10 +297,9 @@ export async function renewListingAction(id: string, type: "aircraft" | "sparepa
         },
       });
 
-      revalidatePath("/aircrafts");
-      revalidatePath(`/aircrafts/${id}`);
+      revalidatePath("/planes");
+      revalidatePath(`/planes/plane-details/${id}`);
     } else {
-      // Repuestos
       const current = await prisma.sparePart.findUnique({
         where: { id },
         select: { listingExpiresAt: true },
@@ -289,7 +322,7 @@ export async function renewListingAction(id: string, type: "aircraft" | "sparepa
       });
 
       revalidatePath("/spareparts");
-      revalidatePath(`/spareparts/${id}`);
+      revalidatePath(`/spareparts/sparepart-details/${id}`);
     }
 
     revalidatePath("/profile");
@@ -312,7 +345,7 @@ export async function deleteListingAction(id: string, type: "AIRCRAFT" | "SPARE_
     }
 
     revalidatePath("/profile");
-    revalidatePath("/aircrafts");
+    revalidatePath("/planes");
     revalidatePath("/spareparts");
 
     return { success: true };
@@ -323,7 +356,7 @@ export async function deleteListingAction(id: string, type: "AIRCRAFT" | "SPARE_
 }
 
 // ==========================================
-// 7. ACTUALIZAR PUBLICACIÓN (Edición rápida)
+// 7. ACTUALIZAR PUBLICACIÓN (Edición Completa)
 // ==========================================
 export async function updateListingAction(formData: FormData) {
   try {
@@ -344,9 +377,27 @@ export async function updateListingAction(formData: FormData) {
     if (listingType === "aircraft") {
       const year = Number(formData.get("year"));
       const totalTimeHours = Number(formData.get("totalTimeHours"));
-      const financing = formData.get("financing") === "on";
-      const trade = formData.get("trade") === "on";
-      const rent = formData.get("rent") === "on";
+      const condition = (formData.get("condition") as AircraftCondition) || "USADO";
+      const engineType = (formData.get("engineType") as EngineType) || undefined;
+
+      const financing = formData.get("financing") === "on" || formData.get("financing") === "true";
+      const trade = formData.get("trade") === "on" || formData.get("trade") === "true";
+      const rent = formData.get("rent") === "on" || formData.get("rent") === "true";
+
+      const avDescription = formData.get("avDescription") as string;
+      const avAaptoifr = formData.get("avAaptoifr") === "true" || formData.get("avAaptoifr") === "on";
+      const avAutopilot = formData.get("avAutopilot") === "true" || formData.get("avAutopilot") === "on";
+      const certified = formData.get("certified") === "true" || formData.get("certified") === "on";
+      const certDateRaw = formData.get("certDate") as string;
+      const certDate = certDateRaw ? new Date(certDateRaw) : undefined;
+      const plate = formData.get("plate") as string;
+
+      const intDescription = formData.get("intDescription") as string;
+      const extDescription = formData.get("extDescription") as string;
+      const passengersRaw = formData.get("passengers") as string;
+      const passengers = passengersRaw ? Number(passengersRaw) : undefined;
+      const airconditioner = formData.get("airconditioner") === "true" || formData.get("airconditioner") === "on";
+      const oxygen = formData.get("oxygen") === "true" || formData.get("oxygen") === "on";
 
       await prisma.aircraft.update({
         where: { id },
@@ -358,35 +409,67 @@ export async function updateListingAction(formData: FormData) {
           price,
           year,
           totalTimeHours,
+          condition,
+          engineType,
           financing,
           trade,
           rent,
+          avDescription: avDescription || undefined,
+          avAaptoifr,
+          avAutopilot,
+          certified,
+          certDate,
+          plate: plate || undefined,
+          intDescription: intDescription || undefined,
+          extDescription: extDescription || undefined,
+          passengers,
+          airconditioner,
+          oxygen,
         },
       });
 
-      revalidatePath("/aircrafts");
-      revalidatePath(`/aircrafts/${id}`);
+      revalidatePath("/planes");
+      revalidatePath(`/planes/plane-details/${id}`);
     } else {
+      const brand = formData.get("brand") as string;
       const partNumber = formData.get("partNumber") as string;
       const stock = Number(formData.get("stock")) || 1;
-      const inPesos = formData.get("inPesos") === "on";
+      const inPesos = formData.get("inPesos") === "on" || formData.get("inPesos") === "true";
+
+      const conditionRaw = (formData.get("condition") as string) || "NUEVO";
+      const condition = (Object.values(SparepartCondition).includes(conditionRaw as SparepartCondition)
+        ? conditionRaw
+        : SparepartCondition.NUEVO) as SparepartCondition;
+
+      const aircraftsRaw = formData.get("aircrafts") as string;
+      let aircrafts: string[] | undefined = undefined;
+      if (aircraftsRaw) {
+        try {
+          aircrafts = JSON.parse(aircraftsRaw);
+        } catch {
+          aircrafts = undefined;
+        }
+      }
 
       await prisma.sparePart.update({
         where: { id },
         data: {
           title,
+          brand: brand || undefined,
           description,
           city,
           province,
           price,
-          partNumber: partNumber || null,
+          partNumber: partNumber || undefined,
           stock,
           inPesos,
+          condition,
+          aircrafts,
         },
       });
 
       revalidatePath("/spareparts");
-      revalidatePath(`/spareparts/${id}`);
+      revalidatePath(`/spareparts/sparepart-details/${id}`);
     }
 
     revalidatePath("/profile");
