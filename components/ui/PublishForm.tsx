@@ -171,7 +171,6 @@ export default function PublishForm({
         description: "",
     });
 
-    // Control dinámico de la condición (Nuevo/Usado) según el Año
     useEffect(() => {
         if (aircraftForm.year !== currentYear) {
             setAircraftForm(prev => ({ ...prev, condition: "USADO" }));
@@ -219,7 +218,6 @@ export default function PublishForm({
       }, 100);
     };
 
-    // Manejadores anidados de Marca > Modelo > Categoría
     const handleBrandChange = (brandId: string) => {
         const foundBrand = brandsData.find((b) => b.id === brandId);
         setAircraftForm((prev) => ({
@@ -263,12 +261,10 @@ export default function PublishForm({
       }));
     };
 
-    // Colecciones Dinámicas (Motores y Hélices)
     const addEngine = () => setEngines([...engines, { brand: "", model: "", engineHours: "", TBO: "", DURG: "", description: "" }]);
     const removeEngine = (index: number) => {
         const updatedEngines = engines.filter((_, i) => i !== index);
         setEngines(updatedEngines);
-        // Si al eliminar motores las hélices superan el número de motores, ajustamos
         if (propellers.length > updatedEngines.length) {
             setPropellers(propellers.slice(0, updatedEngines.length));
         }
@@ -294,7 +290,6 @@ export default function PublishForm({
         setPropellers(updated);
     };
 
-    // MANEJO DE IMÁGENES Y DRAG & DROP
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files) return;
       const filesArray = Array.from(e.target.files);
@@ -348,37 +343,62 @@ export default function PublishForm({
     };
     const removeDocument = (index: number) => setDocuments((prev) => prev.filter((_, i) => i !== index));
 
-    // VALIDACIÓN GENERAL
-    const validateForm = () => {
-        if (activeTab === "aircraft") {
-            if (!aircraftForm.title.trim()) return "El título de la aeronave es obligatorio.";
-            if (aircraftForm.brandId === "CUSTOM" && !aircraftForm.customBrand.trim()) return "Debe ingresar el nombre de la marca personalizada.";
-            if ((!aircraftForm.modelId || aircraftForm.modelId === "CUSTOM_MODEL") && !aircraftForm.customModel.trim()) return "Debe ingresar el modelo de la aeronave.";
-            if (!aircraftForm.categoryId) return "La categoría de la aeronave es obligatoria.";
-            const yearNum = Number(aircraftForm.year);
-            if (isNaN(yearNum) || yearNum < 1900 || yearNum > currentYear) return `El año debe ser válido (entre 1900 y ${currentYear}).`;
-            if (aircraftForm.totalTimeHours === "" || Number(aircraftForm.totalTimeHours) < 0) return "Las Horas Totales deben ser obligatorias y mayores a 0.";
-            if (!aircraftForm.priceOnRequest && (!aircraftForm.price || Number(aircraftForm.price) < 0)) return "Debe ingresar un precio válido o marcar 'Precio a Consultar'.";
-            if (!aircraftForm.avDescription.trim()) return "La descripción de Aviónica es obligatoria (Paso 2).";
-            for (let i = 0; i < engines.length; i++) {
-                if (!engines[i].TBO) return `El TBO del Motor #${i + 1} es obligatorio (Paso 2).`;
+    // ==========================================
+    // NUEVO: VALIDACIÓN DINÁMICA POR PASO
+    // ==========================================
+    const validateStep = (tab: "aircraft" | "parts", step: number): string | null => {
+        if (tab === "aircraft") {
+            if (step === 1) {
+                if (!aircraftForm.title.trim()) return "Falta el Título de la publicación.";
+                if (isNaN(Number(aircraftForm.year)) || aircraftForm.year < 1900 || aircraftForm.year > currentYear) return "Año inválido.";
+                if (!aircraftForm.priceOnRequest && (!aircraftForm.price || Number(aircraftForm.price) < 0)) return "Ingrese el Precio (o marque 'A Consultar').";
+                if (aircraftForm.totalTimeHours === "" || Number(aircraftForm.totalTimeHours) < 0) return "Faltan las Horas Totales.";
+                if (!aircraftForm.brandId) return "Seleccione una Marca.";
+                if (aircraftForm.brandId === "CUSTOM" && !aircraftForm.customBrand.trim()) return "Ingrese la Marca personalizada.";
+                if (!aircraftForm.modelId) return "Seleccione un Modelo.";
+                if (aircraftForm.modelId === "CUSTOM_MODEL" && !aircraftForm.customModel.trim()) return "Ingrese el Modelo personalizado.";
+                if (!aircraftForm.categoryId) return "Seleccione una Categoría.";
             }
-            if (propellers.length > engines.length) {
-                return "La cantidad de hélices no puede ser superior a la cantidad de motores registrados (Paso 2).";
+            if (step === 2) {
+                if (!aircraftForm.avDescription.trim()) return "La descripción de Aviónica es obligatoria.";
+                for (let i = 0; i < engines.length; i++) {
+                    if (!engines[i].TBO) return `El TBO del Motor #${i + 1} es obligatorio.`;
+                }
+                if (propellers.length > engines.length) return "Demasiadas hélices (máximo igual a la cantidad de motores).";
             }
-            if (images.length === 0) return "Debe subir al menos una imagen (Paso 3).";
-            if (!aircraftForm.certified) return "Debe confirmar si la aeronave cuenta con la habilitación anual (Paso 3).";
-            if (!aircraftForm.description.trim()) return "La Descripción General es obligatoria (Paso 4).";
-            if (!aircraftForm.city.trim() || !aircraftForm.province.trim()) return "Debe ingresar una ciudad y provincia (Paso 4).";
+            if (step === 3) {
+                if (images.length === 0) return "Debe adjuntar al menos una imagen.";
+                if (!aircraftForm.certified) return "Debe confirmar si cuenta con habilitación anual.";
+            }
         } else {
-            if (!partsForm.title.trim()) return "El título del repuesto es obligatorio.";
-            if (!partsForm.priceOnRequest && (!partsForm.price || Number(partsForm.price) < 0)) return "El precio del repuesto es obligatorio y no puede ser negativo.";
-            if (images.length === 0) return "Debe subir al menos una imagen del repuesto (Paso 2).";
-            if (!partsForm.description.trim()) return "La Descripción del repuesto es obligatoria (Paso 2).";
-            if (!partsForm.city.trim() || !partsForm.province.trim()) return "Ubicación (Ciudad/Provincia) obligatoria (Paso 2).";
-            if (!partsForm.stock || Number(partsForm.stock) < 1) return "El stock debe ser al menos 1 unidad (Paso 3).";
-            if (!selectedParentCategoryId) return "Debe seleccionar la Categoría (Paso 3).";
-            if (!partsForm.categoryId) return "Debe seleccionar una Subcategoría (Paso 3).";
+            if (step === 1) {
+                if (!partsForm.title.trim()) return "Falta el Título del repuesto.";
+                if (!partsForm.priceOnRequest && (!partsForm.price || Number(partsForm.price) < 0)) return "Ingrese el Precio (o marque 'A Consultar').";
+            }
+            if (step === 2) {
+                if (images.length === 0) return "Debe adjuntar al menos una imagen.";
+                if (!partsForm.city.trim() || !partsForm.province.trim()) return "Ciudad y Provincia son obligatorias.";
+                if (!partsForm.description.trim()) return "La Descripción del repuesto es obligatoria.";
+            }
+            if (step === 3) {
+                if (!partsForm.stock || Number(partsForm.stock) < 1) return "El stock mínimo es de 1 unidad.";
+                if (!selectedParentCategoryId) return "Seleccione la Categoría principal.";
+                if (!partsForm.categoryId) return "Seleccione la Subcategoría.";
+            }
+        }
+        return null;
+    };
+
+    const currentStepError = validateStep(activeTab, currentStep);
+
+    // Validación Total Final (Submit)
+    const validateForm = () => {
+        for (let i = 1; i <= (activeTab === "aircraft" ? 4 : 3); i++) {
+            const err = validateStep(activeTab, i);
+            if (err) return err;
+        }
+        if (activeTab === "aircraft" && (!aircraftForm.description.trim() || !aircraftForm.city.trim() || !aircraftForm.province.trim())) {
+            return "Faltan datos en el último paso (Descripción, Ciudad o Provincia).";
         }
         return null;
     };
@@ -531,7 +551,11 @@ export default function PublishForm({
               <div className="bg-white/80 p-1.5 rounded-2xl border border-[#001F58]/20 flex gap-2 shadow-sm backdrop-blur-sm">
                 <button
                   type="button"
-                  onClick={() => { setActiveTab("aircraft"); setFormError(null); }}
+                  onClick={() => { 
+                      setActiveTab("aircraft"); 
+                      setFormError(null); 
+                      setCurrentStep(1); // Reiniciar al paso 1 al cambiar
+                  }}
                   className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
                     activeTab === "aircraft" ? "bg-[#001F58] text-white shadow-md" : "text-[#001F58]/70 hover:text-[#001F58] hover:bg-[#001F58]/5"
                   }`}
@@ -540,7 +564,11 @@ export default function PublishForm({
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setActiveTab("parts"); setFormError(null); }}
+                  onClick={() => { 
+                      setActiveTab("parts"); 
+                      setFormError(null); 
+                      setCurrentStep(1); // Reiniciar al paso 1 al cambiar
+                  }}
                   className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
                     activeTab === "parts" ? "bg-[#001F58] text-white shadow-md" : "text-[#001F58]/70 hover:text-[#001F58] hover:bg-[#001F58]/5"
                   }`}
@@ -557,9 +585,10 @@ export default function PublishForm({
                         {/* ======================= FORMULARIO AVIONES ======================= */}
                         {activeTab === "aircraft" ? (
                             <Stepper 
+                                key="stepper-aircraft" // Forzar desmontaje y reinicio completo al cambiar pestaña
                                 backButtonText="← Volver" 
                                 nextButtonText="Siguiente Paso"
-                                disableStepIndicators={false}
+                                disableStepIndicators={true} // Bloquea los clics en los números superiores
                                 onStepChange={(step) => setCurrentStep(step)}
                                 backButtonProps={{ 
                                     type: "button", 
@@ -567,7 +596,13 @@ export default function PublishForm({
                                 }}
                                 nextButtonProps={{ 
                                     type: "button", 
-                                    className: "px-6 py-2.5 bg-[#001F58] text-white rounded-xl font-bold hover:bg-blue-900 transition-colors shadow-md",
+                                    disabled: !!currentStepError, // Bloquea el botón si hay error
+                                    title: currentStepError || "Avanzar al siguiente paso",
+                                    className: `px-6 py-2.5 rounded-xl font-bold transition-all shadow-md ${
+                                        currentStepError
+                                            ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                                            : "bg-[#001F58] text-white hover:bg-blue-900"
+                                    }`,
                                     style: currentStep === 4 ? { display: 'none' } : {} 
                                 }}
                             >
@@ -680,6 +715,14 @@ export default function PublishForm({
                                                 </div>
                                             </div>
                                         </div>
+                                        
+                                        {/* AVISO DE ERROR AL FINAL DEL PASO */}
+                                        {currentStepError && (
+                                            <div className="p-3 mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                                {currentStepError}
+                                            </div>
+                                        )}
                                     </div>
                                 </Step>
 
@@ -730,7 +773,7 @@ export default function PublishForm({
                                             {engines.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">No hay motores agregados.</p>}
                                         </div>
 
-                                        {/* HÉLICE (UNIFICADA VISUALMENTE CON MOTOR) */}
+                                        {/* HÉLICE */}
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
                                             <div className="flex justify-between items-center">
                                                 <div>
@@ -754,6 +797,13 @@ export default function PublishForm({
                                             ))}
                                             {propellers.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">No hay hélices agregadas.</p>}
                                         </div>
+
+                                        {currentStepError && (
+                                            <div className="p-3 mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                                {currentStepError}
+                                            </div>
+                                        )}
                                     </div>
                                 </Step>
 
@@ -836,6 +886,13 @@ export default function PublishForm({
                                                 ))}
                                             </div>
                                         </div>
+
+                                        {currentStepError && (
+                                            <div className="p-3 mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                                {currentStepError}
+                                            </div>
+                                        )}
                                     </div>
                                 </Step>
 
@@ -908,9 +965,10 @@ export default function PublishForm({
                         ) : (
                         /* ======================= FORMULARIO REPUESTOS ======================= */
                             <Stepper 
+                                key="stepper-parts" // Forzar desmontaje y reinicio completo al cambiar pestaña
                                 backButtonText="← Volver" 
                                 nextButtonText="Siguiente Paso"
-                                disableStepIndicators={false}
+                                disableStepIndicators={true} // Bloquea los clics en los números superiores
                                 onStepChange={(step) => setCurrentStep(step)}
                                 backButtonProps={{ 
                                     type: "button", 
@@ -918,7 +976,13 @@ export default function PublishForm({
                                 }}
                                 nextButtonProps={{ 
                                     type: "button", 
-                                    className: "px-6 py-2.5 bg-[#001F58] text-white rounded-xl font-bold hover:bg-blue-900 transition-colors shadow-md",
+                                    disabled: !!currentStepError, // Bloquea el botón si hay error
+                                    title: currentStepError || "Avanzar al siguiente paso",
+                                    className: `px-6 py-2.5 rounded-xl font-bold transition-all shadow-md ${
+                                        currentStepError
+                                            ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                                            : "bg-[#001F58] text-white hover:bg-blue-900"
+                                    }`,
                                     style: currentStep === 3 ? { display: 'none' } : {} 
                                 }}
                             >
@@ -966,6 +1030,13 @@ export default function PublishForm({
                                                 </label>
                                             </div>
                                         </div>
+
+                                        {currentStepError && (
+                                            <div className="p-3 mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                                {currentStepError}
+                                            </div>
+                                        )}
                                     </div>
                                 </Step>
 
@@ -1020,6 +1091,13 @@ export default function PublishForm({
                                             <label className="block text-xs font-bold uppercase mb-1">Descripción del Artículo *</label>
                                             <textarea rows={4} placeholder="Detallá uso, tiempo remanente si aplica, fallas, compatibilidades generales..." value={partsForm.description} onChange={e => setPartsForm({...partsForm, description: e.target.value})} className="w-full p-3 rounded-xl border border-slate-300 bg-white" />
                                         </div>
+
+                                        {currentStepError && (
+                                            <div className="p-3 mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                                {currentStepError}
+                                            </div>
+                                        )}
                                     </div>
                                 </Step>
 

@@ -21,7 +21,7 @@ export function HeroBanner({
       
       {/* Imagen de Fondo (Escritorio) */}
       <Image
-        src="/bkg-home.png"
+        src="/bkg-home2.png"
         alt="Fondo Ventas Aeronáuticas"
         fill
         priority

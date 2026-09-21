@@ -40,7 +40,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/como-publicar" className="hover:text-white transition-colors">
+                <Link href="/howtopublish" className="hover:text-white transition-colors">
                   Cómo publicar
                 </Link>
               </li>
