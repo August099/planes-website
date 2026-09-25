@@ -32,8 +32,9 @@ export default async function PublishPage() {
     orderBy: { name: "asc" },
   });
 
-  // Obtener solo las categorías raíz (parentId === null) e incluir sus subcategorías (children)
-  // Ejemplo para otras páginas porque me pioló
+  // Categorías de repuestos: traemos 3 niveles (Categoría Padre -> Subcategoría -> Sub-subcategoría),
+  // ya que algunas subcategorías tienen a su vez opciones más específicas que hay que
+  // mostrar y obligar a elegir cuando existen.
   const rawSpareCategories = await prisma.category.findMany({
     where: {
       parentId: null, // Categorías principales
@@ -45,14 +46,19 @@ export default async function PublishPage() {
         select: {
           id: true,
           name: true,
+          children: {
+            select: {
+              id: true,
+              name: true,
+            },
+            orderBy: { name: "asc" },
+          },
         },
         orderBy: { name: "asc" },
       },
     },
     orderBy: { name: "asc" },
   });
-
-  const spareCategoriesData = JSON.parse(JSON.stringify(rawSpareCategories));
 
   return (
     <main className="min-h-screen">

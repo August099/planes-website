@@ -84,6 +84,10 @@ export default function PublishForm({
     const [activeTab, setActiveTab] = useState<"aircraft" | "parts">("aircraft");    
     const [currentStep, setCurrentStep] = useState(1);
 
+    // Controla si el usuario ya intentó avanzar en el paso actual.
+    // Mientras esté en false, no se muestran las advertencias de campos faltantes.
+    const [stepAttempted, setStepAttempted] = useState(false);
+
     // Combobox (Aeronaves compatibles)
     const allAircraftModels = useMemo(() => {
         const list: string[] = [];
@@ -116,11 +120,38 @@ export default function PublishForm({
     const [selectedBrandModels, setSelectedBrandModels] = useState<ModelOption[]>([]);
     const [selectedModelVariants, setSelectedModelVariants] = useState<SubModelOption[]>([]);
     const [selectedParentCategoryId, setSelectedParentCategoryId] = useState<string>("");
+    const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string>("");
 
     const subCategories = useMemo(() => {
       const parent = spareCategoriesData.find((cat) => cat.id === selectedParentCategoryId);
       return parent?.children || [];
     }, [selectedParentCategoryId, spareCategoriesData]);
+
+    // Nivel adicional: algunas subcategorías tienen a su vez "sub-subcategorías".
+    // Si existen, hay que mostrarlas y obligar a elegir siempre lo más específico.
+    const subSubCategories = useMemo(() => {
+      const sub = subCategories.find((cat) => cat.id === selectedSubCategoryId);
+      return sub?.children || [];
+    }, [selectedSubCategoryId, subCategories]);
+
+    const handleParentCategoryChange = (id: string) => {
+        setSelectedParentCategoryId(id);
+        setSelectedSubCategoryId("");
+        setPartsForm((p) => ({ ...p, categoryId: "" }));
+    };
+
+    const handleSubCategoryChange = (id: string) => {
+        setSelectedSubCategoryId(id);
+        const sub = subCategories.find((c) => c.id === id);
+        const hasChildren = !!(sub?.children && sub.children.length > 0);
+        // Si la subcategoría elegida no tiene hijos, ya es la categoría final.
+        // Si tiene hijos, se deja categoryId vacío hasta que elijan la sub-subcategoría.
+        setPartsForm((p) => ({ ...p, categoryId: hasChildren ? "" : id }));
+    };
+
+    const handleSubSubCategoryChange = (id: string) => {
+        setPartsForm((p) => ({ ...p, categoryId: id }));
+    };
 
     const [managedListingForm, setManagedListingForm] = useState({
         name: "",
@@ -344,7 +375,7 @@ export default function PublishForm({
     const removeDocument = (index: number) => setDocuments((prev) => prev.filter((_, i) => i !== index));
 
     // ==========================================
-    // NUEVO: VALIDACIÓN DINÁMICA POR PASO
+    // VALIDACIÓN DINÁMICA POR PASO
     // ==========================================
     const validateStep = (tab: "aircraft" | "parts", step: number): string | null => {
         if (tab === "aircraft") {
@@ -383,7 +414,8 @@ export default function PublishForm({
             if (step === 3) {
                 if (!partsForm.stock || Number(partsForm.stock) < 1) return "El stock mínimo es de 1 unidad.";
                 if (!selectedParentCategoryId) return "Seleccione la Categoría principal.";
-                if (!partsForm.categoryId) return "Seleccione la Subcategoría.";
+                if (!selectedSubCategoryId) return "Seleccione la Subcategoría.";
+                if (!partsForm.categoryId) return "Seleccione la Subcategoría específica (la opción más detallada disponible).";
             }
         }
         return null;
@@ -555,6 +587,7 @@ export default function PublishForm({
                       setActiveTab("aircraft"); 
                       setFormError(null); 
                       setCurrentStep(1); // Reiniciar al paso 1 al cambiar
+                      setStepAttempted(false);
                   }}
                   className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
                     activeTab === "aircraft" ? "bg-[#001F58] text-white shadow-md" : "text-[#001F58]/70 hover:text-[#001F58] hover:bg-[#001F58]/5"
@@ -568,6 +601,7 @@ export default function PublishForm({
                       setActiveTab("parts"); 
                       setFormError(null); 
                       setCurrentStep(1); // Reiniciar al paso 1 al cambiar
+                      setStepAttempted(false);
                   }}
                   className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
                     activeTab === "parts" ? "bg-[#001F58] text-white shadow-md" : "text-[#001F58]/70 hover:text-[#001F58] hover:bg-[#001F58]/5"
@@ -589,21 +623,23 @@ export default function PublishForm({
                                 backButtonText="← Volver" 
                                 nextButtonText="Siguiente Paso"
                                 disableStepIndicators={true} // Bloquea los clics en los números superiores
-                                onStepChange={(step) => setCurrentStep(step)}
+                                onStepChange={(step) => { setCurrentStep(step); setStepAttempted(false); }}
                                 backButtonProps={{ 
                                     type: "button", 
                                     className: "px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-colors" 
                                 }}
                                 nextButtonProps={{ 
                                     type: "button", 
-                                    disabled: !!currentStepError, // Bloquea el botón si hay error
-                                    title: currentStepError || "Avanzar al siguiente paso",
-                                    className: `px-6 py-2.5 rounded-xl font-bold transition-all shadow-md ${
-                                        currentStepError
-                                            ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                                            : "bg-[#001F58] text-white hover:bg-blue-900"
-                                    }`,
-                                    style: currentStep === 4 ? { display: 'none' } : {} 
+                                    title: "Avanzar al siguiente paso",
+                                    className: "px-6 py-2.5 rounded-xl font-bold transition-all shadow-md bg-[#001F58] text-white hover:bg-blue-900",
+                                    style: currentStep === 4 ? { display: 'none' } : {},
+                                    onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+                                        const err = validateStep(activeTab, currentStep);
+                                        if (err) {
+                                            e.preventDefault();
+                                            setStepAttempted(true);
+                                        }
+                                    }
                                 }}
                             >
                                 {/* PASO 1: DATOS PRINCIPALES */}
@@ -716,8 +752,8 @@ export default function PublishForm({
                                             </div>
                                         </div>
                                         
-                                        {/* AVISO DE ERROR AL FINAL DEL PASO */}
-                                        {currentStepError && (
+                                        {/* AVISO DE ERROR AL FINAL DEL PASO: solo se muestra tras intentar avanzar */}
+                                        {stepAttempted && currentStepError && (
                                             <div className="p-3 mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold flex items-center gap-2">
                                                 <AlertCircle className="w-4 h-4 shrink-0" />
                                                 {currentStepError}
@@ -798,7 +834,7 @@ export default function PublishForm({
                                             {propellers.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">No hay hélices agregadas.</p>}
                                         </div>
 
-                                        {currentStepError && (
+                                        {stepAttempted && currentStepError && (
                                             <div className="p-3 mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold flex items-center gap-2">
                                                 <AlertCircle className="w-4 h-4 shrink-0" />
                                                 {currentStepError}
@@ -887,7 +923,7 @@ export default function PublishForm({
                                             </div>
                                         </div>
 
-                                        {currentStepError && (
+                                        {stepAttempted && currentStepError && (
                                             <div className="p-3 mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold flex items-center gap-2">
                                                 <AlertCircle className="w-4 h-4 shrink-0" />
                                                 {currentStepError}
@@ -969,21 +1005,23 @@ export default function PublishForm({
                                 backButtonText="← Volver" 
                                 nextButtonText="Siguiente Paso"
                                 disableStepIndicators={true} // Bloquea los clics en los números superiores
-                                onStepChange={(step) => setCurrentStep(step)}
+                                onStepChange={(step) => { setCurrentStep(step); setStepAttempted(false); }}
                                 backButtonProps={{ 
                                     type: "button", 
                                     className: "px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-colors" 
                                 }}
                                 nextButtonProps={{ 
                                     type: "button", 
-                                    disabled: !!currentStepError, // Bloquea el botón si hay error
-                                    title: currentStepError || "Avanzar al siguiente paso",
-                                    className: `px-6 py-2.5 rounded-xl font-bold transition-all shadow-md ${
-                                        currentStepError
-                                            ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                                            : "bg-[#001F58] text-white hover:bg-blue-900"
-                                    }`,
-                                    style: currentStep === 3 ? { display: 'none' } : {} 
+                                    title: "Avanzar al siguiente paso",
+                                    className: "px-6 py-2.5 rounded-xl font-bold transition-all shadow-md bg-[#001F58] text-white hover:bg-blue-900",
+                                    style: currentStep === 3 ? { display: 'none' } : {},
+                                    onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+                                        const err = validateStep(activeTab, currentStep);
+                                        if (err) {
+                                            e.preventDefault();
+                                            setStepAttempted(true);
+                                        }
+                                    }
                                 }}
                             >
                                 {/* PASO 1 REPUESTOS */}
@@ -1031,7 +1069,7 @@ export default function PublishForm({
                                             </div>
                                         </div>
 
-                                        {currentStepError && (
+                                        {stepAttempted && currentStepError && (
                                             <div className="p-3 mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold flex items-center gap-2">
                                                 <AlertCircle className="w-4 h-4 shrink-0" />
                                                 {currentStepError}
@@ -1092,7 +1130,7 @@ export default function PublishForm({
                                             <textarea rows={4} placeholder="Detallá uso, tiempo remanente si aplica, fallas, compatibilidades generales..." value={partsForm.description} onChange={e => setPartsForm({...partsForm, description: e.target.value})} className="w-full p-3 rounded-xl border border-slate-300 bg-white" />
                                         </div>
 
-                                        {currentStepError && (
+                                        {stepAttempted && currentStepError && (
                                             <div className="p-3 mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold flex items-center gap-2">
                                                 <AlertCircle className="w-4 h-4 shrink-0" />
                                                 {currentStepError}
@@ -1124,19 +1162,30 @@ export default function PublishForm({
 
                                             <div className="col-span-2 sm:col-span-1">
                                                 <label className="block text-xs font-bold uppercase mb-1">Categoría Padre *</label>
-                                                <select value={selectedParentCategoryId} onChange={e => { setSelectedParentCategoryId(e.target.value); setPartsForm(p => ({...p, categoryId: ""})) }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium">
+                                                <select value={selectedParentCategoryId} onChange={e => handleParentCategoryChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium">
                                                     <option value="">Seleccionar principal</option>
                                                     {spareCategoriesData.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                                 </select>
                                             </div>
 
                                             <div className="col-span-2 sm:col-span-1">
-                                                <label className="block text-xs font-bold uppercase mb-1">Subcategoría Específica *</label>
-                                                <select value={partsForm.categoryId} onChange={e => setPartsForm({...partsForm, categoryId: e.target.value})} disabled={!selectedParentCategoryId} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium disabled:bg-slate-100">
+                                                <label className="block text-xs font-bold uppercase mb-1">Subcategoría *</label>
+                                                <select value={selectedSubCategoryId} onChange={e => handleSubCategoryChange(e.target.value)} disabled={!selectedParentCategoryId} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium disabled:bg-slate-100">
                                                     <option value="">Seleccionar subcategoría</option>
                                                     {subCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                                 </select>
                                             </div>
+
+                                            {subSubCategories.length > 0 && (
+                                                <div className="col-span-2">
+                                                    <label className="block text-xs font-bold uppercase mb-1">Subcategoría Específica *</label>
+                                                    <select value={partsForm.categoryId} onChange={e => handleSubSubCategoryChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium">
+                                                        <option value="">Seleccionar la opción más específica</option>
+                                                        {subSubCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                                    </select>
+                                                    <p className="text-[10px] text-slate-400 mt-1">Esta subcategoría tiene opciones más detalladas: elegí siempre la más específica.</p>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="p-5 bg-blue-50/50 rounded-xl border border-[#001F58]/10">
@@ -1186,10 +1235,24 @@ export default function PublishForm({
                                             )}
                                         </div>
 
+                                        {stepAttempted && currentStepError && (
+                                            <div className="p-3 mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                                {currentStepError}
+                                            </div>
+                                        )}
+
                                         <div className="flex justify-end pt-4">
                                             <button 
                                                 type="button" 
-                                                onClick={submitForm} 
+                                                onClick={() => {
+                                                    const err = validateStep(activeTab, currentStep);
+                                                    if (err) {
+                                                        setStepAttempted(true);
+                                                        return;
+                                                    }
+                                                    submitForm();
+                                                }} 
                                                 disabled={isPublishing} 
                                                 className="px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl flex items-center gap-2 shadow-lg disabled:opacity-50 transition-colors"
                                             >
