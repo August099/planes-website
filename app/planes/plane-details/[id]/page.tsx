@@ -281,13 +281,12 @@ export default async function PlaneDetailsPage({
                 <Separator />
 
                 <div className="space-y-1 text-sm text-slate-700">
-                  <h4 className="font-bold text-[#001F58] mb-2">Datos principales</h4>
+                  <h4 className="font-bold text-[#001F58] mb-2">Datos de la aeronave</h4>
                   {displayBrand && <p><span className="font-semibold text-slate-500">Marca:</span> {displayBrand}</p>}
                   {displayModel && <p><span className="font-semibold text-slate-500">Modelo:</span> {displayModel}</p>}
                   {displaySubModel && <p><span className="font-semibold text-slate-500">Variante:</span> {displaySubModel}</p>}
                   <p><span className="font-semibold text-slate-500">Año:</span> {aircraft.year}</p>
                   {aircraft.totalTimeHours && <p><span className="font-semibold text-slate-500">Horas totales:</span> {aircraft.totalTimeHours} hs</p>}
-                  {(aircraft.passengers ?? 0) > 0 && <p><span className="font-semibold text-slate-500">Pasajeros:</span> {aircraft.passengers}</p>}
 
                   {/* Motor único en lateral móvil */}
                   {hasSingleEngine && singleEngine && (
@@ -474,13 +473,12 @@ export default async function PlaneDetailsPage({
               <Separator />
 
               <div className="space-y-1 text-sm text-slate-700">
-                <h4 className="font-bold text-[#001F58] mb-2">Datos principales</h4>
+                <h4 className="font-bold text-[#001F58] mb-2">Datos de la aeronave</h4>
                 {displayBrand && <p><span className="font-semibold text-slate-500">Marca:</span> {displayBrand}</p>}
                 {displayModel && <p><span className="font-semibold text-slate-500">Modelo:</span> {displayModel}</p>}
                 {displaySubModel && <p><span className="font-semibold text-slate-500">Variante:</span> {displaySubModel}</p>}
                 <p><span className="font-semibold text-slate-500">Año:</span> {aircraft.year}</p>
                 {aircraft.totalTimeHours && <p><span className="font-semibold text-slate-500">Horas totales:</span> {aircraft.totalTimeHours} hs</p>}
-                {(aircraft.passengers ?? 0) > 0 && <p><span className="font-semibold text-slate-500">Pasajeros:</span> {aircraft.passengers}</p>}
 
                 {/* Motor Único en Lateral */}
                 {hasSingleEngine && singleEngine && (

@@ -1161,7 +1161,7 @@ export default function PublishForm({
                                             </div>
 
                                             <div className="col-span-2 sm:col-span-1">
-                                                <label className="block text-xs font-bold uppercase mb-1">Categoría Padre *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Categoría *</label>
                                                 <select value={selectedParentCategoryId} onChange={e => handleParentCategoryChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium">
                                                     <option value="">Seleccionar principal</option>
                                                     {spareCategoriesData.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
