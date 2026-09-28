@@ -6,12 +6,9 @@ import Link from "next/link";
 import { Prisma } from "@prisma/client";
 
 interface Props {
-  // Índice abierto porque los filtros dinámicos (filter_marca, filter_voltaje_min, etc.)
-  // no se pueden listar de antemano como propiedades fijas
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-// Normaliza un searchParam que puede venir como string, string[] o undefined
 function toArray(value: string | string[] | undefined): string[] {
   if (!value) return [];
   return Array.isArray(value) ? value : [value];
@@ -23,37 +20,65 @@ export default async function SparePartsPage({ searchParams }: Props) {
   const itemsPerPage = 20;
   const skip = (currentPage - 1) * itemsPerPage;
 
-  // 1. Obtener el usuario actual
   const user = await getCurrentUser();
 
-  // Normalizar parámetros que pueden venir como string o Array
-  const categoryParam = params.category
-    ? Array.isArray(params.category)
-      ? params.category
-      : [params.category]
-    : [];
-
+  // ==========================================
+  // Leer TODOS los params que el sidebar actual manda
+  // ==========================================
+  const categoryParam = toArray(params.category);
+  const conditionParam = toArray(params.condition);
+  const currency = params.currency === "ARS" ? "ARS" : "USD";
   const minPrice = params.minPrice ? Number(params.minPrice) : undefined;
   const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
 
+  function isDescendantOf(
+    categories: { id: string; parentId: string | null }[],
+    candidateId: string,
+    ancestorId: string
+  ): boolean {
+    let current = categories.find((c) => c.id === candidateId);
+    while (current?.parentId) {
+      if (current.parentId === ancestorId) return true;
+      current = categories.find((c) => c.id === current!.parentId);
+    }
+    return false;
+  }
+
+  // De todos los ids tildados, nos quedamos solo con los que NO tienen
+  // ningún otro tildado como descendiente — es decir, el más específico por rama
+  function getLeafSelectedIds(
+    categories: { id: string; parentId: string | null }[],
+    selectedIds: string[]
+  ): string[] {
+    return selectedIds.filter((id) => {
+      const hasSelectedDescendant = selectedIds.some(
+        (otherId) => otherId !== id && isDescendantOf(categories, otherId, id)
+      );
+      return !hasSelectedDescendant;
+    });
+  }
+
   // ==========================================
-  // Filtro de Precio
+  // Armar el where
   // ==========================================
   const where: Prisma.SparePartWhereInput = {
     status: "ACTIVE",
+    inPesos: currency === "ARS", // moneda: filtro real, siempre aplicado
   };
 
+  // Precio
   if (minPrice !== undefined || maxPrice !== undefined) {
     where.price = {};
     if (minPrice !== undefined && !isNaN(minPrice)) where.price.gte = minPrice;
     if (maxPrice !== undefined && !isNaN(maxPrice)) where.price.lte = maxPrice;
   }
 
-  // ==========================================
-  // Filtro de Categoría (incluye subcategorías hijas)
-  // ==========================================
-  let allTargetCategoryIds: string[] = [];
+  // Condición
+  if (conditionParam.length > 0) {
+    where.condition = { in: conditionParam as any };
+  }
 
+  // Categoría (incluye descendientes, profundidad ilimitada)
   if (categoryParam.length > 0) {
     const allCategories = await prisma.category.findMany({
       select: { id: true, parentId: true },
@@ -64,64 +89,19 @@ export default async function SparePartsPage({ searchParams }: Props) {
       return [id, ...children.flatMap((c) => getDescendantIds(c.id))];
     }
 
-    allTargetCategoryIds = Array.from(
-      new Set(categoryParam.flatMap((id) => getDescendantIds(id)))
+    // Primero filtramos a solo los ids "hoja" de la selección
+    const leafSelectedIds = getLeafSelectedIds(allCategories, categoryParam);
+
+    // Y recién sobre esos armamos la lista final (con sus propios descendientes, si tuvieran)
+    const allTargetCategoryIds = Array.from(
+      new Set(leafSelectedIds.flatMap((id) => getDescendantIds(id)))
     );
 
     where.categoryId = { in: allTargetCategoryIds };
   }
 
   // ==========================================
-  // Filtros dinámicos (filter_<slug> y filter_<slug>_min/_max)
-  // ==========================================
-  const dynamicFilterEntries = Object.entries(params).filter(([key]) => key.startsWith("filter_"));
-  const filterConditions: Prisma.SparePartWhereInput[] = [];
-  const rangeSlugsSeen = new Set<string>();
-
-  for (const [key, value] of dynamicFilterEntries) {
-    // Rangos numéricos: se procesan aparte, más abajo, para juntar _min y _max en una sola condición
-    if (key.endsWith("_min") || key.endsWith("_max")) {
-      const slug = key.replace(/_min$|_max$/, "").replace("filter_", "");
-      if (rangeSlugsSeen.has(slug)) continue;
-      rangeSlugsSeen.add(slug);
-
-      const min = toArray(params[`filter_${slug}_min`])[0];
-      const max = toArray(params[`filter_${slug}_max`])[0];
-      if (!min && !max) continue;
-
-      filterConditions.push({
-        filterValues: {
-          some: {
-            filter: { slug },
-            ...(min && { valueNumber: { gte: Number(min) } }),
-            ...(max && { valueNumber: { lte: Number(max) } }),
-          },
-        },
-      });
-      continue;
-    }
-
-    // Filtros de selección (SELECT / MULTI_SELECT) y BOOLEAN
-    const values = toArray(value);
-    if (values.length === 0) continue;
-
-    const slug = key.replace("filter_", "");
-    filterConditions.push({
-      filterValues: {
-        some: {
-          filter: { slug },
-          OR: [{ optionId: { in: values } }, { valueString: { in: values } }],
-        },
-      },
-    });
-  }
-
-  if (filterConditions.length > 0) {
-    where.AND = filterConditions;
-  }
-
-  // ==========================================
-  // Ejecución paralela: listado + total + datos para el sidebar
+  // Ejecución paralela: listado + total + favoritos
   // ==========================================
   const [spareParts, totalSpareParts, userFavorites] = await Promise.all([
     prisma.sparePart.findMany({
@@ -143,24 +123,21 @@ export default async function SparePartsPage({ searchParams }: Props) {
       : Promise.resolve([]),
   ]);
 
-  // Set con los IDs de los repuestos guardados como favoritos
   const userFavIds = new Set(userFavorites.map((f) => f.sparePartId));
 
   const totalPages = Math.ceil(totalSpareParts / itemsPerPage);
   const hasNextPage = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
 
-  // Helper para generar URLs de paginación manteniendo TODOS los filtros activos
+  // Helper de paginación, preservando TODOS los filtros reales
   const createPageUrl = (pageNumber: number) => {
     const urlParams = new URLSearchParams();
 
     categoryParam.forEach((c) => urlParams.append("category", c));
+    conditionParam.forEach((c) => urlParams.append("condition", c));
+    urlParams.set("currency", currency);
     if (params.minPrice) urlParams.set("minPrice", String(params.minPrice));
     if (params.maxPrice) urlParams.set("maxPrice", String(params.maxPrice));
-
-    dynamicFilterEntries.forEach(([key, value]) => {
-      toArray(value).forEach((v) => urlParams.append(key, v));
-    });
 
     urlParams.set("page", pageNumber.toString());
     return `?${urlParams.toString()}`;
@@ -175,12 +152,9 @@ export default async function SparePartsPage({ searchParams }: Props) {
     } else {
       pages.push(1);
       if (currentPage > 3) pages.push("...");
-
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
-
       for (let i = start; i <= end; i++) pages.push(i);
-
       if (currentPage < totalPages - 2) pages.push("...");
       pages.push(totalPages);
     }
@@ -215,7 +189,6 @@ export default async function SparePartsPage({ searchParams }: Props) {
                   city={sparePart.city}
                   province={sparePart.province}
                   imageUrl={sparePart.images[0]?.url ?? "/placeholder.png"}
-                  /* 3. Pasar la propiedad de favorito inicial */
                   isFavoriteInitial={userFavIds.has(sparePart.id)}
                 />
               ))}
@@ -237,31 +210,25 @@ export default async function SparePartsPage({ searchParams }: Props) {
                 </span>
               )}
 
-              {getPageNumbers().map((page, index) => {
-                if (page === "...") {
-                  return (
-                    <span key={`ellipsis-${index}`} className="px-3 py-2 text-sm text-neutral-400 font-medium">
-                      ...
-                    </span>
-                  );
-                }
-
-                const isCurrent = page === currentPage;
-
-                return (
+              {getPageNumbers().map((page, index) =>
+                page === "..." ? (
+                  <span key={`ellipsis-${index}`} className="px-3 py-2 text-sm text-neutral-400 font-medium">
+                    ...
+                  </span>
+                ) : (
                   <Link
                     key={`page-${page}`}
                     href={createPageUrl(Number(page))}
                     className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
-                      isCurrent
+                      page === currentPage
                         ? "bg-neutral-900 text-white border-neutral-900 pointer-events-none"
                         : "hover:bg-neutral-100 text-neutral-700"
                     }`}
                   >
                     {page}
                   </Link>
-                );
-              })}
+                )
+              )}
 
               {hasNextPage ? (
                 <Link

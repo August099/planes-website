@@ -380,7 +380,7 @@ model SparePart {
   description      String
   stock            Int                 @default(1)
   categoryId       String
-  brand            String
+  brand            String?
   aircrafts        String[]
   attributes       Json?               @default("{}")
   inPesos          Boolean             @default(false)
