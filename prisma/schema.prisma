@@ -194,8 +194,8 @@ model Aircraft {
   year             Int
   totalTimeHours   Int
   price            Decimal?            @db.Decimal(12, 2)
-  city             String?
-  province         String?
+  city             String
+  province         String
   status           AircraftStatus      @default(PENDING_PAYMENT)
   listingStartsAt  DateTime?
   listingExpiresAt DateTime?
