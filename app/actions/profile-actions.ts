@@ -137,7 +137,7 @@ export async function changePasswordAction({ currentPassword, newPassword }: Cha
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        password: hashedPassword,
+        passwordHashfg: hashedPassword,
       },
     });
 
