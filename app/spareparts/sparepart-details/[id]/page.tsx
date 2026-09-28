@@ -22,9 +22,16 @@ export default async function SparePartDetailsPage({
     where: { id },
     include: {
       images: { orderBy: { order: "asc" } },
+      // La categoría guardada puede ser una Subcategoría o, si existe, una
+      // Sección (sub-subcategoría). Traemos hasta dos niveles de "parent"
+      // para poder reconstruir la jerarquía completa: Categoría > Subcategoría > Sección.
       category: {
         include: {
-          parent: true,
+          parent: {
+            include: {
+              parent: true,
+            },
+          },
         },
       },
       questions: {
@@ -100,6 +107,31 @@ export default async function SparePartDetailsPage({
   // Lista de aeronaves compatibles si existen
   const compatibleAircrafts = Array.isArray(sparePart.aircrafts) ? (sparePart.aircrafts as string[]) : [];
 
+  // Reconstrucción de la jerarquía de categorías del repuesto.
+  // sparePart.category es siempre el nivel más específico que eligió el vendedor:
+  // puede ser la Subcategoría (2 niveles) o la Sección (3 niveles, sub-subcategoría).
+  const leafCategory = sparePart.category;
+  const midCategory = leafCategory?.parent ?? null;
+  const rootCategory = midCategory?.parent ?? null;
+
+  let categoryName: string | null = null;
+  let subcategoryName: string | null = null;
+  let sectionName: string | null = null;
+
+  if (rootCategory) {
+    // Categoría (raíz) > Subcategoría (mid) > Sección (leaf)
+    categoryName = rootCategory.name;
+    subcategoryName = midCategory?.name ?? null;
+    sectionName = leafCategory?.name ?? null;
+  } else if (midCategory) {
+    // Categoría (mid) > Subcategoría (leaf) — no hay Sección
+    categoryName = midCategory.name;
+    subcategoryName = leafCategory?.name ?? null;
+  } else if (leafCategory) {
+    // Solo hay categoría raíz
+    categoryName = leafCategory.name;
+  }
+
   return (
     <>
       {/* VISTA DE IMPRESIÓN / PDF */}
@@ -145,8 +177,9 @@ export default async function SparePartDetailsPage({
               <div className="space-y-1">
                 {sparePart.brand && <p><span className="font-semibold">Marca:</span> {sparePart.brand}</p>}
                 {sparePart.condition && <p><span className="font-semibold">Condición:</span> {sparePart.condition}</p>}
-                {sparePart.category?.parent?.name && <p><span className="font-semibold">Categoría:</span> {sparePart.category.parent.name}</p>}
-                {sparePart.category?.name && <p><span className="font-semibold">Subcategoría:</span> {sparePart.category.name}</p>}
+                {categoryName && <p><span className="font-semibold">Categoría:</span> {categoryName}</p>}
+                {subcategoryName && <p><span className="font-semibold">Subcategoría:</span> {subcategoryName}</p>}
+                {sectionName && <p><span className="font-semibold">Sección:</span> {sectionName}</p>}
                 <p><span className="font-semibold">Stock:</span> {sparePart.stock} {sparePart.stock === 1 ? "unidad" : "unidades"}</p>
                 {sparePart.partNumber && <p><span className="font-semibold">Número de Parte (P/N):</span> {sparePart.partNumber}</p>}
                 <p><span className="font-semibold">Ubicación:</span> {locationText}</p>
@@ -229,7 +262,7 @@ export default async function SparePartDetailsPage({
 
                 <Separator />
 
-                {/* DETALLES PRINCIPALES MÓVIL */}
+                {/* DETALLES PRINCIPALES MÓVIL (lateral): solo Categoría y Subcategoría */}
                 <div className="space-y-1 text-sm text-slate-700">
                   <h4 className="font-bold text-[#001F58] mb-2">Detalles principales</h4>
                   {sparePart.brand && (
@@ -238,11 +271,11 @@ export default async function SparePartDetailsPage({
                   {sparePart.condition && (
                     <p><span className="font-semibold text-slate-500">Condición:</span> {sparePart.condition}</p>
                   )}
-                  {sparePart.category?.parent?.name && (
-                    <p><span className="font-semibold text-slate-500">Categoría:</span> {sparePart.category.parent.name}</p>
+                  {categoryName && (
+                    <p><span className="font-semibold text-slate-500">Categoría:</span> {categoryName}</p>
                   )}
-                  {sparePart.category?.name && (
-                    <p><span className="font-semibold text-slate-500">Subcategoría:</span> {sparePart.category.name}</p>
+                  {subcategoryName && (
+                    <p><span className="font-semibold text-slate-500">Subcategoría:</span> {subcategoryName}</p>
                   )}
                   <p><span className="font-semibold text-slate-500">Stock:</span> {sparePart.stock} {sparePart.stock === 1 ? "unidad" : "unidades"}</p>
                 </div>
@@ -316,14 +349,17 @@ export default async function SparePartDetailsPage({
                   </div>
                 </div>
 
-                {/* Columna 2: Aeronaves compatibles y Categoría */}
+                {/* Columna 2: Aeronaves compatibles y Categoría (grilla: acá sí va la Sección si existe) */}
                 <div className="space-y-6">
                   <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
-                    {sparePart.category?.parent?.name && (
-                      <DetailRow label="Categoría" value={sparePart.category.parent.name} />
+                    {categoryName && (
+                      <DetailRow label="Categoría" value={categoryName} />
                     )}
-                    {sparePart.category?.name && (
-                      <DetailRow label="Subcategoría" value={sparePart.category.name} />
+                    {subcategoryName && (
+                      <DetailRow label="Subcategoría" value={subcategoryName} />
+                    )}
+                    {sectionName && (
+                      <DetailRow label="Sección" value={sectionName} />
                     )}
                   </div>
 
@@ -373,6 +409,7 @@ export default async function SparePartDetailsPage({
 
               <Separator />
 
+              {/* DETALLES PRINCIPALES (lateral): solo Categoría y Subcategoría */}
               <div className="space-y-1 text-sm text-slate-700">
                 <h4 className="font-bold text-[#001F58] mb-2">Detalles principales</h4>
                 {sparePart.brand && (
@@ -381,11 +418,11 @@ export default async function SparePartDetailsPage({
                 {sparePart.condition && (
                   <p><span className="font-semibold text-slate-500">Condición:</span> {sparePart.condition}</p>
                 )}
-                {sparePart.category?.parent?.name && (
-                  <p><span className="font-semibold text-slate-500">Categoría:</span> {sparePart.category.parent.name}</p>
+                {categoryName && (
+                  <p><span className="font-semibold text-slate-500">Categoría:</span> {categoryName}</p>
                 )}
-                {sparePart.category?.name && (
-                  <p><span className="font-semibold text-slate-500">Subcategoría:</span> {sparePart.category.name}</p>
+                {subcategoryName && (
+                  <p><span className="font-semibold text-slate-500">Subcategoría:</span> {subcategoryName}</p>
                 )}
                 <p><span className="font-semibold text-slate-500">Stock:</span> {sparePart.stock} {sparePart.stock === 1 ? "unidad" : "unidades"}</p>
               </div>
