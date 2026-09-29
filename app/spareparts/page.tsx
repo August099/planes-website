@@ -78,7 +78,6 @@ export default async function SparePartsPage({ searchParams }: Props) {
     where.condition = { in: conditionParam as any };
   }
 
-  // Categoría (incluye descendientes, profundidad ilimitada)
   if (categoryParam.length > 0) {
     const allCategories = await prisma.category.findMany({
       select: { id: true, parentId: true },
