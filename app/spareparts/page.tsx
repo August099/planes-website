@@ -58,9 +58,6 @@ export default async function SparePartsPage({ searchParams }: Props) {
     });
   }
 
-  // ==========================================
-  // Armar el where
-  // ==========================================
   const where: Prisma.SparePartWhereInput = {
     status: "ACTIVE",
     inPesos: currency === "ARS", // moneda: filtro real, siempre aplicado
