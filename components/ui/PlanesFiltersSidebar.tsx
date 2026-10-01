@@ -11,6 +11,8 @@ type Model = { id: string; name: string; defaultCategoryId?: string | null; vari
 type Brand = { id: string; name: string; logoUrl?: string | null; models: Model[] };
 type Category = { id: string; name: string };
 
+type SectionKey = "price" | "category" | "brand" | "options" | "condition";
+
 export function FiltersSidebar({
   categories,
   brands,
@@ -23,6 +25,18 @@ export function FiltersSidebar({
   const searchParams = useSearchParams();
 
   const [isOpenMobile, setIsOpenMobile] = useState(false);
+
+  const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
+    price: false,
+    category: false,
+    brand: false,
+    options: false,
+    condition: false,
+  });
+
+  const toggleSection = (section: SectionKey) => {
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
 
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") ?? "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") ?? "");
@@ -145,173 +159,278 @@ export function FiltersSidebar({
 
       {/* Precio */}
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium">Precio (USD)</h3>
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            placeholder="Mín"
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-            className="w-full px-2 py-1.5 border rounded-md text-sm bg-white"
-          />
-          <span className="text-gray-400">-</span>
-          <input
-            type="number"
-            placeholder="Máx"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-            className="w-full px-2 py-1.5 border rounded-md text-sm bg-white"
-          />
-        </div>
+        <button
+          type="button"
+          onClick={() => toggleSection("price")}
+          className="flex items-center justify-between w-full text-left py-1 group"
+        >
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium group-hover:text-primary transition-colors">
+              Precio (USD)
+            </h3>
+            {(Boolean(minPrice) || Boolean(maxPrice)) && (
+              <span className="w-2 h-2 rounded-full bg-primary" />
+            )}
+          </div>
+          {openSections.price ? (
+            <ChevronDown className="w-4 h-4 text-gray-500" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-gray-500" />
+          )}
+        </button>
+
+        {openSections.price && (
+          <div className="flex items-center gap-2 pt-1">
+            <input
+              type="number"
+              placeholder="Mín"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              className="w-full px-2 py-1.5 border rounded-md text-sm bg-white"
+            />
+            <span className="text-gray-400">-</span>
+            <input
+              type="number"
+              placeholder="Máx"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              className="w-full px-2 py-1.5 border rounded-md text-sm bg-white"
+            />
+          </div>
+        )}
       </div>
 
       <Separator />
 
       {/* Categoría */}
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium">Categoría</h3>
-        <div className="flex flex-col gap-1.5">
-          {categories.map((cat) => (
-            <div key={cat.id} className="flex items-center gap-2">
-              <Checkbox
-                id={`cat-${cat.id}`}
-                checked={categoryIds.includes(cat.id)}
-                onCheckedChange={() => toggleValue(categoryIds, setCategoryIds, cat.id)}
-              />
-              <label htmlFor={`cat-${cat.id}`} className="text-sm cursor-pointer flex-1 select-none">
-                {cat.name}
-              </label>
-            </div>
-          ))}
-        </div>
+        <button
+          type="button"
+          onClick={() => toggleSection("category")}
+          className="flex items-center justify-between w-full text-left py-1 group"
+        >
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium group-hover:text-primary transition-colors">
+              Categoría
+            </h3>
+            {categoryIds.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-primary" />
+            )}
+          </div>
+          {openSections.category ? (
+            <ChevronDown className="w-4 h-4 text-gray-500" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-gray-500" />
+          )}
+        </button>
+
+        {openSections.category && (
+          <div className="flex flex-col gap-1.5 pt-1">
+            {categories.map((cat) => (
+              <div key={cat.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={`cat-${cat.id}`}
+                  checked={categoryIds.includes(cat.id)}
+                  onCheckedChange={() => toggleValue(categoryIds, setCategoryIds, cat.id)}
+                />
+                <label htmlFor={`cat-${cat.id}`} className="text-sm cursor-pointer flex-1 select-none">
+                  {cat.name}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <Separator />
 
       {/* Marca / Modelo / Submodelo */}
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium">Marca</h3>
-        <div className="flex flex-col gap-1 max-h-[280px] overflow-y-auto pr-1">
-          {brands.map((brand) => {
-            const isSelected = brandIds.includes(brand.id);
-            const isExpanded = expandedBrands.includes(brand.id);
+        <button
+          type="button"
+          onClick={() => toggleSection("brand")}
+          className="flex items-center justify-between w-full text-left py-1 group"
+        >
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium group-hover:text-primary transition-colors">
+              Marca
+            </h3>
+            {(brandIds.length > 0 || modelIds.length > 0 || subModelIds.length > 0) && (
+              <span className="w-2 h-2 rounded-full bg-primary" />
+            )}
+          </div>
+          {openSections.brand ? (
+            <ChevronDown className="w-4 h-4 text-gray-500" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-gray-500" />
+          )}
+        </button>
 
-            return (
-              <div key={brand.id} className="flex flex-col">
-                <div className="flex items-center gap-1">
-                  <Checkbox
-                    id={`brand-${brand.id}`}
-                    checked={isSelected}
-                    onCheckedChange={() => toggleBrand(brand.id)}
-                  />
-                  <label htmlFor={`brand-${brand.id}`} className="text-sm cursor-pointer flex-1 select-none">
-                    {brand.name}
-                  </label>
-                  {isSelected && brand.models.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setExpandedBrands((prev) =>
-                          isExpanded ? prev.filter((id) => id !== brand.id) : [...prev, brand.id]
-                        )
-                      }
-                      className="text-primary mr-3 p-1"
-                    >
-                      {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                    </button>
+        {openSections.brand && (
+          <div className="flex flex-col gap-1 max-h-[280px] overflow-y-auto pr-1 pt-1">
+            {brands.map((brand) => {
+              const isSelected = brandIds.includes(brand.id);
+              const isExpanded = expandedBrands.includes(brand.id);
+
+              return (
+                <div key={brand.id} className="flex flex-col">
+                  <div className="flex items-center gap-1">
+                    <Checkbox
+                      id={`brand-${brand.id}`}
+                      checked={isSelected}
+                      onCheckedChange={() => toggleBrand(brand.id)}
+                    />
+                    <label htmlFor={`brand-${brand.id}`} className="text-sm cursor-pointer flex-1 select-none">
+                      {brand.name}
+                    </label>
+                    {isSelected && brand.models.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedBrands((prev) =>
+                            isExpanded ? prev.filter((id) => id !== brand.id) : [...prev, brand.id]
+                          )
+                        }
+                        className="text-primary mr-3 p-1"
+                      >
+                        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </button>
+                    )}
+                  </div>
+
+                  {isSelected && isExpanded && (
+                    <div className="ml-6 mt-1 flex flex-col gap-1 border-l pl-3">
+                      {brand.models.map((model) => {
+                        const modelSelected = modelIds.includes(model.id);
+                        return (
+                          <div key={model.id} className="flex flex-col">
+                            <div className="flex items-center gap-1">
+                              <Checkbox
+                                id={`model-${model.id}`}
+                                checked={modelSelected}
+                                onCheckedChange={() => toggleModel(model.id)}
+                              />
+                              <label htmlFor={`model-${model.id}`} className="text-sm cursor-pointer flex-1 select-none">
+                                {model.name}
+                              </label>
+                            </div>
+
+                            {modelSelected && model.variants.length > 0 && (
+                              <div className="ml-6 flex flex-col gap-1 border-l pl-3 mt-1">
+                                {model.variants.map((variant) => (
+                                  <div key={variant.id} className="flex items-center gap-1">
+                                    <Checkbox
+                                      id={`variant-${variant.id}`}
+                                      checked={subModelIds.includes(variant.id)}
+                                      onCheckedChange={() => toggleValue(subModelIds, setSubModelIds, variant.id)}
+                                    />
+                                    <label htmlFor={`variant-${variant.id}`} className="text-sm cursor-pointer flex-1 select-none">
+                                      {variant.name}
+                                    </label>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
-
-                {isSelected && isExpanded && (
-                  <div className="ml-6 mt-1 flex flex-col gap-1 border-l pl-3">
-                    {brand.models.map((model) => {
-                      const modelSelected = modelIds.includes(model.id);
-                      return (
-                        <div key={model.id} className="flex flex-col">
-                          <div className="flex items-center gap-1">
-                            <Checkbox
-                              id={`model-${model.id}`}
-                              checked={modelSelected}
-                              onCheckedChange={() => toggleModel(model.id)}
-                            />
-                            <label htmlFor={`model-${model.id}`} className="text-sm cursor-pointer flex-1 select-none">
-                              {model.name}
-                            </label>
-                          </div>
-
-                          {modelSelected && model.variants.length > 0 && (
-                            <div className="ml-6 flex flex-col gap-1 border-l pl-3 mt-1">
-                              {model.variants.map((variant) => (
-                                <div key={variant.id} className="flex items-center gap-1">
-                                  <Checkbox
-                                    id={`variant-${variant.id}`}
-                                    checked={subModelIds.includes(variant.id)}
-                                    onCheckedChange={() => toggleValue(subModelIds, setSubModelIds, variant.id)}
-                                  />
-                                  <label htmlFor={`variant-${variant.id}`} className="text-sm cursor-pointer flex-1 select-none">
-                                    {variant.name}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <Separator />
 
-      {/* Opciones adicionales */}
+      {/* Opciones */}
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium">Opciones</h3>
-        <div className="flex flex-col gap-1.5">
+        <button
+          type="button"
+          onClick={() => toggleSection("options")}
+          className="flex items-center justify-between w-full text-left py-1 group"
+        >
           <div className="flex items-center gap-2">
-            <Checkbox id="financing" checked={financing} onCheckedChange={() => setFinancing((v) => !v)} />
-            <label htmlFor="financing" className="text-sm cursor-pointer flex-1 select-none">
-              Acepta financiación
-            </label>
+            <h3 className="text-sm font-medium group-hover:text-primary transition-colors">
+              Opciones
+            </h3>
+            {(financing || trade || rent) && (
+              <span className="w-2 h-2 rounded-full bg-primary" />
+            )}
           </div>
-          <div className="flex items-center gap-2">
-            <Checkbox id="trade" checked={trade} onCheckedChange={() => setTrade((v) => !v)} />
-            <label htmlFor="trade" className="text-sm cursor-pointer flex-1 select-none">
-              Acepta permuta
-            </label>
+          {openSections.options ? (
+            <ChevronDown className="w-4 h-4 text-gray-500" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-gray-500" />
+          )}
+        </button>
+
+        {openSections.options && (
+          <div className="flex flex-col gap-1.5 pt-1">
+            <div className="flex items-center gap-2">
+              <Checkbox id="financing" checked={financing} onCheckedChange={() => setFinancing((v) => !v)} />
+              <label htmlFor="financing" className="text-sm cursor-pointer flex-1 select-none">
+                Acepta financiación
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="trade" checked={trade} onCheckedChange={() => setTrade((v) => !v)} />
+              <label htmlFor="trade" className="text-sm cursor-pointer flex-1 select-none">
+                Acepta permuta
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="rent" checked={rent} onCheckedChange={() => setRent((v) => !v)} />
+              <label htmlFor="rent" className="text-sm cursor-pointer flex-1 select-none">
+                Disponible para alquiler
+              </label>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Checkbox id="rent" checked={rent} onCheckedChange={() => setRent((v) => !v)} />
-            <label htmlFor="rent" className="text-sm cursor-pointer flex-1 select-none">
-              Disponible para alquiler
-            </label>
-          </div>
-        </div>
+        )}
       </div>
 
       <Separator />
 
       {/* Condición */}
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium">Condición</h3>
-        <div className="flex flex-col gap-1.5">
-          {["NUEVO", "USADO"].map((cond) => (
-            <div key={cond} className="flex items-center gap-2">
-              <Checkbox
-                id={`cond-${cond}`}
-                checked={condition.includes(cond)}
-                onCheckedChange={() => toggleValue(condition, setCondition, cond)}
-              />
-              <label htmlFor={`cond-${cond}`} className="text-sm cursor-pointer flex-1 select-none">
-                {cond === "NUEVO" ? "Nuevo" : "Usado"}
-              </label>
-            </div>
-          ))}
-        </div>
+        <button
+          type="button"
+          onClick={() => toggleSection("condition")}
+          className="flex items-center justify-between w-full text-left py-1 group"
+        >
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium group-hover:text-primary transition-colors">
+              Condición
+            </h3>
+            {condition.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-primary" />
+            )}
+          </div>
+          {openSections.condition ? (
+            <ChevronDown className="w-4 h-4 text-gray-500" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-gray-500" />
+          )}
+        </button>
+
+        {openSections.condition && (
+          <div className="flex flex-col gap-1.5 pt-1">
+            {["NUEVO", "USADO"].map((cond) => (
+              <div key={cond} className="flex items-center gap-2">
+                <Checkbox
+                  id={`cond-${cond}`}
+                  checked={condition.includes(cond)}
+                  onCheckedChange={() => toggleValue(condition, setCondition, cond)}
+                />
+                <label htmlFor={`cond-${cond}`} className="text-sm cursor-pointer flex-1 select-none">
+                  {cond === "NUEVO" ? "Nuevo" : "Usado"}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <Separator />
@@ -328,42 +447,26 @@ export function FiltersSidebar({
 
   return (
     <>
-      {/* Botón Flotante/Superior para Abrir Filtros en Móviles (< lg) */}
-      <div className="w-full lg:hidden mb-4 flex items-center justify-between">
+      {/* Botón Filtros en Móviles (Alineado simétricamente) */}
+      <div className="lg:hidden w-full h-full flex items-center">
         <button
           type="button"
           onClick={() => setIsOpenMobile(true)}
-          className="flex items-center gap-2 bg-white border border-slate-300 shadow-sm px-4 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 shadow-sm px-4 py-2.5 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
         >
           <SlidersHorizontal className="w-4 h-4" />
-          <span>Filtros</span>
-          {activeFilterCount > 0 && (
-            <span className="ml-1 bg-primary text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-              {activeFilterCount}
-            </span>
-          )}
+          <span>Filtros {hasActiveFilters ? `(${activeFilterCount})` : ""}</span>
         </button>
-
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="text-xs text-slate-500 hover:text-red-600 underline"
-          >
-            Limpiar filtros
-          </button>
-        )}
       </div>
 
-      {/* Panel Lateral Flotante para Móviles (< lg) */}
+      {/* Modal / Drawer Móvil */}
       {isOpenMobile && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
-          {/* Fondo oscuro deslizable */}
           <div
             className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
             onClick={() => setIsOpenMobile(false)}
           />
 
-          {/* Drawer / Modal lateral */}
           <div className="relative ml-auto w-full max-w-xs bg-[var(--primary-foreground)] h-full p-5 overflow-y-auto flex flex-col gap-5 shadow-2xl z-10 animate-in slide-in-from-right duration-200">
             <div className="flex items-center justify-between pb-2 border-b">
               <span className="font-semibold text-base">Filtros de Búsqueda</span>
@@ -381,7 +484,7 @@ export function FiltersSidebar({
         </div>
       )}
 
-      {/* Sidebar Fijo para Desktop (>= lg) */}
+      {/* Sidebar Desktop */}
       <aside className="hidden lg:flex w-72 shrink-0 border border-[#001F58]/10 bg-[var(--primary-foreground)] rounded-xl p-5 h-fit flex-col gap-5">
         {filterContent}
       </aside>

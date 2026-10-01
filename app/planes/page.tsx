@@ -22,7 +22,6 @@ export default async function AvionesPage({ searchParams }: Props) {
   const itemsPerPage = 21;
   const skip = (currentPage - 1) * itemsPerPage;
 
-  // 1. Obtener el usuario actual
   const user = await getCurrentUser();
 
   const categoryIds = toArray(params.category);
@@ -72,7 +71,6 @@ export default async function AvionesPage({ searchParams }: Props) {
     }),
   };
 
-  // 2. Traer los datos en paralelo
   const [aircrafts, totalAircrafts, categories, brands, userFavorites] = await Promise.all([
     prisma.aircraft.findMany({
       where: whereClause,
@@ -145,33 +143,42 @@ export default async function AvionesPage({ searchParams }: Props) {
   };
 
   return (
-    <main className="relative isolate min-h-screen px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <main className="relative isolate min-h-screen px-4 py-8">
       <div className="absolute inset-0 -z-20 overflow-hidden">
         <Image src="/bkg-forms.png" alt="Fondo Formularios" fill priority className="object-cover" />
       </div>
       <div className="absolute inset-0 -z-10 bg-background/85" />
 
-      {/* Encabezado Responsive */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">
+      {/* Encabezado: Título a la izquierda, Sort (solo Desktop) a la derecha */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <h1 className="text-2xl font-medium">
           Aviones en venta <span className="text-slate-500 font-normal text-lg">({totalAircrafts})</span>
         </h1>
-        <div className="self-end sm:self-auto">
+        <div className="hidden lg:block">
           <SortDropdown />
         </div>
       </div>
 
       <section className="flex flex-col lg:flex-row items-start gap-6">
-        {/* Componente de Filtros (Sidebar en PC / Drawer Modal en Móvil) */}
-        <AircraftFiltersWrapper categories={categories} brands={brands} />
+        
+        {/* Barra móvil simétrica: 50% Filtros | 50% Ordenar */}
+        <div className="w-full flex lg:block items-center gap-3 lg:w-auto shrink-0">
+          <div className="flex-1 lg:flex-none lg:w-72">
+            <AircraftFiltersWrapper categories={categories} brands={brands} />
+          </div>
+          <div className="flex-1 lg:hidden w-full *:w-full">
+            <SortDropdown />
+          </div>
+        </div>
 
         <div className="w-full flex-1">
           {aircrafts.length === 0 ? (
-            <div className="py-16 sm:py-20 text-center text-slate-500 bg-white/50 backdrop-blur-sm rounded-2xl border border-slate-200 px-4">
+            <div className="py-20 text-center text-slate-500 bg-white/50 backdrop-blur-sm rounded-2xl border border-slate-200 px-4">
               No se encontraron aeronaves con los criterios de búsqueda seleccionados.
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+            /* Grilla original: 1 por fila en móvil, 2 en sm, 3 en lg/xl */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 mb-8">
               {aircrafts.map((aircraft) => (
                 <AircraftCard
                   key={aircraft.id}
@@ -191,32 +198,32 @@ export default async function AvionesPage({ searchParams }: Props) {
             </div>
           )}
 
-          {/* Paginación Responsive */}
+          {/* Paginación */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-1.5 sm:gap-2 mt-8 border-t border-slate-200/80 pt-6 flex-wrap">
+            <div className="flex justify-center items-center gap-2 mt-8 border-t border-slate-200/80 pt-6 flex-wrap">
               {hasPrevPage ? (
                 <Link
                   href={createPageUrl(currentPage - 1)}
-                  className="px-2.5 sm:px-3 py-1.5 sm:py-2 border rounded-md hover:bg-neutral-100 text-xs sm:text-sm font-medium transition-colors bg-white/80"
+                  className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors bg-white/80"
                 >
                   Anterior
                 </Link>
               ) : (
-                <span className="px-2.5 sm:px-3 py-1.5 sm:py-2 border rounded-md text-neutral-400 text-xs sm:text-sm font-medium cursor-not-allowed bg-neutral-50">
+                <span className="px-3 py-2 border rounded-md text-neutral-400 text-sm font-medium cursor-not-allowed bg-neutral-50">
                   Anterior
                 </span>
               )}
 
               {getPageNumbers().map((page, index) =>
                 page === "..." ? (
-                  <span key={`ellipsis-${index}`} className="px-2 py-1.5 text-xs sm:text-sm text-neutral-400 font-medium">
+                  <span key={`ellipsis-${index}`} className="px-3 py-2 text-sm text-neutral-400 font-medium">
                     ...
                   </span>
                 ) : (
                   <Link
                     key={`page-${page}`}
                     href={createPageUrl(Number(page))}
-                    className={`px-2.5 sm:px-3 py-1.5 sm:py-2 border rounded-md text-xs sm:text-sm font-medium transition-colors ${
+                    className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
                       page === currentPage
                         ? "bg-neutral-900 text-white border-neutral-900 pointer-events-none"
                         : "hover:bg-neutral-100 text-neutral-700 bg-white/80"
@@ -230,12 +237,12 @@ export default async function AvionesPage({ searchParams }: Props) {
               {hasNextPage ? (
                 <Link
                   href={createPageUrl(currentPage + 1)}
-                  className="px-2.5 sm:px-3 py-1.5 sm:py-2 border rounded-md hover:bg-neutral-100 text-xs sm:text-sm font-medium transition-colors bg-white/80"
+                  className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors bg-white/80"
                 >
                   Siguiente
                 </Link>
               ) : (
-                <span className="px-2.5 sm:px-3 py-1.5 sm:py-2 border rounded-md text-neutral-400 text-xs sm:text-sm font-medium cursor-not-allowed bg-neutral-50">
+                <span className="px-3 py-2 border rounded-md text-neutral-400 text-sm font-medium cursor-not-allowed bg-neutral-50">
                   Siguiente
                 </span>
               )}
