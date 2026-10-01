@@ -8,7 +8,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || "Ventas Aeronáuticas <no-reply@tu-dominio.com>",
+      from: process.env.EMAIL_FROM || "Ventas Aeronáuticas <no-reply@ventasaeronauticas.com>",
       to: email,
       subject: "Confirmá tu cuenta en Ventas Aeronáuticas",
       html: `
