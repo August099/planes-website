@@ -13,6 +13,8 @@ import type { Metadata } from "next";
 import { getSparePartDetail } from "@/lib/listing-data";
 import { isListingActive } from "@/lib/listing-filters";
 import { sparePartSeoDescription, sparePartSeoTitle } from "@/lib/listing-seo";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { sparePartJsonLd } from "@/lib/structured-data";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -145,6 +147,9 @@ export default async function SparePartDetailsPage({
 
   return (
     <>
+      {/* Datos estructurados: solo para avisos visibles al público */}
+      {isListingActive(sparePart) && <JsonLd data={sparePartJsonLd(sparePart)} />}
+
       {/* VISTA DE IMPRESIÓN / PDF */}
       <div className="hidden print:block font-sans text-black p-4 space-y-6 max-w-4xl mx-auto">
         <div className="flex justify-between items-end border-b-2 border-black pb-3">

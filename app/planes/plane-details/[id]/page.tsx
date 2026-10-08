@@ -14,6 +14,8 @@ import type { Metadata } from "next";
 import { getAircraftDetail } from "@/lib/listing-data";
 import { isListingActive } from "@/lib/listing-filters";
 import { aircraftSeoDescription, aircraftSeoTitle } from "@/lib/listing-seo";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { aircraftJsonLd } from "@/lib/structured-data";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -145,6 +147,9 @@ export default async function PlaneDetailsPage({
 
   return (
     <>
+      {/* Datos estructurados: solo para avisos visibles al público */}
+      {!isInactive && <JsonLd data={aircraftJsonLd(aircraft)} />}
+
       {/* BANNER AVISO DE PAUSA SOLO PARA EL DUEÑO */}
       {isInactive && isOwner && (
         <div className="bg-amber-500 text-white text-xs font-semibold py-3 px-4 text-center flex items-center justify-center gap-2 print:hidden">

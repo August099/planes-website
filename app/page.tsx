@@ -9,6 +9,8 @@ import { LatestAircraft, ListingItem } from "@/components/ui/LatestListings";
 import { HeroBanner } from "@/components/ui/hero-banner";
 import HomeServicesCards from "@/components/ui/HomeServiceCards";
 import { FeaturedBrands } from "@/components/ui/FeaturedBrands";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { organizationAndWebsiteJsonLd } from "@/lib/structured-data";
 
 export default async function HomePage() {
   // 1. Obtener usuario actual
@@ -165,6 +167,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <JsonLd data={organizationAndWebsiteJsonLd()} />
       <div className="bg-[#FAF5F5] min-h-screen">
         <HeroBanner />
 

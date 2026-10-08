@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { faqPageJsonLd } from "@/lib/structured-data";
 
 const faqs = [
   { id: "pregunta-1", question: "Pregunta 1", answer: "Respuesta 1" },
@@ -17,8 +19,15 @@ export const metadata: Metadata = {
 };
 
 export default function FAQPage() {
+  // FAQPage solo con preguntas reales: hoy la página tiene texto de ejemplo
+  // ("Pregunta 1" / "Respuesta 1"), que no se publica como dato estructurado.
+  const realFaqs = faqs.filter(
+    (faq) => !/^Pregunta \d+$/.test(faq.question.trim()) && !/^Respuesta \d+$/.test(faq.answer.trim())
+  );
+
   return (
     <main className="relative isolate overflow-hidden min-h-screen -mb-16">
+      {realFaqs.length > 0 && <JsonLd data={faqPageJsonLd(realFaqs)} />}
       <Image
         src="/bkg-faq.jpg"
         alt=""
