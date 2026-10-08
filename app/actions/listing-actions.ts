@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { assertListingOwner } from "@/lib/listing-auth";
+import { pathFromPublicUrl, removeUploads } from "@/lib/listing-uploads";
 
 // Alta y edición de publicaciones: app/publish/actions.ts (createListing / updateListing).
 // Acá quedan solo renovar y eliminar, desde el perfil.
@@ -92,11 +93,35 @@ export async function deleteListingAction(id: string, type: "AIRCRAFT" | "SPARE_
   try {
     await assertListingOwner(id, type === "AIRCRAFT" ? "aircraft" : "sparepart");
 
+    // Antes se borraba solo el registro y las fotos/documentos quedaban en Supabase Storage.
+    // Se leen las URLs, se borra el aviso y recién después los archivos.
+    let sellerId: string;
+    let imageUrls: string[];
+    let documentUrls: string[] = [];
     if (type === "AIRCRAFT") {
-      await prisma.aircraft.delete({ where: { id } });
+      const aircraft = await prisma.aircraft.delete({
+        where: { id },
+        select: { sellerId: true, images: { select: { url: true } }, documents: { select: { url: true } } },
+      });
+      sellerId = aircraft.sellerId;
+      imageUrls = aircraft.images.map((i) => i.url);
+      documentUrls = aircraft.documents.map((d) => d.url);
     } else {
-      await prisma.sparePart.delete({ where: { id } });
+      const sparePart = await prisma.sparePart.delete({
+        where: { id },
+        select: { sellerId: true, images: { select: { url: true } } },
+      });
+      sellerId = sparePart.sellerId;
+      imageUrls = sparePart.images.map((i) => i.url);
     }
+
+    // Solo archivos de nuestro bucket y de la carpeta del vendedor (URLs externas se ignoran).
+    await removeUploads(
+      sellerId,
+      type === "AIRCRAFT" ? "aircraft" : "parts",
+      imageUrls.map((url) => pathFromPublicUrl("image", url)).filter((p): p is string => !!p),
+      documentUrls.map((url) => pathFromPublicUrl("document", url)).filter((p): p is string => !!p)
+    );
 
     revalidatePath("/profile");
     revalidatePath("/planes");
