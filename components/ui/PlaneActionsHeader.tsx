@@ -34,11 +34,14 @@ function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
 
 interface Props {
   title: string;
+  // Id del aviso (avión o repuesto, según "type").
   aircraftId: string;
   isFavoriteInitial?: boolean;
+  // El mismo encabezado se usa en el detalle de repuesto: favorito, PDF y reporte dependen del tipo.
+  type?: "AIRCRAFT" | "SPARE_PART";
 }
 
-export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = false }: Props) {
+export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = false, type = "AIRCRAFT" }: Props) {
   const [copied, setCopied] = useState(false);
   const [isFavorite, setIsFavorite] = useState(isFavoriteInitial);
   const [isPending, setIsPending] = useState(false);
@@ -55,7 +58,7 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
     setIsPending(true);
 
     try {
-      const res = await toggleFavoriteAction(aircraftId, "AIRCRAFT");
+      const res = await toggleFavoriteAction(aircraftId, type);
       setIsFavorite(res.isFavorite);
     } catch (error: any) {
       setIsFavorite(previousState);
@@ -101,7 +104,7 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
   // Manejador de descarga de PDF / Ficha Técnica
   const handleDownloadPdf = () => {
     if (typeof window !== "undefined") {
-      window.open(`/api/aircraft/${aircraftId}/pdf`, "_blank");
+      window.open(type === "AIRCRAFT" ? `/api/aircraft/${aircraftId}/pdf` : `/api/spareparts/${aircraftId}/pdf`, "_blank");
     }
   };
 
@@ -154,7 +157,7 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
 
         {/* Reportar */}
         <a
-          href={`/report?aircraftId=${aircraftId}`}
+          href={type === "AIRCRAFT" ? `/report?aircraftId=${aircraftId}` : `/report?sparePartId=${aircraftId}`}
           className="group flex items-center select-none"
         >
           <span className="mr-0 max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 ease-out group-hover:mr-2 group-hover:max-w-40 group-hover:opacity-100 text-xs font-semibold text-slate-700">

@@ -2,8 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AircraftGallery } from "../../../../components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
-import { Phone, Mail, FileText, MessageCircle, AlertTriangle, ArrowLeft } from "lucide-react";
-import { DetailRow } from "@/components/ui/DetailRow";
+import { FileText, AlertTriangle, ArrowLeft } from "lucide-react";
 import { QnaSection } from "@/components/ui/QnaSection";
 import { PlaneActionsHeader } from "@/components/ui/PlaneActionsHeader";
 import { AppImage } from "@/components/ui/AppImage";
@@ -15,6 +14,11 @@ import { getAircraftDetail } from "@/lib/listing-data";
 import { isListingActive } from "@/lib/listing-filters";
 import { aircraftSeoDescription, aircraftSeoTitle } from "@/lib/listing-seo";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { FeaturesCard } from "@/components/ui/listing/FeaturesCard";
+import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSections";
+import { PublishedLine } from "@/components/ui/listing/PublishedLine";
+import { aircraftFeatures, aircraftSections } from "@/lib/listing-detail";
+import { ENGINE_LABELS } from "@/lib/aircraft-categories";
 import { aircraftJsonLd } from "@/lib/structured-data";
 
 type Props = { params: Promise<{ id: string }> };
@@ -129,7 +133,6 @@ export default async function PlaneDetailsPage({
   const whatsappUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${body}` : null;
 
   const hasSingleEngine = aircraft.engines.length === 1;
-  const hasMultipleEngines = aircraft.engines.length > 1;
   const singleEngine = hasSingleEngine ? aircraft.engines[0] : null;
 
   const formattedPrice = aircraft.price
@@ -143,6 +146,11 @@ export default async function PlaneDetailsPage({
   // VA-44: las horas son opcionales en Agrícola, Experimental y Proyecto.
   const tboText = (tbo: number | null) => (tbo != null ? `${tbo} hs` : "No informado");
   const hoursText = aircraft.totalTimeHours != null ? `${aircraft.totalTimeHours.toLocaleString("es-AR")} hs` : "No informadas";
+
+  // VA-57: características e "Información adicional", ya sin vacíos.
+  const features = aircraftFeatures(aircraft);
+  const sections = aircraftSections(aircraft);
+  const listingLocation = [aircraft.city, aircraft.province].filter(Boolean).join(", ");
 
   const displayBrand = aircraft.brand?.name || aircraft.customBrand;
   const displayModel = aircraft.model?.name || aircraft.customModel;
@@ -201,75 +209,28 @@ export default async function PlaneDetailsPage({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-6 pt-2">
-          <div className="space-y-4">
-            <div className="border border-slate-200 rounded-xl p-4 bg-white space-y-2">
-              <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1.5 border-slate-100">
-                Especificaciones Generales
-              </h3>
-              <div className="text-xs space-y-1.5 text-slate-700">
-                {displayBrand && <p className="flex justify-between"><span className="font-semibold text-slate-500">Marca:</span> <span>{displayBrand}</span></p>}
-                {displayModel && <p className="flex justify-between"><span className="font-semibold text-slate-500">Modelo:</span> <span>{displayModel}</span></p>}
-                {displaySubModel && <p className="flex justify-between"><span className="font-semibold text-slate-500">Variante:</span> <span>{displaySubModel}</span></p>}
-                {aircraft.category?.name && <p className="flex justify-between"><span className="font-semibold text-slate-500">Categoría:</span> <span>{aircraft.category.name}</span></p>}
-                <p className="flex justify-between"><span className="font-semibold text-slate-500">Año:</span> <span>{aircraft.year}</span></p>
-                <p className="flex justify-between"><span className="font-semibold text-slate-500">Horas Totales:</span> <span>{hoursText}</span></p>
-                <p className="flex justify-between"><span className="font-semibold text-slate-500">Condición:</span> <span>{aircraft.condition}</span></p>
-                {aircraft.engineType && <p className="flex justify-between"><span className="font-semibold text-slate-500">Tipo de Motor:</span> <span>{aircraft.engineType}</span></p>}
-                {(aircraft.passengers ?? 0) > 0 && <p className="flex justify-between"><span className="font-semibold text-slate-500">Pasajeros:</span> <span>{aircraft.passengers}</span></p>}
-              </div>
-            </div>
-
-            {aircraft.engines.length > 0 && (
-              <div className="border border-slate-200 rounded-xl p-4 bg-white space-y-2">
-                <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1.5 border-slate-100">Motor</h3>
-                {aircraft.engines.map((e: any, idx: number) => (
-                  <div key={e.id || idx} className="text-xs space-y-1 text-slate-700 pb-2 border-b border-slate-50 last:border-0">
-                    {aircraft.engines.length > 1 && <p className="font-bold text-[#001F58]">Motor {idx + 1}</p>}
-                    <p className="flex justify-between"><span className="font-semibold text-slate-500">TBO:</span> <span>{tboText(e.TBO)}</span></p>
-                    {e.engineHours && <p className="flex justify-between"><span className="font-semibold text-slate-500">Horas Usadas:</span> <span>{e.engineHours} hs</span></p>}
-                    {e.DURG && <p className="flex justify-between"><span className="font-semibold text-slate-500">DURG:</span> <span>{e.DURG} hs</span></p>}
-                    {e.brand && <p className="flex justify-between"><span className="font-semibold text-slate-500">Marca:</span> <span>{e.brand}</span></p>}
-                    {e.model && <p className="flex justify-between"><span className="font-semibold text-slate-500">Modelo:</span> <span>{e.model}</span></p>}
-                  </div>
-                ))}
-              </div>
-            )}
+        {features.length > 0 && (
+          <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
+            <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-100">Características</h3>
+            <p className="text-slate-700">{features.map((f) => (f.value ? `${f.label}: ${f.value}` : f.label)).join(" · ")}</p>
           </div>
+        )}
 
-          <div className="space-y-4">
-            <div className="border border-slate-200 rounded-xl p-4 bg-white space-y-2">
-              <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1.5 border-slate-100">Atributos Destacados</h3>
-              <div className="flex flex-wrap gap-2 pt-1">
-                {aircraft.certified && <span className="px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-900 text-[10px] font-bold">Anual al Día</span>}
-                {aircraft.avAaptoifr && <span className="px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-900 text-[10px] font-bold">Apto IFR</span>}
-                {aircraft.avAutopilot && <span className="px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-900 text-[10px] font-bold">Autopilot</span>}
-                {aircraft.airconditioner && <span className="px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-900 text-[10px] font-bold">Aire Acond.</span>}
-                {aircraft.oxygen && <span className="px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-900 text-[10px] font-bold">Oxígeno</span>}
-              </div>
-            </div>
+        <PrintSections sections={sections} />
 
-            {(aircraft.financing || aircraft.trade || aircraft.rent) && (
-              <div className="border border-slate-200 rounded-xl p-4 bg-white space-y-2">
-                <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1.5 border-slate-100">Opciones de Negociación</h3>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {aircraft.financing && <span className="px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-900 text-[10px] font-bold">Acepta Financiación</span>}
-                  {aircraft.trade && <span className="px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-900 text-[10px] font-bold">Acepta Permuta</span>}
-                  {aircraft.rent && <span className="px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-900 text-[10px] font-bold">Disponible p/ Alquiler</span>}
-                </div>
-              </div>
-            )}
-
-            <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-2">
-              <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1.5 border-slate-200">Contacto del Vendedor</h3>
-              <div className="text-xs space-y-1.5 text-slate-700">
-                <p className="flex justify-between"><span className="font-semibold text-slate-500">Nombre / Razón Social:</span> <span className="font-bold">{seller.name}</span></p>
-                {sellerLocation && <p className="flex justify-between"><span className="font-semibold text-slate-500">Ubicación:</span> <span>{sellerLocation}</span></p>}
-                {seller.phone && <p className="flex justify-between"><span className="font-semibold text-slate-500">Teléfono:</span> <span>{seller.phone}</span></p>}
-                {seller.email && <p className="flex justify-between"><span className="font-semibold text-slate-500">Email:</span> <span>{seller.email}</span></p>}
-              </div>
-            </div>
+        {aircraft.description && (
+          <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
+            <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-100">Descripción</h3>
+            <p className="whitespace-pre-line text-slate-700">{aircraft.description}</p>
           </div>
+        )}
+
+        <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 text-xs space-y-1 text-slate-700">
+          <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-200">Contacto del Vendedor</h3>
+          <p><span className="font-semibold text-slate-500">Nombre / Razón Social:</span> <span className="font-bold">{seller.name}</span></p>
+          {sellerLocation && <p><span className="font-semibold text-slate-500">Ubicación:</span> {sellerLocation}</p>}
+          {seller.phone && <p><span className="font-semibold text-slate-500">Teléfono:</span> {seller.phone}</p>}
+          {seller.email && <p><span className="font-semibold text-slate-500">Email:</span> {seller.email}</p>}
         </div>
       </div>
 
@@ -289,9 +250,7 @@ export default async function PlaneDetailsPage({
             {/* BLOQUES VISIBLES SOLO EN MÓVIL (<lg) */}
             <div className="flex flex-col gap-5 lg:hidden">
               <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-                <div className="flex justify-between items-center text-xs text-slate-400 pb-2 border-b border-slate-100">
-                  <p>Publicado el {aircraft.createdAt.toLocaleDateString("es-AR")}</p>
-                </div>
+                <PublishedLine createdAt={aircraft.createdAt} location={listingLocation} />
 
                 <PlaneActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} />
                 <Separator />
@@ -315,10 +274,11 @@ export default async function PlaneDetailsPage({
                   {hasSingleEngine && singleEngine && (
                     <div className="mt-3 pt-3 border-t border-slate-100 space-y-1">
                       <p className="font-bold text-[#001F58]">Motor</p>
-                      {aircraft.engineType && <p><span className="font-semibold text-slate-500">Tipo:</span> {aircraft.engineType}</p>}
-                      <p><span className="font-semibold text-slate-500">TBO:</span> {tboText(singleEngine.TBO)}</p>
-                      {singleEngine.engineHours && <p><span className="font-semibold text-slate-500">Horas Motor:</span> {singleEngine.engineHours} hs</p>}
-                      {singleEngine.DURG && <p><span className="font-semibold text-slate-500">DURG:</span> {singleEngine.DURG} hs</p>}
+                      {aircraft.engineType && <p><span className="font-semibold text-slate-500">Tipo:</span> {ENGINE_LABELS[aircraft.engineType]}</p>}
+                      {singleEngine.TBO != null && <p><span className="font-semibold text-slate-500">TBO:</span> {tboText(singleEngine.TBO)}</p>}
+                      {singleEngine.horsepower != null && <p><span className="font-semibold text-slate-500">Potencia:</span> {singleEngine.horsepower} HP</p>}
+                      {singleEngine.engineHours != null && <p><span className="font-semibold text-slate-500">Horas Motor:</span> {singleEngine.engineHours} hs</p>}
+                      {singleEngine.DURG != null && <p><span className="font-semibold text-slate-500">DURG / SMOH:</span> {singleEngine.DURG} hs</p>}
                       {singleEngine.brand && <p><span className="font-semibold text-slate-500">Marca:</span> {singleEngine.brand}</p>}
                       {singleEngine.model && <p><span className="font-semibold text-slate-500">Modelo:</span> {singleEngine.model}</p>}
                     </div>
@@ -358,108 +318,9 @@ export default async function PlaneDetailsPage({
               </div>
             </div>
 
-            {/* FICHA TÉCNICA Y DETALLES */}
-            <section className="flex flex-col gap-6">
-              <h2 className="text-2xl font-bold text-[#001F58]">Información Adicional</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                
-                {/* Columna 1: Especificaciones & Modalidades */}
-                <div className="space-y-6">
-                  {/* Datos Básicos */}
-                  <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
-                    {displayBrand && <DetailRow label="Marca" value={displayBrand} />}
-                    {displayModel && <DetailRow label="Modelo" value={displayModel} />}
-                    {displaySubModel && <DetailRow label="Variante" value={displaySubModel} />}
-                    {aircraft.category?.name && <DetailRow label="Categoría" value={aircraft.category.name} />}
-                    <DetailRow label="Ubicación" value={`${aircraft.city}, ${aircraft.province}`} />
-                    <DetailRow label="Condición" value={aircraft.condition} />
-                    {aircraft.year && <DetailRow label="Año" value={aircraft.year} />}
-                    <DetailRow label="Horas Totales" value={hoursText} />
-                    {(aircraft.passengers ?? 0) > 0 && <DetailRow label="Pasajeros" value={aircraft.passengers!} />}
-                  </div>
-
-                  {/* Motores Múltiples */}
-                  {hasMultipleEngines && (
-                    <div className="space-y-3">
-                      <h3 className="text-lg font-semibold text-slate-800">Motores</h3>
-                      {aircraft.engines.map((engine, index) => (
-                        <div key={engine.id} className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
-                          <div className="bg-blue-50 px-4 py-2 border-b border-blue-100">
-                            <h4 className="text-xs font-bold text-[#001F58] uppercase">Motor {index + 1}</h4>
-                          </div>
-                          {aircraft.engineType && <DetailRow label="Tipo de Motor" value={aircraft.engineType} />}
-                          <DetailRow label="TBO" value={tboText(engine.TBO)} />
-                          {engine.engineHours && <DetailRow label="Horas Usadas" value={`${engine.engineHours} hs`} />}
-                          {engine.DURG && <DetailRow label="DURG" value={`${engine.DURG} hs`} />}
-                          {engine.brand && <DetailRow label="Marca" value={engine.brand} />}
-                          {engine.model && <DetailRow label="Modelo" value={engine.model} />}
-                          {engine.description && <DetailRow label="Notas" value={engine.description} />}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Opciones de Negociación */}
-                  {(aircraft.financing || aircraft.trade || aircraft.rent) && (
-                    <div className="space-y-3">
-                      <h3 className="text-lg font-semibold text-slate-800">Opciones de Negociación</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {aircraft.financing && <span className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#001F58] text-xs font-semibold">Acepta Financiación</span>}
-                        {aircraft.trade && <span className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#001F58] text-xs font-semibold">Acepta Permuta</span>}
-                        {aircraft.rent && <span className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#001F58] text-xs font-semibold">Disponible para Alquiler</span>}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Columna 2: Equipamiento, Hélices y Atributos */}
-                <div className="space-y-6">
-                  {/* Atributos Destacados */}
-                  {(aircraft.certified || aircraft.avAaptoifr || aircraft.avAutopilot || aircraft.airconditioner || aircraft.oxygen) && (
-                    <div className="space-y-3">
-                      <h3 className="text-lg font-semibold text-slate-800">Atributos Destacados</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {aircraft.certified && <span className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#001F58] text-xs font-semibold">Anual al Día</span>}
-                        {aircraft.avAaptoifr && <span className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#001F58] text-xs font-semibold">Apto IFR</span>}
-                        {aircraft.avAutopilot && <span className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#001F58] text-xs font-semibold">Autopilot</span>}
-                        {aircraft.airconditioner && <span className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#001F58] text-xs font-semibold">Aire Acondicionado</span>}
-                        {aircraft.oxygen && <span className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#001F58] text-xs font-semibold">Sistema Oxígeno</span>}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Aviónica, Interior, Exterior */}
-                  {(aircraft.avDescription || aircraft.intDescription || aircraft.extDescription) && (
-                    <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
-                      {aircraft.avDescription && <DetailRow label="Aviónica" value={aircraft.avDescription} />}
-                      {aircraft.intDescription && <DetailRow label="Interior" value={aircraft.intDescription} />}
-                      {aircraft.extDescription && <DetailRow label="Exterior / Pintura" value={aircraft.extDescription} />}
-                    </div>
-                  )}
-
-                  {/* Hélices (SIEMPRE ABAJO) */}
-                  {aircraft.propeller.length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-lg font-semibold text-slate-800">{aircraft.propeller.length > 1 ? "Hélices" : "Hélice"}</h3>
-                      {aircraft.propeller.map((p, index) => (
-                        <div key={p.id} className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
-                          {aircraft.propeller.length > 1 && (
-                            <div className="bg-blue-50 px-4 py-2 border-b border-blue-100">
-                              <h4 className="text-xs font-bold text-[#001F58] uppercase">Hélice {index + 1}</h4>
-                            </div>
-                          )}
-                          {p.propellerHours && <DetailRow label="Horas Usadas" value={`${p.propellerHours} hs`} />}
-                          {p.model && <DetailRow label="Modelo" value={p.model} />}
-                          {p.description && <DetailRow label="Notas" value={p.description} />}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            </section>
+            {/* VA-57: características con íconos + tablas una debajo de la otra */}
+            <FeaturesCard title="Características de la aeronave" features={features} />
+            <DetailSections sections={sections} />
 
             {/* Documentación Adjunta (Para móvil) */}
             {aircraft.documents.length > 0 && (
@@ -480,9 +341,7 @@ export default async function PlaneDetailsPage({
           {/* Columna Derecha (DESKTOP >= lg) */}
           <div className="hidden lg:flex w-1/3 flex-col gap-5">
             <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-              <div className="flex justify-between items-center text-xs text-slate-400 pb-2 border-b border-slate-100">
-                <p>Publicado el {aircraft.createdAt.toLocaleDateString("es-AR")}</p>
-              </div>
+              <PublishedLine createdAt={aircraft.createdAt} location={listingLocation} />
 
               <PlaneActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} />
 
@@ -507,10 +366,11 @@ export default async function PlaneDetailsPage({
                 {hasSingleEngine && singleEngine && (
                   <div className="mt-3 pt-3 border-t border-slate-100 space-y-1">
                     <p className="font-bold text-[#001F58]">Motor</p>
-                    {aircraft.engineType && <p><span className="font-semibold text-slate-500">Tipo:</span> {aircraft.engineType}</p>}
-                    <p><span className="font-semibold text-slate-500">TBO:</span> {tboText(singleEngine.TBO)}</p>
-                    {singleEngine.engineHours && <p><span className="font-semibold text-slate-500">Horas Motor:</span> {singleEngine.engineHours} hs</p>}
-                    {singleEngine.DURG && <p><span className="font-semibold text-slate-500">DURG:</span> {singleEngine.DURG} hs</p>}
+                    {aircraft.engineType && <p><span className="font-semibold text-slate-500">Tipo:</span> {ENGINE_LABELS[aircraft.engineType]}</p>}
+                    {singleEngine.TBO != null && <p><span className="font-semibold text-slate-500">TBO:</span> {tboText(singleEngine.TBO)}</p>}
+                    {singleEngine.horsepower != null && <p><span className="font-semibold text-slate-500">Potencia:</span> {singleEngine.horsepower} HP</p>}
+                      {singleEngine.engineHours != null && <p><span className="font-semibold text-slate-500">Horas Motor:</span> {singleEngine.engineHours} hs</p>}
+                    {singleEngine.DURG != null && <p><span className="font-semibold text-slate-500">DURG / SMOH:</span> {singleEngine.DURG} hs</p>}
                     {singleEngine.brand && <p><span className="font-semibold text-slate-500">Marca:</span> {singleEngine.brand}</p>}
                     {singleEngine.model && <p><span className="font-semibold text-slate-500">Modelo:</span> {singleEngine.model}</p>}
                   </div>

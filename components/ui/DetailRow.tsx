@@ -1,6 +1,6 @@
 type DetailRowProps = {
   label: string;
-  value: string | number | null | undefined;
+  value: React.ReactNode;
   highlight?: boolean;
   multiline?: boolean;
   last?: boolean;

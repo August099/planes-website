@@ -2,8 +2,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AircraftGallery } from "@/components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
-import { Phone, Mail, MessageCircle } from "lucide-react";
-import { DetailRow } from "@/components/ui/DetailRow";
 import { QnaSection } from "@/components/ui/QnaSection";
 import { PlaneActionsHeader } from "@/components/ui/PlaneActionsHeader";
 import { AppImage } from "@/components/ui/AppImage";
@@ -14,6 +12,10 @@ import { getSparePartDetail } from "@/lib/listing-data";
 import { isListingActive } from "@/lib/listing-filters";
 import { sparePartSeoDescription, sparePartSeoTitle } from "@/lib/listing-seo";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { FeaturesCard } from "@/components/ui/listing/FeaturesCard";
+import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSections";
+import { PublishedLine } from "@/components/ui/listing/PublishedLine";
+import { sparePartConditionLabel, sparePartFeatures, sparePartSections } from "@/lib/listing-detail";
 import { sparePartJsonLd } from "@/lib/structured-data";
 
 type Props = { params: Promise<{ id: string }> };
@@ -113,12 +115,10 @@ export default async function SparePartDetailsPage({
   const locationText = `${sparePart.city}, ${sparePart.province}`;
   const sellerLocation = [seller.city, seller.province].filter(Boolean).join(", ");
 
-  // Atributos dinámicos del JSON de la subcategoría
-  const attributesObj = (sparePart.attributes as Record<string, any>) || {};
-  const attributeEntries = Object.entries(attributesObj);
-
-  // Lista de aeronaves compatibles si existen
-  const compatibleAircrafts = Array.isArray(sparePart.aircrafts) ? (sparePart.aircrafts as string[]) : [];
+  // VA-57: características e "Información adicional" (incluye atributos y aeronaves
+  // compatibles), ya sin vacíos.
+  const features = sparePartFeatures(sparePart);
+  const sections = sparePartSections(sparePart);
 
   // Reconstrucción de la jerarquía de categorías del repuesto.
   // sparePart.category es siempre el nivel más específico que eligió el vendedor:
@@ -129,13 +129,11 @@ export default async function SparePartDetailsPage({
 
   let categoryName: string | null = null;
   let subcategoryName: string | null = null;
-  let sectionName: string | null = null;
 
   if (rootCategory) {
     // Categoría (raíz) > Subcategoría (mid) > Sección (leaf)
     categoryName = rootCategory.name;
     subcategoryName = midCategory?.name ?? null;
-    sectionName = leafCategory?.name ?? null;
   } else if (midCategory) {
     // Categoría (mid) > Subcategoría (leaf) — no hay Sección
     categoryName = midCategory.name;
@@ -184,52 +182,30 @@ export default async function SparePartDetailsPage({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-8 text-xs border-t border-b border-slate-300 py-4">
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-bold uppercase text-slate-800 border-b border-slate-200 pb-1 mb-2">
-                Datos del Repuesto
-              </h3>
-              <div className="space-y-1">
-                {sparePart.brand && <p><span className="font-semibold">Marca:</span> {sparePart.brand}</p>}
-                {sparePart.condition && <p><span className="font-semibold">Condición:</span> {sparePart.condition}</p>}
-                {categoryName && <p><span className="font-semibold">Categoría:</span> {categoryName}</p>}
-                {subcategoryName && <p><span className="font-semibold">Subcategoría:</span> {subcategoryName}</p>}
-                {sectionName && <p><span className="font-semibold">Sección:</span> {sectionName}</p>}
-                <p><span className="font-semibold">Stock:</span> {sparePart.stock} {sparePart.stock === 1 ? "unidad" : "unidades"}</p>
-                {sparePart.partNumber && <p><span className="font-semibold">Número de Parte (P/N):</span> {sparePart.partNumber}</p>}
-                <p><span className="font-semibold">Ubicación:</span> {locationText}</p>
-                {attributeEntries.map(([key, val]) => (
-                  <p key={key}><span className="font-semibold">{key}:</span> {String(val)}</p>
-                ))}
-              </div>
-            </div>
-          </div>
+        <p className="text-xs text-slate-500">Ubicación: {locationText}</p>
 
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-bold uppercase text-slate-800 border-b border-slate-200 pb-1 mb-2">
-                Datos del Vendedor
-              </h3>
-              <div className="space-y-1">
-                <p><span className="font-semibold">Nombre:</span> {seller.name}</p>
-                {sellerLocation && <p><span className="font-semibold">Ubicación:</span> {sellerLocation}</p>}
-                {seller.phone && <p><span className="font-semibold">Teléfono:</span> {seller.phone}</p>}
-                {seller.email && <p><span className="font-semibold">Email:</span> {seller.email}</p>}
-              </div>
-            </div>
-
-            {sparePart.description && (
-              <div>
-                <h3 className="font-bold uppercase text-slate-800 border-b border-slate-200 pb-1 mb-2">
-                  Descripción
-                </h3>
-                <p className="text-slate-700 leading-snug whitespace-pre-line text-[11px]">
-                  {sparePart.description}
-                </p>
-              </div>
-            )}
+        {features.length > 0 && (
+          <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
+            <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-100">Características</h3>
+            <p className="text-slate-700">{features.map((f) => (f.value ? `${f.label}: ${f.value}` : f.label)).join(" · ")}</p>
           </div>
+        )}
+
+        <PrintSections sections={sections} />
+
+        {sparePart.description && (
+          <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
+            <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-100">Descripción</h3>
+            <p className="whitespace-pre-line text-slate-700">{sparePart.description}</p>
+          </div>
+        )}
+
+        <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 text-xs space-y-1 text-slate-700">
+          <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-200">Datos del Vendedor</h3>
+          <p><span className="font-semibold">Nombre:</span> {seller.name}</p>
+          {sellerLocation && <p><span className="font-semibold">Ubicación:</span> {sellerLocation}</p>}
+          {seller.phone && <p><span className="font-semibold">Teléfono:</span> {seller.phone}</p>}
+          {seller.email && <p><span className="font-semibold">Email:</span> {seller.email}</p>}
         </div>
 
         <div className="pt-2 text-center text-[10px] text-slate-400">
@@ -257,13 +233,12 @@ export default async function SparePartDetailsPage({
             {/* BLOQUES VISIBLES SOLO EN MÓVIL (<lg) */}
             <div className="flex flex-col gap-5 lg:hidden">
               <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-                <div className="flex justify-between items-center text-xs text-slate-400 pb-2 border-b border-slate-100">
-                  <p>Publicado el {sparePart.createdAt.toLocaleDateString("es-AR")}</p>
-                </div>
+                <PublishedLine createdAt={sparePart.createdAt} location={locationText} />
 
                 <PlaneActionsHeader
                   title={sparePart.title}
                   aircraftId={sparePart.id}
+                  type="SPARE_PART"
                   isFavoriteInitial={isFavoriteInitial}
                 />
 
@@ -285,7 +260,7 @@ export default async function SparePartDetailsPage({
                     <p><span className="font-semibold text-slate-500">Marca:</span> {sparePart.brand}</p>
                   )}
                   {sparePart.condition && (
-                    <p><span className="font-semibold text-slate-500">Condición:</span> {sparePart.condition}</p>
+                    <p><span className="font-semibold text-slate-500">Estado:</span> {sparePartConditionLabel(sparePart.condition)}</p>
                   )}
                   {categoryName && (
                     <p><span className="font-semibold text-slate-500">Categoría:</span> {categoryName}</p>
@@ -341,76 +316,20 @@ export default async function SparePartDetailsPage({
               </div>
             </div>
 
-            {/* Ficha Técnica / Información Adicional */}
-            <section className="flex flex-col gap-6">
-              <h2 className="text-2xl font-bold text-[#001F58]">Información Adicional</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                
-                {/* Columna 1: Especificaciones principales */}
-                <div className="space-y-6">
-                  <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
-                    {sparePart.brand && <DetailRow label="Marca / Fabricante" value={sparePart.brand} />}
-                    {sparePart.condition && <DetailRow label="Condición" value={sparePart.condition} />}
-                    {sparePart.partNumber && (
-                      <DetailRow label="Número de Parte (P/N)" value={sparePart.partNumber} />
-                    )}
-                    <DetailRow label="Stock Disponible" value={`${sparePart.stock} ${sparePart.stock === 1 ? "unidad" : "unidades"}`} />
-                    <DetailRow label="Ubicación" value={locationText} />
-
-                    {/* Renderizar dinámicamente todos los campos/atributos del JSON */}
-                    {attributeEntries.map(([key, val]) => (
-                      <DetailRow key={key} label={key} value={String(val)} />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Columna 2: Aeronaves compatibles y Categoría (grilla: acá sí va la Sección si existe) */}
-                <div className="space-y-6">
-                  <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
-                    {categoryName && (
-                      <DetailRow label="Categoría" value={categoryName} />
-                    )}
-                    {subcategoryName && (
-                      <DetailRow label="Subcategoría" value={subcategoryName} />
-                    )}
-                    {sectionName && (
-                      <DetailRow label="Sección" value={sectionName} />
-                    )}
-                  </div>
-
-                  {/* Aeronaves Compatibles en Chips Azules */}
-                  {compatibleAircrafts.length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-lg font-semibold text-slate-800">Aeronaves Compatibles</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {compatibleAircrafts.map((modelName, idx) => (
-                          <span
-                            key={idx}
-                            className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#001F58] text-xs font-semibold"
-                          >
-                            {modelName}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            </section>
+            {/* VA-57: características con íconos + tablas una debajo de la otra */}
+            <FeaturesCard title="Características del repuesto" features={features} />
+            <DetailSections sections={sections} />
           </div>
 
           {/* Columna Derecha (DESKTOP >= lg) - Flujo continuo sin sticky */}
           <div className="hidden lg:flex w-1/3 flex-col gap-5">
             <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-              <div className="flex justify-between items-center text-xs text-slate-400 pb-2 border-b border-slate-100">
-                <p>Publicado el {sparePart.createdAt.toLocaleDateString("es-AR")}</p>
-              </div>
+              <PublishedLine createdAt={sparePart.createdAt} location={locationText} />
 
               <PlaneActionsHeader
                 title={sparePart.title}
                 aircraftId={sparePart.id}
+                type="SPARE_PART"
                 isFavoriteInitial={isFavoriteInitial}
               />
 
@@ -432,7 +351,7 @@ export default async function SparePartDetailsPage({
                   <p><span className="font-semibold text-slate-500">Marca:</span> {sparePart.brand}</p>
                 )}
                 {sparePart.condition && (
-                  <p><span className="font-semibold text-slate-500">Condición:</span> {sparePart.condition}</p>
+                  <p><span className="font-semibold text-slate-500">Estado:</span> {sparePartConditionLabel(sparePart.condition)}</p>
                 )}
                 {categoryName && (
                   <p><span className="font-semibold text-slate-500">Categoría:</span> {categoryName}</p>
@@ -483,7 +402,7 @@ export default async function SparePartDetailsPage({
                 whatsappUrl={whatsappUrl} 
                 emailUrl={emailUrl} 
                 entityId={sparePart.id} 
-                entityType="AIRCRAFT" 
+                entityType="SPARE_PART" 
               />
             </div>
           </div>
