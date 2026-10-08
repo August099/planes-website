@@ -122,7 +122,7 @@ export function ProfileView({
     try {
       const res = await renewListingAction(id, type);
       if (!res.success) {
-        alert("Ocurrió un error al intentar renovar.");
+        alert(res.error || "Ocurrió un error al intentar renovar.");
       }
     } catch (error) {
       alert("Error de conexión al renovar.");
@@ -134,7 +134,10 @@ export function ProfileView({
   const handleDelete = async (id: string, type: "aircraft" | "sparepart") => {
     if (!confirm("¿Estás seguro de que querés eliminar esta publicación?")) return;
     try {
-      await deleteListingAction(id, type === "aircraft" ? "AIRCRAFT" : "SPARE_PART");
+      const res = await deleteListingAction(id, type === "aircraft" ? "AIRCRAFT" : "SPARE_PART");
+      if (!res.success) {
+        alert(res.error || "Error al eliminar la publicación.");
+      }
     } catch (error) {
       alert("Error al eliminar la publicación.");
     }
@@ -158,7 +161,12 @@ export function ProfileView({
       formData.append("listingType", editingItem!.type);
       formData.append("priceOnRequest", priceConsult.toString());
 
-      await updateListingAction(formData);
+      const res = await updateListingAction(formData);
+      if (!res.success) {
+        // El modal queda abierto para que el usuario corrija los datos.
+        alert(res.error || "Error al actualizar la publicación.");
+        return;
+      }
       setEditingItem(null);
     } catch (error) {
       alert("Error al actualizar la publicación.");
