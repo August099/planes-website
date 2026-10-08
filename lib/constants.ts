@@ -102,3 +102,5 @@ export function formatEnum(
     .replace(/_/g, " ")
     .replace(/(?:^|\s)\S/g, (a) => a.toUpperCase());
 }
+// Miembros fundadores: los asigna el admin a mano desde /admin/users (VA-58).
+export const FOUNDING_MEMBER_LIMIT = 50;

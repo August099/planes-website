@@ -10,7 +10,8 @@ import {
   ShieldAlert,
   Tag,
   Receipt,
-  FileWarning
+  FileWarning,
+  Users
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
@@ -30,6 +31,7 @@ export default async function AdminLayout({
   const navItems = [
     { label: "Resumen", href: "/admin", icon: BarChart3 },
     { label: "Publicaciones", href: "/admin/listings", icon: Plane },
+    { label: "Usuarios", href: "/admin/users", icon: Users },
     { label: "Búsquedas", href: "/admin/searches", icon: Search },
     { label: "Fuentes", href: "/admin/traffic", icon: Globe2 },
     { label: "Métricas", href: "/admin/kpi", icon: ListFilter },
