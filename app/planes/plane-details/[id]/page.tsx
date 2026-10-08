@@ -272,7 +272,7 @@ export default async function PlaneDetailsPage({
             {/* Descripción */}
               {aircraft.description && (
                 <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm mt-2">
-                  <h1 className="text-xl font-bold mb-3 text-[#001F58]">Descripción General</h1>
+                  <h2 className="text-xl font-bold mb-3 text-[#001F58]">Descripción General</h2>
                   <p className="whitespace-pre-line text-slate-700 text-sm leading-relaxed">{aircraft.description}</p>
                 </div>
               )}
@@ -288,7 +288,7 @@ export default async function PlaneDetailsPage({
                 <Separator />
 
                 <div>
-                  <h2 className="text-xl font-bold text-[#001F58]">{aircraft.title}</h2>
+                  <h1 className="text-xl font-bold text-[#001F58]">{aircraft.title}</h1>
                   <h3 className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</h3>
                 </div>
 
@@ -480,7 +480,7 @@ export default async function PlaneDetailsPage({
               <Separator />
 
               <div>
-                <h2 className="text-xl font-bold text-[#001F58]">{aircraft.title}</h2>
+                <p className="text-xl font-bold text-[#001F58]">{aircraft.title}</p>
                 <h3 className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</h3>
               </div>
 

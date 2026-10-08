@@ -149,9 +149,9 @@ export default async function SparePartDetailsPage({
       <div className="hidden print:block font-sans text-black p-4 space-y-6 max-w-4xl mx-auto">
         <div className="flex justify-between items-end border-b-2 border-black pb-3">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 uppercase">
+            <p className="text-xl font-bold tracking-tight text-slate-900 uppercase">
               Ventas Aeronáuticas
-            </h1>
+            </p>
             <p className="text-xs text-slate-500">Ficha Técnica de Repuesto</p>
           </div>
           <div className="text-right text-xs">
@@ -242,7 +242,7 @@ export default async function SparePartDetailsPage({
             {/* 2. DESCRIPCIÓN GENERAL (Ubicada inmediatamente debajo de las imágenes) */}
             {sparePart.description && (
               <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
-                <h1 className="text-xl font-bold mb-3 text-[#001F58]">Descripción General</h1>
+                <h2 className="text-xl font-bold mb-3 text-[#001F58]">Descripción General</h2>
                 <p className="whitespace-pre-line text-slate-700 text-sm leading-relaxed">
                   {sparePart.description}
                 </p>
@@ -265,7 +265,7 @@ export default async function SparePartDetailsPage({
                 <Separator />
 
                 <div>
-                  <h2 className="text-xl font-bold text-[#001F58]">{sparePart.title}</h2>
+                  <h1 className="text-xl font-bold text-[#001F58]">{sparePart.title}</h1>
                   <h3 className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">
                     {formattedPrice}
                   </h3>
@@ -412,7 +412,7 @@ export default async function SparePartDetailsPage({
               <Separator />
 
               <div>
-                <h2 className="text-xl font-bold text-[#001F58]">{sparePart.title}</h2>
+                <p className="text-xl font-bold text-[#001F58]">{sparePart.title}</p>
                 <h3 className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">
                   {formattedPrice}
                 </h3>
