@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 
 const faqs = [
@@ -8,6 +9,12 @@ const faqs = [
   { id: "pregunta-5", question: "Pregunta 5", answer: "Respuesta 5" },
   { id: "pregunta-6", question: "Pregunta 6", answer: "Respuesta 6" },
 ];
+
+export const metadata: Metadata = {
+  title: "Preguntas frecuentes",
+  description: "Respuestas sobre cómo comprar, vender y publicar aviones y repuestos aeronáuticos en Ventas Aeronáuticas.",
+  alternates: { canonical: "/faq" },
+};
 
 export default function FAQPage() {
   return (

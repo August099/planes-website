@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { SparePartCard } from "@/components/ui/SparePartCard";
@@ -13,6 +14,12 @@ function toArray(value: string | string[] | undefined): string[] {
   if (!value) return [];
   return Array.isArray(value) ? value : [value];
 }
+
+export const metadata: Metadata = {
+  title: "Repuestos aeronáuticos en venta",
+  description: "Repuestos, motores, hélices, aviónica y accesorios aeronáuticos en venta en Argentina. Buscá por categoría o número de parte.",
+  alternates: { canonical: "/spareparts" },
+};
 
 export default async function SparePartsPage({ searchParams }: Props) {
   const params = await searchParams;

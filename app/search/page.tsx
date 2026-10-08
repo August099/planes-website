@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
@@ -6,6 +7,12 @@ import Link from "next/link";
 interface Props {
   searchParams: Promise<{ q?: string; page?: string }>;
 }
+
+// Resultados de búsqueda internos: no se indexan.
+export const metadata: Metadata = {
+  title: "Resultados de búsqueda",
+  robots: { index: false, follow: true },
+};
 
 export default async function SearchResultsPage({ searchParams }: Props) {
   const params = await searchParams;

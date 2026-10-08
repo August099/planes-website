@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { 
@@ -10,6 +11,12 @@ import {
     Ticket,
     ShieldCheck
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Cómo publicar tu avión o repuesto",
+  description: "Paso a paso para publicar tu avión o repuesto en Ventas Aeronáuticas y llegar a compradores de todo el país.",
+  alternates: { canonical: "/howtopublish" },
+};
 
 export default function HowToPublishPage() {
     return (

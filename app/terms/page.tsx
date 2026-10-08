@@ -1,6 +1,13 @@
 // app/terms/page.tsx
+import type { Metadata } from "next";
 import Image from "next/image";
 import { TermsContent, termsSections } from "@/lib/terms-content";
+
+export const metadata: Metadata = {
+  title: "Términos y condiciones",
+  description: "Términos y condiciones de uso de Ventas Aeronáuticas, el marketplace de aviones y repuestos aeronáuticos de Argentina.",
+  alternates: { canonical: "/terms" },
+};
 
 export default function TerminosPage() {
   return (

@@ -5,7 +5,7 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://ventasaero
 export const SITE_NAME = "Ventas Aeronáuticas";
 
 export const SITE_DESCRIPTION =
-  "Comprá y vendé aviones, helicópteros y repuestos aeronáuticos en Argentina. Publicá gratis y contactá directo con el vendedor.";
+  "Comprá y vendé aviones, helicópteros y repuestos aeronáuticos en Argentina. Publicá tu aviso y contactá directo con el vendedor.";
 
 export const BRAND_COLORS = {
   blue: "#001F58",

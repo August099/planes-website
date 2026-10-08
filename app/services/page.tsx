@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import {
   Users,
@@ -8,6 +9,12 @@ import {
   Rocket,
   MessageSquareCode,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Servicios y comunidad aeronáutica",
+  description: "Pilotos, talleres, hangares, eventos y empresas del sector aeronáutico argentino, reunidos en Ventas Aeronáuticas.",
+  alternates: { canonical: "/services" },
+};
 
 export default function ServicesPage() {
   const upcomingServices = [

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { AircraftCard } from "@/components/ui/AircraftCard";
@@ -15,6 +16,12 @@ function toArray(value: string | string[] | undefined): string[] {
   if (!value) return [];
   return Array.isArray(value) ? value : [value];
 }
+
+export const metadata: Metadata = {
+  title: "Aviones en venta en Argentina",
+  description: "Aviones, helicópteros y aeronaves agrícolas en venta en Argentina. Filtrá por marca, modelo, año, horas y precio, y contactá directo con el vendedor.",
+  alternates: { canonical: "/planes" },
+};
 
 export default async function AvionesPage({ searchParams }: Props) {
   const params = await searchParams;

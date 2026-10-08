@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 
 const policySections = [
@@ -8,6 +9,12 @@ const policySections = [
   { id: "terceros", title: "5. Compartición de datos" },
   { id: "derechos", title: "6. Derechos del titular" },
 ];
+
+export const metadata: Metadata = {
+  title: "Política de privacidad",
+  description: "Cómo Ventas Aeronáuticas recopila, usa y protege los datos personales de sus usuarios.",
+  alternates: { canonical: "/privacy" },
+};
 
 export default function PrivacidadPage() {
   return (
