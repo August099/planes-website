@@ -15,11 +15,20 @@ function toArray(value: string | string[] | undefined): string[] {
   return Array.isArray(value) ? value : [value];
 }
 
-export const metadata: Metadata = {
-  title: "Repuestos aeronáuticos en venta",
-  description: "Repuestos, motores, hélices, aviónica y accesorios aeronáuticos en venta en Argentina. Buscá por categoría o número de parte.",
-  alternates: { canonical: "/spareparts" },
-};
+// Canonical: los filtros no generan URLs indexables propias (apuntan a /spareparts);
+// sin filtros, cada página del listado es su propia URL (/spareparts?page=N).
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
+  const hasFilters = Object.keys(params).some((key) => key !== "page");
+  const canonical = !hasFilters && page > 1 ? `/spareparts?page=${page}` : "/spareparts";
+
+  return {
+    title: "Repuestos aeronáuticos en venta",
+    description: "Repuestos, motores, hélices, aviónica y accesorios aeronáuticos en venta en Argentina. Buscá por categoría o número de parte.",
+    alternates: { canonical },
+  };
+}
 
 export default async function SparePartsPage({ searchParams }: Props) {
   const params = await searchParams;

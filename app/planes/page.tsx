@@ -17,11 +17,20 @@ function toArray(value: string | string[] | undefined): string[] {
   return Array.isArray(value) ? value : [value];
 }
 
-export const metadata: Metadata = {
-  title: "Aviones en venta en Argentina",
-  description: "Aviones, helicópteros y aeronaves agrícolas en venta en Argentina. Filtrá por marca, modelo, año, horas y precio, y contactá directo con el vendedor.",
-  alternates: { canonical: "/planes" },
-};
+// Canonical: los filtros no generan URLs indexables propias (apuntan a /planes);
+// sin filtros, cada página del listado es su propia URL (/planes?page=N).
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
+  const hasFilters = Object.keys(params).some((key) => key !== "page");
+  const canonical = !hasFilters && page > 1 ? `/planes?page=${page}` : "/planes";
+
+  return {
+    title: "Aviones en venta en Argentina",
+    description: "Aviones, helicópteros y aeronaves agrícolas en venta en Argentina. Filtrá por marca, modelo, año, horas y precio, y contactá directo con el vendedor.",
+    alternates: { canonical },
+  };
+}
 
 export default async function AvionesPage({ searchParams }: Props) {
   const params = await searchParams;
