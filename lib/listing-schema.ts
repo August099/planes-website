@@ -77,7 +77,8 @@ const engine = z.object({
   model: optionalText(100),
   engineHours: optionalInt("Horas del motor"),
   TBO: optionalInt("TBO"),
-  DURG: optionalInt("DURG"),
+  DURG: optionalInt("DURG / SMOH"),
+  horsepower: optionalInt("Potencia"),
   description: optionalText(500),
 });
 
@@ -104,6 +105,10 @@ export const aircraftListingSchema = z
     financing: z.boolean().default(false),
     trade: z.boolean().default(false),
     rent: z.boolean().default(false),
+    negotiable: z.boolean().default(false),
+    extraEquipment: optionalText(2000),
+    // Solo para Agrícola: en otras categorías el servidor lo descarta.
+    agEquipment: optionalText(2000),
     avDescription: optionalText(2000),
     avAaptoifr: z.boolean().default(false),
     avAutopilot: z.boolean().default(false),
@@ -215,6 +220,9 @@ export interface EditListingData {
     financing: boolean;
     trade: boolean;
     rent: boolean;
+    negotiable: boolean;
+    extraEquipment: string;
+    agEquipment: string;
     avDescription: string;
     avAaptoifr: boolean;
     avAutopilot: boolean;
@@ -230,7 +238,7 @@ export interface EditListingData {
     extDescription: string;
     description: string;
   };
-  engines?: { brand: string; model: string; engineHours: string; TBO: string; DURG: string; description: string }[];
+  engines?: { brand: string; model: string; engineHours: string; TBO: string; DURG: string; horsepower: string; description: string }[];
   propellers?: { brand: string; model: string; propellerHours: string; description: string }[];
   parts?: {
     title: string;

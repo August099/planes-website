@@ -62,8 +62,15 @@ const styles = StyleSheet.create({
   footer: { marginTop: 16, textAlign: "center", fontSize: 8, color: "#94a3b8" },
 });
 
-type EngineRow = { TBO: string | number | null; engineHours: number | null; brand: string | null; model: string | null };
-type PropellerRow = { propellerHours: number | null; model: string | null };
+type EngineRow = {
+  TBO: string | number | null;
+  engineHours: number | null;
+  DURG: number | null;
+  horsepower: number | null;
+  brand: string | null;
+  model: string | null;
+};
+type PropellerRow = { propellerHours: number | null; brand: string | null; model: string | null };
 
 type AircraftPDFProps = {
   aircraft: {
@@ -76,6 +83,10 @@ type AircraftPDFProps = {
     financing: boolean;
     trade: boolean;
     rent: boolean;
+    negotiable: boolean;
+    extraEquipment: string | null;
+    agEquipment: string | null;
+    categoryId: string;
     description: string | null;
     city: string;
     province: string;
@@ -216,6 +227,18 @@ export function AircraftPDF({
                         <Text>{e.engineHours} hs</Text>
                       </View>
                     )}
+                    {e.DURG != null && (
+                      <View style={styles.row}>
+                        <Text style={styles.label}>DURG / SMOH:</Text>
+                        <Text>{e.DURG} hs</Text>
+                      </View>
+                    )}
+                    {e.horsepower != null && (
+                      <View style={styles.row}>
+                        <Text style={styles.label}>Potencia:</Text>
+                        <Text>{e.horsepower} HP</Text>
+                      </View>
+                    )}
                     {e.brand && (
                       <View style={styles.row}>
                         <Text style={styles.label}>Marca:</Text>
@@ -246,6 +269,12 @@ export function AircraftPDF({
                         <Text>{p.propellerHours} hs</Text>
                       </View>
                     )}
+                    {p.brand && (
+                      <View style={styles.row}>
+                        <Text style={styles.label}>Marca:</Text>
+                        <Text>{p.brand}</Text>
+                      </View>
+                    )}
                     {p.model && (
                       <View style={styles.row}>
                         <Text style={styles.label}>Modelo:</Text>
@@ -260,7 +289,7 @@ export function AircraftPDF({
 
           {/* Columna derecha: negociación + vendedor + descripción */}
           <View style={styles.column}>
-            {(aircraft.financing || aircraft.trade || aircraft.rent) && (
+            {(aircraft.financing || aircraft.trade || aircraft.rent || aircraft.negotiable) && (
               <View style={styles.box}>
                 <Text style={styles.boxTitle}>Opciones de Negociación</Text>
                 <View style={styles.badgesRow}>
@@ -268,6 +297,7 @@ export function AircraftPDF({
                     <Text style={[styles.badge, styles.badgeFinancing]}>Acepta Financiación</Text>
                   )}
                   {aircraft.trade && <Text style={[styles.badge, styles.badgeTrade]}>Acepta Permuta</Text>}
+                  {aircraft.negotiable && <Text style={[styles.badge, styles.badgeFinancing]}>Precio negociable</Text>}
                   {aircraft.rent && (
                     <Text style={[styles.badge, styles.badgeRent]}>Disponible para Alquiler</Text>
                   )}
@@ -300,6 +330,20 @@ export function AircraftPDF({
                 </View>
               )}
             </View>
+
+            {aircraft.extraEquipment && (
+              <View style={styles.box}>
+                <Text style={styles.boxTitle}>Equipamiento adicional</Text>
+                <Text style={styles.descriptionText}>{aircraft.extraEquipment}</Text>
+              </View>
+            )}
+
+            {aircraft.categoryId === "A" && aircraft.agEquipment && (
+              <View style={styles.box}>
+                <Text style={styles.boxTitle}>Implementos agrícolas</Text>
+                <Text style={styles.descriptionText}>{aircraft.agEquipment}</Text>
+              </View>
+            )}
 
             {aircraft.description && (
               <View style={styles.box}>

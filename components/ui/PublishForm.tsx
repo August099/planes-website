@@ -77,6 +77,7 @@ interface EngineInput {
     engineHours: string;
     TBO: string;
     DURG: string;
+    horsepower: string;
     description: string;
 }
 
@@ -228,6 +229,9 @@ export default function PublishForm({
         financing: false,
         trade: false,
         rent: false,
+        negotiable: false,
+        extraEquipment: "",
+        agEquipment: "",
         avDescription: "",
         avAaptoifr: false,
         avAutopilot: false,
@@ -250,14 +254,21 @@ export default function PublishForm({
     const selectedGroup = categoryDef(aircraftForm.categoryId)?.group ?? pendingGroup;
     const selectedEngine = categoryDef(aircraftForm.categoryId)?.engine ?? null;
 
+    // Nueva categoría + limpieza de "Implementos agrícolas" si deja de ser Agrícola (VA-54).
+    const withCategory = <T extends { categoryId: string; agEquipment: string }>(prev: T, categoryId: string): T => ({
+        ...prev,
+        categoryId,
+        agEquipment: categoryId === "A" ? prev.agEquipment : "",
+    });
+
     const handleGroupChange = (group: string) => {
         setPendingGroup(group);
         // Monomotor/Bimotor: se conserva la motorización si ya estaba elegida.
-        setAircraftForm((prev) => ({ ...prev, categoryId: resolveCategoryId(group, categoryDef(prev.categoryId)?.engine) }));
+        setAircraftForm((prev) => withCategory(prev, resolveCategoryId(group, categoryDef(prev.categoryId)?.engine)));
     };
 
     const handleEngineChange = (engine: EngineKind) => {
-        setAircraftForm((prev) => ({ ...prev, categoryId: resolveCategoryId(selectedGroup, engine) }));
+        setAircraftForm((prev) => withCategory(prev, resolveCategoryId(selectedGroup, engine)));
     };
 
     useEffect(() => {
@@ -335,11 +346,10 @@ export default function PublishForm({
       const targetCategory = foundModel?.defaultCategoryId || aircraftForm.categoryId;
       setSelectedModelVariants(foundModel?.variants || []);
       setAircraftForm((prev) => ({
-        ...prev,
+        ...withCategory(prev, targetCategory),
         modelId,
         subModelId: "",
         customModel: "",
-        categoryId: targetCategory, 
       }));
     };
 
@@ -348,13 +358,12 @@ export default function PublishForm({
       const currentModel = selectedBrandModels.find((m) => m.id === aircraftForm.modelId);
       const targetCategory = foundVariant?.categoryOverride || currentModel?.defaultCategoryId || aircraftForm.categoryId;
       setAircraftForm((prev) => ({
-        ...prev,
+        ...withCategory(prev, targetCategory),
         subModelId,
-        categoryId: targetCategory,
       }));
     };
 
-    const addEngine = () => setEngines([...engines, { brand: "", model: "", engineHours: "", TBO: "", DURG: "", description: "" }]);
+    const addEngine = () => setEngines([...engines, { brand: "", model: "", engineHours: "", TBO: "", DURG: "", horsepower: "", description: "" }]);
     const removeEngine = (index: number) => {
         const updatedEngines = engines.filter((_, i) => i !== index);
         setEngines(updatedEngines);
@@ -541,6 +550,9 @@ export default function PublishForm({
             financing: aircraftForm.financing,
             trade: aircraftForm.trade,
             rent: aircraftForm.rent,
+            negotiable: aircraftForm.negotiable,
+            extraEquipment: aircraftForm.extraEquipment,
+            agEquipment: aircraftForm.categoryId === "A" ? aircraftForm.agEquipment : "",
             avDescription: aircraftForm.avDescription,
             avAaptoifr: aircraftForm.avAaptoifr,
             avAutopilot: aircraftForm.avAutopilot,
@@ -891,6 +903,7 @@ export default function PublishForm({
                                                     <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.financing} onChange={e => setAircraftForm({...aircraftForm, financing: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Permite Financiación</label>
                                                     <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.trade} onChange={e => setAircraftForm({...aircraftForm, trade: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Acepta Permuta</label>
                                                     <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.rent} onChange={e => setAircraftForm({...aircraftForm, rent: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Disponible p/ Alquiler</label>
+                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.negotiable} onChange={e => setAircraftForm({...aircraftForm, negotiable: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Precio negociable</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -930,6 +943,21 @@ export default function PublishForm({
                                             </div>
                                         </div>
 
+                                        {/* EQUIPAMIENTO ADICIONAL */}
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Equipamiento adicional (opcional)</h4>
+                                            <textarea rows={3} placeholder={"Un ítem por línea, por ejemplo:\nEncendido electrónico\nSlats\nCubiertas Alaskan 38\""} value={aircraftForm.extraEquipment} onChange={e => setAircraftForm({...aircraftForm, extraEquipment: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-sm" />
+                                            <p className="text-[10px] text-slate-500">Cada línea se muestra como un ítem de la lista en tu aviso.</p>
+                                        </div>
+
+                                        {/* IMPLEMENTOS AGRÍCOLAS: solo en categoría Agrícola */}
+                                        {aircraftForm.categoryId === "A" && (
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Implementos agrícolas (opcional)</h4>
+                                            <textarea rows={3} placeholder="Ej: Tolva de 1.500 l, barra de 18 m, banderillero satelital..." value={aircraftForm.agEquipment} onChange={e => setAircraftForm({...aircraftForm, agEquipment: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-sm" />
+                                        </div>
+                                        )}
+
                                         {/* MOTOR */}
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
                                             <div className="flex justify-between items-center">
@@ -946,7 +974,9 @@ export default function PublishForm({
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Modelo</label><input type="text" placeholder="Ej: O-320" value={eng.model} onChange={e => updateEngine(idx, "model", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO{requiredMark("TBO", aircraftForm.categoryId)}</label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.TBO`]} /></div>
-                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">DURG</label><input type="number" min="0" placeholder="Ej: 500" value={eng.DURG} onChange={e => updateEngine(idx, "DURG", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">DURG / SMOH (hs desde última revisión general)</label><input type="number" min="0" placeholder="Ej: 500" value={eng.DURG} onChange={e => updateEngine(idx, "DURG", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">Potencia (HP)</label><input type="number" min="0" placeholder="Ej: 150" value={eng.horsepower} onChange={e => updateEngine(idx, "horsepower", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">Horas del motor</label><input type="number" min="0" placeholder="Ej: 2200" value={eng.engineHours} onChange={e => updateEngine(idx, "engineHours", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div className="col-span-2"><label className="text-[10px] font-bold uppercase mb-1 block">Descripción Adicional</label><input type="text" placeholder="Detalles de cilindros, overhaul o accesorios." value={eng.description} onChange={e => updateEngine(idx, "description", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                 </div>
                                             ))}
@@ -997,6 +1027,15 @@ export default function PublishForm({
                                                 Paso 3: Fotos y Documentos
                                             </h3>
                                             <p className="text-xs text-slate-500 mt-1">Mostrale al comprador el estado real de tu aeronave. La primera foto será la portada.</p>
+                                            <ul className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 list-disc pl-5 text-[11px] text-slate-500">
+                                                <li>Portada: ¾ de frente</li>
+                                                <li>¾ trasero</li>
+                                                <li>Laterales</li>
+                                                <li>Tablero</li>
+                                                <li>Tapizado</li>
+                                                <li>Motor</li>
+                                                <li>Detalles</li>
+                                            </ul>
                                         </div>
                                         
                                         <div>
@@ -1055,7 +1094,7 @@ export default function PublishForm({
                                                     <FieldError message={fieldErrors.certified} />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] font-bold uppercase mb-1">Fecha de habilitación anual</label>
+                                                    <label className="block text-[10px] font-bold uppercase mb-1">Habilitado hasta (vencimiento del anual)</label>
                                                     <input type="date" value={aircraftForm.certDate} onChange={e => setAircraftForm({...aircraftForm, certDate: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 text-sm bg-white" />
                                                     <FieldError message={fieldErrors.certDate} />
                                                 </div>

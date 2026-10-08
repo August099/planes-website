@@ -97,6 +97,10 @@ function aircraftFields(data: AircraftListing, categoryId: string) {
     financing: data.financing,
     trade: data.trade,
     rent: data.rent,
+    negotiable: data.negotiable,
+    extraEquipment: data.extraEquipment || null,
+    // "Implementos agrícolas" solo existe en la categoría Agrícola (VA-54).
+    agEquipment: categoryId === "A" ? data.agEquipment || null : null,
     avDescription: data.avDescription || null,
     avAaptoifr: data.avAaptoifr,
     avAutopilot: data.avAutopilot,
@@ -118,14 +122,15 @@ function engineRows(data: AircraftListing) {
     engineHours: e.engineHours ?? null,
     TBO: e.TBO ?? null,
     DURG: e.DURG ?? null,
+    horsepower: e.horsepower ?? null,
     description: e.description || null,
   }));
 }
 
 function propellerRows(data: AircraftListing) {
   return data.propellers.map((p) => ({
-    // La marca va dentro del modelo hasta que tenga su propio campo (VA-54).
-    model: [p.brand, p.model].filter(Boolean).join(" ") || null,
+    brand: p.brand || null,
+    model: p.model || null,
     propellerHours: p.propellerHours ?? null,
     description: p.description || null,
   }));

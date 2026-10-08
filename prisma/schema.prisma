@@ -216,6 +216,9 @@ model Aircraft {
   financing        Boolean             @default(false)
   trade            Boolean             @default(false)
   rent             Boolean             @default(false)
+  negotiable       Boolean             @default(false)
+  extraEquipment   String?
+  agEquipment      String?
   avDescription    String?
   avAaptoifr       Boolean             @default(false)
   avAutopilot      Boolean             @default(false)
@@ -271,6 +274,7 @@ model AircraftEngine {
   engineHours Int?
   TBO         Int?
   DURG        Int?
+  horsepower  Int?
   brand       String?
   model       String?
   description String?
@@ -281,6 +285,7 @@ model AircraftPropeller {
   id             String   @id @default(cuid())
   aircraftId     String
   propellerHours Int?
+  brand          String?
   model          String?
   description    String?
   aircraft       Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)

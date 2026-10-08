@@ -50,6 +50,9 @@ export async function loadListingForEdit(id: string, type: "aircraft" | "parts")
         financing: a.financing,
         trade: a.trade,
         rent: a.rent,
+        negotiable: a.negotiable,
+        extraEquipment: a.extraEquipment ?? "",
+        agEquipment: a.agEquipment ?? "",
         avDescription: a.avDescription ?? "",
         avAaptoifr: a.avAaptoifr,
         avAutopilot: a.avAutopilot,
@@ -71,11 +74,12 @@ export async function loadListingForEdit(id: string, type: "aircraft" | "parts")
         engineHours: str(e.engineHours),
         TBO: str(e.TBO),
         DURG: str(e.DURG),
+        horsepower: str(e.horsepower),
         description: e.description ?? "",
       })),
-      // La marca de la hélice hoy se guarda dentro del modelo (VA-54).
+      // Avisos anteriores a VA-54 tienen la marca dentro de "model" (brand vacío).
       propellers: a.propeller.map((p) => ({
-        brand: "",
+        brand: p.brand ?? "",
         model: p.model ?? "",
         propellerHours: str(p.propellerHours),
         description: p.description ?? "",
