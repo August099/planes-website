@@ -20,14 +20,18 @@ import Image from "next/image";
 import { X, Maximize } from "lucide-react";
 
 type GalleryProps = {
-  images: { url: string; alt?: string }[];
+  images: { url: string; alt?: string | null }[];
+  // Título del aviso: se usa para el alt de cada foto ("{título} – foto {n}").
+  title: string;
 };
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 6;
 const STEP = 0.15;
 
-export function AircraftGallery({ images }: GalleryProps) {
+export function AircraftGallery({ images, title }: GalleryProps) {
+  const photoAlt = (image: { alt?: string | null }, index: number) => image.alt || `${title} – foto ${index + 1}`;
+
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const swiperRef = useRef<SwiperType | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -136,7 +140,7 @@ export function AircraftGallery({ images }: GalleryProps) {
               <div className="relative w-full h-full flex items-center justify-center group swiper-zoom-container">
                 <Image
                   src={image.url}
-                  alt={image.alt ?? "Foto del avión"}
+                  alt={photoAlt(image, index)}
                   width={1200}
                   height={900}
                   priority={index === 0}
@@ -176,7 +180,7 @@ export function AircraftGallery({ images }: GalleryProps) {
                   <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-transparent border-0 shadow-none">
                     <Image
                       src={image.url}
-                      alt={image.alt ?? "Miniatura"}
+                      alt={photoAlt(image, index)}
                       fill
                       className="object-cover rounded"
                     />
@@ -222,7 +226,7 @@ export function AircraftGallery({ images }: GalleryProps) {
                   <div className="swiper-zoom-container w-full h-full flex items-center justify-center">
                     <Image
                       src={image.url}
-                      alt={image.alt ?? "Imagen ampliada"}
+                      alt={photoAlt(image, index)}
                       width={1600}
                       height={1200}
                       className="object-contain max-w-full max-h-[90vh]"

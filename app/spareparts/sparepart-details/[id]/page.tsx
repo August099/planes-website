@@ -242,7 +242,7 @@ export default async function SparePartDetailsPage({
         <section className="flex flex-col lg:flex-row items-start gap-8">
           <div className="w-full lg:w-2/3 flex flex-col gap-8">
             {/* 1. Galería de Imágenes */}
-            <AircraftGallery images={sparePart.images} />
+            <AircraftGallery images={sparePart.images} title={sparePart.title} />
 
             {/* 2. DESCRIPCIÓN GENERAL (Ubicada inmediatamente debajo de las imágenes) */}
             {sparePart.description && (

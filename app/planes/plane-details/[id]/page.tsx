@@ -190,7 +190,7 @@ export default async function PlaneDetailsPage({
             <div className="grid grid-cols-3 gap-3">
               {aircraft.images.slice(0, 3).map((img: any, idx: number) => (
                 <div key={img.id || idx} className="h-36 relative rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
-                  <img src={img.url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                  <img src={img.url} alt={`${aircraft.title} – foto ${idx + 1}`} className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
@@ -273,7 +273,7 @@ export default async function PlaneDetailsPage({
       <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
         <section className="flex flex-col lg:flex-row items-start gap-8">
           <div className="w-full lg:w-2/3 flex flex-col gap-8">
-            <AircraftGallery images={aircraft.images} />
+            <AircraftGallery images={aircraft.images} title={aircraft.title} />
             {/* Descripción */}
               {aircraft.description && (
                 <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm mt-2">
