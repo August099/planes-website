@@ -272,6 +272,7 @@ export async function uploadBrandLogoAction(formData: FormData) {
 // ==========================================
 
 export async function createFilterGroupAction(name: string, categoryIds: string[]) {
+  await verifyAdmin();
   const slug = name.toLowerCase().trim().replace(/\s+/g, "-");
   await prisma.filterGroup.create({
     data: { name, slug, categories: { connect: categoryIds.map((id) => ({ id })) } },
@@ -280,6 +281,7 @@ export async function createFilterGroupAction(name: string, categoryIds: string[
 }
 
 export async function updateFilterGroupAction(id: string, name: string, categoryIds: string[]) {
+  await verifyAdmin();
   await prisma.filterGroup.update({
     where: { id },
     data: { name, categories: { set: categoryIds.map((id) => ({ id })) } },
@@ -288,6 +290,7 @@ export async function updateFilterGroupAction(id: string, name: string, category
 }
 
 export async function deleteFilterGroupAction(id: string) {
+  await verifyAdmin();
   await prisma.filterGroup.delete({ where: { id } });
   revalidatePath("/admin/taxonomy");
 }
@@ -304,6 +307,7 @@ export async function createFilterAction(
   parentId?: string,
   triggerOptionValue?: string
 ) {
+  await verifyAdmin();
   const slug = name.toLowerCase().trim().replace(/\s+/g, "-");
   await prisma.filter.create({
     data: {
@@ -330,6 +334,7 @@ export async function createFilterAction(
 }
 
 export async function deleteFilterAction(id: string) {
+  await verifyAdmin();
   await prisma.filter.delete({ where: { id } });
   revalidatePath("/admin/taxonomy");
 }
