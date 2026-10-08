@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { HowItWorks } from "@/components/ui/HowItWorks";
@@ -11,6 +12,11 @@ import HomeServicesCards from "@/components/ui/HomeServiceCards";
 import { FeaturedBrands } from "@/components/ui/FeaturedBrands";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationAndWebsiteJsonLd } from "@/lib/structured-data";
+
+// Título y descripción salen del layout; acá solo el canonical.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function HomePage() {
   // 1. Obtener usuario actual
