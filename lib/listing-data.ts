@@ -4,6 +4,18 @@ import { prisma } from "@/lib/prisma";
 
 // React.cache: generateMetadata y la página del detalle comparten una sola consulta por request.
 
+// Datos públicos del vendedor que muestra el detalle. Viene en la misma consulta que la
+// publicación (antes era una query aparte, en serie, y traía la fila entera del usuario; VA-13).
+const SELLER_PUBLIC_SELECT = {
+  id: true,
+  name: true,
+  email: true,
+  phone: true,
+  image: true,
+  city: true,
+  province: true,
+} as const;
+
 export const getAircraftDetail = cache(async (id: string) => {
   return prisma.aircraft.findUnique({
     where: { id },
@@ -16,6 +28,7 @@ export const getAircraftDetail = cache(async (id: string) => {
       model: true,
       subModel: true,
       category: true,
+      seller: { select: SELLER_PUBLIC_SELECT },
       questions: {
         orderBy: { createdAt: "desc" },
         include: { user: { select: { name: true } } },
@@ -41,6 +54,7 @@ export const getSparePartDetail = cache(async (id: string) => {
           },
         },
       },
+      seller: { select: SELLER_PUBLIC_SELECT },
       questions: {
         orderBy: { createdAt: "desc" },
         include: { user: { select: { name: true } } },

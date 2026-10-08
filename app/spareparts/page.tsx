@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { getSparePartCategories } from "@/lib/cached-data";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 import { SparePartFiltersWrapper } from "@/components/ui/SparePartFiltersWrapper";
@@ -92,9 +93,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
   }
 
   if (categoryParam.length > 0) {
-    const allCategories = await prisma.category.findMany({
-      select: { id: true, parentId: true },
-    });
+    const allCategories = await getSparePartCategories();
 
     function getDescendantIds(id: string): string[] {
       const children = allCategories.filter((c) => c.parentId === id);

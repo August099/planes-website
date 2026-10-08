@@ -17,8 +17,12 @@ export const metadata: Metadata = {
 export default async function SearchResultsPage({ searchParams }: Props) {
   const params = await searchParams;
   const query = params.q || "";
-  const currentPage = Number(params.page) || 1;
+  const currentPage = Math.max(1, Math.floor(Number(params.page)) || 1);
   const itemsPerPage = 20;
+  const skip = (currentPage - 1) * itemsPerPage;
+  // Aviones y repuestos se mezclan por fecha: para la página N alcanza con las primeras
+  // N × 20 de cada tabla (antes se traían todas, sin límite; VA-13).
+  const takeEach = skip + itemsPerPage;
 
   const tokens = query.trim().toLowerCase().split(" ").filter((t) => t.length > 0);
 
@@ -65,6 +69,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
         images: { orderBy: { order: "asc" }, take: 1 },
       },
       orderBy: { createdAt: "desc" },
+      take: takeEach,
     }),
     prisma.aircraft.count({ where: aircraftWhere }),
     prisma.sparePart.findMany({
@@ -74,6 +79,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
         images: { orderBy: { order: "asc" }, take: 1 },
       },
       orderBy: { createdAt: "desc" },
+      take: takeEach,
     }),
     prisma.sparePart.count({ where: sparePartWhere }),
   ]);
@@ -91,7 +97,6 @@ export default async function SearchResultsPage({ searchParams }: Props) {
 
   const totalItems = totalAircrafts + totalSpareParts;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const skip = (currentPage - 1) * itemsPerPage;
   const paginatedItems = allItems.slice(skip, skip + itemsPerPage);
 
   const hasNextPage = currentPage < totalPages;

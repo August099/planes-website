@@ -2,7 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { unansweredQuestionsTag } from "@/lib/cached-data";
 
 const MAX_TEXT_LENGTH = 1000;
 
@@ -62,6 +63,7 @@ export async function answerQuestionAction({
     },
   });
 
+  updateTag(unansweredQuestionsTag(sellerId));
   safeRevalidate(path);
 
   return { success: true };
@@ -119,6 +121,7 @@ export async function createQuestionAction({
     },
   });
 
+  updateTag(unansweredQuestionsTag(listing.sellerId));
   safeRevalidate(path);
 
   return { success: true };

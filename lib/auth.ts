@@ -9,6 +9,8 @@ import { prisma } from "@/lib/prisma";
 
 // En Auth.js v5 un throw común en authorize() llega al cliente como "CredentialsSignin".
 // Con CredentialsSignin + code, el login recibe res.code === "EmailNotVerified" (VA-20).
+const ADMIN_RECHECK_MS = 5 * 60 * 1000;
+
 class EmailNotVerifiedError extends CredentialsSignin {
   code = "EmailNotVerified";
 }
@@ -78,19 +80,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
       }
 
-      if (token?.email) {
+      // isAdmin se consultaba en cada request (VA-13). Ahora: al iniciar sesión, con
+      // update() y, para que quitar un admin no tarde días, como mucho cada 5 minutos.
+      const checkedAt = typeof token.isAdminCheckedAt === "number" ? token.isAdminCheckedAt : 0;
+      const stale = Date.now() - checkedAt > ADMIN_RECHECK_MS;
+      if (token?.email && (user || trigger === "update" || stale)) {
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
           select: { isAdmin: true },
         });
-        if (dbUser) {
-          token.isAdmin = dbUser.isAdmin;
-        }
+        token.isAdmin = dbUser?.isAdmin ?? false;
+        token.isAdminCheckedAt = Date.now();
       }
 
       return token;

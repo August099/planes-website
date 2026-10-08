@@ -53,17 +53,12 @@ export default async function SparePartDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await auth();
-
-  const sparePart = await getSparePartDetail(id);
+  // Sesión y publicación (con el vendedor incluido) en paralelo (VA-13).
+  const [session, sparePart] = await Promise.all([auth(), getSparePartDetail(id)]);
 
   if (!sparePart) notFound();
 
-  const seller = await prisma.user.findUnique({
-    where: { id: sparePart.sellerId },
-  });
-
-  if (!seller) notFound();
+  const seller = sparePart.seller;
 
   // Comprobar si la publicación está guardada en los favoritos del usuario actual
   let isFavoriteInitial = false;

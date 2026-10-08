@@ -3,7 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { validateImage } from "@/lib/upload-validation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { AIRCRAFT_TAXONOMY_TAG, SPAREPART_CATEGORIES_TAG } from "@/lib/cached-data";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -32,6 +33,7 @@ export async function createAircraftCategoryAction(name: string) {
   });
 
   revalidatePath("/admin/taxonomy");
+  updateTag(AIRCRAFT_TAXONOMY_TAG);
   return { success: true };
 }
 
@@ -45,6 +47,7 @@ export async function updateAircraftCategoryAction(id: string, name: string) {
   });
 
   revalidatePath("/admin/taxonomy");
+  updateTag(AIRCRAFT_TAXONOMY_TAG);
   return { success: true };
 }
 
@@ -52,6 +55,7 @@ export async function deleteAircraftCategoryAction(id: string) {
   await verifyAdmin();
   await prisma.aircraftCategory.delete({ where: { id } });
   revalidatePath("/admin/taxonomy");
+  updateTag(AIRCRAFT_TAXONOMY_TAG);
   return { success: true };
 }
 
@@ -75,6 +79,7 @@ export async function createAircraftBrandAction(name: string, logoUrl?: string) 
   });
 
   revalidatePath("/admin/taxonomy");
+  updateTag(AIRCRAFT_TAXONOMY_TAG);
   revalidatePath("/"); // Limpia caché de la Home para actualizar marcas destacadas
   return { success: true };
 }
@@ -92,6 +97,7 @@ export async function updateAircraftBrandAction(id: string, name: string, logoUr
   });
 
   revalidatePath("/admin/taxonomy");
+  updateTag(AIRCRAFT_TAXONOMY_TAG);
   revalidatePath("/"); // Limpia caché de la Home
   return { success: true };
 }
@@ -100,6 +106,7 @@ export async function deleteAircraftBrandAction(id: string) {
   await verifyAdmin();
   await prisma.aircraftBrand.delete({ where: { id } });
   revalidatePath("/admin/taxonomy");
+  updateTag(AIRCRAFT_TAXONOMY_TAG);
   return { success: true };
 }
 
@@ -112,6 +119,7 @@ export async function createAircraftModelAction(brandId: string, name: string) {
   });
 
   revalidatePath("/admin/taxonomy");
+  updateTag(AIRCRAFT_TAXONOMY_TAG);
   return { success: true };
 }
 
@@ -125,6 +133,7 @@ export async function updateAircraftModelAction(id: string, name: string) {
   });
 
   revalidatePath("/admin/taxonomy");
+  updateTag(AIRCRAFT_TAXONOMY_TAG);
   return { success: true };
 }
 
@@ -132,6 +141,7 @@ export async function deleteAircraftModelAction(id: string) {
   await verifyAdmin();
   await prisma.aircraftModel.delete({ where: { id } });
   revalidatePath("/admin/taxonomy");
+  updateTag(AIRCRAFT_TAXONOMY_TAG);
   return { success: true };
 }
 
@@ -144,6 +154,7 @@ export async function createAircraftSubModelAction(modelId: string, name: string
   });
 
   revalidatePath("/admin/taxonomy");
+  updateTag(AIRCRAFT_TAXONOMY_TAG);
   return { success: true };
 }
 
@@ -157,6 +168,7 @@ export async function updateAircraftSubModelAction(id: string, name: string) {
   });
 
   revalidatePath("/admin/taxonomy");
+  updateTag(AIRCRAFT_TAXONOMY_TAG);
   return { success: true };
 }
 
@@ -164,6 +176,7 @@ export async function deleteAircraftSubModelAction(id: string) {
   await verifyAdmin();
   await prisma.aircraftSubModel.delete({ where: { id } });
   revalidatePath("/admin/taxonomy");
+  updateTag(AIRCRAFT_TAXONOMY_TAG);
   return { success: true };
 }
 
@@ -193,6 +206,7 @@ export async function createSparePartCategoryAction(name: string, parentId?: str
   });
 
   revalidatePath("/admin/taxonomy");
+  updateTag(SPAREPART_CATEGORIES_TAG);
   return { success: true };
 }
 
@@ -209,6 +223,7 @@ export async function updateSparePartCategoryAction(id: string, name: string, ic
   });
 
   revalidatePath("/admin/taxonomy");
+  updateTag(SPAREPART_CATEGORIES_TAG);
   revalidatePath("/"); // <-- Limpia la caché de la Home para que se actualice el carrusel
   return { success: true };
 }
@@ -236,6 +251,7 @@ export async function deleteSparePartCategoryAction(id: string) {
 
   await prisma.category.delete({ where: { id } }); // acá sí, borra toda la rama de categorías vacías
   revalidatePath("/admin/taxonomy");
+  updateTag(SPAREPART_CATEGORIES_TAG);
   return { success: true };
 }
 

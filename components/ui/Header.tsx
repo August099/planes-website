@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { User, Menu, ShieldCheck } from "lucide-react";
 import { auth, signOut } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { hasUnansweredQuestions as fetchHasUnanswered } from "@/lib/cached-data";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,21 +21,8 @@ export async function Header() {
   const sellLink = session?.user ? "/publish" : "/login";
   const isAdmin = Boolean((session?.user as any)?.isAdmin);
 
-  // Consultar si el usuario tiene preguntas recibidas sin responder
-  let hasUnansweredQuestions = false;
-
-  if (session?.user?.id) {
-    const unansweredCount = await prisma.question.count({
-      where: {
-        answer: null,
-        OR: [
-          { aircraft: { sellerId: session.user.id } },
-          { sparePart: { sellerId: session.user.id } },
-        ],
-      },
-    });
-    hasUnansweredQuestions = unansweredCount > 0;
-  }
+  // Preguntas recibidas sin responder (cacheado 60 s por usuario, VA-13)
+  const hasUnansweredQuestions = session?.user?.id ? await fetchHasUnanswered(session.user.id) : false;
 
   return (
     <HeaderWrapper>

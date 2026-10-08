@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
+import { getAircraftTaxonomy } from "@/lib/cached-data";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SortDropdown } from "@/components/ui/SortDropdown";
 import { AircraftFiltersWrapper } from "@/components/ui/AircraftFiltersWrapper";
@@ -87,28 +88,21 @@ export default async function AvionesPage({ searchParams }: Props) {
     }),
   };
 
-  const [aircrafts, totalAircrafts, categories, brands, userFavorites] = await Promise.all([
+  const [aircrafts, totalAircrafts, { categories, brands }, userFavorites] = await Promise.all([
     prisma.aircraft.findMany({
       where: whereClause,
       include: {
         category: { select: { id: true, name: true } },
-        images: { orderBy: { order: "asc" } },
+        // El carrusel de la card muestra hasta 5 (antes se traían todas, VA-13).
+        images: { orderBy: { order: "asc" }, take: 5 },
       },
       orderBy,
       skip,
       take: itemsPerPage,
     }),
     prisma.aircraft.count({ where: whereClause }),
-    prisma.aircraftCategory.findMany({ orderBy: { name: "asc" } }),
-    prisma.aircraftBrand.findMany({
-      orderBy: { name: "asc" },
-      include: {
-        models: {
-          orderBy: { name: "asc" },
-          include: { variants: { orderBy: { name: "asc" } } },
-        },
-      },
-    }),
+    // Taxonomía cacheada (VA-13)
+    getAircraftTaxonomy(),
     user
       ? prisma.favorite.findMany({
           where: { userId: user.id, aircraftId: { not: null } },

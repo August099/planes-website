@@ -56,10 +56,8 @@ export default async function PlaneDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await auth();
-  
-
-  const aircraft = await getAircraftDetail(id);
+  // Sesión y publicación (con el vendedor incluido) en paralelo (VA-13).
+  const [session, aircraft] = await Promise.all([auth(), getAircraftDetail(id)]);
 
   if (!aircraft) notFound();
 
@@ -92,11 +90,7 @@ export default async function PlaneDetailsPage({
     );
   }
 
-  const seller = await prisma.user.findUnique({
-    where: { id: aircraft.sellerId },
-  });
-
-  if (!seller) notFound();
+  const seller = aircraft.seller;
 
   let isFavoriteInitial = false;
   if (session?.user?.id) {

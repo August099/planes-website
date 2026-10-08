@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
+import { getAircraftTaxonomy, getSparePartCategories } from "@/lib/cached-data";
 import { HowItWorks } from "@/components/ui/HowItWorks";
 import { SellerCta } from "@/components/ui/SellerCta";
 import { TrustBlock } from "@/components/ui/TrustBlock";
@@ -25,7 +26,6 @@ export default async function HomePage() {
   // 2. Traer datos y favoritos en paralelo
   const [
     featuredAircraftsFromDb,
-    latestAircraftsFromDb,
     latestSparePartsFromDb,
     sparePartCategories,
     featuredBrandsFromDb,
@@ -42,18 +42,6 @@ export default async function HomePage() {
       orderBy: { createdAt: "desc" },
       take: 8,
     }),
-    // Últimas Aeronaves
-    prisma.aircraft.findMany({
-      where: { status: "ACTIVE" },
-      include: {
-        images: { orderBy: { order: "asc" }, take: 1 },
-        category: true,
-        brand: true,
-        model: true,
-      },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-    }),
     // Últimos Repuestos
     prisma.sparePart.findMany({
       where: { status: "ACTIVE" },
@@ -64,31 +52,13 @@ export default async function HomePage() {
       orderBy: { createdAt: "desc" },
       take: 6,
     }),
-    // Categorías de Repuestos
-    prisma.category.findMany({
-      where: { parentId: null },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        icon: true,
-      },
-      orderBy: { name: "asc" },
-    }),
-    // Marcas de Aeronaves con Logo
-    prisma.aircraftBrand.findMany({
-      where: {
-        logoUrl: {
-          not: null,
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        logoUrl: true,
-      },
-      orderBy: { name: "asc" },
-    }),
+    // Categorías raíz de repuestos y marcas con logo: salen de la taxonomía cacheada (VA-13)
+    getSparePartCategories().then((all) =>
+      all.filter((c) => c.parentId === null).map(({ id, name, slug, icon }) => ({ id, name, slug, icon }))
+    ),
+    getAircraftTaxonomy().then(({ brands }) =>
+      brands.filter((b) => b.logoUrl !== null).map(({ id, name, logoUrl }) => ({ id, name, logoUrl }))
+    ),
     // Favoritos del usuario logueado
     user
       ? prisma.favorite.findMany({
@@ -124,8 +94,9 @@ export default async function HomePage() {
     isFavoriteInitial: userFavAircraftIds.has(aircraft.id),
   }));
 
-  // Mapear aeronaves a ListingItem
-  const aircraftListings: ListingItem[] = latestAircraftsFromDb.map(
+  // Mapear aeronaves a ListingItem. "Últimas aeronaves" son las 6 primeras de la misma
+  // consulta de destacadas (antes eran dos queries idénticas, VA-13).
+  const aircraftListings: ListingItem[] = featuredAircraftsFromDb.slice(0, 6).map(
     (aircraft) => ({
       type: "AIRCRAFT",
       id: aircraft.id,
