@@ -150,6 +150,10 @@ export function ProfileView({
     setLoadingModal(true);
     try {
       const formData = new FormData(e.currentTarget);
+      // Los checkbox destildados no se envían: mandarlos explícitos para que se guarden como false.
+      e.currentTarget
+        .querySelectorAll<HTMLInputElement>('input[type="checkbox"][name]')
+        .forEach((input) => formData.set(input.name, input.checked ? "true" : "false"));
       formData.append("id", editingItem!.item.id);
       formData.append("listingType", editingItem!.type);
       formData.append("priceOnRequest", priceConsult.toString());

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { AircraftStatus, SparePartStatus, SparepartCondition, AircraftCondition, EngineType } from "@prisma/client";
+import { AircraftStatus, SparePartStatus, SparepartCondition, AircraftCondition, EngineType, Prisma } from "@prisma/client";
 import { assertListingOwner } from "@/lib/listing-auth";
 
 // Traduce los errores de assertListingOwner a un mensaje para el usuario.
@@ -387,14 +387,8 @@ export async function updateListingAction(formData: FormData) {
   try {
     const id = formData.get("id") as string;
     const listingType = formData.get("listingType") as "aircraft" | "sparepart";
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string;
-    const city = formData.get("city") as string;
-    const province = formData.get("province") as string;
-    const priceOnRequest = formData.get("priceOnRequest") === "true";
-    const price = priceOnRequest ? null : parseOptionalNumber(formData.get("price"));
 
-    if (!id || !title?.trim()) {
+    if (!id) {
       return { success: false, error: "Datos incompletos" };
     }
     if (listingType !== "aircraft" && listingType !== "sparepart") {
@@ -403,130 +397,152 @@ export async function updateListingAction(formData: FormData) {
 
     await assertListingOwner(id, listingType);
 
-    if (price !== null && (Number.isNaN(price) || price < 0)) {
-      return { success: false, error: "El precio debe ser un número mayor o igual a 0." };
+    // Solo se actualizan los campos que vienen en el formulario: lo que no se envía
+    // queda como está en la base (antes se pisaba con valores por defecto).
+    const has = (name: string) => formData.has(name);
+    const text = (name: string) => String(formData.get(name) ?? "").trim();
+    const bool = (name: string) => formData.get(name) === "true" || formData.get(name) === "on";
+
+    const common: {
+      title?: string;
+      description?: string;
+      city?: string;
+      province?: string;
+      price?: number | null;
+    } = {};
+
+    if (has("title")) {
+      if (!text("title")) return { success: false, error: "El título es obligatorio." };
+      common.title = text("title");
+    }
+    if (has("description")) common.description = text("description");
+    for (const field of ["city", "province"] as const) {
+      if (has(field)) {
+        if (!text(field)) return { success: false, error: "La ciudad y la provincia son obligatorias." };
+        common[field] = text(field);
+      }
+    }
+
+    if (formData.get("priceOnRequest") === "true") {
+      common.price = null;
+    } else if (has("price")) {
+      const price = parseOptionalNumber(formData.get("price"));
+      if (price !== null && (Number.isNaN(price) || price < 0)) {
+        return { success: false, error: "El precio debe ser un número mayor o igual a 0." };
+      }
+      common.price = price;
     }
 
     if (listingType === "aircraft") {
-      const year = Number(formData.get("year"));
-      const maxYear = new Date().getFullYear() + 1;
-      if (!Number.isInteger(year) || year < 1900 || year > maxYear) {
-        return { success: false, error: `El año debe estar entre 1900 y ${maxYear}.` };
+      const data: Prisma.AircraftUpdateInput = { ...common };
+
+      if (has("year")) {
+        const year = Number(formData.get("year"));
+        const maxYear = new Date().getFullYear() + 1;
+        if (!Number.isInteger(year) || year < 1900 || year > maxYear) {
+          return { success: false, error: `El año debe estar entre 1900 y ${maxYear}.` };
+        }
+        data.year = year;
       }
 
-      const totalTimeHours = parseOptionalNumber(formData.get("totalTimeHours")) ?? 0;
-      if (Number.isNaN(totalTimeHours) || totalTimeHours < 0) {
-        return { success: false, error: "Las horas totales deben ser un número mayor o igual a 0." };
+      if (has("totalTimeHours")) {
+        const totalTimeHours = parseOptionalNumber(formData.get("totalTimeHours")) ?? 0;
+        if (!Number.isInteger(totalTimeHours) || totalTimeHours < 0) {
+          return { success: false, error: "Las horas totales deben ser un número entero mayor o igual a 0." };
+        }
+        data.totalTimeHours = totalTimeHours;
       }
 
-      const conditionRaw = (formData.get("condition") as string) || "USADO";
-      if (!Object.values(AircraftCondition).includes(conditionRaw as AircraftCondition)) {
-        return { success: false, error: "Condición inválida." };
+      if (has("condition")) {
+        const condition = text("condition");
+        if (!Object.values(AircraftCondition).includes(condition as AircraftCondition)) {
+          return { success: false, error: "Condición inválida." };
+        }
+        data.condition = condition as AircraftCondition;
       }
-      const condition = conditionRaw as AircraftCondition;
 
-      const engineTypeRaw = (formData.get("engineType") as string) || "";
-      if (engineTypeRaw && !Object.values(EngineType).includes(engineTypeRaw as EngineType)) {
-        return { success: false, error: "Tipo de motor inválido." };
+      if (has("engineType")) {
+        const engineType = text("engineType");
+        if (engineType && !Object.values(EngineType).includes(engineType as EngineType)) {
+          return { success: false, error: "Tipo de motor inválido." };
+        }
+        data.engineType = (engineType as EngineType) || null;
       }
-      const engineType = (engineTypeRaw as EngineType) || undefined;
 
-      const financing = formData.get("financing") === "on" || formData.get("financing") === "true";
-      const trade = formData.get("trade") === "on" || formData.get("trade") === "true";
-      const rent = formData.get("rent") === "on" || formData.get("rent") === "true";
-
-      const avDescription = formData.get("avDescription") as string;
-      const avAaptoifr = formData.get("avAaptoifr") === "true" || formData.get("avAaptoifr") === "on";
-      const avAutopilot = formData.get("avAutopilot") === "true" || formData.get("avAutopilot") === "on";
-      const certified = formData.get("certified") === "true" || formData.get("certified") === "on";
-      const certDateRaw = formData.get("certDate") as string;
-      const certDate = certDateRaw ? new Date(certDateRaw) : undefined;
-      const plate = formData.get("plate") as string;
-
-      const intDescription = formData.get("intDescription") as string;
-      const extDescription = formData.get("extDescription") as string;
-      const passengersRaw = formData.get("passengers") as string;
-      const passengers = passengersRaw ? Number(passengersRaw) : undefined;
-      if (passengers !== undefined && (!Number.isInteger(passengers) || passengers < 0)) {
-        return { success: false, error: "La cantidad de pasajeros debe ser un número entero." };
+      if (has("passengers")) {
+        const passengers = parseOptionalNumber(formData.get("passengers"));
+        if (passengers !== null && (!Number.isInteger(passengers) || passengers < 0)) {
+          return { success: false, error: "La cantidad de pasajeros debe ser un número entero." };
+        }
+        data.passengers = passengers;
       }
-      if (certDate && Number.isNaN(certDate.getTime())) {
-        return { success: false, error: "Fecha de certificación inválida." };
-      }
-      const airconditioner = formData.get("airconditioner") === "true" || formData.get("airconditioner") === "on";
-      const oxygen = formData.get("oxygen") === "true" || formData.get("oxygen") === "on";
 
-      await prisma.aircraft.update({
-        where: { id },
-        data: {
-          title,
-          description,
-          city,
-          province,
-          price,
-          year,
-          totalTimeHours,
-          condition,
-          engineType,
-          financing,
-          trade,
-          rent,
-          avDescription: avDescription || undefined,
-          avAaptoifr,
-          avAutopilot,
-          certified,
-          certDate,
-          plate: plate || undefined,
-          intDescription: intDescription || undefined,
-          extDescription: extDescription || undefined,
-          passengers,
-          airconditioner,
-          oxygen,
-        },
-      });
+      if (has("certDate")) {
+        const certDateRaw = text("certDate");
+        const certDate = certDateRaw ? new Date(certDateRaw) : null;
+        if (certDate && Number.isNaN(certDate.getTime())) {
+          return { success: false, error: "Fecha de certificación inválida." };
+        }
+        data.certDate = certDate;
+      }
+
+      if (has("avDescription")) data.avDescription = text("avDescription");
+      for (const field of ["plate", "intDescription", "extDescription"] as const) {
+        if (has(field)) data[field] = text(field) || null;
+      }
+      for (const field of [
+        "financing",
+        "trade",
+        "rent",
+        "avAaptoifr",
+        "avAutopilot",
+        "certified",
+        "airconditioner",
+        "oxygen",
+      ] as const) {
+        if (has(field)) data[field] = bool(field);
+      }
+
+      await prisma.aircraft.update({ where: { id }, data });
 
       revalidatePath("/planes");
       revalidatePath(`/planes/plane-details/${id}`);
     } else {
-      const brand = formData.get("brand") as string;
-      const partNumber = formData.get("partNumber") as string;
-      const stock = parseOptionalNumber(formData.get("stock")) ?? 1;
-      if (!Number.isInteger(stock) || stock < 1) {
-        return { success: false, error: "El stock debe ser un número entero mayor o igual a 1." };
+      const data: Prisma.SparePartUpdateInput = { ...common };
+
+      if (has("stock")) {
+        const stock = parseOptionalNumber(formData.get("stock")) ?? 1;
+        if (!Number.isInteger(stock) || stock < 1) {
+          return { success: false, error: "El stock debe ser un número entero mayor o igual a 1." };
+        }
+        data.stock = stock;
       }
-      const inPesos = formData.get("inPesos") === "on" || formData.get("inPesos") === "true";
 
-      const conditionRaw = (formData.get("condition") as string) || "NUEVO";
-      const condition = (Object.values(SparepartCondition).includes(conditionRaw as SparepartCondition)
-        ? conditionRaw
-        : SparepartCondition.NUEVO) as SparepartCondition;
+      if (has("condition")) {
+        const condition = text("condition");
+        if (!Object.values(SparepartCondition).includes(condition as SparepartCondition)) {
+          return { success: false, error: "Condición inválida." };
+        }
+        data.condition = condition as SparepartCondition;
+      }
 
-      const aircraftsRaw = formData.get("aircrafts") as string;
-      let aircrafts: string[] | undefined = undefined;
-      if (aircraftsRaw) {
+      if (has("brand")) data.brand = text("brand") || null;
+      if (has("partNumber")) data.partNumber = text("partNumber") || null;
+      if (has("inPesos")) data.inPesos = bool("inPesos");
+
+      if (has("aircrafts")) {
         try {
-          aircrafts = JSON.parse(aircraftsRaw);
+          const aircrafts: unknown = JSON.parse(text("aircrafts") || "[]");
+          if (!Array.isArray(aircrafts) || !aircrafts.every((a) => typeof a === "string")) {
+            throw new Error();
+          }
+          data.aircrafts = aircrafts;
         } catch {
-          aircrafts = undefined;
+          return { success: false, error: "Lista de aeronaves inválida." };
         }
       }
 
-      await prisma.sparePart.update({
-        where: { id },
-        data: {
-          title,
-          brand: brand || undefined,
-          description,
-          city,
-          province,
-          price,
-          partNumber: partNumber || undefined,
-          stock,
-          inPesos,
-          condition,
-          aircrafts,
-        },
-      });
+      await prisma.sparePart.update({ where: { id }, data });
 
       revalidatePath("/spareparts");
       revalidatePath(`/spareparts/sparepart-details/${id}`);
