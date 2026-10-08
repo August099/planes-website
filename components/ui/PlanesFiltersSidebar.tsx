@@ -5,6 +5,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X, ChevronDown, ChevronRight, SlidersHorizontal } from "lucide-react";
+import { AIRCRAFT_GROUPS, ENGINE_LABELS, categoryDef } from "@/lib/aircraft-categories";
 
 type SubModel = { id: string; name: string; categoryOverride?: string | null };
 type Model = { id: string; name: string; defaultCategoryId?: string | null; variants: SubModel[] };
@@ -57,6 +58,24 @@ export function FiltersSidebar({
       .filter((b) => brandIds.includes(b.id))
       .flatMap((b) => b.models.map((m) => ({ ...m, brandName: b.name })));
   }, [brandIds, brands]);
+
+  // Categorías agrupadas como en lib/aircraft-categories.ts. Solo las que existen en la base.
+  const categoryGroups = useMemo(() => {
+    const known = new Set(categories.map((c) => c.id));
+    return AIRCRAFT_GROUPS.map((group) => ({
+      group,
+      items: categories.filter((c) => known.has(c.id) && categoryDef(c.id)?.group === group),
+    }))
+      .filter((g) => g.items.length > 0)
+      // Categorías de la base que no están en el mapa: se muestran solas, con su nombre.
+      .concat(categories.filter((c) => !categoryDef(c.id)).map((c) => ({ group: c.name, items: [c] })));
+  }, [categories]);
+
+  // Tildar el grupo = tildar todas sus subcategorías (y destildarlo, destildarlas).
+  const toggleCategoryGroup = (ids: string[]) => {
+    const allSelected = ids.every((id) => categoryIds.includes(id));
+    setCategoryIds(allSelected ? categoryIds.filter((id) => !ids.includes(id)) : [...new Set([...categoryIds, ...ids])]);
+  };
 
   const toggleValue = (list: string[], setList: (v: string[]) => void, value: string) => {
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
@@ -226,18 +245,40 @@ export function FiltersSidebar({
 
         {openSections.category && (
           <div className="flex flex-col gap-1.5 pt-1">
-            {categories.map((cat) => (
-              <div key={cat.id} className="flex items-center gap-2">
-                <Checkbox
-                  id={`cat-${cat.id}`}
-                  checked={categoryIds.includes(cat.id)}
-                  onCheckedChange={() => toggleValue(categoryIds, setCategoryIds, cat.id)}
-                />
-                <label htmlFor={`cat-${cat.id}`} className="text-sm cursor-pointer flex-1 select-none">
-                  {cat.name}
-                </label>
-              </div>
-            ))}
+            {categoryGroups.map(({ group, items }) => {
+              const ids = items.map((c) => c.id);
+              const groupKey = `catgroup-${group}`;
+              return (
+                <div key={group} className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id={groupKey}
+                      checked={ids.every((id) => categoryIds.includes(id))}
+                      onCheckedChange={() => toggleCategoryGroup(ids)}
+                    />
+                    <label htmlFor={groupKey} className="text-sm cursor-pointer flex-1 select-none">
+                      {items.length === 1 ? items[0].name : group}
+                    </label>
+                  </div>
+                  {items.length > 1 &&
+                    items.map((cat) => {
+                      const engine = categoryDef(cat.id)?.engine;
+                      return (
+                        <div key={cat.id} className="flex items-center gap-2 pl-6">
+                          <Checkbox
+                            id={`cat-${cat.id}`}
+                            checked={categoryIds.includes(cat.id)}
+                            onCheckedChange={() => toggleValue(categoryIds, setCategoryIds, cat.id)}
+                          />
+                          <label htmlFor={`cat-${cat.id}`} className="text-sm cursor-pointer flex-1 select-none text-slate-600">
+                            {engine ? ENGINE_LABELS[engine] : cat.name}
+                          </label>
+                        </div>
+                      );
+                    })}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

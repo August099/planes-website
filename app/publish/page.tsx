@@ -36,18 +36,16 @@ export default async function PublishPage({ searchParams }: Props) {
       id: true,
       name: true,
       models: {
+        // defaultCategoryId y las variantes permiten sugerir el tipo de aeronave al elegir el modelo.
         select: {
           id: true,
           name: true,
+          defaultCategoryId: true,
+          variants: { select: { id: true, name: true, categoryOverride: true }, orderBy: { name: "asc" } },
         },
         orderBy: { name: "asc" },
       },
     },
-    orderBy: { name: "asc" },
-  });
-
-  const rawCategories = await prisma.aircraftCategory.findMany({
-    select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
 
@@ -84,7 +82,6 @@ export default async function PublishPage({ searchParams }: Props) {
       <PublishForm
         userId={user.id}
         brandsData={JSON.parse(JSON.stringify(rawBrands))}
-        categoriesData={JSON.parse(JSON.stringify(rawCategories))}
         spareCategoriesData={JSON.parse(JSON.stringify(rawSpareCategories))}
         editListing={editListing ?? undefined}
       />

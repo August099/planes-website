@@ -15,13 +15,15 @@ async function main() {
 
   // 1. Cargar Categorías de Aeronaves
   console.log('Cargando Categorías de Aeronaves...');
+  // Por id (MP, MT, BP, ...): así un cambio de nombre se actualiza en vez de duplicarse.
   for (const cat of dbData.AircraftCategories) {
     await prisma.aircraftCategory.upsert({
-      where: { name: cat.name },
-      update: {},
+      where: { id: cat.id },
+      update: { name: cat.name },
       create: { id: cat.id, name: cat.name },
     });
   }
+  const categoryIds = new Set<string>(dbData.AircraftCategories.map((c: { id: string }) => c.id));
 
   // 2. Cargar Marcas y Modelos
   console.log('Cargando Marcas, Modelos y Submodelos...');
@@ -33,18 +35,26 @@ async function main() {
     });
 
     for (const model of brand.models) {
+      // Categoría por defecto del modelo (antes se ignoraba y el formulario no podía sugerirla).
+      const defaultCategoryId = categoryIds.has(model.category) ? model.category : null;
       const createdModel = await prisma.aircraftModel.upsert({
         where: { brandId_name: { brandId: createdBrand.id, name: model.name } },
-        update: {},
-        create: { brandId: createdBrand.id, name: model.name },
+        update: { defaultCategoryId },
+        create: { brandId: createdBrand.id, name: model.name, defaultCategoryId },
       });
 
       if (model.subModels) {
         for (const subModel of model.subModels) {
+          // "(PR)" en la composición significa "para más adelante", no Proyecto (D12):
+          // esas variantes heredan la categoría del modelo.
+          const categoryOverride =
+            subModel.category && subModel.category !== "PR" && categoryIds.has(subModel.category)
+              ? subModel.category
+              : null;
           await prisma.aircraftSubModel.upsert({
             where: { modelId_name: { modelId: createdModel.id, name: subModel.name } },
-            update: {},
-            create: { modelId: createdModel.id, name: subModel.name },
+            update: { categoryOverride },
+            create: { modelId: createdModel.id, name: subModel.name, categoryOverride },
           });
         }
       }
