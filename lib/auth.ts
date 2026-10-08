@@ -1,11 +1,17 @@
 // lib/auth.ts
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import FacebookProvider from "next-auth/providers/facebook";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+
+// En Auth.js v5 un throw común en authorize() llega al cliente como "CredentialsSignin".
+// Con CredentialsSignin + code, el login recibe res.code === "EmailNotVerified" (VA-20).
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = "EmailNotVerified";
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -63,7 +69,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!isValidPassword) return null;
 
         if (!user.emailVerified) {
-          throw new Error("EmailNotVerified");
+          throw new EmailNotVerifiedError();
         }
 
         return user;

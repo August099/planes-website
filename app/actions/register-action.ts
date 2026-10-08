@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { UserType } from "@prisma/client";
+import { issueVerificationEmail } from "@/lib/verification";
 
 export async function registerUserAction(formData: FormData) {
   try {
@@ -57,6 +58,15 @@ export async function registerUserAction(formData: FormData) {
         isFoundingMember,
       },
     });
+
+    // 9. Token + mail de verificación (VA-20). Si el mail falla, la cuenta queda creada y
+    //    se puede pedir otro desde el login ("Reenviar mail de verificación").
+    try {
+      await issueVerificationEmail(email);
+    } catch (mailError) {
+      console.error("Error al enviar el mail de verificación:", mailError);
+      return { success: "CheckEmailRetry" };
+    }
 
     return { success: "CheckEmail" };
   } catch (error) {

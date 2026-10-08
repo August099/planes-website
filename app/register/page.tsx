@@ -70,6 +70,12 @@ export default function RegisterPage() {
           </div>
 
           {/* MENSAJES DE ESTADO */}
+          {successMessage === "CheckEmailRetry" && (
+            <div className="rounded-xl bg-amber-50 p-3 text-xs sm:text-sm text-amber-700 border border-amber-200">
+              ¡Cuenta creada! No pudimos enviarte el mail de activación: pedilo de nuevo desde &quot;Iniciar sesión&quot; con &quot;Reenviar mail de verificación&quot;.
+            </div>
+          )}
+
           {successMessage === "CheckEmail" && (
             <div className="rounded-xl bg-green-50 p-3 text-xs sm:text-sm text-green-700 border border-green-200">
               ¡Cuenta creada! Te enviamos un correo para activar tu casilla antes de ingresar.
@@ -103,7 +109,8 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* method="post": si se envía antes de que cargue React, la contraseña no queda en la URL */}
+          <form method="post" onSubmit={handleSubmit} className="space-y-4">
             {/* NOMBRE COMPLETO */}
             <div className="space-y-1.5">
               <Label htmlFor="name" className="text-xs font-semibold text-[#001F58]">
