@@ -12,6 +12,7 @@ import { getSparePartDetail } from "@/lib/listing-data";
 import { isListingActive } from "@/lib/listing-filters";
 import { sparePartSeoDescription, sparePartSeoTitle } from "@/lib/listing-seo";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { TrackListingView } from "@/components/ui/listing/TrackListingView";
 import { FeaturesCard } from "@/components/ui/listing/FeaturesCard";
 import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSections";
 import { PublishedLine } from "@/components/ui/listing/PublishedLine";
@@ -77,19 +78,6 @@ export default async function SparePartDetailsPage({
     isFavoriteInitial = Boolean(fav);
   }
 
-  // Registrar evento analítico
-  try {
-    await prisma.analyticsEvent.create({
-      data: {
-        eventType: "SPARE_PART_VIEW",
-        sparePartId: sparePart.id,
-        userId: session?.user?.id ?? null,
-      },
-    });
-  } catch (err) {
-    console.error("Error al registrar analítica:", err);
-  }
-
   const subject = encodeURIComponent(`Consulta por repuesto ${sparePart.title}`);
   const body = encodeURIComponent(
     `Hola, estoy interesado en el repuesto "${sparePart.title}" publicado en Ventas Aeronáuticas.`
@@ -147,6 +135,9 @@ export default async function SparePartDetailsPage({
     <>
       {/* Datos estructurados: solo para avisos visibles al público */}
       {isListingActive(sparePart) && <JsonLd data={sparePartJsonLd(sparePart)} />}
+      {isListingActive(sparePart) && session?.user?.id !== sparePart.sellerId && (
+        <TrackListingView type="SPARE_PART" id={sparePart.id} />
+      )}
 
       {/* VISTA DE IMPRESIÓN / PDF */}
       <div className="hidden print:block font-sans text-black p-4 space-y-6 max-w-4xl mx-auto">

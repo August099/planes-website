@@ -14,6 +14,7 @@ import { getAircraftDetail } from "@/lib/listing-data";
 import { isListingActive } from "@/lib/listing-filters";
 import { aircraftSeoDescription, aircraftSeoTitle } from "@/lib/listing-seo";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { TrackListingView } from "@/components/ui/listing/TrackListingView";
 import { FeaturesCard } from "@/components/ui/listing/FeaturesCard";
 import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSections";
 import { PublishedLine } from "@/components/ui/listing/PublishedLine";
@@ -109,20 +110,6 @@ export default async function PlaneDetailsPage({
     isFavoriteInitial = Boolean(fav);
   }
 
-  if (!isInactive) {
-    try {
-      await prisma.analyticsEvent.create({
-        data: {
-          eventType: "AIRCRAFT_VIEW",
-          aircraftId: aircraft.id,
-          userId: session?.user?.id ?? null,
-        },
-      });
-    } catch (err) {
-      console.error("Error al registrar analítica:", err);
-    }
-  }
-
   const subject = encodeURIComponent(`Consulta por avión ${aircraft.title}`);
   const body = encodeURIComponent(
     `Hola, estoy interesado en el avión "${aircraft.title}" publicado en Ventas Aeronáuticas.`
@@ -161,6 +148,7 @@ export default async function PlaneDetailsPage({
     <>
       {/* Datos estructurados: solo para avisos visibles al público */}
       {!isInactive && <JsonLd data={aircraftJsonLd(aircraft)} />}
+      {!isInactive && !isOwner && <TrackListingView type="AIRCRAFT" id={aircraft.id} />}
 
       {/* BANNER AVISO DE PAUSA SOLO PARA EL DUEÑO */}
       {isInactive && isOwner && (
