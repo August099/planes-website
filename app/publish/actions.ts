@@ -16,6 +16,64 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Lee y valida los datos propios de una aeronave ANTES de subir archivos (VA-22):
+// sin fechas, pasajeros ni categorías inventadas, y con errores claros en vez de NaN.
+async function parseAircraftFields(formData: FormData) {
+  let categoryId = (formData.get("categoryId") as string) || "";
+  const modelId = (formData.get("modelId") as string) || "";
+  const subModelId = (formData.get("subModelId") as string) || "";
+
+  // La categoría por defecto del modelo o la variante tiene prioridad (igual que en el formulario).
+  if (subModelId) {
+    const subModel = await prisma.aircraftSubModel.findUnique({
+      where: { id: subModelId },
+      select: { categoryOverride: true, model: { select: { defaultCategoryId: true } } },
+    });
+    if (subModel?.categoryOverride) categoryId = subModel.categoryOverride;
+    else if (subModel?.model?.defaultCategoryId) categoryId = subModel.model.defaultCategoryId;
+  } else if (modelId && modelId !== "CUSTOM_MODEL") {
+    const model = await prisma.aircraftModel.findUnique({
+      where: { id: modelId },
+      select: { defaultCategoryId: true },
+    });
+    if (model?.defaultCategoryId) categoryId = model.defaultCategoryId;
+  }
+
+  // Antes, si la categoría no era válida se usaba la primera que existiera: ahora se rechaza.
+  const category = categoryId
+    ? await prisma.aircraftCategory.findUnique({ where: { id: categoryId }, select: { id: true } })
+    : null;
+  if (!category) return { ok: false as const, error: "Seleccioná una categoría válida." };
+
+  const year = Number(formData.get("year"));
+  const maxYear = new Date().getFullYear();
+  if (!Number.isInteger(year) || year < 1900 || year > maxYear) {
+    return { ok: false as const, error: `El año debe estar entre 1900 y ${maxYear}.` };
+  }
+
+  const hoursRaw = String(formData.get("totalTimeHours") ?? "").trim();
+  const totalTimeHours = Number(hoursRaw);
+  if (!hoursRaw || !Number.isInteger(totalTimeHours) || totalTimeHours < 0) {
+    return { ok: false as const, error: "Las horas totales tienen que ser un número entero mayor o igual a 0." };
+  }
+
+  // Vacío = sin dato (null). Antes se guardaba la fecha de hoy.
+  const certDateRaw = String(formData.get("certDate") ?? "").trim();
+  const certDate = certDateRaw ? new Date(certDateRaw) : null;
+  if (certDate && Number.isNaN(certDate.getTime())) {
+    return { ok: false as const, error: "La fecha de habilitación no es válida." };
+  }
+
+  // Vacío = sin dato (null). Antes se guardaba 0.
+  const passengersRaw = String(formData.get("passengers") ?? "").trim();
+  const passengers = passengersRaw ? Number(passengersRaw) : null;
+  if (passengers !== null && (!Number.isInteger(passengers) || passengers < 0)) {
+    return { ok: false as const, error: "La cantidad de pasajeros tiene que ser un número entero." };
+  }
+
+  return { ok: true as const, categoryId: category.id, year, totalTimeHours, certDate, passengers };
+}
+
 export async function createListing(formData: FormData) {
   const user = await getCurrentUser();
 
@@ -25,6 +83,12 @@ export async function createListing(formData: FormData) {
 
   // El formulario manda "aircraft" o "parts" (activeTab de PublishForm).
   const listingType = formData.get("listingType") === "parts" ? "parts" : "aircraft";
+
+  // 0. Datos de la aeronave: se validan antes de subir archivos.
+  const aircraftFields = listingType === "aircraft" ? await parseAircraftFields(formData) : null;
+  if (aircraftFields && !aircraftFields.ok) {
+    return { success: false, error: aircraftFields.error };
+  }
 
   // 1. Validar imágenes y documentos antes de subir nada
   const files = (formData.getAll("files") as File[]).filter((f) => f && f.size > 0);
@@ -96,43 +160,15 @@ export async function createListing(formData: FormData) {
   // 3. Guardado en la base de datos
   if (listingType === "aircraft") {
     const title = formData.get("title") as string;
-    let categoryId = formData.get("categoryId") as string;
+    // Validados antes de subir archivos (parseAircraftFields).
+    if (!aircraftFields?.ok) throw new Error("Datos de aeronave sin validar");
+    const { categoryId, year, totalTimeHours, certDate, passengers } = aircraftFields;
     const brandId = formData.get("brandId") as string;
     const customBrand = formData.get("customBrand") as string;
     const modelId = formData.get("modelId") as string;
     const subModelId = formData.get("subModelId") as string;
     const customModel = formData.get("customModel") as string;
 
-    // Resolución de categoría
-    if (subModelId) {
-      const subModel = await prisma.aircraftSubModel.findUnique({
-        where: { id: subModelId },
-        select: { categoryOverride: true, model: { select: { defaultCategoryId: true } } }
-      });
-      if (subModel?.categoryOverride) categoryId = subModel.categoryOverride;
-      else if (subModel?.model?.defaultCategoryId) categoryId = subModel.model.defaultCategoryId;
-    } else if (modelId && modelId !== "CUSTOM_MODEL") {
-      const model = await prisma.aircraftModel.findUnique({
-        where: { id: modelId },
-        select: { defaultCategoryId: true }
-      });
-      if (model?.defaultCategoryId) categoryId = model.defaultCategoryId;
-    }
-
-    let categoryExists = false;
-    if (categoryId && categoryId.trim() !== "") {
-      const validCategory = await prisma.aircraftCategory.findUnique({ where: { id: categoryId } });
-      if (validCategory) categoryExists = true;
-    }
-
-    if (!categoryExists) {
-      const fallbackCategory = await prisma.aircraftCategory.findFirst();
-      if (fallbackCategory) categoryId = fallbackCategory.id;
-      else throw new Error("No hay categorías registradas en la base de datos.");
-    }
-
-    const year = parseInt(formData.get("year") as string, 10);
-    const totalTimeHours = parseInt(formData.get("totalTimeHours") as string, 10);
     const priceRaw = formData.get("price") as string;
     const priceOnRequest = formData.get("priceOnRequest") === "true";
     const city = formData.get("city") as string;
@@ -158,14 +194,10 @@ export async function createListing(formData: FormData) {
     const avAutopilot = formData.get("avAutopilot") === "true";
 
     const certified = formData.get("certified") === "true";
-    const certDateRaw = formData.get("certDate") as string;
-    const certDate = certDateRaw ? new Date(certDateRaw) : new Date();
     const plate = (formData.get("plate") as string) || "";
 
     const intDescription = (formData.get("intDescription") as string) || "";
     const extDescription = (formData.get("extDescription") as string) || "";
-    const passengersRaw = formData.get("passengers") as string;
-    const passengers = passengersRaw ? parseInt(passengersRaw, 10) : 0;
     const airconditioner = formData.get("airconditioner") === "true";
     const oxygen = formData.get("oxygen") === "true";
 
