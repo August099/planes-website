@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { EMAIL_FROM, escapeHtml, getSupportEmail } from "@/lib/mail";
 import { AircraftCondition, EngineType, SparepartCondition, AnalyticsEventType } from "@prisma/client";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -338,23 +339,57 @@ export async function sendManagedListingEmail(data: {
   itemType: string;
   description: string;
 }) {
+  // Solo usuarios logueados: evita que la action se use como relay de spam.
+  const user = await getCurrentUser();
+  if (!user?.id) {
+    return { success: false, error: "Tenés que iniciar sesión." };
+  }
+
+  const name = String(data?.name ?? "").trim();
+  const whatsapp = String(data?.whatsapp ?? "").trim();
+  const description = String(data?.description ?? "").trim();
+  const itemType = data?.itemType === "Repuesto" ? "Repuesto" : "Aeronave";
+
+  if (!name || name.length > 100) {
+    return { success: false, error: "Ingresá un nombre válido (máximo 100 caracteres)." };
+  }
+  if (!/^[\d\s()+-]{6,30}$/.test(whatsapp)) {
+    return { success: false, error: "Ingresá un número de WhatsApp válido." };
+  }
+  if (description.length > 1000) {
+    return { success: false, error: "Los detalles no pueden superar los 1000 caracteres." };
+  }
+
+  const supportEmail = getSupportEmail();
+  if (!supportEmail) {
+    console.error("Falta la variable SUPPORT_EMAIL: no se puede enviar la solicitud de publicación asistida.");
+    return { success: false, error: "El servicio no está disponible en este momento." };
+  }
+
   try {
-    await resend.emails.send({
-      from: "Ventas Aeronáuticas <contacto@tu-dominio.com>",
-      to: ["soporte@tu-dominio.com"],
-      subject: `Nueva solicitud de publicación asistida: ${data.itemType}`,
+    const { error } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [supportEmail],
+      replyTo: user.email || undefined,
+      subject: `Nueva solicitud de publicación asistida: ${itemType}`,
       html: `
         <h2>Nueva solicitud de publicación asistida</h2>
-        <p><strong>Nombre:</strong> ${data.name}</p>
-        <p><strong>WhatsApp:</strong> ${data.whatsapp}</p>
-        <p><strong>Tipo de Producto:</strong> ${data.itemType}</p>
-        <p><strong>Detalles:</strong> ${data.description}</p>
+        <p><strong>Nombre:</strong> ${escapeHtml(name)}</p>
+        <p><strong>WhatsApp:</strong> ${escapeHtml(whatsapp)}</p>
+        <p><strong>Email de la cuenta:</strong> ${escapeHtml(user.email || "-")}</p>
+        <p><strong>Tipo de Producto:</strong> ${itemType}</p>
+        <p><strong>Detalles:</strong> ${escapeHtml(description).replace(/\n/g, "<br>")}</p>
       `,
     });
 
+    if (error) {
+      console.error("Error de Resend al enviar solicitud asistida:", error);
+      return { success: false, error: "No se pudo enviar la solicitud." };
+    }
+
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error enviando email:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: "No se pudo enviar la solicitud." };
   }
 }

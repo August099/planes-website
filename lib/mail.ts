@@ -2,13 +2,31 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+export const EMAIL_FROM =
+  process.env.EMAIL_FROM || "Ventas Aeronáuticas <no-reply@ventasaeronauticas.com>";
+
+// Casilla interna que recibe solicitudes y reportes. Se configura con SUPPORT_EMAIL.
+export function getSupportEmail(): string | null {
+  return process.env.SUPPORT_EMAIL?.trim() || null;
+}
+
+// Escapa texto del usuario antes de interpolarlo en el HTML de un mail.
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export async function sendVerificationEmail(email: string, token: string) {
   const domain = process.env.NEXTAUTH_URL || "http://localhost:3000";
   const confirmLink = `${domain}/verify-email?token=${token}`;
 
   try {
     const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || "Ventas Aeronáuticas <no-reply@ventasaeronauticas.com>",
+      from: EMAIL_FROM,
       to: email,
       subject: "Confirmá tu cuenta en Ventas Aeronáuticas",
       html: `

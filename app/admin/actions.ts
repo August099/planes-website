@@ -3,6 +3,7 @@
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
+import { EMAIL_FROM, getSupportEmail } from "@/lib/mail";
 import { 
   AnalyticsEventType, 
   Prisma, 
@@ -223,11 +224,16 @@ export async function archiveAndPurgeOldAnalytics() {
   const csvContent = csvHeader + csvRows;
   const fileName = `analiticas_historicas_${ninetyDaysAgo.toISOString().split("T")[0]}.csv`;
 
+  const recipient = user.email || getSupportEmail();
+  if (!recipient) {
+    throw new Error("No hay un email de destino para el respaldo. La purga fue cancelada.");
+  }
+
   try {
     // 3. Enviar planilla por Email antes de borrar
-    await resend.emails.send({
-      from: "Ventas Aeronáuticas <contacto@tu-dominio.com>",
-      to: [user.email || "soporte@tu-dominio.com"],
+    const { error: sendError } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [recipient],
       subject: `📊 Resumen y Archivo de Analíticas (>90 días) - ${oldEvents.length} registros`,
       html: `
         <h2>Resumen de Purga de Analíticas</h2>
@@ -241,6 +247,11 @@ export async function archiveAndPurgeOldAnalytics() {
         },
       ],
     });
+
+    // Resend no lanza excepción si falla: sin este chequeo se borraba todo sin respaldo.
+    if (sendError) {
+      throw new Error(`Resend: ${sendError.message}`);
+    }
 
     // 4. Borrar registros de la base de datos tras envío exitoso
     const deleteResult = await prisma.analyticsEvent.deleteMany({
