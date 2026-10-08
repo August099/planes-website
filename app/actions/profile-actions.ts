@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
+import { validateImage } from "@/lib/upload-validation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
@@ -43,8 +44,10 @@ export async function updateAvatarAction(formData: FormData) {
   const file = formData.get("avatar") as File | null;
   if (!file || file.size === 0) throw new Error("NO_FILE");
 
-  const fileExt = file.name.split(".").pop();
-  const filePath = `${user.id}/avatar.${fileExt}`;
+  const validation = await validateImage(file);
+  if (!validation.ok) throw new Error(validation.error);
+
+  const filePath = `${user.id}/avatar.${validation.file.ext}`;
 
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
@@ -53,7 +56,7 @@ export async function updateAvatarAction(formData: FormData) {
   const { error } = await supabase.storage
     .from("avatars")
     .upload(filePath, buffer, {
-      contentType: file.type,
+      contentType: validation.file.contentType,
       upsert: true,
     });
 

@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { EMAIL_FROM, escapeHtml, getSupportEmail } from "@/lib/mail";
+import { MAX_LISTING_IMAGES, validateDocument, validateImage, type DetectedFile } from "@/lib/upload-validation";
 import { AircraftCondition, EngineType, SparepartCondition, AnalyticsEventType } from "@prisma/client";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -15,17 +16,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Configuración de límites para documentos
-const MAX_DOC_SIZE = 10 * 1024 * 1024; // 10 MB
-const ALLOWED_DOC_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "image/jpeg",
-  "image/png",
-  "image/webp"
-];
-
 export async function createListing(formData: FormData) {
   const user = await getCurrentUser();
 
@@ -33,71 +23,68 @@ export async function createListing(formData: FormData) {
     throw new Error("UNAUTHENTICATED");
   }
 
-  const listingType = formData.get("listingType") as string;
-  const files = formData.getAll("files") as File[];
+  // El formulario manda "aircraft" o "parts" (activeTab de PublishForm).
+  const listingType = formData.get("listingType") === "parts" ? "parts" : "aircraft";
 
-  // 1. Subida de imágenes a Supabase Storage
-  const uploadedUrls: string[] = [];
+  // 1. Validar imágenes y documentos antes de subir nada
+  const files = (formData.getAll("files") as File[]).filter((f) => f && f.size > 0);
+  const documentFiles = (formData.getAll("documents") as File[]).filter((f) => f && f.size > 0);
+
+  if (files.length > MAX_LISTING_IMAGES) {
+    return { success: false, error: `Solo podés subir un máximo de ${MAX_LISTING_IMAGES} imágenes.` };
+  }
+
+  const images: { file: File; detected: DetectedFile }[] = [];
   for (const file of files) {
-    if (file && file.size > 0) {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-      const filePath = `${listingType}/${user.id}/${fileName}`;
+    const result = await validateImage(file);
+    if (!result.ok) return { success: false, error: result.error };
+    images.push({ file, detected: result.file });
+  }
 
+  const docs: { file: File; detected: DetectedFile }[] = [];
+  for (const file of documentFiles) {
+    const result = await validateDocument(file);
+    if (!result.ok) return { success: false, error: result.error };
+    docs.push({ file, detected: result.file });
+  }
+
+  // 2. Subida en paralelo a Supabase Storage (la extensión sale del tipo detectado, no del nombre)
+  const randomName = (ext: string) =>
+    `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+
+  const imageResults = await Promise.all(
+    images.map(async ({ file, detected }) => {
+      const filePath = `${listingType}/${user.id}/${randomName(detected.ext)}`;
       const { error } = await supabase.storage
         .from("listings")
-        .upload(filePath, file);
+        .upload(filePath, file, { contentType: detected.contentType });
 
       if (error) {
         console.error("Error al subir imagen a Supabase:", error);
-        continue;
+        return null;
       }
+      return supabase.storage.from("listings").getPublicUrl(filePath).data?.publicUrl ?? null;
+    })
+  );
+  // Promise.all mantiene el orden, así que la portada sigue siendo la primera imagen.
+  const uploadedUrls = imageResults.filter((url): url is string => !!url);
 
-      const { data: publicUrlData } = supabase.storage
-        .from("listings")
-        .getPublicUrl(filePath);
-
-      if (publicUrlData?.publicUrl) {
-        uploadedUrls.push(publicUrlData.publicUrl);
-      }
-    }
-  }
-
-  // 2. Subida de documentos a Supabase Storage
-  const documentFiles = formData.getAll("documents") as File[];
-  const uploadedDocs: { name: string; url: string }[] = [];
-
-  for (const docFile of documentFiles) {
-    if (docFile && docFile.size > 0) {
-      if (docFile.size > MAX_DOC_SIZE || !ALLOWED_DOC_TYPES.includes(docFile.type)) {
-        continue;
-      }
-
-      const fileExt = docFile.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 6)}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
-
+  const docResults = await Promise.all(
+    docs.map(async ({ file, detected }) => {
+      const filePath = `${user.id}/${randomName(detected.ext)}`;
       const { error } = await supabase.storage
         .from("documents")
-        .upload(filePath, docFile);
+        .upload(filePath, file, { contentType: detected.contentType });
 
       if (error) {
         console.error("Error al subir documento a Supabase:", error);
-        continue;
+        return null;
       }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("documents")
-        .getPublicUrl(filePath);
-
-      if (publicUrlData?.publicUrl) {
-        uploadedDocs.push({
-          name: docFile.name,
-          url: publicUrlData.publicUrl,
-        });
-      }
-    }
-  }
+      const url = supabase.storage.from("documents").getPublicUrl(filePath).data?.publicUrl;
+      return url ? { name: file.name, url } : null;
+    })
+  );
+  const uploadedDocs = docResults.filter((doc): doc is { name: string; url: string } => !!doc);
 
   // Configuración de fechas de vigencia (+45 DÍAS)
   const now = new Date();

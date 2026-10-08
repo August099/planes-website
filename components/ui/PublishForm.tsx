@@ -331,6 +331,16 @@ export default function PublishForm({
         return;
       }
 
+      // Mismo criterio que el servidor (lib/upload-validation.ts): JPG, PNG o WebP de hasta 10 MB.
+      const invalid = filesArray.find(
+        (file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 10 * 1024 * 1024
+      );
+      if (invalid) {
+        setErrorAndScroll(`"${invalid.name}" debe ser una imagen JPG, PNG o WebP de hasta 10 MB.`);
+        e.target.value = '';
+        return;
+      }
+
       const newImages = filesArray.map((file) => ({
         file,
         preview: URL.createObjectURL(file),
@@ -505,7 +515,11 @@ export default function PublishForm({
           data.append("aircrafts", JSON.stringify(compatibleModels));
         }
 
-        await createListing(data);
+        const res = await createListing(data);
+        if (res && !res.success) {
+          setErrorAndScroll(res.error || "Ocurrió un error al guardar la publicación.");
+          return;
+        }
         setIsSuccess(true);
       } catch (error) {
         setErrorAndScroll("Ocurrió un error al guardar la publicación.");
@@ -882,7 +896,7 @@ export default function PublishForm({
                                                     <label className="w-28 h-28 rounded-xl border-2 border-dashed border-[#001F58]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#001F58]/60 bg-slate-50 hover:bg-slate-100 transition-colors">
                                                         <Upload className="w-6 h-6 text-[#001F58]/50 mb-1" />
                                                         <span className="text-[10px] font-bold text-[#001F58]">Agregar Foto</span>
-                                                        <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+                                                        <input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handleImageUpload} className="hidden" />
                                                     </label>
                                                 )}
                                             </div>
@@ -1108,7 +1122,7 @@ export default function PublishForm({
                                                     <label className="w-24 h-24 rounded-xl border-2 border-dashed border-[#001F58]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#001F58]/60 bg-slate-50 transition-colors">
                                                         <Upload className="w-6 h-6 text-[#001F58]/50 mb-1" />
                                                         <span className="text-[10px] font-bold text-[#001F58]">Agregar</span>
-                                                        <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+                                                        <input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handleImageUpload} className="hidden" />
                                                     </label>
                                                 )}
                                             </div>

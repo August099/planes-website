@@ -164,7 +164,7 @@ export default function ProfileDashboardClient({
                   ref={fileInputRef}
                   type="file"
                   name="avatar"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleFileChange}
                 />
               </form>

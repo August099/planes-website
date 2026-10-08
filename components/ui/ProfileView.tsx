@@ -345,7 +345,7 @@ export function ProfileView({
             type="file"
             ref={fileInputRef}
             onChange={handleAvatarChange}
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             className="hidden"
           />
         </div>

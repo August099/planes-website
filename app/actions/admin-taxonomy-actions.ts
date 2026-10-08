@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
+import { validateImage } from "@/lib/upload-validation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 
@@ -245,8 +246,10 @@ export async function uploadBrandLogoAction(formData: FormData) {
   const file = formData.get("file") as File | null;
   if (!file || file.size === 0) throw new Error("NO_FILE");
 
-  const fileExt = file.name.split(".").pop();
-  const fileName = `brand-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+  const validation = await validateImage(file);
+  if (!validation.ok) throw new Error(validation.error);
+
+  const fileName = `brand-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${validation.file.ext}`;
 
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
@@ -255,7 +258,7 @@ export async function uploadBrandLogoAction(formData: FormData) {
   const { error } = await supabase.storage
     .from("brands")
     .upload(fileName, buffer, {
-      contentType: file.type,
+      contentType: validation.file.contentType,
       upsert: true,
     });
 

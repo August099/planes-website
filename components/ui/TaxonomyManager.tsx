@@ -670,7 +670,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                 <label className="flex-1 px-3 py-2 border rounded-xl bg-white text-xs text-slate-500 cursor-pointer flex items-center justify-between hover:bg-slate-50">
                   <span className="truncate">Subir foto desde PC...</span>
                   <Upload className="w-3.5 h-3.5 text-slate-400" />
-                  <input type="file" name="file" accept="image/*" className="hidden" />
+                  <input type="file" name="file" accept="image/jpeg,image/png,image/webp" className="hidden" />
                 </label>
 
                 <button
@@ -711,7 +711,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                         <Upload className="w-3 h-3 text-slate-400" />
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp"
                           className="hidden"
                           onChange={(e) => {
                             if (e.target.files?.[0]) setEditFile(e.target.files[0]);
