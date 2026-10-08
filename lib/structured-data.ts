@@ -14,7 +14,7 @@ export function organizationAndWebsiteJsonLd() {
       "@id": absoluteUrl("/#organization"),
       name: SITE_NAME,
       url: absoluteUrl("/"),
-      logo: absoluteUrl("/logo-mark-red-blue.png"),
+      logo: absoluteUrl("/logo-va-color.png"),
       sameAs: [INSTAGRAM_URL],
     },
     {
