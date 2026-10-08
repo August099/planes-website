@@ -55,6 +55,7 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -63,6 +64,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -245,10 +248,12 @@ model Aircraft {
   tags             Tag[]               @relation("AircraftToTag")
 
   @@index([price])
-  @@index([status])
+  @@index([status, listingExpiresAt, createdAt])
   @@index([brandId, modelId])
   @@index([province, city])
   @@index([year])
+  @@index([sellerId])
+  @@index([categoryId])
 }
 
 model AircraftImage {
@@ -257,6 +262,8 @@ model AircraftImage {
   url        String
   order      Int      @default(0)
   aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId, order])
 }
 
 model AircraftDocument {
@@ -266,6 +273,8 @@ model AircraftDocument {
   name       String
   uploadedAt DateTime @default(now())
   aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId])
 }
 
 model AircraftEngine {
@@ -279,6 +288,8 @@ model AircraftEngine {
   model       String?
   description String?
   aircraft    Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId])
 }
 
 model AircraftPropeller {
@@ -289,6 +300,8 @@ model AircraftPropeller {
   model          String?
   description    String?
   aircraft       Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId])
 }
 
 model Category {
@@ -401,8 +414,10 @@ model SparePart {
   leads            SparePartLead[]
 
   @@index([price])
-  @@index([status])
+  @@index([status, inPesos, createdAt])
   @@index([province, city])
+  @@index([sellerId])
+  @@index([categoryId])
 }
 
 model SparePartImage {
@@ -411,6 +426,8 @@ model SparePartImage {
   url         String
   order       Int       @default(0)
   sparePart   SparePart @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+
+  @@index([sparePartId, order])
 }
 
 model Lead {
@@ -422,6 +439,8 @@ model Lead {
   message    String
   createdAt  DateTime @default(now())
   aircraft   Aircraft @relation(fields: [aircraftId], references: [id])
+
+  @@index([aircraftId])
 }
 
 model SparePartLead {
@@ -433,6 +452,8 @@ model SparePartLead {
   message     String
   createdAt   DateTime  @default(now())
   sparePart   SparePart @relation(fields: [sparePartId], references: [id])
+
+  @@index([sparePartId])
 }
 
 model Favorite {
@@ -459,7 +480,7 @@ model Report {
   userId        String?
   aircraft      Aircraft?    @relation(fields: [aircraftId], references: [id])
   sparePart     SparePart?   @relation(fields: [sparePartId], references: [id])
-  user          User?         @relation(fields: [userId], references: [id])
+  user          User?        @relation(fields: [userId], references: [id])
 }
 
 model Tag {
@@ -509,6 +530,7 @@ model AnalyticsEvent {
   @@index([sparePartId, eventType])
   @@index([userId])
   @@index([anonymousId])
+  @@index([createdAt])
 }
 
 model Coupon {
@@ -543,6 +565,7 @@ model CouponUsage {
   User        User      @relation(fields: [userId], references: [id])
 
   @@index([couponId, userId])
+  @@index([userId])
 }
 
 enum CouponType {
@@ -689,4 +712,3 @@ enum AnalyticsEventType {
   // Users
   USER_REGISTERED
 }
-
