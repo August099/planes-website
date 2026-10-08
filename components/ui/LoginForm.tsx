@@ -16,6 +16,12 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const errorParam = searchParams.get("error");
   const successParam = searchParams.get("success");
+  // Solo rutas internas, para no redirigir a otro sitio.
+  const callbackParam = searchParams.get("callbackUrl");
+  const callbackUrl =
+    callbackParam && /^\/(?![/\\])/.test(callbackParam)
+      ? callbackParam
+      : "/";
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,7 +51,7 @@ export default function LoginForm() {
         setErrorMessage("CredentialsSignin");
       }
     } else {
-      window.location.href = "/";
+      window.location.href = callbackUrl;
     }
   };
 
@@ -77,7 +83,7 @@ export default function LoginForm() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => signIn("google", { callbackUrl: "/" })}
+              onClick={() => signIn("google", { callbackUrl })}
               className="w-full gap-2 bg-white/80 border-[#001F58]/20 hover:bg-white text-[#001F58] font-medium rounded-xl shadow-sm cursor-pointer"
             >
               <svg width="18" height="18" viewBox="0 0 48 48">
@@ -103,7 +109,7 @@ export default function LoginForm() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => signIn("facebook", { callbackUrl: "/" })}
+              onClick={() => signIn("facebook", { callbackUrl })}
               className="w-full gap-2 bg-white/80 border-[#001F58]/20 hover:bg-white text-[#001F58] font-medium rounded-xl shadow-sm cursor-pointer"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
