@@ -277,8 +277,8 @@ export default async function PlaneDetailsPage({
                       {aircraft.engineType && <p><span className="font-semibold text-slate-500">Tipo:</span> {ENGINE_LABELS[aircraft.engineType]}</p>}
                       {singleEngine.TBO != null && <p><span className="font-semibold text-slate-500">TBO:</span> {tboText(singleEngine.TBO)}</p>}
                       {singleEngine.horsepower != null && <p><span className="font-semibold text-slate-500">Potencia:</span> {singleEngine.horsepower} HP</p>}
-                      {singleEngine.engineHours != null && <p><span className="font-semibold text-slate-500">Horas Motor:</span> {singleEngine.engineHours} hs</p>}
-                      {singleEngine.DURG != null && <p><span className="font-semibold text-slate-500">DURG / SMOH:</span> {singleEngine.DURG} hs</p>}
+                      {singleEngine.engineHours != null && <p><span className="font-semibold text-slate-500">Horas Motor:</span> {singleEngine.engineHours.toLocaleString("es-AR")} hs</p>}
+                      {singleEngine.DURG != null && <p><span className="font-semibold text-slate-500">DURG / SMOH:</span> {singleEngine.DURG.toLocaleString("es-AR")} hs</p>}
                       {singleEngine.brand && <p><span className="font-semibold text-slate-500">Marca:</span> {singleEngine.brand}</p>}
                       {singleEngine.model && <p><span className="font-semibold text-slate-500">Modelo:</span> {singleEngine.model}</p>}
                     </div>
@@ -369,8 +369,8 @@ export default async function PlaneDetailsPage({
                     {aircraft.engineType && <p><span className="font-semibold text-slate-500">Tipo:</span> {ENGINE_LABELS[aircraft.engineType]}</p>}
                     {singleEngine.TBO != null && <p><span className="font-semibold text-slate-500">TBO:</span> {tboText(singleEngine.TBO)}</p>}
                     {singleEngine.horsepower != null && <p><span className="font-semibold text-slate-500">Potencia:</span> {singleEngine.horsepower} HP</p>}
-                      {singleEngine.engineHours != null && <p><span className="font-semibold text-slate-500">Horas Motor:</span> {singleEngine.engineHours} hs</p>}
-                    {singleEngine.DURG != null && <p><span className="font-semibold text-slate-500">DURG / SMOH:</span> {singleEngine.DURG} hs</p>}
+                      {singleEngine.engineHours != null && <p><span className="font-semibold text-slate-500">Horas Motor:</span> {singleEngine.engineHours.toLocaleString("es-AR")} hs</p>}
+                    {singleEngine.DURG != null && <p><span className="font-semibold text-slate-500">DURG / SMOH:</span> {singleEngine.DURG.toLocaleString("es-AR")} hs</p>}
                     {singleEngine.brand && <p><span className="font-semibold text-slate-500">Marca:</span> {singleEngine.brand}</p>}
                     {singleEngine.model && <p><span className="font-semibold text-slate-500">Modelo:</span> {singleEngine.model}</p>}
                   </div>
