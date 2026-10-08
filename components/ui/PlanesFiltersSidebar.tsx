@@ -13,27 +13,36 @@ type Brand = { id: string; name: string; logoUrl?: string | null; models: Model[
 type Category = { id: string; name: string };
 
 type SectionKey = "price" | "category" | "brand" | "options" | "condition";
+type Props = { categories: Category[]; brands: Brand[] };
 
-export function FiltersSidebar({
-  categories,
-  brands,
-}: {
-  categories: Category[];
-  brands: Brand[];
-}) {
+const OPTION_LABELS: Record<string, string> = {
+  financing: "Acepta financiación",
+  trade: "Acepta permuta",
+  rent: "Disponible para alquiler",
+};
+
+// El estado del formulario se arma desde la URL. Con la key, cada cambio de URL (Home, volver
+// atrás, búsqueda del header) vuelve a armarlo en vez de quedar con lo del primer montaje (VA-31).
+export function FiltersSidebar(props: Props) {
+  const searchParams = useSearchParams();
+  return <FiltersSidebarForm key={searchParams.toString()} {...props} />;
+}
+
+function FiltersSidebarForm({ categories, brands }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [isOpenMobile, setIsOpenMobile] = useState(false);
 
-  const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
-    price: false,
-    category: false,
-    brand: false,
-    options: false,
-    condition: false,
-  });
+  // Las secciones con filtros activos arrancan abiertas, así se ve qué está aplicado (VA-31).
+  const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>(() => ({
+    price: searchParams.has("minPrice") || searchParams.has("maxPrice"),
+    category: searchParams.has("category"),
+    brand: searchParams.has("brand") || searchParams.has("model") || searchParams.has("subModel"),
+    options: ["financing", "trade", "rent"].some((key) => searchParams.get(key) === "true"),
+    condition: searchParams.has("condition"),
+  }));
 
   const toggleSection = (section: SectionKey) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
@@ -50,7 +59,13 @@ export function FiltersSidebar({
   const [trade, setTrade] = useState(searchParams.get("trade") === "true");
   const [rent, setRent] = useState(searchParams.get("rent") === "true");
 
-  const [expandedBrands, setExpandedBrands] = useState<string[]>([]);
+  // Las marcas aplicadas (URL) van primero, para que no queden escondidas en la lista.
+  const sortedBrands = useMemo(() => {
+    const applied = new Set(searchParams.getAll("brand"));
+    return [...brands.filter((b) => applied.has(b.id)), ...brands.filter((b) => !applied.has(b.id))];
+  }, [brands, searchParams]);
+
+  const [expandedBrands, setExpandedBrands] = useState<string[]>(() => searchParams.getAll("brand"));
 
   const availableModels = useMemo(() => {
     if (brandIds.length === 0) return [];
@@ -159,6 +174,64 @@ export function FiltersSidebar({
 
   const hasActiveFilters = activeFilterCount > 0;
 
+  // Filtros aplicados (los de la URL), como etiquetas que se pueden quitar de a una.
+  const appliedChips = useMemo(() => {
+    const nameOf = new Map<string, string>();
+    categories.forEach((c) => {
+      const def = categoryDef(c.id);
+      nameOf.set(`category:${c.id}`, def?.engine ? `${def.group} · ${ENGINE_LABELS[def.engine]}` : c.name);
+    });
+    brands.forEach((b) => {
+      nameOf.set(`brand:${b.id}`, b.name);
+      b.models.forEach((m) => {
+        nameOf.set(`model:${m.id}`, m.name);
+        m.variants.forEach((v) => nameOf.set(`subModel:${v.id}`, v.name));
+      });
+    });
+
+    const chips: { key: string; value: string | null; label: string }[] = [];
+    const min = searchParams.get("minPrice");
+    const max = searchParams.get("maxPrice");
+    const usd = (v: string) => `USD ${Number(v).toLocaleString("es-AR")}`;
+    if (min) chips.push({ key: "minPrice", value: null, label: `Desde ${usd(min)}` });
+    if (max) chips.push({ key: "maxPrice", value: null, label: `Hasta ${usd(max)}` });
+    for (const key of ["category", "brand", "model", "subModel"]) {
+      for (const value of searchParams.getAll(key)) {
+        chips.push({ key, value, label: nameOf.get(`${key}:${value}`) ?? value });
+      }
+    }
+    for (const value of searchParams.getAll("condition")) {
+      chips.push({ key: "condition", value, label: value === "NUEVO" ? "Nuevo" : "Usado" });
+    }
+    for (const key of Object.keys(OPTION_LABELS)) {
+      if (searchParams.get(key) === "true") chips.push({ key, value: null, label: OPTION_LABELS[key] });
+    }
+    return chips;
+  }, [searchParams, categories, brands]);
+
+  const removeChip = (key: string, value: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === null) {
+      params.delete(key);
+    } else {
+      params.delete(key, value);
+      // Sin la marca, sus modelos y variantes no tienen sentido.
+      if (key === "brand") {
+        const brand = brands.find((b) => b.id === value);
+        brand?.models.forEach((m) => {
+          params.delete("model", m.id);
+          m.variants.forEach((v) => params.delete("subModel", v.id));
+        });
+      }
+      if (key === "model") {
+        const model = brands.flatMap((b) => b.models).find((m) => m.id === value);
+        model?.variants.forEach((v) => params.delete("subModel", v.id));
+      }
+    }
+    params.set("page", "1");
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   const filterContent = (
     <>
       <div className="flex items-center justify-between">
@@ -173,6 +246,23 @@ export function FiltersSidebar({
           </button>
         )}
       </div>
+
+      {appliedChips.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {appliedChips.map((chip) => (
+            <button
+              key={`${chip.key}-${chip.value ?? ""}`}
+              type="button"
+              onClick={() => removeChip(chip.key, chip.value)}
+              aria-label={`Quitar filtro ${chip.label}`}
+              className="flex items-center gap-1 rounded-full bg-[#001F58]/10 px-2.5 py-1 text-xs font-medium text-[#001F58] hover:bg-[#001F58]/20 transition-colors"
+            >
+              {chip.label}
+              <X className="w-3 h-3" />
+            </button>
+          ))}
+        </div>
+      )}
 
       <Separator />
 
@@ -309,7 +399,7 @@ export function FiltersSidebar({
 
         {openSections.brand && (
           <div className="flex flex-col gap-1 max-h-[280px] overflow-y-auto pr-1 pt-1">
-            {brands.map((brand) => {
+            {sortedBrands.map((brand) => {
               const isSelected = brandIds.includes(brand.id);
               const isExpanded = expandedBrands.includes(brand.id);
 
