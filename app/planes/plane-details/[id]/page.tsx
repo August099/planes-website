@@ -10,6 +10,38 @@ import { AppImage } from "@/components/ui/AppImage";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
 import { ContactButtons } from "@/components/ui/ContactButtons";
+import type { Metadata } from "next";
+import { getAircraftDetail } from "@/lib/listing-data";
+import { isListingActive } from "@/lib/listing-filters";
+import { aircraftSeoDescription, aircraftSeoTitle } from "@/lib/listing-seo";
+
+type Props = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const aircraft = await getAircraftDetail(id);
+  if (!aircraft) notFound();
+
+  const title = aircraftSeoTitle(aircraft);
+  const description = aircraftSeoDescription(aircraft);
+  const url = `/planes/plane-details/${aircraft.id}`;
+  const cover = aircraft.images[0]?.url;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    // Pausada, vencida, vendida o pendiente de pago: no se indexa.
+    robots: isListingActive(aircraft) ? undefined : { index: false, follow: true },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "website",
+      ...(cover ? { images: [{ url: cover, alt: aircraft.title }] } : {}),
+    },
+  };
+}
 
 export default async function PlaneDetailsPage({
   params,
@@ -20,31 +52,13 @@ export default async function PlaneDetailsPage({
   const session = await auth();
   
 
-  const aircraft = await prisma.aircraft.findUnique({
-    where: { id },
-    include: {
-      images: { orderBy: { order: "asc" } },
-      engines: true,
-      propeller: true,
-      documents: true,
-      brand: true,
-      model: true,
-      subModel: true,
-      category: true,
-      questions: {
-        orderBy: { createdAt: "desc" },
-        include: { user: { select: { name: true } } },
-      },
-    },
-  });
+  const aircraft = await getAircraftDetail(id);
 
   if (!aircraft) notFound();
 
   // VALIDACIÓN DE VENCIMIENTO / PAUSA
   const isOwner = session?.user?.id === aircraft.sellerId;
-  const now = new Date();
-  const isExpired = aircraft.listingExpiresAt ? new Date(aircraft.listingExpiresAt) < now : false;
-  const isInactive = aircraft.status !== "ACTIVE" || isExpired;
+  const isInactive = !isListingActive(aircraft);
 
   if (isInactive && !isOwner) {
     return (

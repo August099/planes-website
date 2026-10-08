@@ -9,6 +9,38 @@ import { PlaneActionsHeader } from "@/components/ui/PlaneActionsHeader";
 import { AppImage } from "@/components/ui/AppImage";
 import { auth } from "@/lib/auth";
 import { ContactButtons } from "@/components/ui/ContactButtons";
+import type { Metadata } from "next";
+import { getSparePartDetail } from "@/lib/listing-data";
+import { isListingActive } from "@/lib/listing-filters";
+import { sparePartSeoDescription, sparePartSeoTitle } from "@/lib/listing-seo";
+
+type Props = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const sparePart = await getSparePartDetail(id);
+  if (!sparePart) notFound();
+
+  const title = sparePartSeoTitle(sparePart);
+  const description = sparePartSeoDescription(sparePart);
+  const url = `/spareparts/sparepart-details/${sparePart.id}`;
+  const cover = sparePart.images[0]?.url;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    // Vencida, vendida o pendiente de pago: no se indexa.
+    robots: isListingActive(sparePart) ? undefined : { index: false, follow: true },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "website",
+      ...(cover ? { images: [{ url: cover, alt: sparePart.title }] } : {}),
+    },
+  };
+}
 
 export default async function SparePartDetailsPage({
   params,
@@ -18,28 +50,7 @@ export default async function SparePartDetailsPage({
   const { id } = await params;
   const session = await auth();
 
-  const sparePart = await prisma.sparePart.findUnique({
-    where: { id },
-    include: {
-      images: { orderBy: { order: "asc" } },
-      // La categoría guardada puede ser una Subcategoría o, si existe, una
-      // Sección (sub-subcategoría). Traemos hasta dos niveles de "parent"
-      // para poder reconstruir la jerarquía completa: Categoría > Subcategoría > Sección.
-      category: {
-        include: {
-          parent: {
-            include: {
-              parent: true,
-            },
-          },
-        },
-      },
-      questions: {
-        orderBy: { createdAt: "desc" },
-        include: { user: { select: { name: true } } },
-      },
-    },
-  });
+  const sparePart = await getSparePartDetail(id);
 
   if (!sparePart) notFound();
 
