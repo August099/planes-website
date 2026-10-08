@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { activeListingWhere } from "@/lib/listing-filters";
 import { getSparePartCategories } from "@/lib/cached-data";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { SparePartCard } from "@/components/ui/SparePartCard";
@@ -76,7 +77,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
   }
 
   const where: Prisma.SparePartWhereInput = {
-    status: "ACTIVE",
+    ...activeListingWhere(),
     inPesos: currency === "ARS", // moneda: filtro real, siempre aplicado
   };
 

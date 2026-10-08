@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { activeListingWhere } from "@/lib/listing-filters";
 import { AnalyticsEventType } from "@prisma/client";
 
 export interface SearchResultItem {
@@ -37,7 +38,7 @@ export async function searchGlobal(
   if (searchType === "Aeronave") {
     const aircrafts = await prisma.aircraft.findMany({
       where: {
-        status: "ACTIVE",
+        ...activeListingWhere(),
         AND: tokens.map((token) => ({
           OR: [
             { title: { contains: token, mode: "insensitive" } },
@@ -98,7 +99,7 @@ export async function searchGlobal(
   if (searchType === "Repuesto") {
     const spareParts = await prisma.sparePart.findMany({
       where: {
-        status: "ACTIVE",
+        ...activeListingWhere(),
         AND: tokens.map((token) => ({
           OR: [
             { title: { contains: token, mode: "insensitive" } },

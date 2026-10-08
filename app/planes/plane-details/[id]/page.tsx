@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AircraftGallery } from "../../../../components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
-import { FileText, AlertTriangle, ArrowLeft } from "lucide-react";
+import { FileText, AlertTriangle } from "lucide-react";
 import { QnaSection } from "@/components/ui/QnaSection";
 import { PlaneActionsHeader } from "@/components/ui/PlaneActionsHeader";
 import { AppImage } from "@/components/ui/AppImage";
@@ -14,6 +14,7 @@ import { getAircraftDetail } from "@/lib/listing-data";
 import { isListingActive } from "@/lib/listing-filters";
 import { aircraftSeoDescription, aircraftSeoTitle } from "@/lib/listing-seo";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { InactiveListingNotice } from "@/components/ui/listing/InactiveListingNotice";
 import { TrackListingView } from "@/components/ui/listing/TrackListingView";
 import { FeaturesCard } from "@/components/ui/listing/FeaturesCard";
 import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSections";
@@ -66,28 +67,7 @@ export default async function PlaneDetailsPage({
   const isInactive = !isListingActive(aircraft);
 
   if (isInactive && !isOwner) {
-    return (
-      <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center">
-        <div className="p-8 max-w-md bg-white rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto border border-amber-200">
-            <AlertTriangle className="w-6 h-6" />
-          </div>
-          <h1 className="text-xl font-bold text-[#001F58]">Publicación Pausada o Inactiva</h1>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Esta publicación ya no se encuentra disponible públicamente debido a que venció su periodo de publicación o fue pausada por el vendedor.
-          </p>
-          <div className="pt-2">
-            <Link
-              href="/planes"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#001F58] text-white font-semibold text-xs rounded-xl hover:bg-blue-900 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Ver otros aviones
-            </Link>
-          </div>
-        </div>
-      </main>
-    );
+    return <InactiveListingNotice backHref="/planes" backLabel="Ver otros aviones" />;
   }
 
   const seller = aircraft.seller;

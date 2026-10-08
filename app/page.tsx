@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { activeListingWhere } from "@/lib/listing-filters";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { getAircraftTaxonomy, getSparePartCategories } from "@/lib/cached-data";
 import { HowItWorks } from "@/components/ui/HowItWorks";
@@ -32,7 +33,7 @@ export default async function HomePage() {
     userFavorites,
   ] = await Promise.all([
     prisma.aircraft.findMany({
-      where: { status: "ACTIVE" },
+      where: activeListingWhere(),
       include: {
         images: { orderBy: { order: "asc" }, take: 1 },
         category: true,
@@ -44,7 +45,7 @@ export default async function HomePage() {
     }),
     // Últimos Repuestos
     prisma.sparePart.findMany({
-      where: { status: "ACTIVE" },
+      where: activeListingWhere(),
       include: {
         images: { orderBy: { order: "asc" }, take: 1 },
         category: true,

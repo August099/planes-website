@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { activeListingWhere } from "@/lib/listing-filters";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 import Link from "next/link";
@@ -28,7 +29,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
 
   // El insensitive es la clave pa, algún día nos pasaremos a los GIN pero no ahora
   const aircraftWhere = {
-    status: "ACTIVE" as const,
+    ...activeListingWhere(),
     ...(tokens.length > 0 && {
       AND: tokens.map((token) => ({
         OR: [
@@ -46,7 +47,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
   };
 
   const sparePartWhere = {
-    status: "ACTIVE" as const,
+    ...activeListingWhere(),
     ...(tokens.length > 0 && {
       AND: tokens.map((token) => ({
         OR: [

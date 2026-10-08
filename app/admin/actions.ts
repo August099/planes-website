@@ -2,6 +2,7 @@
 
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import { activeListingWhere } from "@/lib/listing-filters";
 import { Resend } from "resend";
 import { EMAIL_FROM, getSupportEmail } from "@/lib/mail";
 import { 
@@ -104,18 +105,18 @@ export async function getDashboardMetrics() {
   const mau = mauData.length;
 
   // 7: Publicaciones Activas
-  const activeAircrafts = await prisma.aircraft.count({ where: { status: AircraftStatus.ACTIVE } });
-  const activeSpareParts = await prisma.sparePart.count({ where: { status: SparePartStatus.ACTIVE } });
+  const activeAircrafts = await prisma.aircraft.count({ where: activeListingWhere() });
+  const activeSpareParts = await prisma.sparePart.count({ where: activeListingWhere() });
   const activeListings = activeAircrafts + activeSpareParts;
 
   // 6: Publicadores Activos
   const aircraftSellers = await prisma.aircraft.findMany({
-    where: { status: AircraftStatus.ACTIVE },
+    where: activeListingWhere(),
     select: { sellerId: true },
     distinct: ['sellerId']
   });
   const sparePartSellers = await prisma.sparePart.findMany({
-    where: { status: SparePartStatus.ACTIVE },
+    where: activeListingWhere(),
     select: { sellerId: true },
     distinct: ['sellerId']
   });
@@ -313,8 +314,8 @@ export async function getDashboardOverview(period: PeriodFilter = "30d", range?:
         userId: { not: null },
       },
     }),
-    prisma.aircraft.count({ where: { status: "ACTIVE" } }),
-    prisma.sparePart.count({ where: { status: "ACTIVE" } }),
+    prisma.aircraft.count({ where: activeListingWhere() }),
+    prisma.sparePart.count({ where: activeListingWhere() }),
     prisma.aircraft.count({ where: dateWhere }),
     prisma.sparePart.count({ where: dateWhere }),
     prisma.analyticsEvent.groupBy({
@@ -758,8 +759,8 @@ export async function getOpportunitiesAnalytics(period: PeriodFilter = "30d", ra
       },
       select: { aircraftId: true, sparePartId: true },
     }),
-    prisma.aircraft.findMany({ where: { status: "ACTIVE" }, select: { id: true, title: true } }),
-    prisma.sparePart.findMany({ where: { status: "ACTIVE" }, select: { id: true, title: true } }),
+    prisma.aircraft.findMany({ where: activeListingWhere(), select: { id: true, title: true } }),
+    prisma.sparePart.findMany({ where: activeListingWhere(), select: { id: true, title: true } }),
   ]);
 
   const allTitles = [...activeAircraft, ...activeParts].map((p) => p.title.toLowerCase());

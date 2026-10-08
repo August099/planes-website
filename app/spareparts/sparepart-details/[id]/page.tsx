@@ -12,6 +12,7 @@ import { getSparePartDetail } from "@/lib/listing-data";
 import { isListingActive } from "@/lib/listing-filters";
 import { sparePartSeoDescription, sparePartSeoTitle } from "@/lib/listing-seo";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { InactiveListingNotice } from "@/components/ui/listing/InactiveListingNotice";
 import { TrackListingView } from "@/components/ui/listing/TrackListingView";
 import { FeaturesCard } from "@/components/ui/listing/FeaturesCard";
 import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSections";
@@ -57,6 +58,11 @@ export default async function SparePartDetailsPage({
   const [session, sparePart] = await Promise.all([auth(), getSparePartDetail(id)]);
 
   if (!sparePart) notFound();
+
+  // Vencida o pausada: solo la ve el dueño, como en el detalle de avión (VA-14).
+  if (!isListingActive(sparePart) && session?.user?.id !== sparePart.sellerId) {
+    return <InactiveListingNotice backHref="/spareparts" backLabel="Ver otros repuestos" />;
+  }
 
   const seller = sparePart.seller;
 

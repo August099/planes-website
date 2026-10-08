@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { activeListingWhere } from "@/lib/listing-filters";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { notFound } from "next/navigation";
 import { ProfileView } from "@/components/ui/ProfileView";
@@ -29,7 +30,7 @@ export default async function ProfilePage({ params }: Props) {
       instagram: true,
       createdAt: true,
       aircrafts: {
-        where: isOwner ? undefined : { status: "ACTIVE" },
+        where: isOwner ? undefined : activeListingWhere(),
         include: {
           category: { select: { id: true, name: true } },
           images: { orderBy: { order: "asc" }, take: 1 },
@@ -46,7 +47,7 @@ export default async function ProfilePage({ params }: Props) {
         orderBy: { createdAt: "desc" },
       },
       spareParts: {
-        where: isOwner ? undefined : { status: "ACTIVE" },
+        where: isOwner ? undefined : activeListingWhere(),
         include: {
           category: { select: { id: true, name: true } },
           images: { orderBy: { order: "asc" }, take: 1 },

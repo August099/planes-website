@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { activeListingWhere } from "@/lib/listing-filters";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { getAircraftTaxonomy } from "@/lib/cached-data";
 import { AircraftCard } from "@/components/ui/AircraftCard";
@@ -67,11 +68,7 @@ export default async function AvionesPage({ searchParams }: Props) {
   const now = new Date();
 
   const whereClause: Prisma.AircraftWhereInput = {
-    status: "ACTIVE",
-    OR: [
-      { listingExpiresAt: { gte: now } },
-      { listingExpiresAt: null },
-    ],
+    ...activeListingWhere(now),
     ...(categoryIds.length > 0 && { categoryId: { in: categoryIds } }),
     ...(brandIds.length > 0 && { brandId: { in: brandIds } }),
     ...(modelIds.length > 0 && { modelId: { in: modelIds } }),
