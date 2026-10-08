@@ -54,12 +54,16 @@ export function QnaSection({
     setErrorMsg(null);
 
     try {
-      await createQuestionAction({
+      const res = await createQuestionAction({
         entityId,
         entityType,
         questionText: newQuestion,
         path: pathname,
       });
+      if (!res.success) {
+        setErrorMsg(res.error || "Error al enviar la pregunta");
+        return;
+      }
       setNewQuestion("");
     } catch (err: any) {
       setErrorMsg(err.message || "Error al enviar la pregunta");
@@ -74,11 +78,15 @@ export function QnaSection({
 
     setIsAnswering(true);
     try {
-      await answerQuestionAction({
+      const res = await answerQuestionAction({
         questionId,
         answerText,
         path: pathname,
       });
+      if (!res.success) {
+        alert(res.error || "Error al responder");
+        return;
+      }
       setReplyingToId(null);
       setAnswerText("");
     } catch (err: any) {
@@ -105,6 +113,7 @@ export function QnaSection({
               type="text"
               placeholder="Ej: ¿Aceptas permutas? ¿Tiene el historial de mantenimiento al día?"
               value={newQuestion}
+              maxLength={1000}
               onChange={(e) => setNewQuestion(e.target.value)}
               className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isSubmitting}
@@ -170,6 +179,7 @@ export function QnaSection({
                         <textarea
                           placeholder="Escribe tu respuesta aquí..."
                           value={answerText}
+                          maxLength={1000}
                           onChange={(e) => setAnswerText(e.target.value)}
                           className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500"
                           rows={2}

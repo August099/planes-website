@@ -74,7 +74,14 @@ export function ReportContent() {
       });
 
       if (!res.ok) {
-        throw new Error("Error al enviar el reporte");
+        const data = await res.json().catch(() => null);
+        // Los 400/404 traen un mensaje para el usuario; el resto, el mensaje genérico.
+        setError(
+          res.status < 500 && data?.error
+            ? data.error
+            : "Ocurrió un error al enviar tu reporte. Por favor, reintenta."
+        );
+        return;
       }
 
       setSubmitted(true);
@@ -196,6 +203,7 @@ export function ReportContent() {
               </label>
               <textarea
                 value={details}
+                maxLength={1000}
                 onChange={(e) => setDetails(e.target.value)}
                 rows={3}
                 placeholder="Si deseas, puedes darnos más detalles del problema..."

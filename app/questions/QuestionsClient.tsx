@@ -37,11 +37,15 @@ export function QuestionsClient({
 
     setIsAnswering(true);
     try {
-      await answerQuestionAction({
+      const res = await answerQuestionAction({
         questionId,
         answerText,
         path: pathname,
       });
+      if (!res.success) {
+        alert(res.error || "Error al responder");
+        return;
+      }
       setReplyingToId(null);
       setAnswerText("");
     } catch (err: any) {
@@ -167,6 +171,7 @@ export function QuestionsClient({
                             <textarea
                               placeholder="Escribe tu respuesta aquí..."
                               value={answerText}
+                              maxLength={1000}
                               onChange={(e) => setAnswerText(e.target.value)}
                               className="w-full border border-slate-300 rounded-xl p-3 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                               rows={3}
