@@ -1,8 +1,16 @@
-"server-only";
 "use server";
 
+import "server-only";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "@/lib/auth-helpers";
+
+async function verifyAdmin() {
+  const user = await getCurrentUser();
+  if (!user || !user.isAdmin) {
+    throw new Error("UNAUTHORIZED");
+  }
+}
 
 export interface CreateCouponInput {
   code: string;
@@ -18,6 +26,8 @@ export interface CreateCouponInput {
 
 // Genera un código de 6 caracteres alfanumérico en mayúsculas
 export async function generateRandomCouponCode(): Promise<string> {
+  await verifyAdmin();
+
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let code = "";
   let isUnique = false;
@@ -36,6 +46,8 @@ export async function generateRandomCouponCode(): Promise<string> {
 
 // Obtener todos los cupones sanitizados para Client Components
 export async function getAdminCoupons() {
+  await verifyAdmin();
+
   try {
     const rawCoupons = await prisma.coupon.findMany({
       orderBy: { createdAt: "desc" },
@@ -61,6 +73,8 @@ export async function getAdminCoupons() {
 // Crear un nuevo cupón
 export async function createAdminCoupon(data: CreateCouponInput) {
   try {
+    await verifyAdmin();
+
     const formattedCode = data.code.trim().toUpperCase();
 
     // Validar formato de 6 caracteres
@@ -95,6 +109,9 @@ export async function createAdminCoupon(data: CreateCouponInput) {
     revalidatePath("/admin/coupons");
     return { success: true };
   } catch (error: any) {
+    if (error?.message === "UNAUTHORIZED") {
+      return { success: false, error: "No autorizado." };
+    }
     console.error("Error al crear cupón:", error);
     return { success: false, error: error.message || "Error al crear el cupón." };
   }
@@ -103,6 +120,8 @@ export async function createAdminCoupon(data: CreateCouponInput) {
 // Cambiar el estado activo/inactivo de un cupón
 export async function toggleCouponStatus(id: string, isActive: boolean) {
   try {
+    await verifyAdmin();
+
     await prisma.coupon.update({
       where: { id },
       data: { isActive },
@@ -110,6 +129,9 @@ export async function toggleCouponStatus(id: string, isActive: boolean) {
     revalidatePath("/admin/coupons");
     return { success: true };
   } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { success: false, error: "No autorizado." };
+    }
     console.error("Error al actualizar estado del cupón:", error);
     return { success: false, error: "No se pudo actualizar el estado." };
   }
