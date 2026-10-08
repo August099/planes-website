@@ -1,7 +1,7 @@
 import "server-only";
+export { MAX_LISTING_IMAGES } from "@/lib/listing-schema";
 
 export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
-export const MAX_LISTING_IMAGES = 15;
 export const MAX_DOC_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export interface DetectedFile {
@@ -9,10 +9,25 @@ export interface DetectedFile {
   ext: string;
 }
 
+export const IMAGE_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+
+const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+export const DOCUMENT_TYPES: Record<string, string> = {
+  ...IMAGE_TYPES,
+  "application/pdf": "pdf",
+  "application/msword": "doc",
+  [DOCX]: "docx",
+};
+
 // El MIME y el nombre los manda el navegador y se pueden falsificar: el tipo se
 // detecta por los primeros bytes del archivo y la extensión sale de ese tipo.
-async function sniff(file: File): Promise<DetectedFile | null> {
-  const bytes = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+// "declaredType" solo desempata el caso del .docx, que por dentro es un ZIP.
+export function detectFileType(bytes: Uint8Array, declaredType?: string): DetectedFile | null {
   const startsWith = (...sig: number[]) => sig.every((b, i) => bytes[i] === b);
   const ascii = (from: number, to: number) => String.fromCharCode(...bytes.slice(from, to));
 
@@ -24,17 +39,15 @@ async function sniff(file: File): Promise<DetectedFile | null> {
   if (startsWith(0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1)) {
     return { contentType: "application/msword", ext: "doc" };
   }
-  // .docx es un ZIP: se acepta solo si el navegador también lo declaró como docx.
-  if (
-    startsWith(0x50, 0x4b, 0x03, 0x04) &&
-    file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  ) {
-    return { contentType: file.type, ext: "docx" };
+  if (startsWith(0x50, 0x4b, 0x03, 0x04) && declaredType === DOCX) {
+    return { contentType: DOCX, ext: "docx" };
   }
   return null;
 }
 
-const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+async function sniff(file: File): Promise<DetectedFile | null> {
+  return detectFileType(new Uint8Array(await file.slice(0, 12).arrayBuffer()), file.type);
+}
 
 /** Valida una imagen (JPG, PNG o WebP, máx. 10 MB). Devuelve el tipo real o un error. */
 export async function validateImage(
@@ -45,7 +58,7 @@ export async function validateImage(
     return { ok: false, error: `"${file.name}" supera los 10 MB.` };
   }
   const detected = await sniff(file);
-  if (!detected || !IMAGE_TYPES.includes(detected.contentType)) {
+  if (!detected || !IMAGE_TYPES[detected.contentType]) {
     return { ok: false, error: `"${file.name}" no es una imagen JPG, PNG o WebP.` };
   }
   return { ok: true, file: detected };

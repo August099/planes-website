@@ -2,353 +2,267 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { EMAIL_FROM, escapeHtml, getSupportEmail } from "@/lib/mail";
-import { MAX_LISTING_IMAGES, validateDocument, validateImage, type DetectedFile } from "@/lib/upload-validation";
-import { AircraftCondition, EngineType, SparepartCondition, AnalyticsEventType } from "@prisma/client";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { AnalyticsEventType } from "@prisma/client";
+import {
+  listingSchema,
+  toFieldErrors,
+  type AircraftListing,
+  type ListingInput,
+  type ListingResult,
+} from "@/lib/listing-schema";
+import {
+  createUploadTargets,
+  removeUploads,
+  verifyUploads,
+  type ListingType,
+  type UploadRequest,
+} from "@/lib/listing-uploads";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Lee y valida los datos propios de una aeronave ANTES de subir archivos (VA-22):
-// sin fechas, pasajeros ni categorías inventadas, y con errores claros en vez de NaN.
-async function parseAircraftFields(formData: FormData) {
-  let categoryId = (formData.get("categoryId") as string) || "";
-  const modelId = (formData.get("modelId") as string) || "";
-  const subModelId = (formData.get("subModelId") as string) || "";
-
-  // La categoría por defecto del modelo o la variante tiene prioridad (igual que en el formulario).
-  if (subModelId) {
+// La categoría por defecto del modelo o de la variante tiene prioridad (igual que en el
+// formulario). Si la categoría resultante no existe, se rechaza (VA-22: antes se usaba
+// la primera categoría que existiera).
+async function resolveAircraftCategory(data: AircraftListing): Promise<string | null> {
+  let categoryId = data.categoryId;
+  if (data.subModelId) {
     const subModel = await prisma.aircraftSubModel.findUnique({
-      where: { id: subModelId },
+      where: { id: data.subModelId },
       select: { categoryOverride: true, model: { select: { defaultCategoryId: true } } },
     });
     if (subModel?.categoryOverride) categoryId = subModel.categoryOverride;
     else if (subModel?.model?.defaultCategoryId) categoryId = subModel.model.defaultCategoryId;
-  } else if (modelId && modelId !== "CUSTOM_MODEL") {
+  } else if (data.modelId) {
     const model = await prisma.aircraftModel.findUnique({
-      where: { id: modelId },
+      where: { id: data.modelId },
       select: { defaultCategoryId: true },
     });
     if (model?.defaultCategoryId) categoryId = model.defaultCategoryId;
   }
-
-  // Antes, si la categoría no era válida se usaba la primera que existiera: ahora se rechaza.
-  const category = categoryId
-    ? await prisma.aircraftCategory.findUnique({ where: { id: categoryId }, select: { id: true } })
-    : null;
-  if (!category) return { ok: false as const, error: "Seleccioná una categoría válida." };
-
-  const year = Number(formData.get("year"));
-  const maxYear = new Date().getFullYear();
-  if (!Number.isInteger(year) || year < 1900 || year > maxYear) {
-    return { ok: false as const, error: `El año debe estar entre 1900 y ${maxYear}.` };
-  }
-
-  const hoursRaw = String(formData.get("totalTimeHours") ?? "").trim();
-  const totalTimeHours = Number(hoursRaw);
-  if (!hoursRaw || !Number.isInteger(totalTimeHours) || totalTimeHours < 0) {
-    return { ok: false as const, error: "Las horas totales tienen que ser un número entero mayor o igual a 0." };
-  }
-
-  // Vacío = sin dato (null). Antes se guardaba la fecha de hoy.
-  const certDateRaw = String(formData.get("certDate") ?? "").trim();
-  const certDate = certDateRaw ? new Date(certDateRaw) : null;
-  if (certDate && Number.isNaN(certDate.getTime())) {
-    return { ok: false as const, error: "La fecha de habilitación no es válida." };
-  }
-
-  // Vacío = sin dato (null). Antes se guardaba 0.
-  const passengersRaw = String(formData.get("passengers") ?? "").trim();
-  const passengers = passengersRaw ? Number(passengersRaw) : null;
-  if (passengers !== null && (!Number.isInteger(passengers) || passengers < 0)) {
-    return { ok: false as const, error: "La cantidad de pasajeros tiene que ser un número entero." };
-  }
-
-  return { ok: true as const, categoryId: category.id, year, totalTimeHours, certDate, passengers };
+  const category = await prisma.aircraftCategory.findUnique({ where: { id: categoryId }, select: { id: true } });
+  return category?.id ?? null;
 }
 
-export async function createListing(formData: FormData) {
+// La categoría de un repuesto tiene que existir y ser la más específica (sin hijas).
+async function isValidSparePartCategory(categoryId: string) {
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId },
+    select: { _count: { select: { children: true } } },
+  });
+  return !!category && category._count.children === 0;
+}
+
+// Doble clic o reintento: si el mismo vendedor creó un aviso con el mismo título en los
+// últimos 2 minutos, se devuelve ese en vez de crear otro.
+const DUPLICATE_WINDOW_MS = 2 * 60 * 1000;
+
+async function findRecentDuplicate(listingType: ListingType, sellerId: string, title: string) {
+  const where = { sellerId, title, createdAt: { gte: new Date(Date.now() - DUPLICATE_WINDOW_MS) } };
+  const found =
+    listingType === "aircraft"
+      ? await prisma.aircraft.findFirst({ where, select: { id: true } })
+      : await prisma.sparePart.findFirst({ where, select: { id: true } });
+  return found?.id ?? null;
+}
+
+const listingUrl = (listingType: ListingType, id: string) =>
+  listingType === "aircraft" ? `/planes/plane-details/${id}` : `/spareparts/sparepart-details/${id}`;
+
+/**
+ * Paso 1 de la publicación: firma una URL de subida por archivo. El navegador sube
+ * las fotos y documentos directo a Supabase y después llama a createListing con las rutas.
+ */
+export async function prepareListingUploads(input: { listingType: ListingType; files: UploadRequest[] }) {
   const user = await getCurrentUser();
+  if (!user?.id) return { ok: false as const, error: "Tenés que iniciar sesión." };
 
-  if (!user) {
-    throw new Error("UNAUTHENTICATED");
+  const listingType: ListingType = input?.listingType === "parts" ? "parts" : "aircraft";
+  const files = Array.isArray(input?.files) ? input.files : [];
+  return createUploadTargets(user.id, listingType, files);
+}
+
+/** Borra archivos subidos que no llegaron a una publicación (error o cancelación). */
+export async function discardListingUploads(input: {
+  listingType: ListingType;
+  images: string[];
+  documents: string[];
+}) {
+  const user = await getCurrentUser();
+  if (!user?.id) return { ok: false as const };
+  const listingType: ListingType = input?.listingType === "parts" ? "parts" : "aircraft";
+  await removeUploads(user.id, listingType, input?.images ?? [], input?.documents ?? []);
+  return { ok: true as const };
+}
+
+/**
+ * Paso 2: crea la publicación con los datos del formulario y las rutas de los archivos
+ * ya subidos. Devuelve { ok: true, id, url } o { ok: false, error, fieldErrors }.
+ */
+export async function createListing(input: ListingInput): Promise<ListingResult> {
+  const user = await getCurrentUser();
+  if (!user?.id) return { ok: false, error: "Tenés que iniciar sesión." };
+
+  const parsed = listingSchema.safeParse(input);
+  const listingType: ListingType = input?.listingType === "parts" ? "parts" : "aircraft";
+  const imagePaths = Array.isArray(input?.images) ? input.images.filter((p) => typeof p === "string") : [];
+  const rawDocs = input?.listingType === "aircraft" && Array.isArray(input.documents) ? input.documents : [];
+  const docPaths = rawDocs.map((d) => d?.path).filter((p): p is string => typeof p === "string");
+
+  // Ante cualquier error, se borran los archivos ya subidos para no dejar huérfanos.
+  const fail = async (result: Extract<ListingResult, { ok: false }>) => {
+    await removeUploads(user.id!, listingType, imagePaths, docPaths);
+    return result;
+  };
+
+  if (!parsed.success) {
+    return fail({ ok: false, error: "Revisá los campos marcados.", fieldErrors: toFieldErrors(parsed.error) });
+  }
+  const data = parsed.data;
+
+  const duplicateId = await findRecentDuplicate(listingType, user.id, data.title);
+  if (duplicateId) {
+    // Ya existe: los archivos de este segundo envío sobran.
+    await removeUploads(user.id, listingType, imagePaths, docPaths);
+    return { ok: true, id: duplicateId, url: listingUrl(listingType, duplicateId) };
   }
 
-  // El formulario manda "aircraft" o "parts" (activeTab de PublishForm).
-  const listingType = formData.get("listingType") === "parts" ? "parts" : "aircraft";
-
-  // 0. Datos de la aeronave: se validan antes de subir archivos.
-  const aircraftFields = listingType === "aircraft" ? await parseAircraftFields(formData) : null;
-  if (aircraftFields && !aircraftFields.ok) {
-    return { success: false, error: aircraftFields.error };
-  }
-
-  // 1. Validar imágenes y documentos antes de subir nada
-  const files = (formData.getAll("files") as File[]).filter((f) => f && f.size > 0);
-  const documentFiles = (formData.getAll("documents") as File[]).filter((f) => f && f.size > 0);
-
-  if (files.length > MAX_LISTING_IMAGES) {
-    return { success: false, error: `Solo podés subir un máximo de ${MAX_LISTING_IMAGES} imágenes.` };
-  }
-
-  const images: { file: File; detected: DetectedFile }[] = [];
-  for (const file of files) {
-    const result = await validateImage(file);
-    if (!result.ok) return { success: false, error: result.error };
-    images.push({ file, detected: result.file });
-  }
-
-  const docs: { file: File; detected: DetectedFile }[] = [];
-  for (const file of documentFiles) {
-    const result = await validateDocument(file);
-    if (!result.ok) return { success: false, error: result.error };
-    docs.push({ file, detected: result.file });
-  }
-
-  // 2. Subida en paralelo a Supabase Storage (la extensión sale del tipo detectado, no del nombre)
-  const randomName = (ext: string) =>
-    `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
-
-  const imageResults = await Promise.all(
-    images.map(async ({ file, detected }) => {
-      const filePath = `${listingType}/${user.id}/${randomName(detected.ext)}`;
-      const { error } = await supabase.storage
-        .from("listings")
-        .upload(filePath, file, { contentType: detected.contentType });
-
-      if (error) {
-        console.error("Error al subir imagen a Supabase:", error);
-        return null;
-      }
-      return supabase.storage.from("listings").getPublicUrl(filePath).data?.publicUrl ?? null;
-    })
+  const uploads = await verifyUploads(
+    user.id,
+    listingType,
+    data.images,
+    data.listingType === "aircraft" ? data.documents : []
   );
-  // Promise.all mantiene el orden, así que la portada sigue siendo la primera imagen.
-  const uploadedUrls = imageResults.filter((url): url is string => !!url);
+  if (!uploads.ok) return fail({ ok: false, error: uploads.error, fieldErrors: { images: uploads.error } });
 
-  const docResults = await Promise.all(
-    docs.map(async ({ file, detected }) => {
-      const filePath = `${user.id}/${randomName(detected.ext)}`;
-      const { error } = await supabase.storage
-        .from("documents")
-        .upload(filePath, file, { contentType: detected.contentType });
-
-      if (error) {
-        console.error("Error al subir documento a Supabase:", error);
-        return null;
-      }
-      const url = supabase.storage.from("documents").getPublicUrl(filePath).data?.publicUrl;
-      return url ? { name: file.name, url } : null;
-    })
-  );
-  const uploadedDocs = docResults.filter((doc): doc is { name: string; url: string } => !!doc);
-
-  // Configuración de fechas de vigencia (+45 DÍAS)
   const now = new Date();
-  const expiresAt = new Date();
+  const expiresAt = new Date(now);
   expiresAt.setDate(now.getDate() + 45);
+  const price = data.priceOnRequest ? null : data.price ?? null;
 
-  let redirectTarget = "";
+  try {
+    let id: string;
 
-  // 3. Guardado en la base de datos
-  if (listingType === "aircraft") {
-    const title = formData.get("title") as string;
-    // Validados antes de subir archivos (parseAircraftFields).
-    if (!aircraftFields?.ok) throw new Error("Datos de aeronave sin validar");
-    const { categoryId, year, totalTimeHours, certDate, passengers } = aircraftFields;
-    const brandId = formData.get("brandId") as string;
-    const customBrand = formData.get("customBrand") as string;
-    const modelId = formData.get("modelId") as string;
-    const subModelId = formData.get("subModelId") as string;
-    const customModel = formData.get("customModel") as string;
+    if (data.listingType === "aircraft") {
+      const categoryId = await resolveAircraftCategory(data);
+      if (!categoryId) {
+        return fail({ ok: false, error: "Seleccioná una categoría válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });
+      }
 
-    const priceRaw = formData.get("price") as string;
-    const priceOnRequest = formData.get("priceOnRequest") === "true";
-    const city = formData.get("city") as string;
-    const province = formData.get("province") as string;
-    const description = formData.get("description") as string;
-    
-    // Validar AircraftCondition Enum
-    const conditionRaw = (formData.get("condition") as string) || "USADO";
-    const condition = (Object.values(AircraftCondition).includes(conditionRaw as AircraftCondition)
-      ? conditionRaw
-      : AircraftCondition.USADO) as AircraftCondition;
-
-    const isEngineTypeRequired = categoryId === "MP" || categoryId === "BP" || categoryId === "M" || categoryId === "B";
-    const rawEngineType = formData.get("engineType") as EngineType;
-    const engineType = isEngineTypeRequired && rawEngineType ? rawEngineType : null;
-
-    const financing = formData.get("financing") === "true";
-    const trade = formData.get("trade") === "true";
-    const rent = formData.get("rent") === "true";
-
-    const avDescription = (formData.get("avDescription") as string) || "";
-    const avAaptoifr = formData.get("avAaptoifr") === "true";
-    const avAutopilot = formData.get("avAutopilot") === "true";
-
-    const certified = formData.get("certified") === "true";
-    const plate = (formData.get("plate") as string) || "";
-
-    const intDescription = (formData.get("intDescription") as string) || "";
-    const extDescription = (formData.get("extDescription") as string) || "";
-    const airconditioner = formData.get("airconditioner") === "true";
-    const oxygen = formData.get("oxygen") === "true";
-
-    const enginesJSON = formData.get("engines") as string;
-    const propellersJSON = formData.get("propellers") as string;
-
-    const engines = enginesJSON ? JSON.parse(enginesJSON) : [];
-    const propellers = propellersJSON ? JSON.parse(propellersJSON) : [];
-
-    const newAircraft = await prisma.aircraft.create({
-      data: {
-        sellerId: user.id,
-        title,
-        categoryId,
-        brandId: brandId === "CUSTOM" ? null : brandId || null,
-        customBrand: brandId === "CUSTOM" ? customBrand : null,
-        modelId: modelId === "CUSTOM_MODEL" ? null : modelId || null,
-        subModelId: subModelId || null,
-        customModel: customModel || null,
-        year,
-        totalTimeHours,
-        price: priceOnRequest || !priceRaw ? null : parseFloat(priceRaw),
-        city,
-        province,
-        description,
-        condition,
-        engineType,
-        financing,
-        trade,
-        rent,
-        avDescription,
-        avAaptoifr,
-        avAutopilot,
-        certified,
-        certDate,
-        plate,
-        intDescription,
-        extDescription,
-        passengers,
-        airconditioner,
-        oxygen,
-        status: "ACTIVE",
-        listingStartsAt: now,
-        listingExpiresAt: expiresAt,
-        images: {
-          create: uploadedUrls.map((url, index) => ({ url, order: index })),
+      const aircraft = await prisma.aircraft.create({
+        data: {
+          sellerId: user.id,
+          title: data.title,
+          categoryId,
+          brandId: data.brandId || null,
+          customBrand: data.brandId ? null : data.customBrand || null,
+          modelId: data.modelId || null,
+          subModelId: data.subModelId || null,
+          customModel: data.modelId ? null : data.customModel || null,
+          year: data.year,
+          totalTimeHours: data.totalTimeHours,
+          price,
+          city: data.city,
+          province: data.province,
+          description: data.description,
+          condition: data.condition,
+          // VA-21: el selector solo aparece en MP/BP; el resto queda sin dato hasta VA-43.
+          engineType: categoryId === "MP" || categoryId === "BP" ? data.engineType ?? null : null,
+          financing: data.financing,
+          trade: data.trade,
+          rent: data.rent,
+          avDescription: data.avDescription,
+          avAaptoifr: data.avAaptoifr,
+          avAutopilot: data.avAutopilot,
+          certified: data.certified,
+          certDate: data.certDate ? new Date(data.certDate) : null,
+          plate: data.plate || null,
+          intDescription: data.intDescription || null,
+          extDescription: data.extDescription || null,
+          passengers: data.passengers ?? null,
+          airconditioner: data.airconditioner,
+          oxygen: data.oxygen,
+          status: "ACTIVE",
+          listingStartsAt: now,
+          listingExpiresAt: expiresAt,
+          images: { create: uploads.imageUrls.map((url, order) => ({ url, order })) },
+          documents: { create: uploads.documents },
+          engines: {
+            create: data.engines.map((e) => ({
+              brand: e.brand || null,
+              model: e.model || null,
+              engineHours: e.engineHours ?? null,
+              TBO: e.TBO,
+              DURG: e.DURG ?? null,
+              description: e.description || null,
+            })),
+          },
+          propeller: {
+            create: data.propellers.map((p) => ({
+              // La marca va dentro del modelo hasta que tenga su propio campo (VA-54).
+              model: [p.brand, p.model].filter(Boolean).join(" ") || null,
+              propellerHours: p.propellerHours ?? null,
+              description: p.description || null,
+            })),
+          },
         },
-        documents: {
-          create: uploadedDocs.map((doc) => ({ name: doc.name, url: doc.url })),
-        },
-        engines: {
-          create: engines.map((e: any) => ({
-            brand: e.brand || null,
-            model: e.model || null,
-            engineHours: e.engineHours ? parseInt(e.engineHours, 10) : null,
-            TBO: parseInt(e.TBO || "0", 10),
-            DURG: e.DURG ? parseInt(e.DURG, 10) : null,
-            description: e.description || null,
-          })),
-        },
-        propeller: {
-          create: propellers.map((p: any) => ({
-            model: p.model || null,
-            propellerHours: p.propellerHours ? parseInt(p.propellerHours, 10) : null,
-            description: p.description || null,
-          })),
-        },
-      },
-    });
+        select: { id: true },
+      });
+      id = aircraft.id;
+    } else {
+      if (!(await isValidSparePartCategory(data.categoryId))) {
+        const msg = "Seleccioná la categoría más específica.";
+        return fail({ ok: false, error: msg, fieldErrors: { categoryId: msg } });
+      }
 
-    // 📊 REGISTRO DE EVENTO EN ANALYTICS
+      const sparePart = await prisma.sparePart.create({
+        data: {
+          sellerId: user.id,
+          title: data.title,
+          categoryId: data.categoryId,
+          brand: data.brand || null,
+          partNumber: data.partNumber || null,
+          price,
+          inPesos: data.inPesos,
+          stock: data.stock,
+          condition: data.condition,
+          city: data.city,
+          province: data.province,
+          description: data.description,
+          aircrafts: data.aircrafts,
+          status: "ACTIVE",
+          listingStartsAt: now,
+          listingExpiresAt: expiresAt,
+          images: { create: uploads.imageUrls.map((url, order) => ({ url, order })) },
+        },
+        select: { id: true },
+      });
+      id = sparePart.id;
+    }
+
     try {
       await prisma.analyticsEvent.create({
         data: {
-          eventType: AnalyticsEventType.CREATE_AIRCRAFT_LISTING,
+          eventType:
+            listingType === "aircraft"
+              ? AnalyticsEventType.CREATE_AIRCRAFT_LISTING
+              : AnalyticsEventType.CREATE_SPARE_PART_LISTING,
           userId: user.id,
-          aircraftId: newAircraft.id,
+          ...(listingType === "aircraft" ? { aircraftId: id } : { sparePartId: id }),
         },
       });
     } catch (err) {
-      console.error("Error al registrar evento CREATE_AIRCRAFT_LISTING:", err);
+      console.error("Error al registrar el evento de alta:", err);
     }
 
-    revalidatePath("/planes");
-    redirectTarget = `/planes/plane-details/${newAircraft.id}`;
-  } else {
-    // Repuestos
-    const title = formData.get("title") as string;
-    const categoryId = formData.get("categoryId") as string;
-    const brand = (formData.get("brand") as string) || "";
-    const partNumber = formData.get("partNumber") as string;
-    const priceRaw = formData.get("price") as string;
-    const priceOnRequest = formData.get("priceOnRequest") === "true";
-    const city = formData.get("city") as string;
-    const province = formData.get("province") as string;
-    const description = formData.get("description") as string;
-    const inPesos = formData.get("inPesos") === "true";
-    const stock = parseInt((formData.get("stock") as string) || "1", 10);
-    const aircraftsJSON = formData.get("aircrafts") as string;
-    const aircrafts = aircraftsJSON ? JSON.parse(aircraftsJSON) : [];
-
-    // Validar SparepartCondition Enum
-    const conditionRaw = (formData.get("condition") as string) || "NUEVO";
-    const condition = (Object.values(SparepartCondition).includes(conditionRaw as SparepartCondition)
-      ? conditionRaw
-      : SparepartCondition.NUEVO) as SparepartCondition;
-
-    const newSparePart = await prisma.sparePart.create({
-      data: {
-        sellerId: user.id,
-        title,
-        categoryId,
-        brand,
-        partNumber: partNumber || null,
-        price: priceOnRequest || !priceRaw ? null : parseFloat(priceRaw),
-        inPesos,
-        stock,
-        condition,
-        city,
-        province,
-        description,
-        aircrafts: aircrafts.length > 0 ? aircrafts : undefined,
-        status: "ACTIVE",
-        listingStartsAt: now,
-        listingExpiresAt: expiresAt,
-        images: {
-          create: uploadedUrls.map((url, index) => ({ url, order: index })),
-        },
-      },
-    });
-
-    // 📊 REGISTRO DE EVENTO EN ANALYTICS
-    try {
-      await prisma.analyticsEvent.create({
-        data: {
-          eventType: AnalyticsEventType.CREATE_SPARE_PART_LISTING,
-          userId: user.id,
-          sparePartId: newSparePart.id,
-        },
-      });
-    } catch (err) {
-      console.error("Error al registrar evento CREATE_SPARE_PART_LISTING:", err);
-    }
-
-    revalidatePath("/spareparts");
-    redirectTarget = `/spareparts/sparepart-details/${newSparePart.id}`;
-  }
-
-  // Redirección segura fuera de cualquier bloque interno
-  if (redirectTarget) {
-    redirect(redirectTarget);
+    revalidatePath("/");
+    revalidatePath(listingType === "aircraft" ? "/planes" : "/spareparts");
+    return { ok: true, id, url: listingUrl(listingType, id) };
+  } catch (error) {
+    console.error("Error al crear la publicación:", error);
+    return fail({ ok: false, error: "No se pudo guardar la publicación. Probá de nuevo." });
   }
 }
 

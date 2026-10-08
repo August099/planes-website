@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { createListing, sendManagedListingEmail } from "@/app/publish/actions";
+import { compressImage } from "@/lib/image-compressor";
+import { discardUploaded, uploadListingFiles } from "@/lib/listing-upload-client";
+import { listingSchema, toFieldErrors, MAX_LISTING_IMAGES, type FieldErrors, type ListingInput } from "@/lib/listing-schema";
 import Image from "next/image";
 import Link from "next/link";
 import Stepper, { Step } from "@/components/ui/Stepper";
@@ -70,6 +74,21 @@ interface PropellerInput {
     model: string;
     propellerHours: string;
     description: string;
+}
+
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const DOCUMENT_TYPES = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ...IMAGE_TYPES,
+];
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+// Error de validación debajo de un campo (viene del mismo esquema que usa el servidor).
+function FieldError({ message }: { message?: string }) {
+    if (!message) return null;
+    return <p className="text-[11px] text-red-600 font-semibold mt-1">{message}</p>;
 }
 
 export default function PublishForm({
@@ -160,10 +179,15 @@ export default function PublishForm({
         description: "",
     });
 
+    const router = useRouter();
     const [isPublishing, setIsPublishing] = useState(false);
+    // Candado contra doble clic: el estado de React tarda un render en actualizarse.
+    const submittingRef = useRef(false);
+    const [publishStatus, setPublishStatus] = useState<string | null>(null);
+    const [compressing, setCompressing] = useState<{ done: number; total: number } | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
     const [isSubmittingManaged, setIsSubmittingManaged] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
-    const [isSuccess, setIsSuccess] = useState(false);
     const [managedSuccess, setManagedSuccess] = useState(false);
 
     const currentYear = new Date().getFullYear();
@@ -321,33 +345,40 @@ export default function PublishForm({
         setPropellers(updated);
     };
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files) return;
       const filesArray = Array.from(e.target.files);
+      e.target.value = "";
       setFormError(null);
 
-      if (images.length + filesArray.length > 15) {
-        setErrorAndScroll("Solo podés subir un máximo de 15 imágenes.");
+      if (images.length + filesArray.length > MAX_LISTING_IMAGES) {
+        setErrorAndScroll(`Solo podés subir un máximo de ${MAX_LISTING_IMAGES} imágenes.`);
         return;
       }
 
       // Mismo criterio que el servidor (lib/upload-validation.ts): JPG, PNG o WebP de hasta 10 MB.
-      const invalid = filesArray.find(
-        (file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 10 * 1024 * 1024
-      );
+      const invalid = filesArray.find((file) => !IMAGE_TYPES.includes(file.type) || file.size > MAX_FILE_SIZE);
       if (invalid) {
         setErrorAndScroll(`"${invalid.name}" debe ser una imagen JPG, PNG o WebP de hasta 10 MB.`);
-        e.target.value = '';
         return;
       }
 
-      const newImages = filesArray.map((file) => ({
+      // Las fotos de celular (3–6 MB) se comprimen acá (máx. 1920 px y ~0,8 MB) antes de subirlas.
+      setCompressing({ done: 0, total: filesArray.length });
+      const compressed: File[] = [];
+      for (const file of filesArray) {
+        compressed.push(await compressImage(file, "listings"));
+        setCompressing({ done: compressed.length, total: filesArray.length });
+      }
+      setCompressing(null);
+
+      const newImages = compressed.map((file) => ({
         file,
         preview: URL.createObjectURL(file),
       }));
 
       setImages((prev) => [...prev, ...newImages]);
-      e.target.value = '';
+      setFieldErrors((prev) => ({ ...prev, images: "" }));
     };
 
     const removeImage = (index: number) => {
@@ -379,8 +410,13 @@ export default function PublishForm({
     const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files) return;
       const filesArray = Array.from(e.target.files);
+      e.target.value = "";
+      const invalid = filesArray.find((file) => !DOCUMENT_TYPES.includes(file.type) || file.size > MAX_FILE_SIZE);
+      if (invalid) {
+        setErrorAndScroll(`"${invalid.name}" debe ser un PDF, Word o imagen de hasta 10 MB.`);
+        return;
+      }
       setDocuments((prev) => [...prev, ...filesArray]);
-      e.target.value = '';
     };
     const removeDocument = (index: number) => setDocuments((prev) => prev.filter((_, i) => i !== index));
 
@@ -445,86 +481,135 @@ export default function PublishForm({
         return null;
     };
 
+    // Datos del formulario con la forma que espera el esquema (lib/listing-schema.ts).
+    const buildListingInput = (imagePaths: string[], docs: { path: string; name: string }[]): ListingInput =>
+      activeTab === "aircraft"
+        ? {
+            listingType: "aircraft",
+            title: aircraftForm.title,
+            year: String(aircraftForm.year),
+            condition: aircraftForm.condition,
+            price: aircraftForm.price,
+            priceOnRequest: aircraftForm.priceOnRequest,
+            brandId: aircraftForm.brandId === "CUSTOM" ? "" : aircraftForm.brandId,
+            customBrand: aircraftForm.brandId === "CUSTOM" ? aircraftForm.customBrand : "",
+            modelId: aircraftForm.modelId === "CUSTOM_MODEL" ? "" : aircraftForm.modelId,
+            subModelId: aircraftForm.subModelId,
+            customModel: aircraftForm.modelId === "CUSTOM_MODEL" ? aircraftForm.customModel : "",
+            categoryId: aircraftForm.categoryId,
+            engineType: aircraftForm.engineType,
+            totalTimeHours: aircraftForm.totalTimeHours,
+            financing: aircraftForm.financing,
+            trade: aircraftForm.trade,
+            rent: aircraftForm.rent,
+            avDescription: aircraftForm.avDescription,
+            avAaptoifr: aircraftForm.avAaptoifr,
+            avAutopilot: aircraftForm.avAutopilot,
+            certified: aircraftForm.certified,
+            certDate: aircraftForm.certDate,
+            plate: aircraftForm.plate,
+            city: aircraftForm.city,
+            province: aircraftForm.province,
+            intDescription: aircraftForm.intDescription,
+            extDescription: aircraftForm.extDescription,
+            passengers: aircraftForm.passengers,
+            airconditioner: aircraftForm.airconditioner,
+            oxygen: aircraftForm.oxygen,
+            description: aircraftForm.description,
+            engines,
+            propellers,
+            images: imagePaths,
+            documents: docs,
+          }
+        : {
+            listingType: "parts",
+            title: partsForm.title,
+            brand: partsForm.brand,
+            price: partsForm.price,
+            inPesos: partsForm.inPesos,
+            priceOnRequest: partsForm.priceOnRequest,
+            condition: partsForm.condition as "NUEVO" | "USADO" | "RECORRIDO" | "REPARAR",
+            city: partsForm.city,
+            province: partsForm.province,
+            description: partsForm.description,
+            partNumber: partsForm.partNumber,
+            stock: partsForm.stock,
+            categoryId: partsForm.categoryId,
+            aircrafts: compatibleModels,
+            images: imagePaths,
+          };
+
+    const showFieldErrors = (errors: FieldErrors, message = "Revisá los campos marcados.") => {
+      setFieldErrors(errors);
+      const details = [...new Set(Object.values(errors))].filter((d) => d && d !== message);
+      setErrorAndScroll(details.length ? `${message} ${details.join(" ")}` : message);
+    };
+
     const submitForm = async () => {
+      if (submittingRef.current || compressing) return;
       setFormError(null);
+      setFieldErrors({});
+
       const validationError = validateForm();
       if (validationError) {
         setErrorAndScroll(validationError);
         return;
       }
 
+      // Misma validación que el servidor, antes de subir nada (las rutas son provisorias).
+      const precheck = listingSchema.safeParse(
+        buildListingInput(
+          images.map((_, i) => `pendiente-${i}`),
+          documents.map((d, i) => ({ path: `pendiente-${i}`, name: d.name }))
+        )
+      );
+      if (!precheck.success) {
+        showFieldErrors(toFieldErrors(precheck.error));
+        return;
+      }
+
+      submittingRef.current = true;
       setIsPublishing(true);
+      let uploaded: { images: string[]; documents: { path: string; name: string }[] } | null = null;
       try {
-        const data = new FormData();
-        data.append("listingType", activeTab);
-
-        images.forEach((img) => data.append("files", img.file));
-        documents.forEach((doc) => data.append("documents", doc));
-
-        if (activeTab === "aircraft") {
-          data.append("title", aircraftForm.title.trim());
-          data.append("year", aircraftForm.year.toString());
-          data.append("condition", aircraftForm.condition);
-          data.append("price", aircraftForm.price);
-          data.append("priceOnRequest", aircraftForm.priceOnRequest.toString());
-          data.append("brandId", aircraftForm.brandId === "CUSTOM" ? "" : aircraftForm.brandId);
-          data.append("customBrand", aircraftForm.customBrand.trim());
-          data.append("modelId", aircraftForm.modelId === "CUSTOM_MODEL" ? "" : aircraftForm.modelId);
-          data.append("subModelId", aircraftForm.subModelId);
-          data.append("customModel", aircraftForm.customModel.trim());
-          data.append("categoryId", aircraftForm.categoryId);
-          data.append("engineType", aircraftForm.engineType);
-          data.append("totalTimeHours", aircraftForm.totalTimeHours);
-          data.append("financing", aircraftForm.financing.toString());
-          data.append("trade", aircraftForm.trade.toString());
-          data.append("rent", aircraftForm.rent.toString());
-          data.append("avDescription", aircraftForm.avDescription.trim());
-          data.append("avAaptoifr", aircraftForm.avAaptoifr.toString());
-          data.append("avAutopilot", aircraftForm.avAutopilot.toString());
-          data.append("certified", aircraftForm.certified.toString());
-          if (aircraftForm.certDate) data.append("certDate", new Date(aircraftForm.certDate).toISOString());
-          data.append("plate", aircraftForm.plate.trim());
-          data.append("city", aircraftForm.city.trim());
-          data.append("province", aircraftForm.province.trim());
-          data.append("intDescription", aircraftForm.intDescription.trim());
-          data.append("passengers", aircraftForm.passengers.toString());
-          data.append("airconditioner", aircraftForm.airconditioner.toString());
-          data.append("oxygen", aircraftForm.oxygen.toString());
-          data.append("extDescription", aircraftForm.extDescription.trim());
-          data.append("description", aircraftForm.description.trim());
-          
-          data.append("engines", JSON.stringify(engines));
-          const mappedPropellers = propellers.map(p => ({
-              ...p,
-              model: p.brand ? `${p.brand} ${p.model}`.trim() : p.model
-          }));
-          data.append("propellers", JSON.stringify(mappedPropellers));
-        } else {
-          data.append("title", partsForm.title.trim());
-          data.append("brand", partsForm.brand.trim());
-          data.append("price", partsForm.price);
-          data.append("inPesos", partsForm.inPesos.toString());
-          data.append("priceOnRequest", partsForm.priceOnRequest.toString());
-          data.append("condition", partsForm.condition);
-          data.append("city", partsForm.city.trim());
-          data.append("province", partsForm.province.trim());
-          data.append("description", partsForm.description.trim());
-          data.append("partNumber", partsForm.partNumber.trim());
-          data.append("stock", partsForm.stock.toString());
-          data.append("categoryId", partsForm.categoryId); 
-          data.append("aircrafts", JSON.stringify(compatibleModels));
-        }
-
-        const res = await createListing(data);
-        if (res && !res.success) {
-          setErrorAndScroll(res.error || "Ocurrió un error al guardar la publicación.");
+        // 1. Fotos y documentos directo a Supabase (no pasan por Vercel).
+        setPublishStatus("Subiendo fotos...");
+        const upload = await uploadListingFiles(
+          activeTab,
+          images.map((img) => img.file),
+          activeTab === "aircraft" ? documents : [],
+          ({ done, total }) => setPublishStatus(`Subiendo archivos ${done}/${total}...`)
+        );
+        if (!upload.ok) {
+          setErrorAndScroll(upload.error);
           return;
         }
-        setIsSuccess(true);
+        uploaded = upload;
+
+        // 2. Crear la publicación con las rutas ya subidas.
+        setPublishStatus("Guardando publicación...");
+        const res = await createListing(buildListingInput(upload.images, upload.documents));
+        // Con o sin éxito, el servidor ya se hizo cargo de estos archivos.
+        uploaded = null;
+        if (!res.ok) {
+          if (res.fieldErrors) showFieldErrors(res.fieldErrors, res.error);
+          else setErrorAndScroll(res.error);
+          return;
+        }
+
+        setPublishStatus("¡Publicado! Abriendo tu aviso...");
+        router.push(res.url);
       } catch (error) {
-        setErrorAndScroll("Ocurrió un error al guardar la publicación.");
+        console.error("Error al publicar:", error);
+        // Si se cortó la red después de subir, se intenta borrar lo subido.
+        if (uploaded) await discardUploaded(activeTab, uploaded.images, uploaded.documents);
+        setErrorAndScroll(
+          "Se perdió la conexión al publicar. Revisá tu internet y probá de nuevo: no se creó ninguna publicación."
+        );
       } finally {
+        submittingRef.current = false;
         setIsPublishing(false);
+        setPublishStatus(null);
       }
     };
 
@@ -557,19 +642,6 @@ export default function PublishForm({
         <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center p-4">
           <h2 className="text-2xl font-bold text-[#001F58]">Debes iniciar sesión</h2>
           <Link href="/login" className="px-6 py-2.5 bg-red-600 text-white rounded-xl font-semibold">Iniciar Sesión</Link>
-        </div>
-      );
-    }
-
-    if (isSuccess) {
-      return (
-        <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center p-6">
-          <CheckCircle2 className="w-16 h-16 text-emerald-600" />
-          <h2 className="text-3xl font-bold text-[#001F58]">¡Publicación Creada con Éxito!</h2>
-          <p className="text-slate-600 max-w-md">Tu producto ha sido publicado en la plataforma correctamente.</p>
-          <Link href="/" className="mt-4 px-6 py-3 bg-[#001F58] text-white font-semibold rounded-xl hover:bg-blue-900 transition-colors">
-            Volver al Inicio
-          </Link>
         </div>
       );
     }
@@ -671,11 +743,13 @@ export default function PublishForm({
                                             <div className="sm:col-span-2">
                                                 <label className="block text-xs font-bold uppercase mb-1">Título de Publicación *</label>
                                                 <input type="text" value={aircraftForm.title} onChange={e => setAircraftForm({...aircraftForm, title: e.target.value})} placeholder="Ej: Cessna 172 Skyhawk" className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.title} />
                                             </div>
 
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Año *</label>
                                                 <input type="number" min="1900" max={currentYear} value={aircraftForm.year} onChange={e => setAircraftForm({...aircraftForm, year: Number(e.target.value)})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.year} />
                                             </div>
 
                                             <div>
@@ -685,6 +759,7 @@ export default function PublishForm({
                                                     {aircraftForm.year === currentYear && <option value="NUEVO">Nuevo</option>}
                                                 </select>
                                                 {aircraftForm.year !== currentYear && <p className="text-[10px] text-slate-400 mt-1">Solo los modelos del año {currentYear} pueden marcarse como Nuevos.</p>}
+                                                <FieldError message={fieldErrors.condition} />
                                             </div>
 
                                             <div>
@@ -694,11 +769,13 @@ export default function PublishForm({
                                                     <input type="checkbox" checked={aircraftForm.priceOnRequest} onChange={e => setAircraftForm({...aircraftForm, priceOnRequest: e.target.checked, price: ""})} className="rounded text-[#001F58]" /> 
                                                     Precio a Consultar
                                                 </label>
+                                                <FieldError message={fieldErrors.price} />
                                             </div>
 
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Horas Totales (TT) *</label>
                                                 <input type="number" min="0" placeholder="Ej: 3200" value={aircraftForm.totalTimeHours} onChange={e => setAircraftForm({...aircraftForm, totalTimeHours: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.totalTimeHours} />
                                             </div>
 
                                             <div>
@@ -709,6 +786,7 @@ export default function PublishForm({
                                                     <option value="CUSTOM">Otra Marca...</option>
                                                 </select>
                                                 {aircraftForm.brandId === "CUSTOM" && <input type="text" placeholder="Escribí la marca" value={aircraftForm.customBrand} onChange={e => setAircraftForm({...aircraftForm, customBrand: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white" />}
+                                                <FieldError message={fieldErrors.brandId} />
                                             </div>
 
                                             <div>
@@ -719,6 +797,7 @@ export default function PublishForm({
                                                     <option value="CUSTOM_MODEL">Otro modelo...</option>
                                                 </select>
                                                 {aircraftForm.modelId === "CUSTOM_MODEL" && <input type="text" placeholder="Escribí el modelo" value={aircraftForm.customModel} onChange={e => setAircraftForm({...aircraftForm, customModel: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white" />}
+                                                <FieldError message={fieldErrors.modelId} />
                                                 
                                                 {selectedModelVariants.length > 0 && aircraftForm.modelId !== "CUSTOM_MODEL" && (
                                                     <select value={aircraftForm.subModelId} onChange={(e) => handleSubModelChange(e.target.value)} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white">
@@ -735,6 +814,7 @@ export default function PublishForm({
                                                     {categoriesData.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                                 </select>
                                                 <p className="text-[10px] text-slate-400 mt-1">Sugerimos una categoría basada en tu modelo, pero podés cambiarla si es necesario.</p>
+                                                <FieldError message={fieldErrors.categoryId} />
                                             </div>
 
                                             {(aircraftForm.categoryId === "MP" || aircraftForm.categoryId === "BP") && (
@@ -793,6 +873,7 @@ export default function PublishForm({
                                             <div>
                                                 <label className="block text-xs font-bold mb-1">Descripción del panel *</label>
                                                 <textarea rows={3} placeholder="Ej: Garmin G1000, 2 NAV/COM, Transponder GXR..." value={aircraftForm.avDescription} onChange={e => setAircraftForm({...aircraftForm, avDescription: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.avDescription} />
                                             </div>
                                             <div className="flex gap-6 text-sm font-medium">
                                                 <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.avAaptoifr} onChange={e => setAircraftForm({...aircraftForm, avAaptoifr: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Apto IFR</label>
@@ -815,7 +896,7 @@ export default function PublishForm({
                                                     
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Modelo</label><input type="text" placeholder="Ej: O-320" value={eng.model} onChange={e => updateEngine(idx, "model", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
-                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO *</label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO *</label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.TBO`]} /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">DURG</label><input type="number" min="0" placeholder="Ej: 500" value={eng.DURG} onChange={e => updateEngine(idx, "DURG", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div className="col-span-2"><label className="text-[10px] font-bold uppercase mb-1 block">Descripción Adicional</label><input type="text" placeholder="Detalles de cilindros, overhaul o accesorios." value={eng.description} onChange={e => updateEngine(idx, "description", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                 </div>
@@ -846,6 +927,7 @@ export default function PublishForm({
                                                 </div>
                                             ))}
                                             {propellers.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">No hay hélices agregadas.</p>}
+                                            <FieldError message={fieldErrors.propellers} />
                                         </div>
 
                                         {stepAttempted && currentStepError && (
@@ -873,6 +955,10 @@ export default function PublishForm({
                                                 <label className="text-xs font-bold uppercase">Imágenes (Max 15) *</label>
                                                 <span className="text-[10px] text-slate-500 font-medium">Mantén apretado y arrastrá para reordenar</span>
                                             </div>
+                                            {compressing && (
+                                                <p className="text-xs font-semibold text-[#001F58] mb-2">Optimizando fotos {compressing.done}/{compressing.total}...</p>
+                                            )}
+                                            <FieldError message={fieldErrors.images} />
                                             
                                             <div className="flex flex-wrap gap-3">
                                                 {images.map((img, idx) => (
@@ -892,7 +978,7 @@ export default function PublishForm({
                                                         {idx === 0 && <span className="absolute bottom-1 left-1 right-1 text-center bg-[#001F58] text-white text-[10px] font-bold py-0.5 rounded shadow">PORTADA</span>}
                                                     </div>
                                                 ))}
-                                                {images.length < 15 && (
+                                                {images.length < MAX_LISTING_IMAGES && !compressing && (
                                                     <label className="w-28 h-28 rounded-xl border-2 border-dashed border-[#001F58]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#001F58]/60 bg-slate-50 hover:bg-slate-100 transition-colors">
                                                         <Upload className="w-6 h-6 text-[#001F58]/50 mb-1" />
                                                         <span className="text-[10px] font-bold text-[#001F58]">Agregar Foto</span>
@@ -915,6 +1001,7 @@ export default function PublishForm({
                                                 <div>
                                                     <label className="block text-[10px] font-bold uppercase mb-1">Fecha de habilitación anual</label>
                                                     <input type="date" value={aircraftForm.certDate} onChange={e => setAircraftForm({...aircraftForm, certDate: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 text-sm bg-white" />
+                                                    <FieldError message={fieldErrors.certDate} />
                                                 </div>
                                                 <div className="sm:col-span-2">
                                                     <label className="block text-[10px] font-bold uppercase mb-1">Matrícula</label>
@@ -961,10 +1048,12 @@ export default function PublishForm({
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Ciudad *</label>
                                                 <input type="text" placeholder="Ej: San Fernando" value={aircraftForm.city} onChange={e => setAircraftForm({...aircraftForm, city: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.city} />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Provincia *</label>
                                                 <input type="text" placeholder="Ej: Buenos Aires" value={aircraftForm.province} onChange={e => setAircraftForm({...aircraftForm, province: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.province} />
                                             </div>
                                         </div>
 
@@ -978,6 +1067,7 @@ export default function PublishForm({
                                                 <div>
                                                     <label className="block text-[10px] font-bold uppercase mb-1">Cant. Pasajeros</label>
                                                     <input type="number" min="0" placeholder="Ej: 4" value={aircraftForm.passengers} onChange={e => setAircraftForm({...aircraftForm, passengers: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 text-sm bg-white" />
+                                                    <FieldError message={fieldErrors.passengers} />
                                                 </div>
                                                 <div className="flex flex-col justify-center gap-3 mt-4 sm:col-span-2 sm:flex-row sm:justify-start">
                                                     <label className="flex items-center gap-2 text-sm font-medium cursor-pointer"><input type="checkbox" checked={aircraftForm.airconditioner} onChange={e => setAircraftForm({...aircraftForm, airconditioner: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Aire Acondicionado</label>
@@ -997,16 +1087,17 @@ export default function PublishForm({
                                         <div>
                                             <label className="block text-xs font-bold uppercase mb-1">Descripción General y Comentarios Adicionales *</label>
                                             <textarea required rows={4} placeholder="Explayate sobre el historial, mantenimientos recientes, o motivo de venta de la aeronave..." value={aircraftForm.description} onChange={e => setAircraftForm({...aircraftForm, description: e.target.value})} className="w-full p-3 rounded-xl border border-slate-300 bg-white" />
+                                            <FieldError message={fieldErrors.description} />
                                         </div>
 
                                         <div className="flex justify-end pt-4">
                                             <button 
                                                 type="button" 
                                                 onClick={submitForm} 
-                                                disabled={isPublishing} 
+                                                disabled={isPublishing || !!compressing} 
                                                 className="px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl flex items-center gap-2 shadow-lg disabled:opacity-50 transition-colors"
                                             >
-                                                <Rocket className="w-5 h-5" /> {isPublishing ? "Publicando..." : "Finalizar y Publicar"}
+                                                <Rocket className="w-5 h-5" /> {isPublishing ? publishStatus ?? "Publicando..." : compressing ? "Optimizando fotos..." : "Finalizar y Publicar"}
                                             </button>
                                         </div>
                                     </div>
@@ -1053,6 +1144,7 @@ export default function PublishForm({
                                             <div className="sm:col-span-2">
                                                 <label className="block text-xs font-bold uppercase mb-1">Título de Publicación *</label>
                                                 <input type="text" placeholder="Ej: Cilindro Lycoming Superior con válvulas" value={partsForm.title} onChange={e => setPartsForm({...partsForm, title: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.title} />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Marca / Fabricante</label>
@@ -1080,6 +1172,7 @@ export default function PublishForm({
                                                     <input type="checkbox" checked={partsForm.priceOnRequest} onChange={e => setPartsForm({...partsForm, priceOnRequest: e.target.checked, price: ""})} className="rounded text-[#001F58]" /> 
                                                     Precio a Consultar
                                                 </label>
+                                                <FieldError message={fieldErrors.price} />
                                             </div>
                                         </div>
 
@@ -1108,6 +1201,10 @@ export default function PublishForm({
                                                 <label className="text-xs font-bold uppercase">Imágenes (Max 15) *</label>
                                                 <span className="text-[10px] text-slate-500 font-medium">Mantén apretado para reordenar</span>
                                             </div>
+                                            {compressing && (
+                                                <p className="text-xs font-semibold text-[#001F58] mb-2">Optimizando fotos {compressing.done}/{compressing.total}...</p>
+                                            )}
+                                            <FieldError message={fieldErrors.images} />
                                             <div className="flex flex-wrap gap-3">
                                                 {images.map((img, idx) => (
                                                     <div key={idx} draggable onDragStart={(e) => onDragStart(e, idx)} onDragOver={onDragOver} onDrop={(e) => onDrop(e, idx)} className="relative w-24 h-24 rounded-xl border border-slate-300 overflow-hidden cursor-move group">
@@ -1118,7 +1215,7 @@ export default function PublishForm({
                                                         <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-600 rounded-lg p-1 text-white shadow-md z-10 hover:bg-red-700"><Trash2 className="w-3.5 h-3.5" /></button>
                                                     </div>
                                                 ))}
-                                                {images.length < 15 && (
+                                                {images.length < MAX_LISTING_IMAGES && !compressing && (
                                                     <label className="w-24 h-24 rounded-xl border-2 border-dashed border-[#001F58]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#001F58]/60 bg-slate-50 transition-colors">
                                                         <Upload className="w-6 h-6 text-[#001F58]/50 mb-1" />
                                                         <span className="text-[10px] font-bold text-[#001F58]">Agregar</span>
@@ -1132,16 +1229,19 @@ export default function PublishForm({
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Ciudad *</label>
                                                 <input type="text" placeholder="Ej: Morón" value={partsForm.city} onChange={e => setPartsForm({...partsForm, city: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.city} />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Provincia *</label>
                                                 <input type="text" placeholder="Ej: Buenos Aires" value={partsForm.province} onChange={e => setPartsForm({...partsForm, province: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.province} />
                                             </div>
                                         </div>
 
                                         <div>
                                             <label className="block text-xs font-bold uppercase mb-1">Descripción del Artículo *</label>
                                             <textarea rows={4} placeholder="Detallá uso, tiempo remanente si aplica, fallas, compatibilidades generales..." value={partsForm.description} onChange={e => setPartsForm({...partsForm, description: e.target.value})} className="w-full p-3 rounded-xl border border-slate-300 bg-white" />
+                                            <FieldError message={fieldErrors.description} />
                                         </div>
 
                                         {stepAttempted && currentStepError && (
@@ -1172,6 +1272,7 @@ export default function PublishForm({
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Stock Disponible *</label>
                                                 <input type="number" min="1" value={partsForm.stock} onChange={e => setPartsForm({...partsForm, stock: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.stock} />
                                             </div>
 
                                             <div className="col-span-2 sm:col-span-1">
@@ -1188,6 +1289,7 @@ export default function PublishForm({
                                                     <option value="">Seleccionar subcategoría</option>
                                                     {subCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                                 </select>
+                                                <FieldError message={fieldErrors.categoryId} />
                                             </div>
 
                                             {subSubCategories.length > 0 && (
@@ -1267,10 +1369,10 @@ export default function PublishForm({
                                                     }
                                                     submitForm();
                                                 }} 
-                                                disabled={isPublishing} 
+                                                disabled={isPublishing || !!compressing} 
                                                 className="px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl flex items-center gap-2 shadow-lg disabled:opacity-50 transition-colors"
                                             >
-                                                <Rocket className="w-5 h-5" /> {isPublishing ? "Publicando..." : "Finalizar y Publicar"}
+                                                <Rocket className="w-5 h-5" /> {isPublishing ? publishStatus ?? "Publicando..." : compressing ? "Optimizando fotos..." : "Finalizar y Publicar"}
                                             </button>
                                         </div>
                                     </div>
