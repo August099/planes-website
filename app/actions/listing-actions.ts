@@ -3,6 +3,23 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { AircraftStatus, SparePartStatus, SparepartCondition, AircraftCondition, EngineType } from "@prisma/client";
+import { assertListingOwner } from "@/lib/listing-auth";
+
+// Traduce los errores de assertListingOwner a un mensaje para el usuario.
+function listingAuthError(error: unknown): string | null {
+  const message = error instanceof Error ? error.message : "";
+  if (message === "UNAUTHORIZED") return "Tenés que iniciar sesión.";
+  if (message === "FORBIDDEN") return "No tenés permiso para modificar esta publicación.";
+  if (message === "NOT_FOUND") return "La publicación no existe.";
+  return null;
+}
+
+// Número opcional: null si viene vacío, NaN si no es un número válido.
+function parseOptionalNumber(value: FormDataEntryValue | null): number | null {
+  if (value === null || String(value).trim() === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : NaN;
+}
 
 // ==========================================
 // 1. CREAR AIRCRAFT (Aeronave)
@@ -273,6 +290,8 @@ export async function getListingDetails(id: string, type: "AIRCRAFT" | "SPARE_PA
 // ==========================================
 export async function renewListingAction(id: string, type: "aircraft" | "sparepart") {
   try {
+    await assertListingOwner(id, type);
+
     const now = new Date();
 
     if (type === "aircraft") {
@@ -328,6 +347,8 @@ export async function renewListingAction(id: string, type: "aircraft" | "sparepa
     revalidatePath("/profile");
     return { success: true };
   } catch (error) {
+    const authError = listingAuthError(error);
+    if (authError) return { success: false, error: authError };
     console.error("Error al renovar publicación:", error);
     return { success: false, error: "No se pudo renovar la publicación." };
   }
@@ -338,6 +359,8 @@ export async function renewListingAction(id: string, type: "aircraft" | "sparepa
 // ==========================================
 export async function deleteListingAction(id: string, type: "AIRCRAFT" | "SPARE_PART") {
   try {
+    await assertListingOwner(id, type === "AIRCRAFT" ? "aircraft" : "sparepart");
+
     if (type === "AIRCRAFT") {
       await prisma.aircraft.delete({ where: { id } });
     } else {
@@ -350,6 +373,8 @@ export async function deleteListingAction(id: string, type: "AIRCRAFT" | "SPARE_
 
     return { success: true };
   } catch (error) {
+    const authError = listingAuthError(error);
+    if (authError) return { success: false, error: authError };
     console.error("Error al eliminar publicación:", error);
     return { success: false, error: "No se pudo eliminar la publicación." };
   }
@@ -367,18 +392,44 @@ export async function updateListingAction(formData: FormData) {
     const city = formData.get("city") as string;
     const province = formData.get("province") as string;
     const priceOnRequest = formData.get("priceOnRequest") === "true";
-    const priceInput = formData.get("price") as string;
-    const price = priceOnRequest || !priceInput ? null : Number(priceInput);
+    const price = priceOnRequest ? null : parseOptionalNumber(formData.get("price"));
 
-    if (!id || !title) {
+    if (!id || !title?.trim()) {
       return { success: false, error: "Datos incompletos" };
+    }
+    if (listingType !== "aircraft" && listingType !== "sparepart") {
+      return { success: false, error: "Tipo de publicación inválido." };
+    }
+
+    await assertListingOwner(id, listingType);
+
+    if (price !== null && (Number.isNaN(price) || price < 0)) {
+      return { success: false, error: "El precio debe ser un número mayor o igual a 0." };
     }
 
     if (listingType === "aircraft") {
       const year = Number(formData.get("year"));
-      const totalTimeHours = Number(formData.get("totalTimeHours"));
-      const condition = (formData.get("condition") as AircraftCondition) || "USADO";
-      const engineType = (formData.get("engineType") as EngineType) || undefined;
+      const maxYear = new Date().getFullYear() + 1;
+      if (!Number.isInteger(year) || year < 1900 || year > maxYear) {
+        return { success: false, error: `El año debe estar entre 1900 y ${maxYear}.` };
+      }
+
+      const totalTimeHours = parseOptionalNumber(formData.get("totalTimeHours")) ?? 0;
+      if (Number.isNaN(totalTimeHours) || totalTimeHours < 0) {
+        return { success: false, error: "Las horas totales deben ser un número mayor o igual a 0." };
+      }
+
+      const conditionRaw = (formData.get("condition") as string) || "USADO";
+      if (!Object.values(AircraftCondition).includes(conditionRaw as AircraftCondition)) {
+        return { success: false, error: "Condición inválida." };
+      }
+      const condition = conditionRaw as AircraftCondition;
+
+      const engineTypeRaw = (formData.get("engineType") as string) || "";
+      if (engineTypeRaw && !Object.values(EngineType).includes(engineTypeRaw as EngineType)) {
+        return { success: false, error: "Tipo de motor inválido." };
+      }
+      const engineType = (engineTypeRaw as EngineType) || undefined;
 
       const financing = formData.get("financing") === "on" || formData.get("financing") === "true";
       const trade = formData.get("trade") === "on" || formData.get("trade") === "true";
@@ -396,6 +447,12 @@ export async function updateListingAction(formData: FormData) {
       const extDescription = formData.get("extDescription") as string;
       const passengersRaw = formData.get("passengers") as string;
       const passengers = passengersRaw ? Number(passengersRaw) : undefined;
+      if (passengers !== undefined && (!Number.isInteger(passengers) || passengers < 0)) {
+        return { success: false, error: "La cantidad de pasajeros debe ser un número entero." };
+      }
+      if (certDate && Number.isNaN(certDate.getTime())) {
+        return { success: false, error: "Fecha de certificación inválida." };
+      }
       const airconditioner = formData.get("airconditioner") === "true" || formData.get("airconditioner") === "on";
       const oxygen = formData.get("oxygen") === "true" || formData.get("oxygen") === "on";
 
@@ -433,7 +490,10 @@ export async function updateListingAction(formData: FormData) {
     } else {
       const brand = formData.get("brand") as string;
       const partNumber = formData.get("partNumber") as string;
-      const stock = Number(formData.get("stock")) || 1;
+      const stock = parseOptionalNumber(formData.get("stock")) ?? 1;
+      if (!Number.isInteger(stock) || stock < 1) {
+        return { success: false, error: "El stock debe ser un número entero mayor o igual a 1." };
+      }
       const inPesos = formData.get("inPesos") === "on" || formData.get("inPesos") === "true";
 
       const conditionRaw = (formData.get("condition") as string) || "NUEVO";
@@ -475,6 +535,8 @@ export async function updateListingAction(formData: FormData) {
     revalidatePath("/profile");
     return { success: true };
   } catch (error) {
+    const authError = listingAuthError(error);
+    if (authError) return { success: false, error: authError };
     console.error("Error al actualizar la publicación:", error);
     return { success: false, error: "No se pudo actualizar la publicación." };
   }
