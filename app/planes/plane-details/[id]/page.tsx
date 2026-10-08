@@ -140,6 +140,10 @@ export default async function PlaneDetailsPage({
       }).format(Number(aircraft.price))
     : "Consultar precio";
 
+  // VA-44: las horas son opcionales en Agrícola, Experimental y Proyecto.
+  const tboText = (tbo: number | null) => (tbo != null ? `${tbo} hs` : "No informado");
+  const hoursText = aircraft.totalTimeHours != null ? `${aircraft.totalTimeHours.toLocaleString("es-AR")} hs` : "No informadas";
+
   const displayBrand = aircraft.brand?.name || aircraft.customBrand;
   const displayModel = aircraft.model?.name || aircraft.customModel;
   const displaySubModel = aircraft.subModel?.name;
@@ -209,7 +213,7 @@ export default async function PlaneDetailsPage({
                 {displaySubModel && <p className="flex justify-between"><span className="font-semibold text-slate-500">Variante:</span> <span>{displaySubModel}</span></p>}
                 {aircraft.category?.name && <p className="flex justify-between"><span className="font-semibold text-slate-500">Categoría:</span> <span>{aircraft.category.name}</span></p>}
                 <p className="flex justify-between"><span className="font-semibold text-slate-500">Año:</span> <span>{aircraft.year}</span></p>
-                {aircraft.totalTimeHours && <p className="flex justify-between"><span className="font-semibold text-slate-500">Horas Totales:</span> <span>{aircraft.totalTimeHours} hs</span></p>}
+                <p className="flex justify-between"><span className="font-semibold text-slate-500">Horas Totales:</span> <span>{hoursText}</span></p>
                 <p className="flex justify-between"><span className="font-semibold text-slate-500">Condición:</span> <span>{aircraft.condition}</span></p>
                 {aircraft.engineType && <p className="flex justify-between"><span className="font-semibold text-slate-500">Tipo de Motor:</span> <span>{aircraft.engineType}</span></p>}
                 {(aircraft.passengers ?? 0) > 0 && <p className="flex justify-between"><span className="font-semibold text-slate-500">Pasajeros:</span> <span>{aircraft.passengers}</span></p>}
@@ -222,7 +226,7 @@ export default async function PlaneDetailsPage({
                 {aircraft.engines.map((e: any, idx: number) => (
                   <div key={e.id || idx} className="text-xs space-y-1 text-slate-700 pb-2 border-b border-slate-50 last:border-0">
                     {aircraft.engines.length > 1 && <p className="font-bold text-[#001F58]">Motor {idx + 1}</p>}
-                    <p className="flex justify-between"><span className="font-semibold text-slate-500">TBO:</span> <span>{e.TBO} hs</span></p>
+                    <p className="flex justify-between"><span className="font-semibold text-slate-500">TBO:</span> <span>{tboText(e.TBO)}</span></p>
                     {e.engineHours && <p className="flex justify-between"><span className="font-semibold text-slate-500">Horas Usadas:</span> <span>{e.engineHours} hs</span></p>}
                     {e.DURG && <p className="flex justify-between"><span className="font-semibold text-slate-500">DURG:</span> <span>{e.DURG} hs</span></p>}
                     {e.brand && <p className="flex justify-between"><span className="font-semibold text-slate-500">Marca:</span> <span>{e.brand}</span></p>}
@@ -305,14 +309,14 @@ export default async function PlaneDetailsPage({
                   {displayModel && <p><span className="font-semibold text-slate-500">Modelo:</span> {displayModel}</p>}
                   {displaySubModel && <p><span className="font-semibold text-slate-500">Variante:</span> {displaySubModel}</p>}
                   <p><span className="font-semibold text-slate-500">Año:</span> {aircraft.year}</p>
-                  {aircraft.totalTimeHours && <p><span className="font-semibold text-slate-500">Horas totales:</span> {aircraft.totalTimeHours} hs</p>}
+                  <p><span className="font-semibold text-slate-500">Horas totales:</span> {hoursText}</p>
 
                   {/* Motor único en lateral móvil */}
                   {hasSingleEngine && singleEngine && (
                     <div className="mt-3 pt-3 border-t border-slate-100 space-y-1">
                       <p className="font-bold text-[#001F58]">Motor</p>
                       {aircraft.engineType && <p><span className="font-semibold text-slate-500">Tipo:</span> {aircraft.engineType}</p>}
-                      <p><span className="font-semibold text-slate-500">TBO:</span> {singleEngine.TBO} hs</p>
+                      <p><span className="font-semibold text-slate-500">TBO:</span> {tboText(singleEngine.TBO)}</p>
                       {singleEngine.engineHours && <p><span className="font-semibold text-slate-500">Horas Motor:</span> {singleEngine.engineHours} hs</p>}
                       {singleEngine.DURG && <p><span className="font-semibold text-slate-500">DURG:</span> {singleEngine.DURG} hs</p>}
                       {singleEngine.brand && <p><span className="font-semibold text-slate-500">Marca:</span> {singleEngine.brand}</p>}
@@ -371,7 +375,7 @@ export default async function PlaneDetailsPage({
                     <DetailRow label="Ubicación" value={`${aircraft.city}, ${aircraft.province}`} />
                     <DetailRow label="Condición" value={aircraft.condition} />
                     {aircraft.year && <DetailRow label="Año" value={aircraft.year} />}
-                    {aircraft.totalTimeHours && <DetailRow label="Horas Totales" value={`${aircraft.totalTimeHours} hs`} />}
+                    <DetailRow label="Horas Totales" value={hoursText} />
                     {(aircraft.passengers ?? 0) > 0 && <DetailRow label="Pasajeros" value={aircraft.passengers!} />}
                   </div>
 
@@ -385,7 +389,7 @@ export default async function PlaneDetailsPage({
                             <h4 className="text-xs font-bold text-[#001F58] uppercase">Motor {index + 1}</h4>
                           </div>
                           {aircraft.engineType && <DetailRow label="Tipo de Motor" value={aircraft.engineType} />}
-                          <DetailRow label="TBO" value={`${engine.TBO} hs`} />
+                          <DetailRow label="TBO" value={tboText(engine.TBO)} />
                           {engine.engineHours && <DetailRow label="Horas Usadas" value={`${engine.engineHours} hs`} />}
                           {engine.DURG && <DetailRow label="DURG" value={`${engine.DURG} hs`} />}
                           {engine.brand && <DetailRow label="Marca" value={engine.brand} />}
@@ -497,14 +501,14 @@ export default async function PlaneDetailsPage({
                 {displayModel && <p><span className="font-semibold text-slate-500">Modelo:</span> {displayModel}</p>}
                 {displaySubModel && <p><span className="font-semibold text-slate-500">Variante:</span> {displaySubModel}</p>}
                 <p><span className="font-semibold text-slate-500">Año:</span> {aircraft.year}</p>
-                {aircraft.totalTimeHours && <p><span className="font-semibold text-slate-500">Horas totales:</span> {aircraft.totalTimeHours} hs</p>}
+                <p><span className="font-semibold text-slate-500">Horas totales:</span> {hoursText}</p>
 
                 {/* Motor Único en Lateral */}
                 {hasSingleEngine && singleEngine && (
                   <div className="mt-3 pt-3 border-t border-slate-100 space-y-1">
                     <p className="font-bold text-[#001F58]">Motor</p>
                     {aircraft.engineType && <p><span className="font-semibold text-slate-500">Tipo:</span> {aircraft.engineType}</p>}
-                    <p><span className="font-semibold text-slate-500">TBO:</span> {singleEngine.TBO} hs</p>
+                    <p><span className="font-semibold text-slate-500">TBO:</span> {tboText(singleEngine.TBO)}</p>
                     {singleEngine.engineHours && <p><span className="font-semibold text-slate-500">Horas Motor:</span> {singleEngine.engineHours} hs</p>}
                     {singleEngine.DURG && <p><span className="font-semibold text-slate-500">DURG:</span> {singleEngine.DURG} hs</p>}
                     {singleEngine.brand && <p><span className="font-semibold text-slate-500">Marca:</span> {singleEngine.brand}</p>}

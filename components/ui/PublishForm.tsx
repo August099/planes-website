@@ -4,6 +4,16 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createListing, sendManagedListingEmail, updateListing } from "@/app/publish/actions";
 import { compressImage } from "@/lib/image-compressor";
+import {
+    AIRCRAFT_GROUPS,
+    ENGINE_LABELS,
+    categoriesInGroup,
+    categoryDef,
+    groupHasEngines,
+    resolveCategoryId,
+    type EngineKind,
+} from "@/lib/aircraft-categories";
+import { isRequired, requiredMark } from "@/lib/aircraft-rules";
 import { discardUploaded, uploadListingFiles } from "@/lib/listing-upload-client";
 import { listingSchema, toFieldErrors, MAX_LISTING_IMAGES, type EditListingData, type FieldErrors, type ListingInput } from "@/lib/listing-schema";
 import Image from "next/image";
@@ -55,7 +65,6 @@ export interface BrandOption {
 
 interface PublishFormProps {
     userId: string | null;
-    categoriesData?: CategoryOption[];
     brandsData?: BrandOption[];
     spareCategoriesData?: CategoryOption[];
     // Si viene, el formulario edita esa publicación (/publish?edit=<id>) en vez de crear una.
@@ -95,7 +104,6 @@ function FieldError({ message }: { message?: string }) {
 
 export default function PublishForm({
     userId,
-    categoriesData = [],
     brandsData = [],
     spareCategoriesData = [],
     editListing
@@ -216,7 +224,6 @@ export default function PublishForm({
         subModelId: "",
         customModel: "",
         categoryId: "",
-        engineType: "PISTON" as "PISTON" | "TURBOPROP",
         totalTimeHours: "",
         financing: false,
         trade: false,
@@ -224,7 +231,7 @@ export default function PublishForm({
         avDescription: "",
         avAaptoifr: false,
         avAutopilot: false,
-        certified: false,
+        certified: null as boolean | null,
         certDate: "",
         plate: "",
         city: "",
@@ -236,6 +243,22 @@ export default function PublishForm({
         extDescription: "",
         description: "",
     });
+
+    // VA-43: "Tipo de aeronave" + "Motorización" resuelven la categoría (MP/MT/BP/BT/...).
+    // pendingGroup guarda el tipo elegido mientras todavía falta la motorización.
+    const [pendingGroup, setPendingGroup] = useState("");
+    const selectedGroup = categoryDef(aircraftForm.categoryId)?.group ?? pendingGroup;
+    const selectedEngine = categoryDef(aircraftForm.categoryId)?.engine ?? null;
+
+    const handleGroupChange = (group: string) => {
+        setPendingGroup(group);
+        // Monomotor/Bimotor: se conserva la motorización si ya estaba elegida.
+        setAircraftForm((prev) => ({ ...prev, categoryId: resolveCategoryId(group, categoryDef(prev.categoryId)?.engine) }));
+    };
+
+    const handleEngineChange = (engine: EngineKind) => {
+        setAircraftForm((prev) => ({ ...prev, categoryId: resolveCategoryId(selectedGroup, engine) }));
+    };
 
     useEffect(() => {
         if (aircraftForm.year !== currentYear) {
@@ -444,23 +467,25 @@ export default function PublishForm({
                 if (!aircraftForm.title.trim()) return "Falta el Título de la publicación.";
                 if (isNaN(Number(aircraftForm.year)) || aircraftForm.year < 1900 || aircraftForm.year > currentYear) return "Año inválido.";
                 if (!aircraftForm.priceOnRequest && (!aircraftForm.price || Number(aircraftForm.price) < 0)) return "Ingrese el Precio (o marque 'A Consultar').";
-                if (aircraftForm.totalTimeHours === "" || Number(aircraftForm.totalTimeHours) < 0) return "Faltan las Horas Totales.";
+                if (aircraftForm.totalTimeHours === "" && isRequired("totalTimeHours", aircraftForm.categoryId)) return "Faltan las Horas Totales.";
+                if (aircraftForm.totalTimeHours !== "" && Number(aircraftForm.totalTimeHours) < 0) return "Las horas totales no pueden ser negativas.";
                 if (!aircraftForm.brandId) return "Seleccione una Marca.";
                 if (aircraftForm.brandId === "CUSTOM" && !aircraftForm.customBrand.trim()) return "Ingrese la Marca personalizada.";
                 if (!aircraftForm.modelId) return "Seleccione un Modelo.";
                 if (aircraftForm.modelId === "CUSTOM_MODEL" && !aircraftForm.customModel.trim()) return "Ingrese el Modelo personalizado.";
-                if (!aircraftForm.categoryId) return "Seleccione una Categoría.";
+                if (!selectedGroup) return "Elegí el tipo de aeronave.";
+                if (!aircraftForm.categoryId) return "Elegí la motorización (Pistón o Turbohélice).";
             }
             if (step === 2) {
-                if (!aircraftForm.avDescription.trim()) return "La descripción de Aviónica es obligatoria.";
+                if (!aircraftForm.avDescription.trim() && isRequired("avDescription", aircraftForm.categoryId)) return "La descripción de Aviónica es obligatoria.";
                 for (let i = 0; i < engines.length; i++) {
-                    if (!engines[i].TBO) return `El TBO del Motor #${i + 1} es obligatorio.`;
+                    if (!engines[i].TBO && isRequired("TBO", aircraftForm.categoryId)) return `El TBO del Motor #${i + 1} es obligatorio.`;
                 }
                 if (propellers.length > engines.length) return "Demasiadas hélices (máximo igual a la cantidad de motores).";
             }
             if (step === 3) {
                 if (images.length === 0) return "Debe adjuntar al menos una imagen.";
-                if (!aircraftForm.certified) return "Debe confirmar si cuenta con habilitación anual.";
+                if (aircraftForm.certified === null) return "Indicá si la aeronave está habilitada (Sí o No).";
             }
         } else {
             if (step === 1) {
@@ -512,7 +537,6 @@ export default function PublishForm({
             subModelId: aircraftForm.subModelId,
             customModel: aircraftForm.modelId === "CUSTOM_MODEL" ? aircraftForm.customModel : "",
             categoryId: aircraftForm.categoryId,
-            engineType: aircraftForm.engineType,
             totalTimeHours: aircraftForm.totalTimeHours,
             financing: aircraftForm.financing,
             trade: aircraftForm.trade,
@@ -520,7 +544,8 @@ export default function PublishForm({
             avDescription: aircraftForm.avDescription,
             avAaptoifr: aircraftForm.avAaptoifr,
             avAutopilot: aircraftForm.avAutopilot,
-            certified: aircraftForm.certified,
+            // null = sin responder: el esquema lo rechaza con su mensaje.
+            certified: aircraftForm.certified as boolean,
             certDate: aircraftForm.certDate,
             plate: aircraftForm.plate,
             city: aircraftForm.city,
@@ -800,7 +825,7 @@ export default function PublishForm({
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Horas Totales (TT) *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Horas Totales (TT){requiredMark("totalTimeHours", aircraftForm.categoryId)}</label>
                                                 <input type="number" min="0" placeholder="Ej: 3200" value={aircraftForm.totalTimeHours} onChange={e => setAircraftForm({...aircraftForm, totalTimeHours: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.totalTimeHours} />
                                             </div>
@@ -835,31 +860,28 @@ export default function PublishForm({
                                             </div>
 
                                             <div className="sm:col-span-2">
-                                                <label className="block text-xs font-bold uppercase mb-1">Categoría asignada *</label>
-                                                <select value={aircraftForm.categoryId} onChange={e => setAircraftForm({...aircraftForm, categoryId: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 font-medium bg-white">
-                                                    <option value="">-- Seleccionar Categoría --</option>
-                                                    {categoriesData.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                <label className="block text-xs font-bold uppercase mb-1">Tipo de aeronave *</label>
+                                                <select value={selectedGroup} onChange={e => handleGroupChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 font-medium bg-white">
+                                                    <option value="">-- Seleccionar tipo --</option>
+                                                    {AIRCRAFT_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
                                                 </select>
-                                                <p className="text-[10px] text-slate-400 mt-1">Sugerimos una categoría basada en tu modelo, pero podés cambiarla si es necesario.</p>
+                                                <p className="text-[10px] text-slate-400 mt-1">Si el modelo elegido tiene un tipo sugerido, se completa solo. Podés cambiarlo.</p>
                                                 <FieldError message={fieldErrors.categoryId} />
                                             </div>
 
-                                            {(aircraftForm.categoryId === "MP" || aircraftForm.categoryId === "BP") && (
+                                            {selectedGroup && groupHasEngines(selectedGroup) && (
                                             <div className="sm:col-span-2 bg-blue-50/60 p-3.5 rounded-xl border border-blue-100 space-y-1.5">
                                                 <label className="block text-xs font-bold uppercase tracking-wider text-[#001F58]">
-                                                Tipo de Motor *
+                                                Motorización *
                                                 </label>
-                                                <select
-                                                value={aircraftForm.engineType}
-                                                onChange={(e) => setAircraftForm({ ...aircraftForm, engineType: e.target.value as "PISTON" | "TURBOPROP" })}
-                                                className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-sm text-[#001F58]"
-                                                >
-                                                <option value="PISTON">Pistón</option>
-                                                <option value="TURBOPROP">Turbohélice</option>
-                                                </select>
-                                                <p className="text-[10px] text-slate-500">
-                                                Indicá si la planta motriz de esta categoría es a Pistón o Turbohélice.
-                                                </p>
+                                                <div className="flex gap-6 text-sm font-medium">
+                                                    {categoriesInGroup(selectedGroup).map(c => c.engine && (
+                                                        <label key={c.id} className="flex items-center gap-2 cursor-pointer">
+                                                            <input type="radio" name="engine" checked={selectedEngine === c.engine} onChange={() => handleEngineChange(c.engine!)} className="w-4 h-4 text-[#001F58]" />
+                                                            {ENGINE_LABELS[c.engine]}
+                                                        </label>
+                                                    ))}
+                                                </div>
                                             </div>
                                             )}
 
@@ -898,7 +920,7 @@ export default function PublishForm({
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
                                             <h4 className="font-bold uppercase text-xs text-[#001F58]">Aviónica / Radio / Equipamiento</h4>
                                             <div>
-                                                <label className="block text-xs font-bold mb-1">Descripción del panel *</label>
+                                                <label className="block text-xs font-bold mb-1">Descripción del panel{requiredMark("avDescription", aircraftForm.categoryId)}</label>
                                                 <textarea rows={3} placeholder="Ej: Garmin G1000, 2 NAV/COM, Transponder GXR..." value={aircraftForm.avDescription} onChange={e => setAircraftForm({...aircraftForm, avDescription: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.avDescription} />
                                             </div>
@@ -923,7 +945,7 @@ export default function PublishForm({
                                                     
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Modelo</label><input type="text" placeholder="Ej: O-320" value={eng.model} onChange={e => updateEngine(idx, "model", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
-                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO *</label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.TBO`]} /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO{requiredMark("TBO", aircraftForm.categoryId)}</label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.TBO`]} /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">DURG</label><input type="number" min="0" placeholder="Ej: 500" value={eng.DURG} onChange={e => updateEngine(idx, "DURG", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div className="col-span-2"><label className="text-[10px] font-bold uppercase mb-1 block">Descripción Adicional</label><input type="text" placeholder="Detalles de cilindros, overhaul o accesorios." value={eng.description} onChange={e => updateEngine(idx, "description", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                 </div>
@@ -1020,10 +1042,17 @@ export default function PublishForm({
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-[10px] font-bold uppercase mb-1">Estado de Habilitación *</label>
-                                                    <div className="flex items-center gap-2 mt-2">
-                                                        <input type="checkbox" checked={aircraftForm.certified} onChange={e => setAircraftForm({...aircraftForm, certified: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" />
-                                                        <span className="text-sm font-medium">Sí, cuenta con anual al día</span>
+                                                    <div className="flex items-center gap-6 mt-2 text-sm font-medium">
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input type="radio" name="certified" checked={aircraftForm.certified === true} onChange={() => setAircraftForm({...aircraftForm, certified: true})} className="w-4 h-4 text-[#001F58]" />
+                                                            Sí, con anual al día
+                                                        </label>
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input type="radio" name="certified" checked={aircraftForm.certified === false} onChange={() => setAircraftForm({...aircraftForm, certified: false})} className="w-4 h-4 text-[#001F58]" />
+                                                            No
+                                                        </label>
                                                     </div>
+                                                    <FieldError message={fieldErrors.certified} />
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] font-bold uppercase mb-1">Fecha de habilitación anual</label>

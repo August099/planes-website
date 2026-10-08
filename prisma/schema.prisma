@@ -192,7 +192,7 @@ model Aircraft {
   title            String
   customBrand      String?
   year             Int
-  totalTimeHours   Int
+  totalTimeHours   Int?
   price            Decimal?            @db.Decimal(12, 2)
   city             String
   province         String
@@ -216,7 +216,7 @@ model Aircraft {
   financing        Boolean             @default(false)
   trade            Boolean             @default(false)
   rent             Boolean             @default(false)
-  avDescription    String
+  avDescription    String?
   avAaptoifr       Boolean             @default(false)
   avAutopilot      Boolean             @default(false)
   brandId          String?
@@ -269,7 +269,7 @@ model AircraftEngine {
   id          String   @id @default(cuid())
   aircraftId  String
   engineHours Int?
-  TBO         Int
+  TBO         Int?
   DURG        Int?
   brand       String?
   model       String?

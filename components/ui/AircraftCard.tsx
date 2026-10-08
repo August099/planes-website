@@ -108,7 +108,7 @@ export function AircraftCard({
   const specs = [
     categoryFormatted,
     year,
-    totalTimeHours ? `${totalTimeHours.toLocaleString("es-AR")} hs` : null,
+    totalTimeHours != null ? `${totalTimeHours.toLocaleString("es-AR")} hs` : "Horas no informadas",
   ].filter(Boolean);
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {

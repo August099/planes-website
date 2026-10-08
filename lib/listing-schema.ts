@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isRequired } from "@/lib/aircraft-rules";
 
 // Esquema único de una publicación nueva: lo usan el formulario (PublishForm) y el
 // servidor (createListing). Los números llegan como texto desde los inputs.
@@ -75,7 +76,7 @@ const engine = z.object({
   brand: optionalText(100),
   model: optionalText(100),
   engineHours: optionalInt("Horas del motor"),
-  TBO: requiredInt("TBO", "El TBO del motor es obligatorio."),
+  TBO: optionalInt("TBO"),
   DURG: optionalInt("DURG"),
   description: optionalText(500),
 });
@@ -99,15 +100,14 @@ export const aircraftListingSchema = z
     subModelId: optionalText(50),
     customModel: optionalText(100),
     categoryId: requiredText("Seleccioná una categoría.", 20),
-    engineType: z.enum(["PISTON", "TURBOPROP"]).optional(),
-    totalTimeHours: requiredInt("Horas totales", "Las horas totales son obligatorias."),
+    totalTimeHours: optionalInt("Horas totales"),
     financing: z.boolean().default(false),
     trade: z.boolean().default(false),
     rent: z.boolean().default(false),
-    avDescription: requiredText("La descripción de aviónica es obligatoria.", 2000),
+    avDescription: optionalText(2000),
     avAaptoifr: z.boolean().default(false),
     avAutopilot: z.boolean().default(false),
-    certified: z.boolean().default(false),
+    certified: z.boolean({ error: "Indicá si la aeronave está habilitada (Sí o No)." }),
     certDate: z.preprocess(emptyToUndefined, z.iso.date("La fecha de habilitación no es válida.").optional()),
     plate: optionalText(20),
     intDescription: optionalText(2000),
@@ -134,6 +134,20 @@ export const aircraftListingSchema = z
     }
     if (data.propellers.length > data.engines.length) {
       ctx.addIssue({ code: "custom", path: ["propellers"], message: "No puede haber más hélices que motores." });
+    }
+    // VA-44: obligatorios según la categoría (lib/aircraft-rules.ts).
+    if (data.totalTimeHours === undefined && isRequired("totalTimeHours", data.categoryId)) {
+      ctx.addIssue({ code: "custom", path: ["totalTimeHours"], message: "Las horas totales son obligatorias." });
+    }
+    if (!data.avDescription && isRequired("avDescription", data.categoryId)) {
+      ctx.addIssue({ code: "custom", path: ["avDescription"], message: "La descripción de aviónica es obligatoria." });
+    }
+    if (isRequired("TBO", data.categoryId)) {
+      data.engines.forEach((engine, i) => {
+        if (engine.TBO === undefined) {
+          ctx.addIssue({ code: "custom", path: ["engines", i, "TBO"], message: "El TBO del motor es obligatorio." });
+        }
+      });
     }
   });
 
@@ -197,7 +211,6 @@ export interface EditListingData {
     subModelId: string;
     customModel: string;
     categoryId: string;
-    engineType: "PISTON" | "TURBOPROP";
     totalTimeHours: string;
     financing: boolean;
     trade: boolean;
@@ -205,7 +218,7 @@ export interface EditListingData {
     avDescription: string;
     avAaptoifr: boolean;
     avAutopilot: boolean;
-    certified: boolean;
+    certified: boolean | null;
     certDate: string;
     plate: string;
     city: string;

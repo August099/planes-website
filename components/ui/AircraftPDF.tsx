@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
   footer: { marginTop: 16, textAlign: "center", fontSize: 8, color: "#94a3b8" },
 });
 
-type EngineRow = { TBO: string | number; engineHours: number | null; brand: string | null; model: string | null };
+type EngineRow = { TBO: string | number | null; engineHours: number | null; brand: string | null; model: string | null };
 type PropellerRow = { propellerHours: number | null; model: string | null };
 
 type AircraftPDFProps = {
@@ -182,12 +182,11 @@ export function AircraftPDF({
                 <Text style={styles.label}>Año:</Text>
                 <Text>{aircraft.year}</Text>
               </View>
-              {aircraft.totalTimeHours && (
-                <View style={styles.row}>
-                  <Text style={styles.label}>Horas Totales:</Text>
-                  <Text>{aircraft.totalTimeHours} hs</Text>
-                </View>
-              )}
+              {/* VA-44: las horas son opcionales en algunas categorías */}
+              <View style={styles.row}>
+                <Text style={styles.label}>Horas Totales:</Text>
+                <Text>{aircraft.totalTimeHours != null ? `${aircraft.totalTimeHours} hs` : "No informadas"}</Text>
+              </View>
               <View style={styles.row}>
                 <Text style={styles.label}>Condición:</Text>
                 <Text>{aircraft.condition}</Text>
@@ -209,7 +208,7 @@ export function AircraftPDF({
                     {hasMultipleEngines && <Text style={styles.subBlockTitle}>Motor {idx + 1}</Text>}
                     <View style={styles.row}>
                       <Text style={styles.label}>TBO:</Text>
-                      <Text>{e.TBO} hs</Text>
+                      <Text>{e.TBO != null ? `${e.TBO} hs` : "No informado"}</Text>
                     </View>
                     {e.engineHours && (
                       <View style={styles.row}>

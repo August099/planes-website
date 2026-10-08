@@ -15,6 +15,7 @@ import {
   type ListingResult,
 } from "@/lib/listing-schema";
 import { assertListingOwner } from "@/lib/listing-auth";
+import { engineTypeForCategory } from "@/lib/aircraft-categories";
 import {
   createUploadTargets,
   pathFromPublicUrl,
@@ -85,18 +86,18 @@ function aircraftFields(data: AircraftListing, categoryId: string) {
     subModelId: data.subModelId || null,
     customModel: data.modelId ? null : data.customModel || null,
     year: data.year,
-    totalTimeHours: data.totalTimeHours,
+    totalTimeHours: data.totalTimeHours ?? null,
     price: data.priceOnRequest ? null : data.price ?? null,
     city: data.city,
     province: data.province,
     description: data.description,
     condition: data.condition,
-    // VA-21: el selector solo aparece en MP/BP; el resto queda sin dato hasta VA-43.
-    engineType: categoryId === "MP" || categoryId === "BP" ? data.engineType ?? null : null,
+    // VA-21/VA-43: el tipo de motor sale de la categoría (MP/BP pistón, MT/BT turbohélice).
+    engineType: engineTypeForCategory(categoryId),
     financing: data.financing,
     trade: data.trade,
     rent: data.rent,
-    avDescription: data.avDescription,
+    avDescription: data.avDescription || null,
     avAaptoifr: data.avAaptoifr,
     avAutopilot: data.avAutopilot,
     certified: data.certified,
@@ -115,7 +116,7 @@ function engineRows(data: AircraftListing) {
     brand: e.brand || null,
     model: e.model || null,
     engineHours: e.engineHours ?? null,
-    TBO: e.TBO,
+    TBO: e.TBO ?? null,
     DURG: e.DURG ?? null,
     description: e.description || null,
   }));
