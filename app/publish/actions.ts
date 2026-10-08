@@ -10,11 +10,14 @@ import {
   listingSchema,
   toFieldErrors,
   type AircraftListing,
+  type SparePartListing,
   type ListingInput,
   type ListingResult,
 } from "@/lib/listing-schema";
+import { assertListingOwner } from "@/lib/listing-auth";
 import {
   createUploadTargets,
+  pathFromPublicUrl,
   removeUploads,
   verifyUploads,
   type ListingType,
@@ -70,6 +73,79 @@ async function findRecentDuplicate(listingType: ListingType, sellerId: string, t
 
 const listingUrl = (listingType: ListingType, id: string) =>
   listingType === "aircraft" ? `/planes/plane-details/${id}` : `/spareparts/sparepart-details/${id}`;
+
+// Campos propios (sin relaciones ni estado/vigencia), iguales en el alta y en la edición.
+function aircraftFields(data: AircraftListing, categoryId: string) {
+  return {
+    title: data.title,
+    categoryId,
+    brandId: data.brandId || null,
+    customBrand: data.brandId ? null : data.customBrand || null,
+    modelId: data.modelId || null,
+    subModelId: data.subModelId || null,
+    customModel: data.modelId ? null : data.customModel || null,
+    year: data.year,
+    totalTimeHours: data.totalTimeHours,
+    price: data.priceOnRequest ? null : data.price ?? null,
+    city: data.city,
+    province: data.province,
+    description: data.description,
+    condition: data.condition,
+    // VA-21: el selector solo aparece en MP/BP; el resto queda sin dato hasta VA-43.
+    engineType: categoryId === "MP" || categoryId === "BP" ? data.engineType ?? null : null,
+    financing: data.financing,
+    trade: data.trade,
+    rent: data.rent,
+    avDescription: data.avDescription,
+    avAaptoifr: data.avAaptoifr,
+    avAutopilot: data.avAutopilot,
+    certified: data.certified,
+    certDate: data.certDate ? new Date(data.certDate) : null,
+    plate: data.plate || null,
+    intDescription: data.intDescription || null,
+    extDescription: data.extDescription || null,
+    passengers: data.passengers ?? null,
+    airconditioner: data.airconditioner,
+    oxygen: data.oxygen,
+  };
+}
+
+function engineRows(data: AircraftListing) {
+  return data.engines.map((e) => ({
+    brand: e.brand || null,
+    model: e.model || null,
+    engineHours: e.engineHours ?? null,
+    TBO: e.TBO,
+    DURG: e.DURG ?? null,
+    description: e.description || null,
+  }));
+}
+
+function propellerRows(data: AircraftListing) {
+  return data.propellers.map((p) => ({
+    // La marca va dentro del modelo hasta que tenga su propio campo (VA-54).
+    model: [p.brand, p.model].filter(Boolean).join(" ") || null,
+    propellerHours: p.propellerHours ?? null,
+    description: p.description || null,
+  }));
+}
+
+function sparePartFields(data: SparePartListing) {
+  return {
+    title: data.title,
+    categoryId: data.categoryId,
+    brand: data.brand || null,
+    partNumber: data.partNumber || null,
+    price: data.priceOnRequest ? null : data.price ?? null,
+    inPesos: data.inPesos,
+    stock: data.stock,
+    condition: data.condition,
+    city: data.city,
+    province: data.province,
+    description: data.description,
+    aircrafts: data.aircrafts,
+  };
+}
 
 /**
  * Paso 1 de la publicación: firma una URL de subida por archivo. El navegador sube
@@ -140,7 +216,6 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
   const now = new Date();
   const expiresAt = new Date(now);
   expiresAt.setDate(now.getDate() + 45);
-  const price = data.priceOnRequest ? null : data.price ?? null;
 
   try {
     let id: string;
@@ -154,59 +229,14 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
       const aircraft = await prisma.aircraft.create({
         data: {
           sellerId: user.id,
-          title: data.title,
-          categoryId,
-          brandId: data.brandId || null,
-          customBrand: data.brandId ? null : data.customBrand || null,
-          modelId: data.modelId || null,
-          subModelId: data.subModelId || null,
-          customModel: data.modelId ? null : data.customModel || null,
-          year: data.year,
-          totalTimeHours: data.totalTimeHours,
-          price,
-          city: data.city,
-          province: data.province,
-          description: data.description,
-          condition: data.condition,
-          // VA-21: el selector solo aparece en MP/BP; el resto queda sin dato hasta VA-43.
-          engineType: categoryId === "MP" || categoryId === "BP" ? data.engineType ?? null : null,
-          financing: data.financing,
-          trade: data.trade,
-          rent: data.rent,
-          avDescription: data.avDescription,
-          avAaptoifr: data.avAaptoifr,
-          avAutopilot: data.avAutopilot,
-          certified: data.certified,
-          certDate: data.certDate ? new Date(data.certDate) : null,
-          plate: data.plate || null,
-          intDescription: data.intDescription || null,
-          extDescription: data.extDescription || null,
-          passengers: data.passengers ?? null,
-          airconditioner: data.airconditioner,
-          oxygen: data.oxygen,
+          ...aircraftFields(data, categoryId),
           status: "ACTIVE",
           listingStartsAt: now,
           listingExpiresAt: expiresAt,
           images: { create: uploads.imageUrls.map((url, order) => ({ url, order })) },
           documents: { create: uploads.documents },
-          engines: {
-            create: data.engines.map((e) => ({
-              brand: e.brand || null,
-              model: e.model || null,
-              engineHours: e.engineHours ?? null,
-              TBO: e.TBO,
-              DURG: e.DURG ?? null,
-              description: e.description || null,
-            })),
-          },
-          propeller: {
-            create: data.propellers.map((p) => ({
-              // La marca va dentro del modelo hasta que tenga su propio campo (VA-54).
-              model: [p.brand, p.model].filter(Boolean).join(" ") || null,
-              propellerHours: p.propellerHours ?? null,
-              description: p.description || null,
-            })),
-          },
+          engines: { create: engineRows(data) },
+          propeller: { create: propellerRows(data) },
         },
         select: { id: true },
       });
@@ -220,18 +250,7 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
       const sparePart = await prisma.sparePart.create({
         data: {
           sellerId: user.id,
-          title: data.title,
-          categoryId: data.categoryId,
-          brand: data.brand || null,
-          partNumber: data.partNumber || null,
-          price,
-          inPesos: data.inPesos,
-          stock: data.stock,
-          condition: data.condition,
-          city: data.city,
-          province: data.province,
-          description: data.description,
-          aircrafts: data.aircrafts,
+          ...sparePartFields(data),
           status: "ACTIVE",
           listingStartsAt: now,
           listingExpiresAt: expiresAt,
@@ -262,6 +281,149 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
     return { ok: true, id, url: listingUrl(listingType, id) };
   } catch (error) {
     console.error("Error al crear la publicación:", error);
+    return fail({ ok: false, error: "No se pudo guardar la publicación. Probá de nuevo." });
+  }
+}
+
+/**
+ * Edición completa con el mismo formulario del alta (VA-30, punto 7).
+ * En "images" y "documents" llegan mezcladas las URLs de los archivos que ya tenía el
+ * aviso (se conservan) y las rutas de los nuevos que el navegador acaba de subir.
+ */
+export async function updateListing(id: string, input: ListingInput): Promise<ListingResult> {
+  const user = await getCurrentUser();
+  if (!user?.id) return { ok: false, error: "Tenés que iniciar sesión." };
+
+  const listingType: ListingType = input?.listingType === "parts" ? "parts" : "aircraft";
+  const incomingImages = Array.isArray(input?.images) ? input.images.filter((p) => typeof p === "string") : [];
+  const incomingDocs = input?.listingType === "aircraft" && Array.isArray(input.documents) ? input.documents : [];
+
+  // Dueño (o admin). Si no lo es, no se toca nada, ni siquiera los archivos.
+  try {
+    await assertListingOwner(id, listingType === "aircraft" ? "aircraft" : "sparepart");
+  } catch {
+    return { ok: false, error: "No tenés permiso para editar esta publicación." };
+  }
+
+  let sellerId: string;
+  let imageUrls: string[];
+  let docUrls: string[] = [];
+  if (listingType === "aircraft") {
+    const aircraft = await prisma.aircraft.findUnique({
+      where: { id },
+      select: { sellerId: true, images: { select: { url: true } }, documents: { select: { url: true } } },
+    });
+    if (!aircraft) return { ok: false, error: "La publicación no existe." };
+    sellerId = aircraft.sellerId;
+    imageUrls = aircraft.images.map((i) => i.url);
+    docUrls = aircraft.documents.map((d) => d.url);
+  } else {
+    const sparePart = await prisma.sparePart.findUnique({
+      where: { id },
+      select: { sellerId: true, images: { select: { url: true } } },
+    });
+    if (!sparePart) return { ok: false, error: "La publicación no existe." };
+    sellerId = sparePart.sellerId;
+    imageUrls = sparePart.images.map((i) => i.url);
+  }
+
+  const currentImages = new Set(imageUrls);
+  const currentDocs = new Set(docUrls);
+  const newImagePaths = incomingImages.filter((p) => !currentImages.has(p));
+  const newDocPaths = incomingDocs.map((d) => d?.path).filter((p): p is string => typeof p === "string" && !currentDocs.has(p));
+
+  // Ante cualquier error, se borran solo los archivos NUEVOS de esta edición.
+  const fail = async (result: Extract<ListingResult, { ok: false }>) => {
+    await removeUploads(user.id!, listingType, newImagePaths, newDocPaths);
+    return result;
+  };
+
+  const parsed = listingSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail({ ok: false, error: "Revisá los campos marcados.", fieldErrors: toFieldErrors(parsed.error) });
+  }
+  const data = parsed.data;
+
+  const uploads = await verifyUploads(
+    user.id,
+    listingType,
+    newImagePaths,
+    data.listingType === "aircraft" ? data.documents.filter((d) => !currentDocs.has(d.path)) : []
+  );
+  if (!uploads.ok) return fail({ ok: false, error: uploads.error, fieldErrors: { images: uploads.error } });
+
+  // Orden final: cada URL existente queda igual; cada ruta nueva se reemplaza por su URL pública.
+  const newUrlByPath = new Map(newImagePaths.map((path, i) => [path, uploads.imageUrls[i]]));
+  const finalImages = data.images.map((entry) => (currentImages.has(entry) ? entry : newUrlByPath.get(entry)!));
+  const removedImages = [...currentImages].filter((url) => !finalImages.includes(url));
+
+  try {
+    if (data.listingType === "aircraft") {
+      const categoryId = await resolveAircraftCategory(data);
+      if (!categoryId) {
+        return fail({ ok: false, error: "Seleccioná una categoría válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });
+      }
+      const keptDocs = data.documents.filter((d) => currentDocs.has(d.path)).map((d) => d.path);
+      const removedDocs = [...currentDocs].filter((url) => !keptDocs.includes(url));
+
+      await prisma.$transaction([
+        prisma.aircraftImage.deleteMany({ where: { aircraftId: id } }),
+        prisma.aircraftEngine.deleteMany({ where: { aircraftId: id } }),
+        prisma.aircraftPropeller.deleteMany({ where: { aircraftId: id } }),
+        prisma.aircraftDocument.deleteMany({ where: { aircraftId: id, url: { notIn: keptDocs } } }),
+        prisma.aircraft.update({
+          where: { id },
+          data: {
+            ...aircraftFields(data, categoryId),
+            images: { create: finalImages.map((url, order) => ({ url, order })) },
+            documents: { create: uploads.documents },
+            engines: { create: engineRows(data) },
+            propeller: { create: propellerRows(data) },
+          },
+        }),
+      ]);
+
+      // Recién con la base actualizada se borran del bucket los archivos que se quitaron.
+      await removeUploads(
+        sellerId,
+        listingType,
+        removedImages.map((url) => pathFromPublicUrl("image", url)).filter((p): p is string => !!p),
+        removedDocs.map((url) => pathFromPublicUrl("document", url)).filter((p): p is string => !!p)
+      );
+      revalidatePath(`/planes/plane-details/${id}`);
+      revalidatePath("/planes");
+    } else {
+      if (!(await isValidSparePartCategory(data.categoryId))) {
+        const msg = "Seleccioná la categoría más específica.";
+        return fail({ ok: false, error: msg, fieldErrors: { categoryId: msg } });
+      }
+
+      await prisma.$transaction([
+        prisma.sparePartImage.deleteMany({ where: { sparePartId: id } }),
+        prisma.sparePart.update({
+          where: { id },
+          data: {
+            ...sparePartFields(data),
+            images: { create: finalImages.map((url, order) => ({ url, order })) },
+          },
+        }),
+      ]);
+
+      await removeUploads(
+        sellerId,
+        listingType,
+        removedImages.map((url) => pathFromPublicUrl("image", url)).filter((p): p is string => !!p),
+        []
+      );
+      revalidatePath(`/spareparts/sparepart-details/${id}`);
+      revalidatePath("/spareparts");
+    }
+
+    revalidatePath("/");
+    revalidatePath("/profile");
+    return { ok: true, id, url: listingUrl(listingType, id) };
+  } catch (error) {
+    console.error("Error al editar la publicación:", error);
     return fail({ ok: false, error: "No se pudo guardar la publicación. Probá de nuevo." });
   }
 }

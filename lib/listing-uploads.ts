@@ -126,6 +126,13 @@ export async function verifyUploads(
   };
 }
 
+/** Ruta dentro del bucket a partir de la URL pública guardada en la base (o null si no es de ese bucket). */
+export function pathFromPublicUrl(kind: UploadKind, url: string): string | null {
+  const marker = `/storage/v1/object/public/${LISTING_BUCKETS[kind]}/`;
+  const at = url.indexOf(marker);
+  return at === -1 ? null : decodeURIComponent(url.slice(at + marker.length).split("?")[0]);
+}
+
 /** Borra archivos subidos (solo dentro de la carpeta del usuario). Nunca lanza. */
 export async function removeUploads(
   userId: string,

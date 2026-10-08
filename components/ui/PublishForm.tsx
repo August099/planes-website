@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { createListing, sendManagedListingEmail } from "@/app/publish/actions";
+import { createListing, sendManagedListingEmail, updateListing } from "@/app/publish/actions";
 import { compressImage } from "@/lib/image-compressor";
 import { discardUploaded, uploadListingFiles } from "@/lib/listing-upload-client";
-import { listingSchema, toFieldErrors, MAX_LISTING_IMAGES, type FieldErrors, type ListingInput } from "@/lib/listing-schema";
+import { listingSchema, toFieldErrors, MAX_LISTING_IMAGES, type EditListingData, type FieldErrors, type ListingInput } from "@/lib/listing-schema";
 import Image from "next/image";
 import Link from "next/link";
 import Stepper, { Step } from "@/components/ui/Stepper";
@@ -58,6 +58,8 @@ interface PublishFormProps {
     categoriesData?: CategoryOption[];
     brandsData?: BrandOption[];
     spareCategoriesData?: CategoryOption[];
+    // Si viene, el formulario edita esa publicación (/publish?edit=<id>) en vez de crear una.
+    editListing?: EditListingData;
 }
 
 interface EngineInput {
@@ -95,12 +97,14 @@ export default function PublishForm({
     userId,
     categoriesData = [],
     brandsData = [],
-    spareCategoriesData = []
+    spareCategoriesData = [],
+    editListing
 }: PublishFormProps) {
     const errorRef = useRef<HTMLDivElement>(null);
+    const isEditing = !!editListing;
 
     // Sistema de Pasos
-    const [activeTab, setActiveTab] = useState<"aircraft" | "parts">("aircraft");    
+    const [activeTab, setActiveTab] = useState<"aircraft" | "parts">(editListing?.type ?? "aircraft");
     const [currentStep, setCurrentStep] = useState(1);
 
     // Controla si el usuario ya intentó avanzar en el paso actual.
@@ -117,7 +121,7 @@ export default function PublishForm({
     }, [brandsData]);
     const [searchModel, setSearchModel] = useState("");
     const [showModelDropdown, setShowModelDropdown] = useState(false);
-    const [compatibleModels, setCompatibleModels] = useState<string[]>([]);
+    const [compatibleModels, setCompatibleModels] = useState<string[]>(editListing?.parts?.aircrafts ?? []);
 
     const filteredModels = useMemo(() => {
         if (!searchModel) return allAircraftModels.slice(0, 10);
@@ -136,10 +140,17 @@ export default function PublishForm({
         setCompatibleModels(compatibleModels.filter(m => m !== model));
     };
 
-    const [selectedBrandModels, setSelectedBrandModels] = useState<ModelOption[]>([]);
-    const [selectedModelVariants, setSelectedModelVariants] = useState<SubModelOption[]>([]);
-    const [selectedParentCategoryId, setSelectedParentCategoryId] = useState<string>("");
-    const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string>("");
+    const [selectedBrandModels, setSelectedBrandModels] = useState<ModelOption[]>(
+        () => brandsData.find((b) => b.id === editListing?.aircraft?.brandId)?.models ?? []
+    );
+    const [selectedModelVariants, setSelectedModelVariants] = useState<SubModelOption[]>(
+        () =>
+            brandsData
+                .find((b) => b.id === editListing?.aircraft?.brandId)
+                ?.models.find((m) => m.id === editListing?.aircraft?.modelId)?.variants ?? []
+    );
+    const [selectedParentCategoryId, setSelectedParentCategoryId] = useState<string>(editListing?.parts?.parentCategoryId ?? "");
+    const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string>(editListing?.parts?.subCategoryId ?? "");
 
     const subCategories = useMemo(() => {
       const parent = spareCategoriesData.find((cat) => cat.id === selectedParentCategoryId);
@@ -193,7 +204,7 @@ export default function PublishForm({
     const currentYear = new Date().getFullYear();
 
     // ESTADO: Formulario de aeronaves
-    const [aircraftForm, setAircraftForm] = useState({
+    const [aircraftForm, setAircraftForm] = useState(() => editListing?.aircraft ?? {
         title: "",
         year: currentYear,
         condition: "USADO" as "USADO" | "NUEVO",
@@ -232,11 +243,11 @@ export default function PublishForm({
         }
     }, [aircraftForm.year, currentYear]);
 
-    const [engines, setEngines] = useState<EngineInput[]>([]);
-    const [propellers, setPropellers] = useState<PropellerInput[]>([]);
+    const [engines, setEngines] = useState<EngineInput[]>(editListing?.engines ?? []);
+    const [propellers, setPropellers] = useState<PropellerInput[]>(editListing?.propellers ?? []);
 
     // ESTADO: Formulario de repuestos
-    const [partsForm, setPartsForm] = useState({
+    const [partsForm, setPartsForm] = useState(() => editListing?.parts ?? {
         title: "",
         brand: "",
         price: "",
@@ -252,8 +263,12 @@ export default function PublishForm({
     });
 
     // ESTADO: Archivos
-    const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
+    // Fotos: las que ya tenía la publicación (url) y las nuevas (file), en el orden elegido.
+    const [images, setImages] = useState<{ file?: File; url?: string; preview: string }[]>(
+        () => editListing?.images.map((url) => ({ url, preview: url })) ?? []
+    );
     const [documents, setDocuments] = useState<File[]>([]);
+    const [existingDocuments, setExistingDocuments] = useState<{ name: string; url: string }[]>(editListing?.documents ?? []);
 
     useEffect(() => {
       if (brandsData && brandsData.length > 0 && !aircraftForm.brandId) {
@@ -384,7 +399,7 @@ export default function PublishForm({
     const removeImage = (index: number) => {
       setImages((prev) => {
         const updated = [...prev];
-        URL.revokeObjectURL(updated[index].preview);
+        if (updated[index].file) URL.revokeObjectURL(updated[index].preview);
         updated.splice(index, 1);
         return updated;
       });
@@ -559,8 +574,11 @@ export default function PublishForm({
       // Misma validación que el servidor, antes de subir nada (las rutas son provisorias).
       const precheck = listingSchema.safeParse(
         buildListingInput(
-          images.map((_, i) => `pendiente-${i}`),
-          documents.map((d, i) => ({ path: `pendiente-${i}`, name: d.name }))
+          images.map((img, i) => img.url ?? `pendiente-${i}`),
+          [
+            ...existingDocuments.map((d) => ({ path: d.url, name: d.name })),
+            ...documents.map((d, i) => ({ path: `pendiente-${i}`, name: d.name })),
+          ]
         )
       );
       if (!precheck.success) {
@@ -574,9 +592,10 @@ export default function PublishForm({
       try {
         // 1. Fotos y documentos directo a Supabase (no pasan por Vercel).
         setPublishStatus("Subiendo fotos...");
+        // En la edición solo se suben las fotos y documentos nuevos.
         const upload = await uploadListingFiles(
           activeTab,
-          images.map((img) => img.file),
+          images.flatMap((img) => (img.file ? [img.file] : [])),
           activeTab === "aircraft" ? documents : [],
           ({ done, total }) => setPublishStatus(`Subiendo archivos ${done}/${total}...`)
         );
@@ -586,9 +605,14 @@ export default function PublishForm({
         }
         uploaded = upload;
 
-        // 2. Crear la publicación con las rutas ya subidas.
-        setPublishStatus("Guardando publicación...");
-        const res = await createListing(buildListingInput(upload.images, upload.documents));
+        // 2. Crear (o actualizar) la publicación con las rutas ya subidas. En la edición, las
+        //    fotos que ya existían van por URL y las nuevas por su ruta, en el orden elegido.
+        setPublishStatus(isEditing ? "Guardando cambios..." : "Guardando publicación...");
+        const newPaths = [...upload.images];
+        const orderedImages = images.map((img) => img.url ?? newPaths.shift()!);
+        const allDocuments = [...existingDocuments.map((d) => ({ path: d.url, name: d.name })), ...upload.documents];
+        const input = buildListingInput(orderedImages, allDocuments);
+        const res = editListing ? await updateListing(editListing.id, input) : await createListing(input);
         // Con o sin éxito, el servidor ya se hizo cargo de estos archivos.
         uploaded = null;
         if (!res.ok) {
@@ -597,14 +621,16 @@ export default function PublishForm({
           return;
         }
 
-        setPublishStatus("¡Publicado! Abriendo tu aviso...");
+        setPublishStatus(isEditing ? "¡Guardado! Abriendo tu aviso..." : "¡Publicado! Abriendo tu aviso...");
         router.push(res.url);
       } catch (error) {
         console.error("Error al publicar:", error);
         // Si se cortó la red después de subir, se intenta borrar lo subido.
         if (uploaded) await discardUploaded(activeTab, uploaded.images, uploaded.documents);
         setErrorAndScroll(
-          "Se perdió la conexión al publicar. Revisá tu internet y probá de nuevo: no se creó ninguna publicación."
+          isEditing
+            ? "Se perdió la conexión al guardar. Revisá tu internet y probá de nuevo: la publicación no se modificó."
+            : "Se perdió la conexión al publicar. Revisá tu internet y probá de nuevo: no se creó ninguna publicación."
         );
       } finally {
         submittingRef.current = false;
@@ -654,7 +680,7 @@ export default function PublishForm({
         <div className="container mx-auto px-4 pt-16 pb-36 max-w-7xl">
             <div className="text-center max-w-3xl mx-auto mb-10">
               <h1 className="font-heading text-3xl sm:text-5xl font-semibold text-[#001F58] mb-4">
-                PUBLICAR PRODUCTO
+                {isEditing ? "EDITAR PUBLICACIÓN" : "PUBLICAR PRODUCTO"}
               </h1>
             </div>
 
@@ -665,7 +691,8 @@ export default function PublishForm({
               </div>
             )}
 
-            <div className="flex justify-center mb-8">
+            {/* En la edición no se puede cambiar el tipo de publicación */}
+            <div className={isEditing ? "hidden" : "flex justify-center mb-8"}>
               <div className="bg-white/80 p-1.5 rounded-2xl border border-[#001F58]/20 flex gap-2 shadow-sm backdrop-blur-sm">
                 <button
                   type="button"
@@ -1015,6 +1042,12 @@ export default function PublishForm({
                                                     <Paperclip className="w-4 h-4 text-[#001F58]" /> Adjuntar Fichas o Informes (PDF/Docs)
                                                     <input type="file" multiple accept=".pdf,.doc,.docx,image/*" onChange={handleDocumentUpload} className="hidden" />
                                                 </label>
+                                                {existingDocuments.map((doc) => (
+                                                    <div key={doc.url} className="flex justify-between items-center p-2.5 mt-2 bg-white rounded-lg border border-slate-200 text-xs shadow-sm">
+                                                        <span className="truncate w-3/4 font-medium text-slate-600">{doc.name}</span>
+                                                        <button type="button" onClick={() => setExistingDocuments((prev) => prev.filter((d) => d.url !== doc.url))} className="text-red-600 hover:text-red-800 font-bold px-2">X</button>
+                                                    </div>
+                                                ))}
                                                 {documents.map((doc, idx) => (
                                                     <div key={idx} className="flex justify-between items-center p-2.5 mt-2 bg-white rounded-lg border border-slate-200 text-xs shadow-sm">
                                                         <span className="truncate w-3/4 font-medium text-slate-600">{doc.name}</span>
@@ -1097,7 +1130,7 @@ export default function PublishForm({
                                                 disabled={isPublishing || !!compressing} 
                                                 className="px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl flex items-center gap-2 shadow-lg disabled:opacity-50 transition-colors"
                                             >
-                                                <Rocket className="w-5 h-5" /> {isPublishing ? publishStatus ?? "Publicando..." : compressing ? "Optimizando fotos..." : "Finalizar y Publicar"}
+                                                <Rocket className="w-5 h-5" /> {isPublishing ? publishStatus ?? "Publicando..." : compressing ? "Optimizando fotos..." : isEditing ? "Guardar cambios" : "Finalizar y Publicar"}
                                             </button>
                                         </div>
                                     </div>
@@ -1372,7 +1405,7 @@ export default function PublishForm({
                                                 disabled={isPublishing || !!compressing} 
                                                 className="px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl flex items-center gap-2 shadow-lg disabled:opacity-50 transition-colors"
                                             >
-                                                <Rocket className="w-5 h-5" /> {isPublishing ? publishStatus ?? "Publicando..." : compressing ? "Optimizando fotos..." : "Finalizar y Publicar"}
+                                                <Rocket className="w-5 h-5" /> {isPublishing ? publishStatus ?? "Publicando..." : compressing ? "Optimizando fotos..." : isEditing ? "Guardar cambios" : "Finalizar y Publicar"}
                                             </button>
                                         </div>
                                     </div>

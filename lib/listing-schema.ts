@@ -177,3 +177,63 @@ export function toFieldErrors(error: z.ZodError): FieldErrors {
 export type ListingResult =
   | { ok: true; id: string; url: string }
   | { ok: false; error: string; fieldErrors?: FieldErrors };
+
+// Publicación existente cargada en el formulario para editarla (/publish?edit=<id>).
+// Los valores van como los maneja el formulario (números como texto).
+export interface EditListingData {
+  id: string;
+  type: "aircraft" | "parts";
+  images: string[];
+  documents: { name: string; url: string }[];
+  aircraft?: {
+    title: string;
+    year: number;
+    condition: "USADO" | "NUEVO";
+    price: string;
+    priceOnRequest: boolean;
+    brandId: string;
+    customBrand: string;
+    modelId: string;
+    subModelId: string;
+    customModel: string;
+    categoryId: string;
+    engineType: "PISTON" | "TURBOPROP";
+    totalTimeHours: string;
+    financing: boolean;
+    trade: boolean;
+    rent: boolean;
+    avDescription: string;
+    avAaptoifr: boolean;
+    avAutopilot: boolean;
+    certified: boolean;
+    certDate: string;
+    plate: string;
+    city: string;
+    province: string;
+    intDescription: string;
+    passengers: string;
+    airconditioner: boolean;
+    oxygen: boolean;
+    extDescription: string;
+    description: string;
+  };
+  engines?: { brand: string; model: string; engineHours: string; TBO: string; DURG: string; description: string }[];
+  propellers?: { brand: string; model: string; propellerHours: string; description: string }[];
+  parts?: {
+    title: string;
+    brand: string;
+    price: string;
+    inPesos: boolean;
+    priceOnRequest: boolean;
+    condition: string;
+    city: string;
+    province: string;
+    description: string;
+    partNumber: string;
+    stock: string;
+    categoryId: string;
+    parentCategoryId: string;
+    subCategoryId: string;
+    aircrafts: string[];
+  };
+}

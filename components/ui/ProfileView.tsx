@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 import {
@@ -11,7 +12,7 @@ import {
   changePasswordAction, // Asegúrate de importar tu Server Action o API para cambiar contraseña
 } from "@/app/actions/profile-actions";
 import { claimCouponToProfile } from "@/app/actions/coupon-validation";
-import { deleteListingAction, updateListingAction, renewListingAction } from "@/app/actions/listing-actions";
+import { deleteListingAction, renewListingAction } from "@/app/actions/listing-actions";
 import { RefreshCw, Lock } from "lucide-react";
 import {
   MapPin,
@@ -96,9 +97,6 @@ export function ProfileView({
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Estados para Modal de Edición de Publicaciones
-  const [editingItem, setEditingItem] = useState<{ item: any; type: "aircraft" | "sparepart" } | null>(null);
-  const [loadingModal, setLoadingModal] = useState(false);
-  const [priceConsult, setPriceConsult] = useState(false);
 
   // Estados para reclamo de cupones
   const [couponCodeInput, setCouponCodeInput] = useState("");
@@ -140,38 +138,6 @@ export function ProfileView({
       }
     } catch (error) {
       alert("Error al eliminar la publicación.");
-    }
-  };
-
-  const handleEditOpen = (item: any, type: "aircraft" | "sparepart") => {
-    setEditingItem({ item, type });
-    setPriceConsult(!item.price);
-  };
-
-  const handleUpdateListingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoadingModal(true);
-    try {
-      const formData = new FormData(e.currentTarget);
-      // Los checkbox destildados no se envían: mandarlos explícitos para que se guarden como false.
-      e.currentTarget
-        .querySelectorAll<HTMLInputElement>('input[type="checkbox"][name]')
-        .forEach((input) => formData.set(input.name, input.checked ? "true" : "false"));
-      formData.append("id", editingItem!.item.id);
-      formData.append("listingType", editingItem!.type);
-      formData.append("priceOnRequest", priceConsult.toString());
-
-      const res = await updateListingAction(formData);
-      if (!res.success) {
-        // El modal queda abierto para que el usuario corrija los datos.
-        alert(res.error || "Error al actualizar la publicación.");
-        return;
-      }
-      setEditingItem(null);
-    } catch (error) {
-      alert("Error al actualizar la publicación.");
-    } finally {
-      setLoadingModal(false);
     }
   };
 
@@ -569,14 +535,13 @@ export function ProfileView({
                       </div>
 
                       <div className="flex items-center gap-1 border-l pl-2 border-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => handleEditOpen(item, "aircraft")}
+                        <Link
+                          href={`/publish?edit=${item.id}&type=aircraft`}
                           className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
                           title="Editar Publicación"
                         >
                           <Edit className="w-3.5 h-3.5" />
-                        </button>
+                        </Link>
                         <button
                           type="button"
                           onClick={() => handleDelete(item.id, "aircraft")}
@@ -671,14 +636,13 @@ export function ProfileView({
                       </div>
 
                       <div className="flex items-center gap-1 border-l pl-2 border-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => handleEditOpen(item, "sparepart")}
+                        <Link
+                          href={`/publish?edit=${item.id}&type=parts`}
                           className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
                           title="Editar Publicación"
                         >
                           <Edit className="w-3.5 h-3.5" />
-                        </button>
+                        </Link>
                         <button
                           type="button"
                           onClick={() => handleDelete(item.id, "sparepart")}
@@ -937,195 +901,6 @@ export function ProfileView({
         </div>
       )}
 
-      {/* MODAL DE EDICIÓN RÁPIDA DE PUBLICACIÓN */}
-      {editingItem && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-2xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto space-y-4">
-            <div className="flex justify-between items-center border-b pb-3 border-slate-100">
-              <h3 className="font-bold text-[#001F58] text-lg">
-                Editar {editingItem.type === "aircraft" ? "Aeronave" : "Repuesto"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setEditingItem(null)}
-                className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdateListingSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider mb-1">Título</label>
-                <input
-                  type="text"
-                  name="title"
-                  required
-                  defaultValue={editingItem.item.title}
-                  className="w-full px-3 py-2 text-xs border rounded-xl"
-                />
-              </div>
-
-              {editingItem.type === "aircraft" ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Año</label>
-                    <input
-                      type="number"
-                      name="year"
-                      required
-                      min="1900"
-                      max={new Date().getFullYear()}
-                      defaultValue={editingItem.item.year}
-                      className="w-full px-3 py-2 text-xs border rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Horas Totales</label>
-                    <input
-                      type="number"
-                      name="totalTimeHours"
-                      required
-                      min="0"
-                      defaultValue={editingItem.item.totalTimeHours}
-                      className="w-full px-3 py-2 text-xs border rounded-xl"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">P/N (SKU)</label>
-                    <input
-                      type="text"
-                      name="partNumber"
-                      defaultValue={editingItem.item.partNumber || ""}
-                      className="w-full px-3 py-2 text-xs border rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Stock</label>
-                    <input
-                      type="number"
-                      name="stock"
-                      required
-                      min="1"
-                      defaultValue={editingItem.item.stock || 1}
-                      className="w-full px-3 py-2 text-xs border rounded-xl"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider mb-1">Precio</label>
-                <input
-                  type="number"
-                  name="price"
-                  disabled={priceConsult}
-                  defaultValue={editingItem.item.price || ""}
-                  placeholder={priceConsult ? "A Consultar" : "Ej: 120000"}
-                  className="w-full px-3 py-2 text-xs border rounded-xl disabled:bg-slate-100"
-                />
-                <div className="flex items-center gap-4 mt-2">
-                  <label className="flex items-center gap-1 text-xs cursor-pointer font-medium">
-                    <input
-                      type="checkbox"
-                      checked={priceConsult}
-                      onChange={(e) => setPriceConsult(e.target.checked)}
-                      className="rounded"
-                    />
-                    Precio a Consultar
-                  </label>
-
-                  {editingItem.type === "sparepart" && (
-                    <label className="flex items-center gap-1 text-xs cursor-pointer font-medium">
-                      <input
-                        type="checkbox"
-                        name="inPesos"
-                        defaultChecked={editingItem.item.inPesos}
-                        className="rounded"
-                      />
-                      Expresado en Pesos (ARS)
-                    </label>
-                  )}
-                </div>
-              </div>
-
-              {editingItem.type === "aircraft" && (
-                <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <label className="block text-xs font-bold uppercase tracking-wider">Opciones de Negociación</label>
-                  <div className="flex flex-wrap gap-4 text-xs font-medium">
-                    <label className="flex items-center gap-1 cursor-pointer">
-                      <input type="checkbox" name="financing" defaultChecked={editingItem.item.financing} className="rounded" />
-                      Financiación
-                    </label>
-                    <label className="flex items-center gap-1 cursor-pointer">
-                      <input type="checkbox" name="trade" defaultChecked={editingItem.item.trade} className="rounded" />
-                      Permuta
-                    </label>
-                    <label className="flex items-center gap-1 cursor-pointer">
-                      <input type="checkbox" name="rent" defaultChecked={editingItem.item.rent} className="rounded" />
-                      Alquiler
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider mb-1">Ciudad</label>
-                  <input
-                    type="text"
-                    name="city"
-                    required
-                    defaultValue={editingItem.item.city}
-                    className="w-full px-3 py-2 text-xs border rounded-xl"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider mb-1">Provincia</label>
-                  <input
-                    type="text"
-                    name="province"
-                    required
-                    defaultValue={editingItem.item.province}
-                    className="w-full px-3 py-2 text-xs border rounded-xl"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider mb-1">Descripción</label>
-                <textarea
-                  name="description"
-                  required
-                  rows={3}
-                  defaultValue={editingItem.item.description}
-                  className="w-full px-3 py-2 text-xs border rounded-xl"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setEditingItem(null)}
-                  className="px-4 py-2 text-xs border rounded-xl hover:bg-slate-50 cursor-pointer font-semibold"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loadingModal}
-                  className="px-5 py-2 bg-[#001F58] text-white text-xs font-bold rounded-xl hover:bg-blue-900 cursor-pointer flex items-center gap-2"
-                >
-                  {loadingModal ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar Cambios"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

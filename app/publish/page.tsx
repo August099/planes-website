@@ -1,15 +1,34 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 import PublishForm from "@/components/ui/PublishForm";
+import { loadListingForEdit } from "@/lib/listing-edit";
 
 export const dynamic = "force-dynamic";
 
-export default async function PublishPage() {
+type Props = { searchParams: Promise<{ edit?: string; type?: string }> };
+
+export default async function PublishPage({ searchParams }: Props) {
   const user = await getCurrentUser();
+  const { edit, type } = await searchParams;
 
   if (!user) {
     redirect("/login?callbackUrl=/publish");
+  }
+
+  // Modo edición: /publish?edit=<id>&type=aircraft|parts (solo el dueño o un admin).
+  const editListing = edit ? await loadListingForEdit(edit, type === "parts" ? "parts" : "aircraft") : null;
+  if (edit && !editListing) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center gap-4 text-center p-6">
+        <h1 className="text-2xl font-bold text-[#001F58]">No podés editar esta publicación</h1>
+        <p className="text-sm text-slate-600 max-w-md">No existe o no es tuya.</p>
+        <Link href={`/profile/${user.id}`} className="px-6 py-2.5 bg-[#001F58] text-white rounded-xl font-semibold">
+          Ir a mi perfil
+        </Link>
+      </main>
+    );
   }
 
   const rawBrands = await prisma.aircraftBrand.findMany({
@@ -67,6 +86,7 @@ export default async function PublishPage() {
         brandsData={JSON.parse(JSON.stringify(rawBrands))}
         categoriesData={JSON.parse(JSON.stringify(rawCategories))}
         spareCategoriesData={JSON.parse(JSON.stringify(rawSpareCategories))}
+        editListing={editListing ?? undefined}
       />
     </main>
   );
