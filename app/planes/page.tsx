@@ -6,7 +6,7 @@ import { getAircraftTaxonomy } from "@/lib/cached-data";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SortDropdown } from "@/components/ui/SortDropdown";
 import { AircraftFiltersWrapper } from "@/components/ui/AircraftFiltersWrapper";
-import { Prisma } from "@prisma/client";
+import { Prisma, UserType } from "@prisma/client";
 import Link from "next/link";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
@@ -50,6 +50,14 @@ export default async function AvionesPage({ searchParams }: Props) {
   const conditions = toArray(params.condition);
   const minPrice = params.minPrice ? Number(params.minPrice) : undefined;
   const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
+  // VA-45: año desde-hasta y tipo de vendedor ("Publica"). Valores inválidos se ignoran.
+  const toInt = (v: string | string[] | undefined) => {
+    const n = typeof v === "string" ? Number.parseInt(v, 10) : NaN;
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const minYear = toInt(params.minYear);
+  const maxYear = toInt(params.maxYear);
+  const sellerTypes = toArray(params.sellerType).filter((t): t is UserType => (Object.values(UserType) as string[]).includes(t));
   const financing = params.financing === "true";
   const trade = params.trade === "true";
   const rent = params.rent === "true";
@@ -75,6 +83,13 @@ export default async function AvionesPage({ searchParams }: Props) {
     ...(modelIds.length > 0 && { modelId: { in: modelIds } }),
     ...(subModelIds.length > 0 && { subModelId: { in: subModelIds } }),
     ...(conditions.length > 0 && { condition: { in: conditions as any } }),
+    ...((minYear !== undefined || maxYear !== undefined) && {
+      year: {
+        ...(minYear !== undefined && { gte: minYear }),
+        ...(maxYear !== undefined && { lte: maxYear }),
+      },
+    }),
+    ...(sellerTypes.length > 0 && { seller: { userType: { in: sellerTypes } } }),
     ...(financing && { financing: true }),
     ...(trade && { trade: true }),
     ...(rent && { rent: true }),
@@ -124,6 +139,9 @@ export default async function AvionesPage({ searchParams }: Props) {
     conditions.forEach((c) => urlParams.append("condition", c));
     if (minPrice !== undefined) urlParams.set("minPrice", String(minPrice));
     if (maxPrice !== undefined) urlParams.set("maxPrice", String(maxPrice));
+    if (minYear !== undefined) urlParams.set("minYear", String(minYear));
+    if (maxYear !== undefined) urlParams.set("maxYear", String(maxYear));
+    sellerTypes.forEach((t) => urlParams.append("sellerType", t));
     if (financing) urlParams.set("financing", "true");
     if (trade) urlParams.set("trade", "true");
     if (rent) urlParams.set("rent", "true");

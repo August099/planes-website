@@ -5,6 +5,7 @@ import { getSparePartCategories } from "@/lib/cached-data";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 import { SparePartFiltersWrapper } from "@/components/ui/SparePartFiltersWrapper";
+import { SortDropdown } from "@/components/ui/SortDropdown";
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
@@ -50,6 +51,18 @@ export default async function SparePartsPage({ searchParams }: Props) {
   const currency = params.currency === "ARS" ? "ARS" : "USD";
   const minPrice = params.minPrice ? Number(params.minPrice) : undefined;
   const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
+
+  // Orden (VA-45): mismas opciones que /planes (SortDropdown).
+  const sort = typeof params.sort === "string" ? params.sort : "recent";
+  const orderByMap: Record<string, Prisma.SparePartOrderByWithRelationInput> = {
+    price_desc: { price: "desc" },
+    price_asc: { price: "asc" },
+    recent: { createdAt: "desc" },
+    oldest: { createdAt: "asc" },
+    az: { title: "asc" },
+    za: { title: "desc" },
+  };
+  const orderBy = orderByMap[sort] ?? orderByMap.recent;
 
   function isDescendantOf(
     categories: { id: string; parentId: string | null }[],
@@ -124,7 +137,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
         images: { orderBy: { order: "asc" }, take: 1 },
         category: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy,
       skip,
       take: itemsPerPage,
     }),
@@ -153,6 +166,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
     if (params.minPrice) urlParams.set("minPrice", String(params.minPrice));
     if (params.maxPrice) urlParams.set("maxPrice", String(params.maxPrice));
 
+    if (sort !== "recent") urlParams.set("sort", sort);
     urlParams.set("page", pageNumber.toString());
     return `?${urlParams.toString()}`;
   };
@@ -178,13 +192,27 @@ export default async function SparePartsPage({ searchParams }: Props) {
   return (
     <main className="mx-auto px-4 py-8">
       <PageBackground page="spareparts" />
-      <h1 className="text-2xl font-medium mb-6">
-        Repuestos en venta ({totalSpareParts})
-      </h1>
-      <section className="flex items-start gap-6">
-        <SparePartFiltersWrapper />
+      {/* Misma disposición que /planes (VA-45): en celular, "Filtros" (panel lateral) y "Ordenar"
+          lado a lado; desde lg, barra lateral + grilla. */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <h1 className="text-2xl font-medium">
+          Repuestos en venta <span className="text-slate-500 font-normal text-lg">({totalSpareParts})</span>
+        </h1>
+        <div className="hidden lg:block">
+          <SortDropdown />
+        </div>
+      </div>
+      <section className="flex flex-col lg:flex-row items-start gap-6">
+        <div className="w-full flex lg:block items-center gap-3 lg:w-auto shrink-0">
+          <div className="flex-1 lg:flex-none lg:w-72">
+            <SparePartFiltersWrapper />
+          </div>
+          <div className="flex-1 lg:hidden w-full *:w-full">
+            <SortDropdown />
+          </div>
+        </div>
 
-        <div className="w-full lg:w-3/4">
+        <div className="w-full flex-1 min-w-0">
           {spareParts.length === 0 ? (
             <div className="p-12 text-center border rounded-2xl bg-neutral-50/50">
               <p className="text-slate-500 font-medium">
@@ -192,7 +220,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {spareParts.map((sparePart) => (
                 <SparePartCard
                   key={sparePart.id}
