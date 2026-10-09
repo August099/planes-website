@@ -82,7 +82,7 @@ export function OverlayAircraftCard({
             <span className="font-semibold text-lg sm:text-xl text-white/95 drop-shadow-sm">
               {formattedPrice}
             </span>
-            {year && (
+            {year != null && (
               <span className="font-semibold text-base sm:text-lg text-white/90 drop-shadow-sm">
                 {year}
               </span>

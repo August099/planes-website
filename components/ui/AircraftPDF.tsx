@@ -223,7 +223,7 @@ export function AircraftPDF({
                       <Text style={styles.label}>TBO:</Text>
                       <Text>{e.TBO != null ? `${e.TBO} hs` : "No informado"}</Text>
                     </View>
-                    {e.engineHours && (
+                    {e.engineHours != null && (
                       <View style={styles.row}>
                         <Text style={styles.label}>Horas Usadas:</Text>
                         <Text>{e.engineHours} hs</Text>
@@ -265,7 +265,7 @@ export function AircraftPDF({
                 {aircraft.propeller.map((p, idx) => (
                   <View key={idx}>
                     {hasMultiplePropellers && <Text style={styles.subBlockTitle}>Hélice {idx + 1}</Text>}
-                    {p.propellerHours && (
+                    {p.propellerHours != null && (
                       <View style={styles.row}>
                         <Text style={styles.label}>Horas Totales:</Text>
                         <Text>{p.propellerHours} hs</Text>
