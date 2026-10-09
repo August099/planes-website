@@ -392,6 +392,8 @@ Revisando el flujo completo (`PublishForm.tsx` → `app/publish/actions.ts` → 
 - Según la composición: en la categoría **Bimotor** no se muestra el recuadro "Datos de motor" a la derecha de las fotos (abajo sigue todo igual). Hoy depende de `hasSingleEngine`. Atarlo a la categoría (`BP`/`BT`).
 - **Aceptación:** a 375 px, sin scrollear, se ve foto + título + precio.
 
+**Estado (9/10/2026):** ✅ hecho en local (commit `bbb3f74`). Un solo árbol en los dos detalles: las columnas son `contents` en celular y los bloques se ordenan con `order-*` (fotos → título/precio/acciones → vendedor → descripción → ficha → documentos); fuera las copias `lg:hidden` / `hidden lg:flex`. Componentes nuevos `KeyFacts` (datos clave en grilla 2 columnas) y `SellerContactCard`. La ficha web ya no repite "General" ni los datos del motor del recuadro (`aircraftSections` / `sparePartSections` con `omitSummary`); la impresión usa la ficha completa. Recuadro "Motor" atado a la categoría (`showsEngineSummary`: un motor y no Bimotor). Verificado: a 375 px el precio termina en 669 px (avión) y 725 px (repuesto) de 812; a 1280 px las dos columnas quedan como antes; un BP con un solo motor ya no muestra el recuadro. **No se hizo** el cambio de `DetailRow` (label 40 % en la misma fila): las tablas de la ficha se leen bien a 375 px.
+
 ### VA-42 · Zoom de imágenes: pantalla completa al tocar y X arriba a la derecha
 - **Archivo real:** `components/ui/Carousel.tsx`, que es el que usan los detalles. `components/ui/AircraftGallery.tsx` está **sin usar** y hay que borrarlo.
 - **Confirmado en vivo:** tocar la foto no hace nada y el botón tiene `opacity: 0`.
@@ -402,6 +404,8 @@ Revisando el flujo completo (`PublishForm.tsx` → `app/publish/actions.ts` → 
   - En el lightbox: X fija arriba a la derecha (con `env(safe-area-inset-top)`), pinch-zoom (ya está el módulo `Zoom`), doble tap para zoom, swipe entre fotos, `Escape` para cerrar en desktop, `role="dialog"` y `aria-modal`.
   - Reemplazar el texto "Pellizca o usa la rueda" por "Pellizcá…".
   - Bug extra: en desktop, el listener de `wheel` del carrusel principal (l.70–77) **secuestra el scroll** hacia arriba sobre la foto y hace zoom en vez de scrollear la página. Quitar el zoom con rueda del carrusel principal y dejarlo solo en el lightbox.
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `a81c824`). Tocar/clic en la foto abre el visor (`onClick` de Swiper: no se dispara al deslizar ni en las flechas); botón de maximizar visible en táctil (44 px, `aria-label`). Sin zoom con rueda en el carrusel principal. Visor con `role="dialog"`, `aria-modal`, foco en la X, `Escape`, flechas del teclado, doble toque/clic para zoom, X de 44 px con `safe-area-inset-top`. Probado a 375 px con clics reales: la flecha no abre, tocar la foto abre, `Escape` cierra y devuelve el scroll, deslizar cambia de foto sin abrir. Borrado `components/ui/AircraftGallery.tsx` (no se usaba).
 
 ### VA-43 · Subcategorías Pistón / Turbohélice dentro de Monomotor y Bimotor
 **Estado (8/10/2026):** ✅ hecho en local (commit `feat(VA-43)` + parte del formulario en `feat(VA-44)`). Migración `20261008154932_va43_subcategorias` aplicada en `va_dev`.

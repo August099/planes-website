@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 35 de 63 tareas hechas (VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-43 a VA-45, VA-54, VA-56, VA-57, VA-58, VA-60 y VA-70). Faltan 28 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 37 de 63 tareas hechas (VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-41 a VA-45, VA-54, VA-56, VA-57, VA-58, VA-60 y VA-70). Faltan 26 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -75,6 +75,8 @@ Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://l
 | VA-44 | `3e498ef` | Horas opcionales en Agrícola, Experimental y Proyecto; aviónica opcional en Agrícola y Proyecto; TBO opcional en Proyecto (migración `20261008155026_va44_campos_opcionales`). Labels con "(opcional)". "Habilitado" pasa a Sí/No obligatorio. "No informadas" en cards, detalle y PDF. | `/publish` con tipo Agrícola · detalle de un aviso sin horas · `lib/aircraft-rules.ts` |
 | VA-58 | `0d59127` | **Miembros fundadores a mano desde el admin** (pedido del socio). El registro ya no los asigna solo. Nueva sección **Usuarios** en el panel: búsqueda, filtro "Solo fundadores", alta, método de ingreso (Email / Google), email sin verificar, cantidad de avisos y botón "Hacer fundador" / "Fundador · Quitar". Contador "Fundadores: X de 50" con tope. | http://localhost:3000/admin/users (con un usuario admin). `app/admin/users/page.tsx`, `app/actions/admin-users-actions.ts`, `components/ui/FoundingMemberToggle.tsx` |
 | VA-45 | `4b55359` | **Filtros desplegables.** `/spareparts` ya no se rompe en celular (se ensanchaba a 457 px): botón "Filtros (n)" con panel lateral y "Ordenar" al lado, como `/planes`. Se puede ordenar repuestos. Secciones con contador y etiquetas de filtros aplicados en las dos páginas. `/planes` suma filtros **Año desde-hasta** y **Publica** (Particular / Intermediario / Fábrica), y Marca muestra 6 + "Ver todas". | `/planes` y `/spareparts` a 375 px → "Filtros". `components/ui/filters/FilterShell.tsx` |
+| VA-41 | `bbb3f74` | **Detalle ordenado para celular**: fotos → título y precio → vendedor → descripción → ficha (antes la descripción iba antes del precio). Un solo árbol de componentes, sin bloques duplicados. Datos clave en grilla de 2 columnas; la ficha no repite lo del resumen. El recuadro "Motor" no aparece en Bimotor. | Detalle de un avión y de un repuesto a 375 px. `components/ui/listing/KeyFacts.tsx`, `SellerContactCard.tsx` |
+| VA-42 | `a81c824` | **Zoom de fotos en celular**: tocar la foto abre la pantalla completa (antes no se podía: el botón solo aparecía con mouse). Visor con X arriba a la derecha, `Escape`, flechas, doble toque para zoom. La rueda del mouse ya no se "come" el scroll de la página sobre la foto. | Detalle → tocar la foto. `components/ui/Carousel.tsx` |
 
 ### VA-57 · Verificación "campo del formulario → dónde se ve en el detalle"
 
