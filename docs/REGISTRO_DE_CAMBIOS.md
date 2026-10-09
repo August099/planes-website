@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 35 de 62 tareas hechas (VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-43 a VA-45, VA-54, VA-56, VA-57, VA-58, VA-60 y VA-70). Faltan 27 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 35 de 63 tareas hechas (VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-43 a VA-45, VA-54, VA-56, VA-57, VA-58, VA-60 y VA-70). Faltan 28 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 

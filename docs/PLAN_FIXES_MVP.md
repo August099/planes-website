@@ -351,6 +351,21 @@ Revisando el flujo completo (`PublishForm.tsx` → `app/publish/actions.ts` → 
 - **Hacer:** mismo fondo que las demás tarjetas (`bg-white`, borde `slate-200`, `rounded-2xl`, `shadow-sm`) en el contenedor de la foto y en la tira de miniaturas. Ver a 375 y 1280 px con fotos horizontales y verticales.
 
 **Estado (9/10/2026):** ✅ hecho en local (commit `3ec45a0`). Contenedor y tira de miniaturas en `bg-white` (borde `slate-200`, igual que las demás tarjetas). Además, las miniaturas tienen desde el primer render el mismo ancho que calcula Swiper (5 / 7 / 9 por fila): antes de inicializarse, la primera ocupaba todo el ancho. Verificado a 375 px (57 px, 5 visibles) y 1280 px (79,3 px, 9 visibles). Aplica al detalle de avión y al de repuesto (mismo componente).
+
+### VA-33 · El tipo de vendedor ("Publica") no se completa bien (visto el 9/10)
+- **Problema:** el filtro "Publica" de VA-45 usa `User.userType` (`PARTICULAR` / `RESELLER` / `FACTORY`), pero:
+  - Solo se carga en el registro con email, con dos opciones: "Particular" y "Empresa / Taller / Broker" (→ `RESELLER`). **`FACTORY` nunca se puede elegir.**
+  - Quien entra con **Google** queda siempre `PARTICULAR` (valor por defecto) y nadie se lo pregunta. En `va_dev`: 9 de 13 `PARTICULAR` son cuentas de Google.
+  - No se puede cambiar después: "Ajustes" del perfil no lo tiene.
+  - El perfil muestra el valor crudo (`PARTICULAR`) en vez de una etiqueta.
+- **Solución propuesta:**
+  1. Etiquetas únicas en `lib/constants.ts` (`USER_TYPE_LABELS`: Particular / Intermediario (empresa, taller, broker) / Fábrica) y usarlas en el registro, el perfil, el filtro y el admin.
+  2. **Registro:** el select pasa a tener las tres opciones y se guarda tal cual (sin el mapeo `COMPANY` → `RESELLER`).
+  3. **Perfil → Ajustes:** campo "Tipo de cuenta" editable, con validación en el servidor (solo el propio usuario, valor del enum).
+  4. **Cuentas de Google (y las existentes):** campo nuevo `userTypeConfirmed` (boolean). Se marca en el registro con email y al guardar el tipo en Ajustes. Si no está confirmado, **antes de publicar** `/publish` pregunta "¿Quién publica?" (mismo select) y lo guarda junto con la publicación. Para las cuentas actuales con contraseña, la migración lo marca como confirmado (ya lo eligieron al registrarse).
+  5. **Admin:** mostrar y poder corregir el tipo en `/admin/users` (VA-58), por si alguien se equivoca.
+  6. Mientras haya cuentas sin confirmar, el filtro "Publica" puede dar resultados incompletos: opcionalmente mostrar el filtro recién cuando la mayoría de los vendedores con avisos estén confirmados.
+- **Migración:** `ALTER TABLE "User" ADD COLUMN "userTypeConfirmed" BOOLEAN NOT NULL DEFAULT false` + `UPDATE ... SET true WHERE "passwordHash" IS NOT NULL` (mostrar el SQL antes de aplicar).
 ---
 
 ## FASE 4 — Lista del socio
