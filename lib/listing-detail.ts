@@ -32,6 +32,7 @@ export interface DetailRowData {
   label: string;
   value?: string;
   list?: string[]; // se muestra como lista con viñetas
+  helpHref?: string; // ícono de ayuda junto a la etiqueta (VA-78: glosario)
 }
 
 export interface DetailSection {
@@ -114,7 +115,7 @@ export function aircraftSections(a: AircraftDetail, { omitSummary = false }: { o
         { label: "Potencia", value: e.horsepower != null ? `${e.horsepower} HP` : undefined },
         { label: "Horas totales", value: hours(e.engineHours) },
         { label: "TBO", value: hours(e.TBO) },
-        { label: "DURG / SMOH", value: hours(e.DURG) },
+        { label: "DURG / SMOH", value: hours(e.DURG), helpHref: "/guias/glosario-aeronautico#smoh" },
         { label: "Descripción", value: text(e.description) },
       ])
     ),

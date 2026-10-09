@@ -1149,6 +1149,13 @@ export default function PublishForm({
                                                 Paso 4: Descripción y otras características
                                             </h3>
                                             <p className="text-xs text-slate-500 mt-1">Brindá los detalles finales sobre la estética y el estado general.</p>
+                                            {/* VA-78: guía para vender */}
+                                            <p className="text-xs text-slate-500 mt-1">
+                                                ¿Qué conviene contar en el aviso?{" "}
+                                                <Link href="/guias/como-vender-tu-avion" target="_blank" className="font-semibold text-[#E70F1F] hover:underline">
+                                                    Leé la guía para vender tu avión
+                                                </Link>
+                                            </p>
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

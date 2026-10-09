@@ -266,6 +266,14 @@ export default async function PlaneDetailsPage({
               entityType="AIRCRAFT"
             />
 
+            {/* VA-78: link discreto a la guía de pre-compra */}
+            <p className="order-3 lg:order-none -mt-2 px-1 text-xs text-slate-500">
+              ¿Primera compra?{" "}
+              <Link href="/guias/como-comprar-un-avion-usado" className="font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
+                Leé el checklist de pre-compra
+              </Link>
+            </p>
+
             {aircraft.documents.length > 0 && (
               <div className="order-6 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-3">
                 <h2 className="font-bold text-[#001F58] text-sm">Documentación Adjunta</h2>

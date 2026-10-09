@@ -48,6 +48,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/guias" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  Guías
+                </Link>
+              </li>
+              <li>
                 <Link href="/terms" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Términos y condiciones
                 </Link>

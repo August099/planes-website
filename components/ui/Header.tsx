@@ -37,6 +37,9 @@ export function Header() {
             <Link href="/services" className={linkClass}>
               Servicios
             </Link>
+            <Link href="/guias" className={linkClass}>
+              Guías
+            </Link>
             {/* Sin sesión, el proxy manda a /login y vuelve a /publish después de ingresar. */}
             <Link href="/publish" className={linkClass}>
               Vender

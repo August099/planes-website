@@ -1,4 +1,5 @@
 import type { AircraftDetail, SparePartDetail } from "@/lib/listing-data";
+import type { Guide } from "@/lib/guides";
 import { aircraftName, sparePartCurrency, truncate } from "@/lib/listing-seo";
 import { absoluteUrl, CONTACT_PHONE, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 
@@ -147,4 +148,54 @@ export function faqPageJsonLd(faqs: { question: string; answer: string }[]) {
       acceptedAnswer: { "@type": "Answer", text: faq.answer },
     })),
   };
+}
+
+// Guías (VA-78): Article + BreadcrumbList; el glosario suma DefinedTermSet.
+export function guideJsonLd(guide: Guide) {
+  const path = `/guias/${guide.slug}`;
+  const organization = { "@id": absoluteUrl("/#organization"), "@type": "Organization", name: SITE_NAME, url: absoluteUrl("/") };
+  const article = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: guide.title,
+    description: guide.metaDescription,
+    url: absoluteUrl(path),
+    mainEntityOfPage: absoluteUrl(path),
+    inLanguage: "es-AR",
+    datePublished: guide.updatedAt,
+    dateModified: guide.updatedAt,
+    author: organization,
+    publisher: { ...organization, logo: { "@type": "ImageObject", url: absoluteUrl("/logo-va-color.png") } },
+  };
+  const trail = breadcrumbs([
+    { name: "Inicio", path: "/" },
+    { name: "Guías", path: "/guias" },
+    { name: guide.title, path },
+  ]);
+  if (!guide.isGlossary) return [article, trail];
+
+  const termSet = {
+    "@context": "https://schema.org",
+    "@type": "DefinedTermSet",
+    "@id": absoluteUrl(`${path}#glosario`),
+    name: guide.title,
+    url: absoluteUrl(path),
+    inLanguage: "es-AR",
+    hasDefinedTerm: guide.sections.map((s) => ({
+      "@type": "DefinedTerm",
+      "@id": absoluteUrl(`${path}#${s.id}`),
+      name: s.heading,
+      description: (s.paragraphs ?? []).join(" "),
+      url: absoluteUrl(`${path}#${s.id}`),
+      inDefinedTermSet: absoluteUrl(`${path}#glosario`),
+    })),
+  };
+  return [article, trail, termSet];
+}
+
+export function guidesIndexJsonLd() {
+  return breadcrumbs([
+    { name: "Inicio", path: "/" },
+    { name: "Guías", path: "/guias" },
+  ]);
 }

@@ -17,6 +17,7 @@ export function DetailSections({ sections }: { sections: DetailSection[] }) {
               <DetailRow
                 key={row.label}
                 label={row.label}
+                helpHref={row.helpHref}
                 last={i === s.rows.length - 1}
                 multiline={!row.list}
                 value={

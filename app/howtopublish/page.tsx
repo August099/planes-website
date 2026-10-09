@@ -109,7 +109,7 @@ export default function HowToPublishPage() {
                 </div>
 
                 {/* Acciones Principales */}
-                <div className="flex flex-col sm:flex-row justify-center gap-4 mb-20">
+                <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
                     <Link 
                         href="/publish" 
                         className="px-8 py-4 bg-[#001F58] text-white rounded-xl font-bold text-lg text-center hover:bg-blue-900 transition-colors shadow-lg flex items-center justify-center gap-2"
@@ -117,6 +117,14 @@ export default function HowToPublishPage() {
                         Comenzar Ahora <ArrowRight className="w-5 h-5" />
                     </Link>
                 </div>
+
+                {/* VA-78: guía para vender */}
+                <p className="mb-20 text-center text-sm text-slate-600">
+                    ¿Querés vender más rápido?{" "}
+                    <Link href="/guias/como-vender-tu-avion" className="font-semibold text-[#E70F1F] hover:underline">
+                        Leé la guía para vender tu avión
+                    </Link>
+                </p>
 
                 {/* Sección Alternativa: Publicación Asistida */}
                 <div className="bg-white rounded-3xl p-8 sm:p-10 border-2 border-red-100 shadow-2xl relative overflow-hidden">

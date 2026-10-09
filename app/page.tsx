@@ -5,6 +5,7 @@ import { activeListingWhere } from "@/lib/listing-filters";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { getAircraftTaxonomy, getSparePartCategories } from "@/lib/cached-data";
 import { HowItWorks } from "@/components/ui/HowItWorks";
+import { GuidesSection } from "@/components/ui/GuidesSection";
 import { SellerCta } from "@/components/ui/SellerCta";
 import { SparePartCategoriesCarousel } from "@/components/ui/SparePartCategoriesCarousel";
 import { FeaturedAircraftCarousel } from "@/components/ui/FeaturedAircraftCarousel";
@@ -188,6 +189,7 @@ export default async function HomePage() {
 
         <SellerCta />
         <HowItWorks />
+        <GuidesSection />
         <HomeServicesCards />
       </div>
     </>
