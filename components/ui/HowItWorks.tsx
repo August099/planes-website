@@ -28,9 +28,9 @@ export function HowItWorks() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {STEPS.map((step, i) => (
             <div key={step.title} className="text-center group">
-              {/* Círculo con fondo oscuro translúcido */}
-              <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-white/50 group-hover:bg-primary/20 flex items-center justify-center transition-colors duration-300 border border-white/10 group-hover:border-primary/50">
-                <step.icon className="h-7 w-7 text-primary" />
+              {/* VA-49: círculo rojo de marca con ícono blanco (antes, blanco translúcido con ícono rojo) */}
+              <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary group-hover:bg-red-700 flex items-center justify-center transition-colors duration-300">
+                <step.icon className="h-7 w-7 text-white" />
               </div>
 
               {/* Número de paso en Rojo */}
