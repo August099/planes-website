@@ -482,6 +482,8 @@ Del ítem que vino pegado en la lista: *"…una vez registrado, marcar con un av
   2. Usuario logueado: aviso en `/publish` y en el perfil con el mismo texto.
   3. Con `enabled: false` desaparece todo.
 
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `b79db15`). Decisión del socio: **solo el avión** ("Promoción de lanzamiento: publicá tu avión 100% gratis"), **pocos lugares** y **arranca prendido**. Visitantes: cartel en la Home debajo del hero, visto como mucho 2 veces por navegador (`LAUNCH_PROMO.maxViews`) o hasta cerrarlo; no va en `/planes` ni `/spareparts`. Con cuenta: aviso en `/publish` al publicar un avión. Todo sale de `lib/promo.ts`. Probado: 1ª y 2ª visita lo muestran, la 3ª no; la X lo cierra para siempre; con sesión no aparece en la Home.
 ### VA-48 · Menú desplegable en "Repuestos" en la Home
 - **Interpretación ❓:** en el header (desktop) y en el menú mobile, "Repuestos" abre un desplegable con las categorías raíz (las mismas del carrusel `SparePartCategoriesCarousel`) que lleva a `/spareparts?category=<id>`. Reusar `DropdownMenu` de `components/ui/dropdown-menu.tsx`. Las categorías salen de una consulta cacheada (VA-13).
 - Si el socio se refería a otra cosa (por ejemplo, el filtro del hero `HomeFilter.tsx`), ajustar.
