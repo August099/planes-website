@@ -7,6 +7,7 @@ import { SparePartCard } from "@/components/ui/SparePartCard";
 import { SparePartFiltersWrapper } from "@/components/ui/SparePartFiltersWrapper";
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -200,7 +201,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
                   category={sparePart.category}
                   city={sparePart.city}
                   province={sparePart.province}
-                  imageUrl={sparePart.images[0]?.url ?? "/placeholder.png"}
+                  imageUrl={sparePart.images[0]?.url ?? PLACEHOLDER_IMAGE}
                   isFavoriteInitial={userFavIds.has(sparePart.id)}
                 />
               ))}

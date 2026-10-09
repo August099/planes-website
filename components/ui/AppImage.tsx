@@ -3,6 +3,7 @@
 import Image, { ImageProps } from "next/image";
 import { useState } from "react";
 import { getOptimizedImageUrl } from "@/lib/supabase-image";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 
 interface AppImageProps extends Omit<ImageProps, "src"> {
   src: string | null | undefined;
@@ -16,7 +17,7 @@ export function AppImage({
   alt,
   optimizedWidth = 800,
   quality = 75,
-  fallbackSrc = "/placeholder.png",
+  fallbackSrc = PLACEHOLDER_IMAGE,
   className,
   ...props
 }: AppImageProps) {

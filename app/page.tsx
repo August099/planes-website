@@ -14,6 +14,7 @@ import HomeServicesCards from "@/components/ui/HomeServiceCards";
 import { FeaturedBrands } from "@/components/ui/FeaturedBrands";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationAndWebsiteJsonLd } from "@/lib/structured-data";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 
 // Título y descripción salen del layout; acá solo el canonical.
 export const metadata: Metadata = {
@@ -91,7 +92,7 @@ export default async function HomePage() {
     totalTimeHours: aircraft.totalTimeHours,
     city: aircraft.city,
     province: aircraft.province,
-    imageUrl: aircraft.images[0]?.url ?? "/placeholder.png",
+    imageUrl: aircraft.images[0]?.url ?? PLACEHOLDER_IMAGE,
     isFavoriteInitial: userFavAircraftIds.has(aircraft.id),
   }));
 
@@ -110,7 +111,7 @@ export default async function HomePage() {
       totalTimeHours: aircraft.totalTimeHours,
       city: aircraft.city,
       province: aircraft.province,
-      imageUrl: aircraft.images[0]?.url ?? "/placeholder.png",
+      imageUrl: aircraft.images[0]?.url ?? PLACEHOLDER_IMAGE,
       createdAt: aircraft.createdAt,
       isFavoriteInitial: userFavAircraftIds.has(aircraft.id),
     })
@@ -129,7 +130,7 @@ export default async function HomePage() {
       city: part.city,
       province: part.province,
       inPesos: part.inPesos,
-      imageUrl: part.images[0]?.url ?? "/placeholder.png",
+      imageUrl: part.images[0]?.url ?? PLACEHOLDER_IMAGE,
       createdAt: part.createdAt,
       isFavoriteInitial: userFavSparePartIds.has(part.id),
     })

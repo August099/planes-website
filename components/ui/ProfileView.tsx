@@ -14,6 +14,7 @@ import {
 import { claimCouponToProfile } from "@/app/actions/coupon-validation";
 import { deleteListingAction, renewListingAction } from "@/app/actions/listing-actions";
 import { RefreshCw, Lock } from "lucide-react";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import {
   MapPin,
   Calendar,
@@ -475,7 +476,7 @@ export function ProfileView({
                   totalTimeHours={item.totalTimeHours}
                   city={item.city}
                   province={item.province}
-                  imageUrl={item.images[0]?.url ?? "/placeholder.png"}
+                  imageUrl={item.images[0]?.url ?? PLACEHOLDER_IMAGE}
                   isFavoriteInitial={currentUserFavIds.includes(item.id)}
                 />
 
@@ -576,7 +577,7 @@ export function ProfileView({
                   category={item.category}
                   city={item.city}
                   province={item.province}
-                  imageUrl={item.images[0]?.url ?? "/placeholder.png"}
+                  imageUrl={item.images[0]?.url ?? PLACEHOLDER_IMAGE}
                   isFavoriteInitial={currentUserFavIds.includes(item.id)}
                 />
 

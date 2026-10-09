@@ -9,6 +9,7 @@ import { AircraftFiltersWrapper } from "@/components/ui/AircraftFiltersWrapper";
 import { Prisma } from "@prisma/client";
 import Link from "next/link";
 import Image from "next/image";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -197,7 +198,7 @@ export default async function AvionesPage({ searchParams }: Props) {
                   totalTimeHours={aircraft.totalTimeHours}
                   city={aircraft.city}
                   province={aircraft.province}
-                  imageUrl={aircraft.images[0]?.url ?? "/placeholder.png"}
+                  imageUrl={aircraft.images[0]?.url ?? PLACEHOLDER_IMAGE}
                   images={aircraft.images}
                   isFavoriteInitial={userFavIds.has(aircraft.id)}
                 />

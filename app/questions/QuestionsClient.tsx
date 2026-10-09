@@ -13,6 +13,7 @@ import {
   AlertCircle 
 } from "lucide-react";
 import { answerQuestionAction } from "@/app/actions/questions";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 
 interface QuestionsClientProps {
   receivedQuestions: any[];
@@ -111,7 +112,7 @@ export function QuestionsClient({
               const detailsUrl = q.aircraft
                 ? `/planes/plane-details/${q.aircraft.id}`
                 : `/spareparts/sparepart-details/${q.sparePart.id}`;
-              const imageUrl = item?.images?.[0]?.url || "/placeholder.png";
+              const imageUrl = item?.images?.[0]?.url || PLACEHOLDER_IMAGE;
               const isPending = !q.answer;
 
               return (
@@ -233,7 +234,7 @@ export function QuestionsClient({
               const detailsUrl = q.aircraft
                 ? `/planes/plane-details/${q.aircraft.id}`
                 : `/spareparts/sparepart-details/${q.sparePart.id}`;
-              const imageUrl = item?.images?.[0]?.url || "/placeholder.png";
+              const imageUrl = item?.images?.[0]?.url || PLACEHOLDER_IMAGE;
 
               return (
                 <div key={q.id} className="p-5 rounded-2xl border border-slate-200 bg-white space-y-3">

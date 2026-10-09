@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { formatPrice } from "@/lib/format";
@@ -59,7 +59,7 @@ export function OverlayAircraftCard({
         )}
 
         {/* IMAGEN CON ZOOM EN HOVER */}
-        <Image
+        <AppImage
           src={imageUrl}
           alt={displayTitle}
           fill

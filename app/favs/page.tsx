@@ -5,6 +5,7 @@ import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 import Image from "next/image";
 import { Heart } from "lucide-react";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 
 export default async function FavoritesPage() {
   const user = await getCurrentUser();
@@ -78,7 +79,7 @@ export default async function FavoritesPage() {
                   totalTimeHours={fav.aircraft.totalTimeHours}
                   city={fav.aircraft.city}
                   province={fav.aircraft.province}
-                  imageUrl={fav.aircraft.images[0]?.url ?? "/placeholder.png"}
+                  imageUrl={fav.aircraft.images[0]?.url ?? PLACEHOLDER_IMAGE}
                   isFavoriteInitial={true}
                 />
               );
@@ -94,7 +95,7 @@ export default async function FavoritesPage() {
                   category={fav.sparePart.category}
                   city={fav.sparePart.city}
                   province={fav.sparePart.province}
-                  imageUrl={fav.sparePart.images[0]?.url ?? "/placeholder.png"}
+                  imageUrl={fav.sparePart.images[0]?.url ?? PLACEHOLDER_IMAGE}
                   isFavoriteInitial={true}
                 />
               );

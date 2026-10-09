@@ -4,6 +4,7 @@ import { activeListingWhere } from "@/lib/listing-filters";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 import Link from "next/link";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 
 interface Props {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -129,7 +130,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
                     totalTimeHours={item.totalTimeHours}
                     city={item.city}
                     province={item.province}
-                    imageUrl={item.images[0]?.url ?? "/placeholder.png"}
+                    imageUrl={item.images[0]?.url ?? PLACEHOLDER_IMAGE}
                   />
                 );
               }
@@ -143,7 +144,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
                   category={item.category}
                   city={item.city}
                   province={item.province}
-                  imageUrl={item.images[0]?.url ?? "/placeholder.png"}
+                  imageUrl={item.images[0]?.url ?? PLACEHOLDER_IMAGE}
                 />
               );
             })}

@@ -52,12 +52,6 @@ export function ImageCarousel({
     );
   }
 
-  console.log("ImageCarousel:", {
-  images,
-  imagesLength: images.length,
-  finalImagesLength: finalImages.length,
-});
-
   const hasMultipleImages = finalImages.length > 1;
 
   return (

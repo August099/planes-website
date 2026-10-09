@@ -111,3 +111,7 @@ export function formatEnum(
 }
 // Miembros fundadores: los asigna el admin a mano desde /admin/users (VA-58).
 export const FOUNDING_MEMBER_LIMIT = 50;
+
+// Imagen de reemplazo cuando una publicación no tiene foto o la foto no carga (VA-25).
+// Antes se usaba "/placeholder.png", que no existe en public/.
+export const PLACEHOLDER_IMAGE = "/placeholder.svg";
