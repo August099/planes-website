@@ -1021,3 +1021,29 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - **Componentes:** `SectionTitle` (`components/ui/home/SectionTitle.tsx`) unifica los 7 títulos (mismo tamaño y peso, "//" rojo; sin el subrayado de Destacadas). `FeaturedBrands` con `mask-image` (sin los degradés `#FAF5F5`) y pasa a **server component** (marquesina en CSS): **JS de la Home 990,3 → 980,7 KB**. Tarjetas en zonas claras (`.home-card` y `[data-card]` en AircraftCard/SparePartCard) blancas con sombra azulada solo bajo `.home-theme`. `HowItWorks` y `HomeServiceCards` sin `bg-[#001F58]`. `GuideCard` con `variant="dark"` (vidrio) en la Home; `/guias` sigue con la clara. Mapa de provincias con la paleta.
 - **Contrastes (WCAG AA):** navy sobre sky 11,95:1, sobre mist 14,29, sobre blush 14,46; slate-600 (subtítulos) sobre sky 5,76, mist 6,89, blush 6,98; links `#C20D1A` sobre mist 5,67 / blush 5,74; provincia sin avisos slate-500 sobre blanco 4,76 (antes slate-400, 2,56: fallaba); blanco sobre `--va-blue` (punto más claro de la zona 4) 8,44; blanco/70 sobre blue 4,99; "Paso N" `#FFC2C7` sobre blue 5,55 (antes rojo, 1,80: fallaba); blanco/80 y blanco/75 sobre tarjeta de vidrio 5,42 y 5,00; blanco sobre botón rojo 4,68 (hover 6,24); blanco/90 sobre el banner 10,93; blanco/90 sobre footer 14,93; `#FF5A64` (promo) sobre navy 5,16.
 - **Verificado:** `next build` OK; sin scroll horizontal a 375 px (`scrollWidth` 375); `/planes`, `/spareparts`, un detalle, `/terms` y `/guias` **idénticas píxel a píxel** a 1280 y 375 px; el LCP sigue siendo el hero (`fetchPriority="high"`, sin cambios).
+
+---
+
+## Pedidos del socio del 9/10 (tarde) — pendientes
+
+> Desde el 9/10 rige `docs/DESIGN_GUIDELINES.md` (pautas de UI): toda tarea visual se hace siguiéndolas, partiendo de cómo estaba la web antes de VA-79, y los cambios grandes se proponen primero en 2 direcciones.
+
+### VA-81 · Ruta de navegación (breadcrumb) en todas las páginas
+- Como en las guías (Inicio › Servicios › Guías › título): un componente único y el `BreadcrumbList` de JSON-LD en cada página interna (listados, detalles, publicar, perfil, preguntas, favoritos, servicios, FAQ, legales, admin). La Home no lleva.
+- **Estado:** pendiente.
+
+### VA-82 · Flechas de los carruseles de la Home unificadas
+- "Últimas Publicaciones" y "Aeronaves Destacadas" usan chevrons grandes sueltos; "Buscar Repuestos por Categoría" usa un botón redondo blanco con sombra. Usar el mismo control en todos.
+- **Estado:** pendiente.
+
+### VA-83 · Footer único en todo el sitio, con el "//" de la marca
+- El footer de la Home (VA-79, azul marino profundo y liso) le gusta al socio: llevarlo a todas las páginas y sumarle la silueta del "//" del logo, como el motivo de la zona de SellerCta.
+- **Estado:** pendiente.
+
+### VA-84 · SellerCta: que se vea más la foto
+- Menos filtros sobre la imagen de fondo del banner "¿Querés vender tu aeronave?", manteniendo el contraste AA del texto.
+- **Estado:** pendiente.
+
+### VA-85 · Home, Servicios y Guías según las pautas de diseño
+- Revisar la Home, `/services` y `/services/guides` contra `docs/DESIGN_GUIDELINES.md` (vidrio, grillas de tarjetas con ícono en cuadradito, elevación al hover, rounded-2xl/3xl, resplandores, centrado, copy genérico) y rediseñar partiendo de la web anterior a VA-79. Proponer 2 direcciones antes de implementar.
+- **Estado:** pendiente de elegir dirección.
