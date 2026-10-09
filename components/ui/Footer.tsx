@@ -6,10 +6,12 @@ import { SiInstagram } from "@icons-pack/react-simple-icons";
 
 export function Footer() {
   return (
-    <footer className="relative bg-[#001F58] text-white overflow-hidden">
+    <footer data-site-footer className="relative bg-[#001F58] text-white overflow-hidden">
       <Image
         src="/bkg-footer.png"
         alt="Fondo Footer"
+        // VA-79: en la Home se oculta y el footer sigue el color de la zona 4 (app/globals.css).
+        data-footer-bg
         fill
         className="object-cover object-[center_30%]"
       />

@@ -43,6 +43,12 @@ export function HeroBanner({
       {/* Sombreado suave solo para mejorar lectura en celulares */}
       <div className="absolute inset-0 bg-black/20 md:bg-transparent pointer-events-none" />
 
+      {/* VA-79: la foto no termina en un borde recto; se funde con el celeste de la zona 1. */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 bottom-0 h-40 sm:h-56 pointer-events-none bg-gradient-to-b from-transparent via-[#CFE3F6]/55 to-[#CFE3F6]"
+      />
+
       {/* Contenedor del Texto */}
       <div
         className="absolute transition-all duration-300 

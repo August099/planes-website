@@ -169,31 +169,62 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={organizationAndWebsiteJsonLd()} />
-      <div className="bg-[#FAF5F5] min-h-screen">
+      {/* VA-79: la Home es una sola pieza. Cuatro zonas con degradés que se continúan (el color con
+          que termina una es el color con que empieza la siguiente); estilos en app/globals.css. */}
+      <main className="home-theme relative isolate overflow-x-clip">
+        {/* Zona 1 · Cielo: hero + marcas + destacadas */}
         <HeroBanner />
+        <div className="home-zone home-zone-1">
+          <div aria-hidden className="home-zone-bg" />
+          {/* VA-47: invitación a registrarse, solo para visitantes sin cuenta */}
+          {!user && <LaunchPromoBanner />}
+          <FeaturedBrands brands={featuredBrandsFromDb} />
+          <div className="container mx-auto px-4 pb-12">
+            <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
+          </div>
+        </div>
 
-        {/* VA-47: invitación a registrarse, solo para visitantes sin cuenta */}
-        {!user && <LaunchPromoBanner />}
+        {/* Zona 2 · Altura: últimas publicaciones + provincias + categorías */}
+        <div className="home-zone home-zone-2">
+          <div aria-hidden className="home-zone-bg" />
+          {/* Resplandores montados sobre el límite entre la zona 1 y la 2 */}
+          <div aria-hidden className="home-glow home-glow--red -top-[22rem] -left-[18rem] sm:-left-[12rem]" />
+          <div aria-hidden className="home-glow home-glow--sky -top-[16rem] -right-[20rem] sm:-right-[10rem]" />
+          <div className="container mx-auto px-4 py-8 space-y-16">
+            <LatestAircraft items={combinedLatestListings} />
+            <ProvinceExplorer counts={provinceCounts} />
+            <SparePartCategoriesCarousel categories={sparePartCategories} />
+          </div>
+        </div>
 
-        <FeaturedBrands brands={featuredBrandsFromDb} />
+        {/* Zona 3 · Puente: SellerCta flota mientras el fondo pasa de claro a oscuro */}
+        <div className="home-zone home-zone-3 pt-8 pb-20">
+          <div aria-hidden className="home-zone-bg" />
+          <SellerCta />
+        </div>
 
-        <main className="container mx-auto px-4 py-8 space-y-12">
-          <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
-
-          <LatestAircraft items={combinedLatestListings} />
-
-          <ProvinceExplorer counts={provinceCounts} />
-
-          <SparePartCategoriesCarousel categories={sparePartCategories} />
-        </main>
-
-        <SellerCta />
-        <HowItWorks />
-        <GuidesSection />
-        <HomeServicesCards />
-      </div>
+        {/* Zona 4 · Estratósfera: cómo funciona + guías + servicios; el footer sigue el mismo color */}
+        <div className="home-zone home-zone-4 pb-8">
+          <div aria-hidden className="home-zone-bg" />
+          <BrandSlashes className="-top-6 right-[-4rem] w-72 sm:w-[28rem]" />
+          <BrandSlashes className="bottom-24 -left-24 w-64 sm:w-96 -scale-x-100" />
+          <HowItWorks />
+          <GuidesSection />
+          <HomeServicesCards />
+        </div>
+      </main>
     </>
   );
 } 
 
 
+
+// Motivo "//" de la marca (las barras del footer), en SVG inline y muy tenue (VA-79).
+function BrandSlashes({ className = "" }: { className?: string }) {
+  return (
+    <svg aria-hidden viewBox="0 0 400 160" fill="none" className={`home-slashes ${className}`}>
+      <path d="M150 4h120L126 156H6z" stroke="currentColor" strokeWidth="8" />
+      <path d="M300 4h60L216 156h-60z" stroke="currentColor" strokeWidth="8" />
+    </svg>
+  );
+}

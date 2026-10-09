@@ -49,7 +49,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
 
       <div
         data-province-map
-        className="h-[380px] sm:h-[460px] md:h-[600px] rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
+        className="home-card h-[380px] sm:h-[460px] md:h-[600px] rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
         {...mapHandlers}
       >
         {map}
@@ -74,7 +74,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
         </label>
 
         {/* Desktop: lista de las 24, sincronizada con el mapa */}
-        <ul className="hidden md:grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+        <ul className="home-card hidden md:grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
           {provinces.map((p) => {
             const total = p.aircraft + p.parts;
             const isSelected = p.slug === selected;
@@ -96,7 +96,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
                         ? "bg-[#E70F1F]/10 text-[#001F58]"
                         : total > 0
                           ? "text-[#001F58] hover:bg-slate-50"
-                          : "text-slate-400 hover:bg-slate-50"
+                          : "text-slate-500 hover:bg-slate-50"
                   }`}
                 >
                   <span className="truncate font-medium">{p.label}</span>
@@ -110,7 +110,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
         </ul>
 
         {/* Panel de la provincia elegida */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-live="polite">
+        <div className="home-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-live="polite">
           {!current ? (
             <p className="text-sm text-slate-500">Tocá una provincia en el mapa para ver sus avisos</p>
           ) : current.aircraft + current.parts === 0 ? (

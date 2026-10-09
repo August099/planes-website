@@ -12,6 +12,7 @@ import { Navigation } from "swiper/modules";
 // Estilos de Swiper obligatorios
 import "swiper/css";
 import "swiper/css/navigation";
+import { SectionTitle } from "@/components/ui/home/SectionTitle";
 
 export interface CategoryItem {
   id: string;
@@ -30,16 +31,14 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
       {/* CABECERA */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#001F58] tracking-tight">
-            Buscar Repuestos por Categoría
-          </h2>
-          <p className="text-sm text-muted-foreground">
+          <SectionTitle>Buscar Repuestos por Categoría</SectionTitle>
+          <p className="text-sm text-slate-600 mt-1">
             Encontrá piezas y componentes certificados para tu aeronave
           </p>
         </div>
         <Link
           href="/spareparts"
-          className="text-sm font-medium text-primary hover:underline hidden sm:block"
+          className="text-sm font-medium text-[#C20D1A] hover:underline hidden sm:block"
         >
           Ver todo el catálogo →
         </Link>
@@ -91,7 +90,7 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
                 href={`/spareparts?category=${cat.id}`}
                 className="block h-full"
               >
-                <Card className="aspect-square w-full bg-white dark:bg-white border-slate-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-200 group/card cursor-pointer rounded-2xl overflow-hidden">
+                <Card className="home-card aspect-square w-full bg-white dark:bg-white border-slate-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-200 group/card cursor-pointer rounded-2xl overflow-hidden">
                   <CardContent className="p-4 flex flex-col items-center text-center justify-center h-full w-full">
                     <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover/card:bg-primary group-hover/card:text-white transition-colors duration-200 shrink-0">
                       <DynamicCategoryIcon

@@ -34,7 +34,7 @@ export default function HomeServicesCards() {
 
   return (
     /* SECCIÓN DE ANCHO COMPLETO SIN ESQUINAS REDONDEADAS */
-    <section className="w-full bg-[#001F58] py-8 sm:py-12">
+    <section className="w-full py-8 sm:py-12">
       <div className="container mx-auto px-4">
         {/* GRILLA ADAPTABLE A MOBILE */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

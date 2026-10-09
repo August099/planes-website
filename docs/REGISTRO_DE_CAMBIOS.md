@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 59 de 66 tareas cerradas (58 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60 a VA-62, VA-70 a VA-75, VA-77 y VA-78. VA-63 y VA-76 parciales. Faltan 7 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77, VA-78 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 60 de 67 tareas cerradas (59 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60 a VA-62, VA-70 a VA-75, VA-77 a VA-79. VA-63 y VA-76 parciales. Faltan 7 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -178,6 +178,7 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 | VA-62 | `eca2c4b` | **Imágenes**: el hero de la Home y el fondo de "Vender" pasan a WebP (63–108 KB, antes ~2,4 MB). Los originales salen de `public/` a `assets/originals/`: lo que se publica baja de 48 MB a 3 MB. | `/` (hero y "Vender") |
 | VA-63 (parcial) | `cfc7d0b` + `2d81685` | **Sin `any`** (48): errores tipados, datos del admin, perfil y preguntas con tipos reales. Arregla 3 bugs que aparecieron al tipar: `/planes?condition=X` y `/spareparts?condition=X` daban error 500; `/questions` podía romper con una pregunta sin aviso; el visor de eventos del admin aceptaba cualquier tipo. Lint: 68 → 19 errores. | `/planes?condition=X` ya no da 500 |
 | VA-78 | `32c45a5` | **Guías para comprar y vender**: 4 guías estáticas (pre-compra, vender, transferencia ante ANAC con fuente oficial, glosario), índice `/guias`, sección en la Home entre "Cómo funciona" y los servicios, links en header, footer, detalle de avión, `/howtopublish`, `/publish` y un ícono de ayuda junto a "DURG / SMOH". Estáticas (CDN), con JSON-LD y en el sitemap. | `/guias`, `/` (sección Guías) |
+| VA-79 | ver git log | **Home fluida**: fondo continuo en 4 zonas con degradés de la paleta del hero (celeste, neblina, azul, marino), resplandores suaves, banner "Vender" flotante, títulos unificados con "//" rojo y el footer que sigue el color final. Solo en la Home: el resto de la web quedó idéntico (comparado píxel a píxel). La Home baja ~10 KB de JS. | `/` |
 
 ## Bugs encontrados en el camino (fuera del plan)
 

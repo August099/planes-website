@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Configuración local del editor (VA-61: tenía credenciales de Postgres local)
 .vscode/
+
+# Capturas de verificación (pesadas; se mandan por chat, no van al repo)
+docs/capturas/

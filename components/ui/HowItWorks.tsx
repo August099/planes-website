@@ -1,4 +1,5 @@
 import { FileEdit, MessageCircle, Handshake } from "lucide-react";
+import { SectionTitle } from "@/components/ui/home/SectionTitle";
 
 const STEPS = [
   {
@@ -20,11 +21,11 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="w-full bg-[#001F58] text-white py-16">
+    <section className="w-full text-white py-16">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl font-heading font-semibold mb-10 text-center text-white">
+        <SectionTitle tone="dark" className="mb-10 text-center">
           Cómo funciona
-        </h2>
+        </SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {STEPS.map((step, i) => (
             <div key={step.title} className="text-center group">
@@ -33,8 +34,8 @@ export function HowItWorks() {
                 <step.icon className="h-7 w-7 text-white" />
               </div>
 
-              {/* Número de paso en Rojo */}
-              <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">
+              {/* VA-79: rosado claro para AA sobre el azul de la zona 4 (el rojo daba 1,8:1) */}
+              <p className="text-xs font-semibold text-[#FFC2C7] uppercase tracking-wider mb-1">
                 Paso {i + 1}
               </p>
 

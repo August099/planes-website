@@ -12,6 +12,7 @@ import { Navigation } from "swiper/modules";
 // Estilos de Swiper
 import "swiper/css";
 import "swiper/css/navigation";
+import { SectionTitle } from "@/components/ui/home/SectionTitle";
 
 type CategoryProp = { id?: string; name: string } | string | null;
 
@@ -56,10 +57,8 @@ export function LatestAircraft({ items }: LatestListingsProps) {
       {/* TÍTULO Y NAVEGACIÓN */}
       <div className="flex justify-between items-end mb-6">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F58] tracking-tight">
-            Últimas Publicaciones
-          </h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <SectionTitle>Últimas Publicaciones</SectionTitle>
+          <p className="text-sm text-slate-600 mt-1">
             Lo último en aeronaves y repuestos certificados ingresados al mercado
           </p>
         </div>

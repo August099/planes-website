@@ -206,3 +206,100 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
     print-color-adjust: exact !important;
   }
 }
+/* ==========================================================================
+   VA-79 · Home fluida. Todo esto vive bajo .home-theme (solo la Home); el resto
+   de la web sigue con el fondo estándar con filtro blanco (VA-56).
+   Paleta sacada del hero (backgrounds/home2.webp y home-mobile.webp).
+   ========================================================================== */
+.home-theme,
+body:has(.home-theme) [data-site-footer] {
+  --va-navy: #001f58;      /* marca */
+  --va-navy-deep: #001331; /* sombra del hangar del hero */
+  --va-blue: #0a4c96;      /* azul del cielo del hero */
+  --va-sky: #cfe3f6;       /* celeste: el cielo del hero aclarado */
+  --va-mist: #eef5fc;      /* blanco neblina */
+  --va-blush: #fff3f0;     /* blanco con un toque rojo/crema (nubes del hero) */
+  --va-red: #e70f1f;       /* marca */
+  --va-red-hover: #c20d1a;
+  --va-red-soft: rgb(231 15 31 / 0.12);
+}
+
+/* Cada zona pinta su fondo en una capa absoluta detrás del contenido (z -2); los resplandores
+   van en z -1, así pueden pasar por encima del límite entre zonas sin tapar nada. La regla: el
+   color con que termina una zona es el color con que empieza la siguiente. */
+.home-zone {
+  position: relative;
+}
+.home-zone > .home-zone-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+.home-zone-1 > .home-zone-bg {
+  background: linear-gradient(180deg, var(--va-sky) 0%, var(--va-mist) 100%);
+}
+.home-zone-2 > .home-zone-bg {
+  background: linear-gradient(180deg, var(--va-mist) 0%, var(--va-blush) 50%, var(--va-mist) 100%);
+}
+.home-zone-3 > .home-zone-bg {
+  /* El paso de claro a oscuro queda detrás del banner de SellerCta. */
+  background: linear-gradient(180deg, var(--va-mist) 0%, var(--va-mist) 28%, var(--va-blue) 74%, var(--va-blue) 100%);
+}
+.home-zone-4 > .home-zone-bg {
+  background: linear-gradient(180deg, var(--va-blue) 0%, var(--va-navy) 42%, var(--va-navy-deep) 100%);
+}
+
+/* Resplandores (radial-gradient, sin filter: blur) */
+.home-glow {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  width: min(900px, 130vw);
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  animation: home-drift 26s ease-in-out infinite;
+}
+.home-glow--red {
+  background: radial-gradient(closest-side, rgb(231 15 31 / 0.11), rgb(231 15 31 / 0) 72%);
+}
+.home-glow--sky {
+  background: radial-gradient(closest-side, rgb(23 103 176 / 0.16), rgb(23 103 176 / 0) 72%);
+  animation-duration: 31s;
+  animation-direction: reverse;
+}
+@keyframes home-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); opacity: 1; }
+  50% { transform: translate3d(5%, 4%, 0); opacity: 0.8; }
+}
+
+/* Motivo "//" de la marca, muy tenue (SVG inline en la página) */
+.home-slashes {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  color: #fff;
+  opacity: 0.06;
+}
+
+/* Tarjetas sobre las zonas claras: blancas, sombra azulada y borde tenue, para que floten. */
+.home-theme .home-card,
+.home-theme [data-card] {
+  background-color: #fff;
+  border-color: rgb(0 31 88 / 0.08);
+  box-shadow: 0 12px 32px -16px rgb(0 31 88 / 0.3);
+}
+
+/* El footer continúa el color final de la zona 4, solo en la Home. */
+body:has(.home-theme) [data-site-footer] {
+  background-color: var(--va-navy-deep);
+}
+body:has(.home-theme) [data-footer-bg] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-glow {
+    animation: none;
+  }
+}

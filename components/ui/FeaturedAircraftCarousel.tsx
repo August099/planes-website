@@ -14,6 +14,7 @@ import { Navigation } from "swiper/modules";
 // Estilos Swiper
 import "swiper/css";
 import "swiper/css/navigation";
+import { SectionTitle } from "@/components/ui/home/SectionTitle";
 
 export interface FeaturedAircraftProps extends AircraftCardProps {
   viewsCount?: number;
@@ -49,10 +50,7 @@ export function FeaturedAircraftCarousel({ aircrafts }: Props) {
     <section className="py-8 relative">
       {/* ENCABEZADO */}
       <div className="text-center mb-8">
-        <h2 className="text-3xl sm:text-4xl font-bold text-[#001F58] tracking-tight inline-block relative pb-2">
-          Aeronaves Destacadas
-          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-[#001F58] rounded-full" />
-        </h2>
+        <SectionTitle>Aeronaves Destacadas</SectionTitle>
       </div>
 
       {/* CONTENEDOR CON NAVEGACIÓN LATERAL */}
