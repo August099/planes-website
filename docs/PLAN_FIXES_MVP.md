@@ -745,11 +745,15 @@ Medido en `ventasaeronauticas.com` (8/10/2026, celular emulado):
   - Quitar la consulta a la base del callback `jwt` en cada request (VA-13).
 - **Aceptación:** `/terms` responde con `x-vercel-cache: HIT` y TTFB menor a 100 ms.
 
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `75c0baa`). El header ya no llama a `auth()` en el servidor: la parte del usuario es `components/ui/HeaderUser.tsx` (cliente, `useSession()` + server action `getHeaderIndicators`). "Vender" va siempre a `/publish` (el proxy redirige a `/login`). El build marca como **estáticas** `/terms`, `/privacy`, `/faq`, `/howtopublish`, `/services`, `/plans`, `/register`, `/report`, `/ads` y las de error, con `s-maxage=31536000` (en Vercel → `x-vercel-cache: HIT`; verificar en pre-production). Probado con y sin sesión: menú, punto rojo de perfil incompleto y "Completá tu perfil" en una página estática. **Pendiente**: cachear los datos de listados y detalles con tags (siguen dinámicos por los favoritos del usuario). Nota: el servidor de producción local (`next start`) pide `AUTH_TRUST_HOST` para las sesiones; en Vercel no hace falta.
 ### VA-72 · Fuentes duplicadas y una mal escrita
 - `app/layout.tsx` descarga **Space Grotesk e Inter** con `next/font`, pero `app/globals.css` l.1–2 importa además desde Google Fonts (CSS bloqueante, de un tercero) **Montserrat, Raleway e IBM Plex Sans con todos los pesos e itálicas**, y redefine `--font-display`/`--font-body` en l.65–66. Se bajan fuentes que no se usan y hay un request bloqueante extra antes de pintar.
 - **Bug:** `--font-body: 'IBM Plex Sans ', sans-serif;` (l.66) tiene un **espacio dentro de las comillas**, así que el navegador no encuentra la fuente y el cuerpo de texto cae en la sans-serif del sistema.
 - **Hacer:** definir con el socio las dos fuentes reales (por lo visto, Montserrat para títulos e IBM Plex Sans para el cuerpo). Cargarlas **solo** con `next/font/google` (self-hosted, sin request a Google) con los pesos usados (por ejemplo 400/600/700/800) y `display: "swap"`. Borrar los `@import` de Google Fonts, Space Grotesk, Inter y Raleway si no se usan.
 
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `36a8089`). Decisión del socio: Montserrat (títulos) + IBM Plex Sans (cuerpo), con `next/font/google` (self-hosted, `display: swap`, una fuente variable por familia). Fuera los `@import` de Google Fonts, Raleway, Space Grotesk e Inter. Arreglado el bug de `'IBM Plex Sans '` (el cuerpo se veía con la fuente del sistema). Verificado: 0 pedidos a Google, el cuerpo carga IBM Plex Sans. Ojo: IBM Plex llega hasta peso 700, así que `font-black` en textos del cuerpo se ve en 700. Si el servidor de desarrollo muestra la fuente vieja, borrar `.next/dev` (caché desactualizada).
 ### VA-73 · Imágenes: doble hero en celular, fondos pesados, logos sin optimizar
 - **Hero:** `hero-banner.tsx` tiene dos `<Image priority>`, desktop (`bkg-home2.png`) y mobile (`bkg-home-mobile.png`), ocultas con `hidden md:block`. Con `priority`, el navegador **descarga las dos** en cualquier dispositivo. Usar *art direction* con `<picture>` + `getImageProps()` de `next/image` (ver docs) para que cada dispositivo baje solo la suya.
 - **Fondos y cards:** los PNG de `public/` pesan entre 2 y 3 MB cada uno (más de 40 MB en total). Next los optimiza al servirlos, pero cada variante nueva consume el **cupo de optimización de imágenes de Vercel** y el primer request es lento. Convertirlos a WebP/AVIF de 1920 px (200–400 KB) en el repo (VA-62) y usar `quality={60}` en los fondos con filtro (VA-56).
@@ -757,6 +761,8 @@ Medido en `ventasaeronauticas.com` (8/10/2026, celular emulado):
 - **Fotos de publicaciones:** con VA-30 se comprimen al subirlas (máximo 1920 px y 0,8 MB). En las cards, pasar `sizes` correctos (`(min-width:1024px) 33vw, 100vw`) para que no se pidan variantes más grandes de lo necesario.
 - `public/hero-video.mp4` (8 MB) no se usa: borrarlo (VA-61).
 
+
+**Estado (9/10/2026):** ✅ hecho en local (commits `32f5b21` + `9f269c1`). Hero con `<picture>` + `getImageProps()`: cada dispositivo baja solo su imagen (verificado a 375 y 1280 px). Logos de marcas con `next/image` de tamaño fijo (srcset 1x/2x, 0–1 KB cada uno, carga diferida) y copias de la marquesina ocultas para lectores de pantalla. `sizes` en la card destacada. Los fondos ya eran WebP (VA-56). `public/hero-video.mp4` y los PNG originales quedan para VA-61/VA-62.
 ### VA-74 · HTML de `/planes` inflado (338 KB)
 - La página manda al cliente **toda la taxonomía** (todas las marcas → todos los modelos → todas las variantes) para el filtro y **todas las imágenes** de cada aeronave del listado.
 - **Hacer:**
@@ -765,6 +771,8 @@ Medido en `ventasaeronauticas.com` (8/10/2026, celular emulado):
   - Cachear la taxonomía (VA-13 / VA-71).
 - **Aceptación:** HTML de `/planes` por debajo de 120 KB.
 
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `9f269c1`), sin llegar al objetivo de 120 KB: **291 → 221 KB** (gzip 26 → 19 KB). Cards con solo la primera foto en el HTML (las demás al interactuar) y filtro con solo marcas/modelos/variantes con avisos activos. Lo que queda es estructural (SVG de íconos por card, clases, srcset de la primera foto); para bajar más habría que mostrar 12 avisos por página en vez de 21 o cargar las fotos del carrusel aparte — decisión del socio.
 ### VA-75 · Latencia de la base de datos (verificar)
 - Cada página hace varias consultas a Postgres (Supabase) desde funciones de Vercel. Si la **región de las funciones de Vercel** (por defecto `iad1`, Washington) y la **de Supabase** (por ejemplo `sa-east-1`, São Paulo) no coinciden, cada consulta cruza el continente (~120 ms ida y vuelta) y las consultas en serie se suman.
 - **Hacer:**
@@ -774,11 +782,15 @@ Medido en `ventasaeronauticas.com` (8/10/2026, celular emulado):
   4. Pasar las consultas secuenciales de detalles y Header a `Promise.all` (VA-13).
 - **Aceptación:** TTFB de páginas dinámicas por debajo de 250 ms desde Argentina.
 
+
+**Estado (9/10/2026):** ✅ verificado (9/10/2026). La URL de runtime de producción ya usa el **pooler de Supabase en modo transacción** (puerto 6543, `pgbouncer=true`); `DATABASE_URL` (5432) queda para migraciones. Supabase está en **`ca-central-1` (Montreal)**: la región por defecto de las funciones de Vercel, `iad1` (Washington), está cerca, así que no hay cruce de continente entre función y base. **Acción para el usuario**: confirmar en Vercel → Settings → Functions que la región sea `iad1` (no cambiar a `gru1`, que quedaría lejos de la base). Mover todo a São Paulo (`sa-east-1` + `gru1`) acercaría la web a Argentina, pero implica migrar la base: no hace falta ahora. Las consultas en serie ya se pasaron a `Promise.all` en VA-13.
 ### VA-76 · Medir antes y después
 - Correr Lighthouse en modo mobile (Chrome DevTools o PageSpeed Insights) sobre `/`, `/planes` y un detalle **antes** de VA-70 y **después** de cada tarea de esta fase, y anotar Performance, LCP, TBT y CLS en `docs/perf.md`.
 - Activar **Vercel Speed Insights** (`@vercel/speed-insights`, un componente en el layout) para medir con usuarios reales.
 - **Objetivo:** Lighthouse mobile ≥ 85 en la Home, LCP < 2,5 s y TBT < 200 ms.
 
+
+**Estado (9/10/2026):** ⏳ **parcial**. Mediciones de antes y después en `docs/perf.md` (servidor con `scripts/measure-pages.mjs` y navegador con Resource Timing). Falta: (1) Lighthouse/PageSpeed en pre-production cuando se mergee (el navegador integrado no reporta LCP/TBT con el panel oculto) y (2) Vercel Speed Insights, que requiere instalar `@vercel/speed-insights` y activarlo en Vercel — pendiente de confirmación.
 ---
 
 ## FASE 6 — Mercado Pago y facturación (más adelante, no ahora)

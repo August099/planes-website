@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 45 de 64 tareas cerradas (44 hechas + VA-48 descartada): VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49, VA-50, VA-54 a VA-58, VA-60 y VA-70. Faltan 19 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 50 de 64 tareas cerradas (49 hechas + VA-48 descartada): VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49, VA-50, VA-54 a VA-58, VA-60 y VA-70 a VA-75. VA-76 parcial. Faltan 14 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -161,6 +161,12 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 | Tarea | Commit | Qué cambió | Dónde verlo |
 |---|---|---|---|
 | VA-70 | `43f3d48` | La Home ya no baja 25 MB de JS: los íconos de categorías son propios (`components/icons/category/`), sin `react-icons`. | `/` → "Buscar Repuestos por Categoría" |
+| VA-71 | `75c0baa` | **Páginas de texto estáticas** (cacheables en el CDN): el header ya no lee la sesión en el servidor; la parte del usuario es un componente cliente. `/terms`, `/privacy`, `/faq`, `/howtopublish`, `/services`, `/plans`, `/register`, `/report`, `/ads` y las de error pasan a estáticas. | `npm run build` (○ estáticas). `components/ui/HeaderUser.tsx` |
+| VA-72 | `36a8089` | **Fuentes**: Montserrat + IBM Plex Sans con `next/font` (sin Google Fonts externo, sin fuentes de más). El cuerpo ahora sí se ve en IBM Plex Sans (antes, por un bug, en la del sistema). | Todo el sitio. `app/layout.tsx` |
+| VA-73 | `32f5b21` + `9f269c1` | **Imágenes**: el hero baja solo la versión de cada dispositivo; logos de marcas optimizados y con carga diferida; `sizes` en la card destacada. | `/` |
+| VA-74 | `9f269c1` | **HTML de `/planes`** 291 → 221 KB (gzip 26 → 19): cards con solo la primera foto en el HTML y filtro sin marcas/modelos vacíos. | `/planes` |
+| VA-75 | — | Verificado: producción usa el pooler de Supabase (6543) y la base está en Montreal, cerca de la región por defecto de Vercel (`iad1`). Confirmar la región en Vercel. | `docs/PLAN_FIXES_MVP.md` (VA-75) |
+| VA-76 | — | ⏳ Parcial: mediciones antes/después en `docs/perf.md` y `scripts/measure-pages.mjs`. Falta Lighthouse en pre-production y Speed Insights. | `docs/perf.md` |
 
 ## Bugs encontrados en el camino (fuera del plan)
 
@@ -191,6 +197,7 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 
 ## Estado del entorno local (para retomar)
 
+- **Build de producción local**: `npm run build` y configuración `prod` de `.claude/launch.json` (`next start -p 3001`). Para sesiones en ese modo, Auth.js pide `AUTH_TRUST_HOST=true` (no está en `.env`; en Vercel no hace falta). Si el servidor de desarrollo muestra CSS o fuentes viejas, borrar `.next/dev`.
 - **Ramas:** el trabajo del plan va en `milton/auth-roles`. Flujo: ramas → `pre-production` (se prueba en https://planes-website-git-pre-production-diodo.vercel.app/) → `main`. Desde el 8/10 `main` (producción) muestra una página estática de "próximamente".
 - `npm run dev` con `.env` → `va_dev` (Postgres 17 local, servicio `postgresql-x64-17`; si está detenido, hay que iniciarlo como administrador). Migraciones aplicadas en `va_dev`: baseline, VA-43, VA-44, VA-54 y VA-11.
 - **Después de cada migración: `npx prisma generate` y reiniciar `npm run dev`.** En Prisma 7, `migrate dev` no regenera el cliente.
