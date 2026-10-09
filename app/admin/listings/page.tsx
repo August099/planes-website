@@ -11,12 +11,21 @@ export default function AdminListingsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // La tabla viene paginada desde el servidor (VA-12): cada página pide solo sus 10 filas.
   useEffect(() => {
-    getListingsAnalytics("30d")
-      .then((res) => setData(res))
+    let cancelled = false;
+    getListingsAnalytics("30d", undefined, currentPage, itemsPerPage)
+      .then((res) => {
+        if (!cancelled) setData(res);
+      })
       .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage]);
 
   if (loading) {
     return <div className="py-20 text-center text-slate-400">Cargando métricas de publicaciones...</div>;
@@ -41,10 +50,10 @@ export default function AdminListingsPage() {
   };
 
   // Lógica de Paginación
-  const totalItems = data?.listings?.length || 0;
-  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentListings = data?.listings?.slice(startIndex, startIndex + itemsPerPage) || [];
+  const totalItems = data?.totalItems || 0;
+  const totalPages = data?.totalPages || 1;
+  const startIndex = ((data?.page || currentPage) - 1) * itemsPerPage;
+  const currentListings = data?.listings || [];
 
   const handlePrevPage = () => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1);
