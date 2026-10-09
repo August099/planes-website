@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
@@ -150,25 +151,22 @@ export default async function HomePage() {
       <div className="bg-[#FAF5F5] min-h-screen">
         <HeroBanner />
 
-        {/* MARQUESINA DE MARCAS */}
         <FeaturedBrands brands={featuredBrandsFromDb} />
 
         <main className="container mx-auto px-4 py-8 space-y-12">
-          {/* AERONAVES DESTACADAS */}
           <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
 
-          {/* ÚLTIMAS PUBLICACIONES */}
           <LatestAircraft items={combinedLatestListings} />
 
-          {/* CATEGORÍAS DE REPUESTOS */}
           <SparePartCategoriesCarousel categories={sparePartCategories} />
         </main>
 
-        {/* SECCIONES FINALES */}
         <SellerCta />
         <HowItWorks />
         <HomeServicesCards />
       </div>
     </>
   );
-}
+} 
+
+
