@@ -405,10 +405,11 @@ export function ProfileView({
       </div>
 
       {/* Selector de pestañas responsive */}
-      <div className="flex border-b border-slate-200 gap-6 overflow-x-auto scrollbar-none">
+      {/* En celular las pestañas van en grilla de 2 columnas: con scroll horizontal "Ajustes" quedaba escondida (VA-60) */}
+      <div className="grid grid-cols-2 gap-x-4 border-b border-slate-200 sm:flex sm:gap-6 sm:overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab("aircrafts")}
-          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+          className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
             activeTab === "aircrafts"
               ? "border-[#001F58] text-[#001F58]"
               : "border-transparent text-slate-400 hover:text-slate-600"
@@ -420,7 +421,7 @@ export function ProfileView({
 
         <button
           onClick={() => setActiveTab("spareparts")}
-          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+          className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
             activeTab === "spareparts"
               ? "border-[#001F58] text-[#001F58]"
               : "border-transparent text-slate-400 hover:text-slate-600"
@@ -433,7 +434,7 @@ export function ProfileView({
         {isOwner && (
           <button
             onClick={() => setActiveTab("coupons")}
-            className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === "coupons"
                 ? "border-[#001F58] text-[#001F58]"
                 : "border-transparent text-slate-400 hover:text-slate-600"
@@ -447,7 +448,7 @@ export function ProfileView({
         {isOwner && (
           <button
             onClick={() => setActiveTab("edit")}
-            className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === "edit"
                 ? "border-[#001F58] text-[#001F58]"
                 : "border-transparent text-slate-400 hover:text-slate-600"
@@ -504,7 +505,7 @@ export function ProfileView({
                         type="button"
                         onClick={() => handleRenew(item.id, "aircraft")}
                         disabled={loadingRenewId === item.id}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                        className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-3 sm:px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-xs sm:text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
                         title="Extender publicación 45 días más"
                       >
                         {loadingRenewId === item.id ? (
@@ -538,7 +539,8 @@ export function ProfileView({
                       <div className="flex items-center gap-1 border-l pl-2 border-slate-200">
                         <Link
                           href={`/publish?edit=${item.id}&type=aircraft`}
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
+                          className="p-3 sm:p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
+                          aria-label="Editar publicación"
                           title="Editar Publicación"
                         >
                           <Edit className="w-3.5 h-3.5" />
@@ -546,7 +548,8 @@ export function ProfileView({
                         <button
                           type="button"
                           onClick={() => handleDelete(item.id, "aircraft")}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                          className="p-3 sm:p-1 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                          aria-label="Eliminar publicación"
                           title="Eliminar Publicación"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -605,7 +608,7 @@ export function ProfileView({
                         type="button"
                         onClick={() => handleRenew(item.id, "sparepart")}
                         disabled={loadingRenewId === item.id}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                        className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-3 sm:px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-xs sm:text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
                         title="Extender publicación 45 días más"
                       >
                         {loadingRenewId === item.id ? (
@@ -639,7 +642,8 @@ export function ProfileView({
                       <div className="flex items-center gap-1 border-l pl-2 border-slate-200">
                         <Link
                           href={`/publish?edit=${item.id}&type=parts`}
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
+                          className="p-3 sm:p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
+                          aria-label="Editar publicación"
                           title="Editar Publicación"
                         >
                           <Edit className="w-3.5 h-3.5" />
@@ -647,7 +651,8 @@ export function ProfileView({
                         <button
                           type="button"
                           onClick={() => handleDelete(item.id, "sparepart")}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                          className="p-3 sm:p-1 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                          aria-label="Eliminar publicación"
                           title="Eliminar Publicación"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

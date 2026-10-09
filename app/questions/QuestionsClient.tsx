@@ -79,10 +79,15 @@ export function QuestionsClient({
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
-          Preguntas recibidas ({receivedQuestions.length})
+          {/* En celular, textos cortos para que las dos pestañas entren en una línea (VA-60) */}
+          <span className="sm:hidden">Recibidas ({receivedQuestions.length})</span>
+          <span className="hidden sm:inline">Preguntas recibidas ({receivedQuestions.length})</span>
           {pendingReceivedCount > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[11px] font-bold animate-pulse">
-              {pendingReceivedCount} sin responder
+            <span
+              aria-label={`${pendingReceivedCount} sin responder`}
+              className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[11px] font-bold animate-pulse whitespace-nowrap"
+            >
+              {pendingReceivedCount}<span className="hidden sm:inline"> sin responder</span>
             </span>
           )}
         </button>
@@ -95,7 +100,8 @@ export function QuestionsClient({
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
-          Mis preguntas realizadas ({sentQuestions.length})
+          <span className="sm:hidden">Realizadas ({sentQuestions.length})</span>
+          <span className="hidden sm:inline">Mis preguntas realizadas ({sentQuestions.length})</span>
         </button>
       </div>
 

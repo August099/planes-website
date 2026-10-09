@@ -49,7 +49,7 @@ export function AdminReportsTable({ reports }: { reports: ReportItem[] }) {
   return (
     <div className="space-y-4">
       {/* Filtros por Estado */}
-      <div className="flex gap-2 border-b border-slate-200 pb-3">
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
         {(["PENDING", "REVIEWED", "DISMISSED", "ALL"] as const).map((st) => {
           const count = st === "ALL" ? reports.length : reports.filter((r) => r.status === st).length;
           const labels = {

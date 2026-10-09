@@ -115,10 +115,12 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
     <>
       <div className="w-full flex justify-between gap-3 print:hidden">
         <div className="w-full flex gap-3">
-          {/* Favoritos */}
-          <div
+          {/* Favoritos, compartir e imprimir: botones reales con 44 px de área táctil en celular (VA-60) */}
+          <button
+            type="button"
             onClick={handleToggleFavorite}
-            className="group flex items-center cursor-pointer select-none"
+            aria-label={isFavorite ? "Quitar de favoritos" : "Guardar en favoritos"}
+            className="group flex items-center justify-center min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 cursor-pointer select-none"
           >
             <Heart
               className={`transition-colors ${
@@ -130,35 +132,40 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
             <span className="ml-0 max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 ease-out group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100 text-xs font-semibold text-slate-700">
               {isFavorite ? "Guardado" : "Favoritos"}
             </span>
-          </div>
+          </button>
 
           {/* Compartir */}
-          <div
+          <button
+            type="button"
             onClick={handleShareClick}
-            className="group flex items-center cursor-pointer select-none"
+            aria-label="Compartir"
+            className="group flex items-center justify-center min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 cursor-pointer select-none"
           >
             <Share2 className="hover:text-blue-600 transition-colors text-slate-600" />
             <span className="ml-0 max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 ease-out group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100 text-xs font-semibold text-slate-700">
               Compartir
             </span>
-          </div>
+          </button>
 
           {/* Descargar PDF (Mantiene el icono Printer) */}
-          <div
+          <button
+            type="button"
             onClick={handleDownloadPdf}
-            className="group flex items-center cursor-pointer select-none"
+            aria-label="Descargar PDF"
+            className="group flex items-center justify-center min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 cursor-pointer select-none"
           >
             <Printer className="hover:text-blue-600 transition-colors text-slate-600" />
             <span className="ml-0 max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 ease-out group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100 text-xs font-semibold text-slate-700">
               Imprimir
             </span>
-          </div>
+          </button>
         </div>
 
         {/* Reportar */}
         <a
           href={type === "AIRCRAFT" ? `/report?aircraftId=${aircraftId}` : `/report?sparePartId=${aircraftId}`}
-          className="group flex items-center select-none"
+          aria-label="Reportar publicación"
+          className="group flex items-center justify-center min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 select-none"
         >
           <span className="mr-0 max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 ease-out group-hover:mr-2 group-hover:max-w-40 group-hover:opacity-100 text-xs font-semibold text-slate-700">
             Reportar

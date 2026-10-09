@@ -33,24 +33,24 @@ export function Footer() {
             <h3 className="font-heading font-semibold mb-3 text-sm text-white drop-shadow-md">
               Ayuda
             </h3>
-            <ul className="space-y-2 text-sm text-white/90 drop-shadow-sm">
+            <ul className="space-y-1 sm:space-y-2 text-sm text-white/90 drop-shadow-sm">
               <li>
-                <Link href="/faq" className="hover:text-white transition-colors">
+                <Link href="/faq" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Preguntas frecuentes
                 </Link>
               </li>
               <li>
-                <Link href="/howtopublish" className="hover:text-white transition-colors">
+                <Link href="/howtopublish" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Cómo publicar
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-white transition-colors">
+                <Link href="/terms" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Términos y condiciones
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-white transition-colors">
+                <Link href="/privacy" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Privacidad
                 </Link>
               </li>
@@ -61,24 +61,24 @@ export function Footer() {
             <h3 className="font-heading font-semibold mb-3 text-sm text-white drop-shadow-md">
               Explorar
             </h3>
-            <ul className="space-y-2 text-sm text-white/90 drop-shadow-sm">
+            <ul className="space-y-1 sm:space-y-2 text-sm text-white/90 drop-shadow-sm">
               <li>
-                <Link href="/planes" className="hover:text-white transition-colors">
+                <Link href="/planes" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Aviones en venta
                 </Link>
               </li>
               <li>
-                <Link href="/spareparts" className="hover:text-white transition-colors">
+                <Link href="/spareparts" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Repuestos en venta
                 </Link>
               </li>
               {/*<li>
-                <Link href="/plans" className="hover:text-white transition-colors">
+                <Link href="/plans" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Planes para publicar
                 </Link>
               </li>
               <li>
-                <Link href="/ads" className="hover:text-white transition-colors">
+                <Link href="/ads" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Publicite su negocio
                 </Link>
               </li>*/}
@@ -89,7 +89,7 @@ export function Footer() {
             <h3 className="font-heading font-semibold mb-3 text-sm text-white drop-shadow-md">
               Contacto
             </h3>
-            <ul className="space-y-2.5 text-sm text-white/90 drop-shadow-sm">
+            <ul className="space-y-1 sm:space-y-2.5 text-sm text-white/90 drop-shadow-sm">
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0 text-white" />
                 <a
@@ -101,7 +101,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0 text-white" />
-                <a href="tel:+5490000000000" className="hover:text-white transition-colors">
+                <a href="tel:+5490000000000" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   +54 9 000 000 0000
                 </a>
               </li>
@@ -111,7 +111,7 @@ export function Footer() {
                   href="https://instagram.com/ventas.aeronauticas"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-white transition-colors"
+                  className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors"
                 >
                   @ventas.aeronauticas
                 </a>

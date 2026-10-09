@@ -800,7 +800,7 @@ export default function PublishForm({
                                                 <Plane className="w-5 h-5 text-red-600" />
                                                 Paso 1: Datos principales de la aeronave
                                             </h3>
-                                            <p className="text-xs text-slate-500 mt-1">Completa la información básica obligatoria para identificar tu aeronave.</p>
+                                            <p className="text-xs text-slate-500 mt-1">Completá la información básica obligatoria para identificar tu aeronave.</p>
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
