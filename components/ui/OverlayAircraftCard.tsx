@@ -63,6 +63,8 @@ export function OverlayAircraftCard({
           src={imageUrl}
           alt={displayTitle}
           fill
+          // VA-73: 1 card por fila en celular y 2 desde 640 px (FeaturedAircraftCarousel), dentro del container.
+          sizes="(max-width: 640px) 100vw, (max-width: 1536px) 50vw, 768px"
           className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
         />
 

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { getImageProps } from "next/image";
 import HomeHeroFilter from "./HomeFilter";
 
 interface HeroBannerProps {
@@ -16,28 +16,29 @@ export function HeroBanner({
     horizontal: "70%", 
   },
 }: HeroBannerProps) {
+  // Art direction (VA-73): un solo <img> dentro de <picture>. Antes había dos <Image priority>
+  // (escritorio y celular) ocultos con CSS, y el navegador descargaba los dos en cualquier equipo.
+  const common = { alt: "Fondo Ventas Aeronáuticas", sizes: "100vw", loading: "eager" as const };
+  const {
+    props: { srcSet: desktopSrcSet },
+  } = getImageProps({ ...common, src: "/bkg-home2.png", width: 1671, height: 941 });
+  const {
+    props: { srcSet: mobileSrcSet, ...imgProps },
+  } = getImageProps({ ...common, src: "/bkg-home-mobile.png", width: 940, height: 1672 });
+
   return (
     <section className="relative w-full h-screen min-h-[550px] sm:min-h-[600px] overflow-hidden">
       
-      {/* Imagen de Fondo (Escritorio) */}
-      <Image
-        src="/bkg-home2.png"
-        alt="Fondo Ventas Aeronáuticas"
-        fill
-        priority
-        className="hidden md:block object-cover object-center select-none"
-        sizes="100vw"
-      />
-
-      {/* Imagen de Fondo (Celulares) */}
-      <Image
-        src="/bkg-home-mobile.png"
-        alt="Fondo Ventas Aeronáuticas Mobile"
-        fill
-        priority
-        className="block md:hidden object-cover object-center select-none"
-        sizes="100vw"
-      />
+      <picture>
+        <source media="(min-width: 768px)" srcSet={desktopSrcSet} sizes="100vw" />
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- el alt viene en imgProps (getImageProps) */}
+        <img
+          {...imgProps}
+          srcSet={mobileSrcSet}
+          fetchPriority="high"
+          className="absolute inset-0 h-full w-full object-cover object-center select-none"
+        />
+      </picture>
 
       {/* Sombreado suave solo para mejorar lectura en celulares */}
       <div className="absolute inset-0 bg-black/20 md:bg-transparent pointer-events-none" />

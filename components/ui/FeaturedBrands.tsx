@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 export type BrandItem = {
   id: string;
@@ -65,21 +66,33 @@ export function FeaturedBrands({ brands }: FeaturedBrandsProps) {
 
         {/* PISTA DE MARQUESINA */}
         <div className="animate-marquee-inline">
-          {repeatedBrands.map((brand, index) => (
+          {repeatedBrands.map((brand, index) => {
+            // Las copias (para el loop de la marquesina) son decorativas: fuera del orden de
+            // tabulación y ocultas para lectores de pantalla.
+            const isCopy = index >= brandsWithLogo.length;
+            return (
             <Link
               key={`${brand.id}-${index}`}
               href={`/planes?brand=${encodeURIComponent(brand.id)}&page=1`}
+              aria-hidden={isCopy || undefined}
+              tabIndex={isCopy ? -1 : undefined}
               className="flex items-center justify-center mx-6 sm:mx-10 w-28 sm:w-36 h-16 sm:h-20 transition-transform duration-300 hover:scale-110 shrink-0 cursor-pointer overflow-visible"
             >
               <div className="relative w-full h-full flex items-center justify-center">
-                <img
+                {/* VA-73: next/image con tamaño chico (antes <img> directo a Supabase, en tamaño
+                    original y sin lazy). Las copias reutilizan la misma URL (caché del navegador). */}
+                <Image
                   src={brand.logoUrl!}
-                  alt={brand.name}
-                  className="max-w-full max-h-full object-contain filter grayscale opacity-75 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+                  alt={isCopy ? "" : brand.name}
+                  fill
+                  sizes="144px"
+                  loading="lazy"
+                  className="object-contain filter grayscale opacity-75 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
                 />
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
