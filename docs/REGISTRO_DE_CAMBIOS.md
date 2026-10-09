@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 53 de 64 tareas cerradas (52 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49, VA-50, VA-54 a VA-58, VA-60 y VA-70 a VA-75. VA-76 parcial. Faltan 11 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 55 de 64 tareas cerradas (54 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60 y VA-70 a VA-75. VA-76 parcial. Faltan 9 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -170,6 +170,8 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 | VA-16 | `067b2c7` | **Favoritos sin duplicados**: dos índices únicos (`userId`+avión, `userId`+repuesto; migración `20261009120000_va16_favoritos_unicos`) y el botón borra o crea sin "buscar y después crear", así un doble clic no duplica. | Doble clic rápido en ❤️. **Producción:** buscar duplicados antes de migrar (consulta en el plan, VA-16) |
 | VA-15 | `b0e2db6` | **Analytics que mide**: visitante anónimo (`va_anon`) y origen (`va_src`: referrer y UTM) en todos los eventos; búsquedas registradas solo al buscar de verdad (Enter, clic en resultado o `/search`), no en cada tecla. Enter en el buscador de escritorio ahora va a `/search`. | `/admin` → visitantes únicos y fuentes de tráfico. `lib/analytics-client.ts`, `lib/analytics-context.ts` |
 | VA-12 | `2bf14cc` | **Panel admin liviano**: los totales se calculan en la base (no se traen tablas enteras); tabla de publicaciones paginada en el servidor; CSV/purga por lotes. KPIs con el dólar oficial del día y EBITDA, retención y CAC como "Sin datos" en vez de números inventados. | `/admin`, `/admin/listings`, `/admin/searches`, `/admin/traffic`, `/admin/kpi` |
+| VA-52 | `de436d2` | **Cards de la Home** con las imágenes elegidas (Aviones: agrícola al atardecer; Repuestos: depósito), en WebP de menos de 75 KB (antes ~2,4 MB cada una). | `/` → cards Aviones / Repuestos / Servicios |
+| VA-53 | `c56fac3` | **Descripción con formato**: subtítulos (línea que termina en ":") y listas ("-"), máximo de 2000 caracteres con contador, y "Ver más" en celular. El recuadro "Motor" junto a las fotos muestra como mucho 4 datos; la ficha de abajo, todos. | Detalle de avión o repuesto; `/publish` (último paso) |
 
 ## Bugs encontrados en el camino (fuera del plan)
 

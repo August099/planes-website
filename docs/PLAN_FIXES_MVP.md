@@ -616,6 +616,8 @@ Del ítem que vino pegado en la lista: *"…una vez registrado, marcar con un av
 - Candidatas en `public/`: `bkg-aircraft.png` (agrícola al atardecer) y `bkg-spareparts.png` (depósito de repuestos). VA-56 también las usa como fondo de `/planes/...` y `/spareparts`, lo cual no es un problema. ❓ Confirmar con el socio cuáles quiere en las cards antes de cambiarlas; si no responde, dejar las actuales.
 - Convertirlas a WebP de menos de 300 KB y pasar `sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"`.
 
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `de436d2`). Decisión del socio: **opción B**. Aviones = agrícola al atardecer (`bkg-aircraft.png`, el fondo del detalle de avión) y Repuestos = depósito (`bkg-spareparts.png`, el fondo de `/spareparts`). Servicios sigue con su imagen. Las tres pasan a `public/cards/*.webp` de 960 px (48–73 KB, antes ~2,4 MB) con `scripts/optimize-cards.mjs`, y llevan `sizes`. El encuadre de Aviones se corrió (`object-[70%_65%]`) para que se vea el avión. Probado a 375 y 1280 px. `card-plane.png` y `card-sparepart.png` quedan sin uso (para VA-61/VA-62).
 ### VA-53 · Actualizar el formato de la descripción en las publicaciones
 - ❓ **Falta definir qué formato quiere el socio.** Opciones:
   - **(a)** Mantener texto libre pero con mejor tipografía (títulos, listas con "-", máximo de 2000 caracteres y contador).
@@ -624,6 +626,8 @@ Del ítem que vino pegado en la lista: *"…una vez registrado, marcar con un av
 - Mientras tanto: en el detalle, mostrar la descripción colapsada a 6 líneas con "Ver más" en mobile.
 - La composición agrega dos pistas: "descripción breve" visible arriba (horas totales, overhaul, etc.) y el campo `Descripción*` como **último paso** del formulario (Paso 4). Propuesta: un resumen automático arriba (año · horas · motor · ubicación) y la descripción libre abajo, sin pedirle al vendedor que repita datos.
 
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `c56fac3`). Decisión del socio: **opción (a)**, texto libre, más "Ver más". `components/ui/listing/ListingDescription.tsx`: una línea corta que termina en ":" se muestra como subtítulo, las que empiezan con "-", "•" o "*" forman una lista, y una línea en blanco separa párrafos. En celular arranca en 6 líneas con "Ver más" / "Ver menos", que solo aparece si el texto no entra; desde `lg` se ve completa. Formulario: `components/ui/DescriptionTextarea.tsx` con tope de **2000 caracteres** (`MAX_DESCRIPTION_LENGTH` en `lib/listing-schema.ts`, antes 5000; la más larga en `va_dev` tiene 365), contador, ayuda de formato y ejemplo. La impresión usa el mismo formato. **Pedido extra del socio (9/10):** el recuadro "Motor" junto a las fotos muestra como mucho **4 datos** (los primeros cargados entre marca, modelo, horas motor, DURG/SMOH, potencia y TBO). La ficha de abajo vuelve a mostrar el motor completo. Se quitó "Tipo" del recuadro porque ya lo dice la categoría. El resumen automático arriba de la descripción no se hizo: los datos clave ya están en el recuadro del costado. Probado a 375 y 1280 px con una descripción de prueba (después restaurada). El campo del formulario (último paso) no se vio en pantalla; compila y se usa igual que antes.
 ### VA-54 · Sumar campos a "Publicación avión" (según la composición)
 **Estado (8/10/2026):** ✅ hecho en local (commit `1460fb8`). Migración `20261008194327_va54_campos_nuevos` aplicada en `va_dev` (`Aircraft.negotiable/extraEquipment/agEquipment`, `AircraftEngine.horsepower`, `AircraftPropeller.brand`). En formulario (alta y edición), esquema Zod, servidor y `AircraftPDF`. Además: label "DURG / SMOH", input "Horas del motor" (existía en la base sin input), guía de fotos y label "Habilitado hasta (vencimiento del anual)". Las hélices anteriores siguen con la marca dentro de `model` (no se separó automáticamente). Pendientes: label de `RECORRIDO` (❓) y matrícula pública (D13).
 Comparación del formulario de la composición (anexo A, "AVIONES") contra el schema actual:
@@ -851,7 +855,7 @@ Notas para cuando se encare, a partir de lo que ya existe:
 | D1 | ¿Cómo se armó la base? | VA-10 | ✅ Con `db push`. Se resuelve con el baseline |
 | D2 | Publicaciones gratis | VA-47 | ✅ Se definen más adelante con un cupón. Por ahora solo el aviso visual |
 | D3 | Subcategorías | VA-43 | ✅ Dos niveles según la composición. 8/10: solo el Pilatus PC-12 pasa a `MT` (es monomotor turbohélice; el seed decía `BT`). El resto de los avisos son de prueba y quedan como están |
-| D4 | ¿Qué formato de descripción quiere el socio? | VA-53 | Pendiente (hay propuesta) |
+| D4 | ¿Qué formato de descripción quiere el socio? | VA-53 | ✅ Opción (a): texto libre con formato + "Ver más" en celular (9/10) |
 | D5 | Campos nuevos del avión | VA-54 | ✅ Según la composición. DURG = SMOH |
 | D6 | Imágenes | VA-40, 51, 52, 56 | Footer: parece listo. Logo: borrador generado. Fondos: usar los de `public/` según la tabla de VA-56 |
 | D7 | ¿Es obligatorio el teléfono para publicar? | VA-46 | ✅ Sí, se bloquea publicar sin teléfono (se puede cargar en el mismo `/publish`). La foto de perfil es opcional (9/10) |
