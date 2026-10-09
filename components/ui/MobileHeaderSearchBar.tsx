@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { Search, Loader2, Plane, Wrench, ArrowLeft, X } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation"; // Importamos usePathname
 import { searchGlobal, SearchResultItem } from "@/app/actions/search-actions";
+import { logSearch } from "@/app/actions/analytics-actions";
+import { ensureAnalyticsCookies } from "@/lib/analytics-client";
 
 export default function MobileHeaderSearchBar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -39,13 +41,7 @@ export default function MobileHeaderSearchBar() {
 
     setLoading(true);
     const timer = setTimeout(async () => {
-      let anonymousId = localStorage.getItem("anon_id");
-      if (!anonymousId) {
-        anonymousId = `anon_${Math.random().toString(36).substring(2, 9)}`;
-        localStorage.setItem("anon_id", anonymousId);
-      }
-
-      const res = await searchGlobal(query, anonymousId);
+      const res = await searchGlobal(query);
       setResults(res);
       setLoading(false);
     }, 350);
@@ -54,6 +50,9 @@ export default function MobileHeaderSearchBar() {
   }, [query]);
 
   const handleSelect = (url: string) => {
+    // VA-15: la búsqueda se registra al elegir un resultado (no en cada tecla).
+    ensureAnalyticsCookies();
+    void logSearch(query, results.length, "HEADER_RESULT_CLICK");
     setIsOpen(false);
     setQuery("");
     router.push(url);

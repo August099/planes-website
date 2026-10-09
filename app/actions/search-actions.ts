@@ -2,7 +2,6 @@
 
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
-import { AnalyticsEventType } from "@prisma/client";
 import { formatPrice } from "@/lib/format";
 
 export interface SearchResultItem {
@@ -15,9 +14,10 @@ export interface SearchResultItem {
 
 export type SearchType = "Aeronave" | "Repuesto";
 
+// Sugerencias del buscador del header (se llama mientras se escribe). No registra analytics: la
+// búsqueda se registra recién cuando la persona la envía o elige un resultado (logSearch, VA-15).
 export async function searchGlobal(
   query: string,
-  anonymousId?: string,
   searchType: SearchType = "Aeronave"
 ): Promise<SearchResultItem[]> {
   const cleanQuery = query.trim().toLowerCase();
@@ -136,29 +136,6 @@ export async function searchGlobal(
       }`,
       url: `/spareparts/sparepart-details/${s.id}`,
     }));
-  }
-
-  // ============================================================
-  // ANALYTICS
-  // ============================================================
-  try {
-    await prisma.analyticsEvent.create({
-      data: {
-        eventType: AnalyticsEventType.SEARCH,
-        anonymousId: anonymousId || null,
-        metadata: {
-          query: cleanQuery,
-          resultsCount: results.length,
-          searchType,
-          origin: "HEADER_NAVBAR",
-        },
-      },
-    });
-  } catch (err) {
-    console.error(
-      "Error al registrar AnalyticsEvent de búsqueda:",
-      err
-    );
   }
 
   return results;

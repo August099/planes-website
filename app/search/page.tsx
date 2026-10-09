@@ -6,6 +6,7 @@ import { SparePartCard } from "@/components/ui/SparePartCard";
 import Link from "next/link";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { TrackSearch } from "@/components/analytics/TrackSearch";
 
 interface Props {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -108,6 +109,8 @@ export default async function SearchResultsPage({ searchParams }: Props) {
   return (
     <main className="container mx-auto px-4 py-8">
       <PageBackground page="default" />
+      {/* VA-15: la búsqueda se registra acá (una vez por pestaña y término), no en cada tecla */}
+      {currentPage === 1 && <TrackSearch query={query} resultsCount={totalItems} />}
       <h1 className="text-2xl font-medium mb-6">
         Resultados para "{query}" ({totalItems})
       </h1>

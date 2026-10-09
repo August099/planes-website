@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { Search, Loader2, Plane, Wrench } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { searchGlobal, SearchResultItem, SearchType } from "@/app/actions/search-actions";
+import { logSearch } from "@/app/actions/analytics-actions";
+import { ensureAnalyticsCookies } from "@/lib/analytics-client";
 
 export default function HeaderSearchBar() {
   const [query, setQuery] = useState("");
@@ -38,18 +40,7 @@ export default function HeaderSearchBar() {
     setLoading(true);
 
     const timer = setTimeout(async () => {
-      let anonymousId = localStorage.getItem("anon_id");
-
-      if (!anonymousId) {
-        anonymousId = `anon_${Math.random().toString(36).substring(2, 9)}`;
-        localStorage.setItem("anon_id", anonymousId);
-      }
-
-      const res = await searchGlobal(
-        query,
-        anonymousId,
-        searchType
-      );
+      const res = await searchGlobal(query, searchType);
 
       setResults(res);
       setIsOpen(true);
@@ -78,6 +69,9 @@ export default function HeaderSearchBar() {
   }, []);
 
   const handleSelect = (url: string) => {
+    // VA-15: la búsqueda se registra al elegir un resultado (no en cada tecla).
+    ensureAnalyticsCookies();
+    void logSearch(query, results.length, "HEADER_RESULT_CLICK", searchType);
     setIsOpen(false);
     setQuery("");
     router.push(url);
@@ -88,13 +82,9 @@ export default function HeaderSearchBar() {
 
     setIsOpen(false);
 
-    const encodedQuery = encodeURIComponent(query.trim());
-
-    if (searchType === "Aeronave") {
-      router.push(`/planes?search=${encodedQuery}`);
-    } else {
-      router.push(`/spareparts?search=${encodedQuery}`);
-    }
+    // Antes iba a /planes?search= o /spareparts?search=, que no leen ese parámetro (no filtraba
+    // nada). /search busca en aviones y repuestos, y registra la búsqueda (VA-15).
+    router.push(`/search?q=${encodeURIComponent(query.trim())}`);
   };
 
   const handleKeyDown = (

@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { getAnalyticsContext } from "@/lib/analytics-context";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
@@ -282,6 +283,7 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
               ? AnalyticsEventType.CREATE_AIRCRAFT_LISTING
               : AnalyticsEventType.CREATE_SPARE_PART_LISTING,
           userId: user.id,
+          ...(await getAnalyticsContext()),
           ...(listingType === "aircraft" ? { aircraftId: id } : { sparePartId: id }),
         },
       });
