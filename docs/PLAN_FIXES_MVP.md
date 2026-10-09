@@ -643,6 +643,15 @@ Prioridad según el escaneo de clases responsive (0 = ninguna):
 
 **Criterio general:** a 375 px, sin scroll horizontal, áreas táctiles de al menos 44 px, textos de al menos 14 px y nada tapado por el header.
 
+**Estado (9/10/2026):** ✅ hecho en local (commit `533d31f`). Escaneo automático de 30 rutas a 375 px (scroll horizontal, elementos cortados, áreas táctiles) + capturas:
+1. **Admin:** `components/admin/AdminNav.tsx`: debajo de `lg`, barra superior con botón de menú y panel lateral (se cierra al navegar); en escritorio, la misma barra lateral, ahora con la sección activa marcada. Todas las tablas ya tenían `overflow-x-auto`; las pestañas de `AdminReportsTable` bajan de línea.
+2. **`/questions`:** se veía bien; solo las pestañas con textos cortos en celular ("Recibidas" / "Realizadas").
+3. **Perfil:** pestañas en grilla 2×2 en celular (con scroll horizontal oculto, "Ajustes" no se veía); Renovar/editar/eliminar con 44 px. `profile-client.tsx` no se usa (VA-61).
+4. **Publicar:** se veía bien; botones Volver/Siguiente a 44 px y círculos del stepper más grandes en celular.
+5. **Detalle:** favoritos, compartir e imprimir eran `div` con `onClick` (sin teclado, área de 24 px): ahora botones con `aria-label` y 44 px; "Reportar" también. Footer con links más altos.
+6. Las grillas `grid-cols-4` son los modales de compartir: entran bien a 375 px.
+- **Pendiente:** `/spareparts` todavía se ensancha a 457 px — es VA-45 (drawer de filtros). Las flechas del carrusel de las cards miden 28 px pero solo aparecen con mouse; en celular se desliza. El criterio de "textos de al menos 14 px" no se aplicó a todo el sitio (hay mucho `text-xs` de diseño); se ajustó en los controles tocados.
+
 ### VA-61 · Código muerto y archivos que no van
 Borrar (verificar con `grep` antes):
 - `components/ui/AircraftGallery.tsx`, `HeroCarousel.tsx`, `ScrollVideoHero.tsx`, `PromoBanner.tsx`, `animated-search.tsx`, `PriceTicker.tsx` y `PriceTickerClient.tsx`: sin imports.

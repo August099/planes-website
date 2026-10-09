@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 33 de 62 tareas hechas (VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-43, VA-44, VA-54, VA-56, VA-57, VA-58 y VA-70). Faltan 29 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 34 de 62 tareas hechas (VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-43, VA-44, VA-54, VA-56, VA-57, VA-58, VA-60 y VA-70). Faltan 28 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -139,6 +139,12 @@ Hecha con un script que compara cada campo cargado en la base con el HTML del de
 
 Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/<id>/pdf`) responden 200; falta mirarlos visualmente.
 
+## Fase 5 — Responsive y limpieza
+
+| Tarea | Commit | Qué cambió | Dónde verlo |
+|---|---|---|---|
+| VA-60 | `533d31f` | **Pantallas adaptadas a celular.** Panel admin con menú desplegable debajo de 1024 px (antes la barra lateral dejaba ~120 px de contenido). Perfil con pestañas en 2×2 ("Ajustes" quedaba escondida). Favoritos/compartir/imprimir/reportar del detalle como botones de 44 px. Botones del formulario de publicar, acciones del perfil y links del footer más fáciles de tocar. | A 375 px: `/admin` (botón ☰), `/profile/<id>`, detalle de un avión, `/publish`. `components/admin/AdminNav.tsx` |
+
 ## Fase 5b — Rendimiento
 
 | Tarea | Commit | Qué cambió | Dónde verlo |
@@ -179,6 +185,8 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 
 ## Hallazgos pendientes (anotados, sin tocar)
 
+- **"Vistas" en el perfil** usa `_count.analyticsEvents`, que cuenta todos los eventos de la publicación (contactos, altas, etc.), no solo las vistas. Filtrar por `AIRCRAFT_VIEW` / `SPARE_PART_VIEW` (relacionado con VA-15/VA-17).
+- En `SellerCta` el link envuelve un `<Button>` (HTML inválido: botón dentro de link). Usar `asChild` o un `Link` con estilos de botón.
 - **`/plans` → `/checkout` da 404.** `/plans` está en el footer y en el sitemap; sus botones llevan a `/checkout`, que no existe. Es de la Fase 6 (Mercado Pago): decidir si se esconde `/plans` hasta entonces.
 - **Código que no se usa** (para VA-61): `app/profile/[id]/profile-client.tsx` (con links a `/publicacion` y `/editar-publicacion`), `components/ui/HeroCarousel.tsx` (link a `/aviones`, que no existe), `components/ui/animated-search.tsx`, `lib/aircraft-service.ts`.
 - **Quitar un admin** tarda hasta 5 minutos en aplicarse (VA-13: `isAdmin` se revalida cada 5 min en el `jwt`).
