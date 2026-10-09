@@ -71,14 +71,18 @@ export default function ServicesPage() {
       </div>
 
       <div className="relative max-w-4xl mx-auto space-y-10 bg-white/70 backdrop-blur-md p-6 sm:p-10 rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-        {/* Cinta / Solapa Diagonal "PRÓXIMAMENTE" arriba a la derecha */}
-        <div className="absolute top-0 right-0 w-36 h-36 overflow-hidden pointer-events-none z-20">
+        {/* Cinta diagonal "PRÓXIMAMENTE": solo desde lg. En celular y tablet tapaba el título (VA-29). */}
+        <div className="hidden lg:block absolute top-0 right-0 w-36 h-36 overflow-hidden pointer-events-none z-20">
             <div className="absolute top-6 -right-10 w-44 bg-[#E70F1F] text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 rotate-45 shadow-md">
             Próximamente
             </div>
         </div>
         {/* Encabezado Principal */}
         <div className="text-center space-y-4">
+          {/* En celular y tablet, el aviso va como badge arriba del título */}
+          <span className="lg:hidden inline-block rounded-full bg-[#E70F1F] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-sm">
+            Próximamente
+          </span>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#001F58] tracking-tight">
             Todo el ecosistema aeronáutico, en un solo lugar.
           </h1>
