@@ -465,7 +465,11 @@ model Favorite {
   sparePart   SparePart? @relation(fields: [sparePartId], references: [id])
   user        User       @relation(fields: [userId], references: [id])
 
-  @@unique([userId, aircraftId, sparePartId])
+  // VA-16: el unique de 3 columnas no evitaba duplicados (en Postgres NULL <> NULL, y siempre
+  // una de las dos columnas es NULL). Con dos índices de 2 columnas, los NULL no chocan entre sí
+  // pero dos favoritos del mismo avión (o repuesto) para el mismo usuario sí.
+  @@unique([userId, aircraftId])
+  @@unique([userId, sparePartId])
 }
 
 model Report {
