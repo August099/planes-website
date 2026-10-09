@@ -1,13 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import {
-  Navigation,
-  Autoplay,
-  Parallax,
-  Zoom,
-  Thumbs,
-} from "swiper/modules";
+import { Navigation, Autoplay, Parallax, Zoom, Thumbs, Keyboard } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 
 import "swiper/css";
@@ -33,75 +27,49 @@ export function AircraftGallery({ images, title }: GalleryProps) {
   const photoAlt = (image: { alt?: string | null }, index: number) => image.alt || `${title} – foto ${index + 1}`;
 
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
-  const swiperRef = useRef<SwiperType | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-
-  const zoomLevel = useRef(1);
-  const [currentZoom, setCurrentZoom] = useState(1);
 
   // --- Lightbox ---
   const lightboxSwiperRef = useRef<SwiperType | null>(null);
   const lightboxContainerRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const lightboxZoomLevel = useRef(1);
   const [lightboxCurrentZoom, setLightboxCurrentZoom] = useState(1);
 
-  // Zoom con rueda del mouse — función genérica reutilizable
-  const makeWheelHandler = (
-    swiperRefObj: React.MutableRefObject<SwiperType | null>,
-    zoomRef: React.MutableRefObject<number>,
-    setZoomState: (v: number) => void
-  ) => (e: WheelEvent) => {
-    if (!swiperRefObj.current || (e.deltaY > 0 && zoomRef.current <= MIN_ZOOM)) return;
-    e.preventDefault();
-
-    const delta = e.deltaY < 0 ? STEP : -STEP;
-    zoomRef.current = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomRef.current + delta));
-
-    if (zoomRef.current <= MIN_ZOOM) {
-      swiperRefObj.current.zoom.out();
-      zoomRef.current = MIN_ZOOM;
-    } else {
-      swiperRefObj.current.zoom.in(zoomRef.current);
-    }
-
-    setZoomState(zoomRef.current);
-  };
-
-  // Wheel listener del carrusel principal
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handler = makeWheelHandler(swiperRef, zoomLevel, setCurrentZoom);
-    container.addEventListener("wheel", handler, { passive: false });
-    return () => container.removeEventListener("wheel", handler);
-  }, []);
-
-  // Wheel listener del lightbox (solo cuando está abierto)
+  // Lightbox abierto: bloquear el scroll del fondo, zoom con rueda (solo acá: en el carrusel
+  // principal secuestraba el scroll de la página, VA-42) y Escape para cerrar.
   useEffect(() => {
     if (!isFullscreenOpen) return;
 
-    // Bloquear scroll del fondo
     document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus();
 
-    // Wheel listener del lightbox
     const container = lightboxContainerRef.current;
-    const handler = container
-      ? makeWheelHandler(lightboxSwiperRef, lightboxZoomLevel, setLightboxCurrentZoom)
-      : null;
+    const onWheel = (e: WheelEvent) => {
+      const swiper = lightboxSwiperRef.current;
+      if (!swiper || (e.deltaY > 0 && lightboxZoomLevel.current <= MIN_ZOOM)) return;
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? STEP : -STEP;
+      lightboxZoomLevel.current = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, lightboxZoomLevel.current + delta));
+      if (lightboxZoomLevel.current <= MIN_ZOOM) {
+        swiper.zoom.out();
+        lightboxZoomLevel.current = MIN_ZOOM;
+      } else {
+        swiper.zoom.in(lightboxZoomLevel.current);
+      }
+      setLightboxCurrentZoom(lightboxZoomLevel.current);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsFullscreenOpen(false);
+    };
 
-    if (container && handler) {
-      container.addEventListener("wheel", handler, { passive: false });
-    }
-
+    container?.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
-      if (container && handler) {
-        container.removeEventListener("wheel", handler);
-      }
+      container?.removeEventListener("wheel", onWheel);
+      window.removeEventListener("keydown", onKey);
     };
   }, [isFullscreenOpen]);
 
@@ -116,15 +84,16 @@ export function AircraftGallery({ images, title }: GalleryProps) {
     <>
       {/* Mismo fondo que el resto de las tarjetas del detalle (VA-32): antes era transparente
           y alrededor de la foto y de las miniaturas se veía el fondo de la página. */}
-      <div ref={containerRef} className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white">
-        {/* Carrusel Principal */}
+      <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white">
+        {/* Carrusel principal. Tocar o hacer clic en la foto abre la pantalla completa (VA-42):
+            Swiper solo dispara onClick si no hubo arrastre, así que deslizar no la abre. */}
         <Swiper
-          onSwiper={(swiper) => (swiperRef.current = swiper)}
-          onZoomChange={(_swiper, scale) => {
-            zoomLevel.current = scale;
-            setCurrentZoom(scale);
+          onClick={(swiper, event) => {
+            const target = event.target as HTMLElement | null;
+            if (target?.closest(".swiper-button-prev, .swiper-button-next")) return;
+            handleOpenFullscreen(swiper.activeIndex);
           }}
-          modules={[Navigation, Autoplay, Parallax, Zoom, Thumbs]}
+          modules={[Navigation, Autoplay, Parallax, Thumbs]}
           spaceBetween={10}
           slidesOffsetBefore={10}
           slidesOffsetAfter={10}
@@ -133,13 +102,12 @@ export function AircraftGallery({ images, title }: GalleryProps) {
           parallax
           navigation
           autoplay={{ delay: 5000, pauseOnMouseEnter: true }}
-          zoom={{ maxRatio: MAX_ZOOM, minRatio: MIN_ZOOM }}
           thumbs={{ swiper: thumbsSwiper }}
           className="w-full aspect-[4/3] max-h-[520px]"
         >
           {images.map((image, index) => (
-            <SwiperSlide key={index} className="flex items-center justify-center">
-              <div className="relative w-full h-full flex items-center justify-center group swiper-zoom-container">
+            <SwiperSlide key={index} className="flex items-center justify-center cursor-zoom-in">
+              <div className="relative w-full h-full flex items-center justify-center group">
                 <Image
                   src={image.url}
                   alt={photoAlt(image, index)}
@@ -149,14 +117,18 @@ export function AircraftGallery({ images, title }: GalleryProps) {
                   className="object-contain w-full h-full max-h-[520px]"
                 />
 
-                {currentZoom < 1.3 && (
-                  <div
-                    className="absolute bottom-4 right-4 bg-black/60 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-2 cursor-pointer"
-                    onClick={() => handleOpenFullscreen(index)}
-                  >
-                    <Maximize className="w-5 h-5" />
-                  </div>
-                )}
+                {/* Siempre visible en pantallas táctiles (no hay hover); en escritorio, al pasar el mouse. */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenFullscreen(index);
+                  }}
+                  aria-label="Ver foto en pantalla completa"
+                  className="absolute bottom-3 right-3 flex h-11 w-11 items-center justify-center bg-black/60 text-white rounded-full opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity z-2 cursor-pointer"
+                >
+                  <Maximize className="w-5 h-5" />
+                </button>
               </div>
             </SwiperSlide>
           ))}
@@ -196,19 +168,32 @@ export function AircraftGallery({ images, title }: GalleryProps) {
         )}
       </div>
 
-      {/* Visor Pantalla Completa (Lightbox) con el MISMO sistema de zoom */}
+      {/* Visor de pantalla completa */}
       {isFullscreenOpen && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center select-none">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Fotos de ${title}`}
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center select-none"
+        >
           <button
+            ref={closeButtonRef}
+            type="button"
             onClick={() => setIsFullscreenOpen(false)}
-            className="absolute top-5 right-5 z-50 text-white bg-slate-800/80 hover:bg-slate-700 p-2.5 rounded-full transition-colors cursor-pointer"
-            title="Cerrar"
+            aria-label="Cerrar"
+            style={{ top: "max(1rem, env(safe-area-inset-top))" }}
+            className="absolute right-4 z-50 flex h-11 w-11 items-center justify-center text-white bg-slate-800/80 hover:bg-slate-700 rounded-full transition-colors cursor-pointer"
           >
             <X className="w-6 h-6" />
           </button>
 
-          <div className="absolute top-5 left-5 z-50 text-slate-300 text-xs font-medium bg-black/50 px-3 py-1.5 rounded-full border border-slate-800">
-            Pellizcá o usá la rueda del mouse para hacer zoom ({Math.round(lightboxCurrentZoom * 100)}%)
+          <div
+            style={{ top: "max(1rem, env(safe-area-inset-top))" }}
+            className="absolute left-4 z-50 max-w-[calc(100%-6rem)] text-slate-300 text-xs font-medium bg-black/50 px-3 py-1.5 rounded-full border border-slate-800"
+          >
+            <span className="lg:hidden">Pellizcá o tocá dos veces para hacer zoom</span>
+            <span className="hidden lg:inline">Usá la rueda del mouse o hacé doble clic para hacer zoom</span>
+            {lightboxCurrentZoom > 1 && ` (${Math.round(lightboxCurrentZoom * 100)}%)`}
           </div>
 
           <div ref={lightboxContainerRef} className="w-full h-full">
@@ -219,9 +204,10 @@ export function AircraftGallery({ images, title }: GalleryProps) {
                 setLightboxCurrentZoom(scale);
               }}
               onSlideChange={(swiper) => setActiveImageIndex(swiper.activeIndex)}
-              modules={[Navigation, Zoom]}
+              modules={[Navigation, Zoom, Keyboard]}
               navigation
-              zoom={{ maxRatio: MAX_ZOOM, minRatio: MIN_ZOOM }}
+              keyboard={{ enabled: true }}
+              zoom={{ maxRatio: MAX_ZOOM, minRatio: MIN_ZOOM, toggle: true }}
               initialSlide={activeImageIndex}
               className="w-full h-full"
             >
