@@ -30,11 +30,11 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
       {/* CABECERA */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl font-heading font-semibold">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#001F58] tracking-tight">
             Buscar Repuestos por Categoría
           </h2>
           <p className="text-sm text-muted-foreground">
-            Encuentra piezas y componentes certificados para tu aeronave
+            Encontrá piezas y componentes certificados para tu aeronave
           </p>
         </div>
         <Link
