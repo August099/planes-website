@@ -115,7 +115,6 @@ export default async function PlaneDetailsPage({
   const displayBrand = aircraft.brand?.name || aircraft.customBrand;
   const displayModel = aircraft.model?.name || aircraft.customModel;
   const displaySubModel = aircraft.subModel?.name;
-  const hs = (n: number | null | undefined) => (n != null ? `${n.toLocaleString("es-AR")} hs` : null);
   const keyFacts: KeyFact[] = [
     { label: "Marca", value: displayBrand },
     { label: "Modelo", value: displayModel },
@@ -125,20 +124,14 @@ export default async function PlaneDetailsPage({
     { label: "Categoría", value: aircraft.category?.name },
     { label: "Estado", value: AIRCRAFT_CONDITION_LABELS[aircraft.condition] ?? aircraft.condition },
   ];
-  // Recuadro "Motor" junto a las fotos: como mucho 4 datos, los primeros cargados en este orden de
-  // prioridad (pedido del socio, 9/10). Todos los datos del motor siguen en la ficha de abajo.
-  const ENGINE_SUMMARY_MAX = 4;
+  // Recuadro "Motor" junto a las fotos: marca, modelo y TBO, en ese orden (pedido del socio, 9/10).
+  // Todos los datos del motor siguen en la ficha de abajo.
   const engineSummary: KeyFact[] | null = singleEngine
     ? [
         { label: "Marca", value: singleEngine.brand },
         { label: "Modelo", value: singleEngine.model },
-        { label: "Horas motor", value: hs(singleEngine.engineHours) },
-        { label: "DURG / SMOH", value: hs(singleEngine.DURG) },
-        { label: "Potencia", value: singleEngine.horsepower != null ? `${singleEngine.horsepower} HP` : null },
         { label: "TBO", value: tboText(singleEngine.TBO) },
       ]
-        .filter((f) => !!f.value)
-        .slice(0, ENGINE_SUMMARY_MAX)
     : null;
   const sellerLocation = [seller.city, seller.province].filter(Boolean).join(", ");
 
