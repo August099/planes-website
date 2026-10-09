@@ -7,6 +7,8 @@ import { isRequired } from "@/lib/aircraft-rules";
 export const MAX_LISTING_IMAGES = 15;
 export const MAX_LISTING_DOCUMENTS = 10;
 export const MAX_ENGINES = 4;
+// Tope de la descripción (VA-53). En va_dev la más larga tenía 365 caracteres.
+export const MAX_DESCRIPTION_LENGTH = 2000;
 
 const emptyToUndefined = (value: unknown) =>
   typeof value === "string" && value.trim() === "" ? undefined : value;
@@ -68,7 +70,7 @@ const common = {
   price,
   city: requiredText("La ciudad es obligatoria.", 100),
   province: requiredText("La provincia es obligatoria.", 100),
-  description: requiredText("La descripción es obligatoria.", 5000),
+  description: requiredText("La descripción es obligatoria.", MAX_DESCRIPTION_LENGTH),
   images,
 };
 

@@ -88,13 +88,13 @@ export function showsEngineSummary(a: AircraftDetail): boolean {
   return a.engines.length === 1 && categoryDef(a.categoryId)?.group !== "Bimotor";
 }
 
-// omitSummary (vista web, VA-41): sin lo que ya está en el resumen de arriba ("General" y los
-// datos del motor del recuadro). La impresión / PDF sigue usando la ficha completa.
+// omitSummary (vista web, VA-41): sin "General", que ya está en el resumen de arriba. Los motores
+// van siempre completos: el recuadro de arriba muestra solo 4 datos (9/10). La impresión / PDF usa
+// la ficha completa.
 export function aircraftSections(a: AircraftDetail, { omitSummary = false }: { omitSummary?: boolean } = {}): DetailSection[] {
   const multipleEngines = a.engines.length > 1;
   const brand = a.brand?.name || a.customBrand;
   const model = a.model?.name || a.customModel;
-  const engineInSummary = omitSummary && showsEngineSummary(a);
 
   const sections: (DetailSection | null)[] = [
     omitSummary ? null : section("General", [
@@ -108,9 +108,7 @@ export function aircraftSections(a: AircraftDetail, { omitSummary = false }: { o
       { label: "Estado", value: AIRCRAFT_CONDITION[a.condition] ?? a.condition },
     ]),
     ...a.engines.map((e, i) =>
-      engineInSummary
-        ? section("Motor", [{ label: "Descripción", value: text(e.description) }])
-        : section(multipleEngines ? `Motor ${i + 1}` : "Motor", [
+      section(multipleEngines ? `Motor ${i + 1}` : "Motor", [
         { label: "Marca", value: text(e.brand) },
         { label: "Modelo", value: text(e.model) },
         { label: "Potencia", value: e.horsepower != null ? `${e.horsepower} HP` : undefined },

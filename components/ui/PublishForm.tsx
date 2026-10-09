@@ -22,6 +22,7 @@ import Stepper, { Step } from "@/components/ui/Stepper";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle, Send, AlertCircle, Upload, Paperclip, Search, X, GripHorizontal, Rocket, Sparkles } from "lucide-react";
 import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
+import { DescriptionTextarea } from "@/components/ui/DescriptionTextarea";
 import { LAUNCH_PROMO } from "@/lib/promo";
 
 export interface CategoryOption { 
@@ -1191,7 +1192,7 @@ export default function PublishForm({
 
                                         <div>
                                             <label className="block text-xs font-bold uppercase mb-1">Descripción General y Comentarios Adicionales *</label>
-                                            <textarea required rows={4} placeholder="Explayate sobre el historial, mantenimientos recientes, o motivo de venta de la aeronave..." value={aircraftForm.description} onChange={e => setAircraftForm({...aircraftForm, description: e.target.value})} className="w-full p-3 rounded-xl border border-slate-300 bg-white" />
+                                            <DescriptionTextarea required placeholder={"Historial:\n- Siempre hangarado\n- Último anual en marzo 2026\n\nMotivo de venta: cambio por un bimotor."} value={aircraftForm.description} onChange={(description) => setAircraftForm({...aircraftForm, description})} />
                                             <FieldError message={fieldErrors.description} />
                                         </div>
 
@@ -1345,7 +1346,7 @@ export default function PublishForm({
 
                                         <div>
                                             <label className="block text-xs font-bold uppercase mb-1">Descripción del Artículo *</label>
-                                            <textarea rows={4} placeholder="Detallá uso, tiempo remanente si aplica, fallas, compatibilidades generales..." value={partsForm.description} onChange={e => setPartsForm({...partsForm, description: e.target.value})} className="w-full p-3 rounded-xl border border-slate-300 bg-white" />
+                                            <DescriptionTextarea placeholder="Detallá uso, tiempo remanente si aplica, fallas, compatibilidades generales..." value={partsForm.description} onChange={(description) => setPartsForm({...partsForm, description})} />
                                             <FieldError message={fieldErrors.description} />
                                         </div>
 

@@ -19,9 +19,9 @@ import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSec
 import { PublishedLine } from "@/components/ui/listing/PublishedLine";
 import { aircraftFeatures, aircraftSections, showsEngineSummary } from "@/lib/listing-detail";
 import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
+import { DescriptionBody, ListingDescription } from "@/components/ui/listing/ListingDescription";
 import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
 import { AIRCRAFT_CONDITION_LABELS } from "@/lib/constants";
-import { ENGINE_LABELS } from "@/lib/aircraft-categories";
 import { aircraftJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
@@ -125,16 +125,20 @@ export default async function PlaneDetailsPage({
     { label: "Categoría", value: aircraft.category?.name },
     { label: "Estado", value: AIRCRAFT_CONDITION_LABELS[aircraft.condition] ?? aircraft.condition },
   ];
+  // Recuadro "Motor" junto a las fotos: como mucho 4 datos, los primeros cargados en este orden de
+  // prioridad (pedido del socio, 9/10). Todos los datos del motor siguen en la ficha de abajo.
+  const ENGINE_SUMMARY_MAX = 4;
   const engineSummary: KeyFact[] | null = singleEngine
     ? [
-        { label: "Tipo", value: aircraft.engineType ? ENGINE_LABELS[aircraft.engineType] : null },
         { label: "Marca", value: singleEngine.brand },
         { label: "Modelo", value: singleEngine.model },
-        { label: "Potencia", value: singleEngine.horsepower != null ? `${singleEngine.horsepower} HP` : null },
         { label: "Horas motor", value: hs(singleEngine.engineHours) },
-        { label: "TBO", value: tboText(singleEngine.TBO) },
         { label: "DURG / SMOH", value: hs(singleEngine.DURG) },
+        { label: "Potencia", value: singleEngine.horsepower != null ? `${singleEngine.horsepower} HP` : null },
+        { label: "TBO", value: tboText(singleEngine.TBO) },
       ]
+        .filter((f) => !!f.value)
+        .slice(0, ENGINE_SUMMARY_MAX)
     : null;
   const sellerLocation = [seller.city, seller.province].filter(Boolean).join(", ");
 
@@ -203,7 +207,7 @@ export default async function PlaneDetailsPage({
         {aircraft.description && (
           <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
             <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-100">Descripción</h3>
-            <p className="whitespace-pre-line text-slate-700">{aircraft.description}</p>
+            <DescriptionBody text={aircraft.description} />
           </div>
         )}
 
@@ -230,8 +234,7 @@ export default async function PlaneDetailsPage({
 
             {aircraft.description && (
               <div className="order-4 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
-                <h2 className="text-xl font-bold mb-3 text-[#001F58]">Descripción General</h2>
-                <p className="whitespace-pre-line text-slate-700 text-sm leading-relaxed">{aircraft.description}</p>
+                <ListingDescription text={aircraft.description} />
               </div>
             )}
 

@@ -18,6 +18,7 @@ import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSec
 import { PublishedLine } from "@/components/ui/listing/PublishedLine";
 import { sparePartConditionLabel, sparePartFeatures, sparePartSections } from "@/lib/listing-detail";
 import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
+import { DescriptionBody, ListingDescription } from "@/components/ui/listing/ListingDescription";
 import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
 import { sparePartJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
@@ -196,7 +197,7 @@ export default async function SparePartDetailsPage({
         {sparePart.description && (
           <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
             <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-100">Descripción</h3>
-            <p className="whitespace-pre-line text-slate-700">{sparePart.description}</p>
+            <DescriptionBody text={sparePart.description} />
           </div>
         )}
 
@@ -225,8 +226,7 @@ export default async function SparePartDetailsPage({
 
             {sparePart.description && (
               <div className="order-4 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
-                <h2 className="text-xl font-bold mb-3 text-[#001F58]">Descripción General</h2>
-                <p className="whitespace-pre-line text-slate-700 text-sm leading-relaxed">{sparePart.description}</p>
+                <ListingDescription text={sparePart.description} />
               </div>
             )}
 
