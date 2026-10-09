@@ -366,6 +366,12 @@ Revisando el flujo completo (`PublishForm.tsx` → `app/publish/actions.ts` → 
   5. **Admin:** mostrar y poder corregir el tipo en `/admin/users` (VA-58), por si alguien se equivoca.
   6. Mientras haya cuentas sin confirmar, el filtro "Publica" puede dar resultados incompletos: opcionalmente mostrar el filtro recién cuando la mayoría de los vendedores con avisos estén confirmados.
 - **Migración:** `ALTER TABLE "User" ADD COLUMN "userTypeConfirmed" BOOLEAN NOT NULL DEFAULT false` + `UPDATE ... SET true WHERE "passwordHash" IS NOT NULL` (mostrar el SQL antes de aplicar).
+
+### VA-34 · "Compartir" siempre con ventana flotante (pedido del socio, 9/10)
+- **Problema:** cada botón de compartir hacía algo distinto: en las cards, menú nativo del celular o copiar el link sin avisar en escritorio; en el detalle, menú nativo si existía.
+- **Hacer:** un solo componente de ventana flotante para cards (avión y repuesto) y detalle, en celular y escritorio.
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `4de0300`). `components/ui/ShareDialog.tsx` (WhatsApp, Facebook, X, email y copiar enlace): hoja inferior en celular y ventana centrada desde `sm`, `role="dialog"`, Escape y X de 44 px. Se eliminaron las tres copias del modal. Probado: card de avión a 375 px, card de repuesto y detalle a 1280 px; abrir no navega al detalle.
 ---
 
 ## FASE 4 — Lista del socio
@@ -382,6 +388,8 @@ Revisando el flujo completo (`PublishForm.tsx` → `app/publish/actions.ts` → 
   - Tamaño: alto 32–36 px, `width`/`height` reales en el `Image` (aspecto ≈ 3,74:1) y no 20×20.
 - **Aceptación:** a 375 px, en la Home se lee "VA//" en blanco y en `/planes` se lee "VA//" en color.
 
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `a41e6d2`). Header en celular: `logo-va-white.png` sobre la Home y `logo-va-color.png` en el resto, 34 px de alto con la proporción real (1032×276). Siguen siendo **borradores**: si el socio manda el logo final, se reemplazan los archivos con el mismo nombre.
 ### VA-41 · Ordenar los campos de las publicaciones en celular
 - **Archivos:** `app/planes/plane-details/[id]/page.tsx`, `app/spareparts/sparepart-details/[id]/page.tsx`.
 - **Confirmado en vivo:** el orden en mobile es fotos → **descripción** → título y precio → datos → vendedor → ficha técnica, que **repite** marca, modelo y año. El título y el precio quedan debajo de una descripción larga.
@@ -464,6 +472,8 @@ Revisando el flujo completo (`PublishForm.tsx` → `app/publish/actions.ts` → 
   - En el perfil del dueño: un aviso "Completá tu perfil para que te puedan contactar" y punto rojo junto a cada campo vacío.
   - Bloquear la publicación sin teléfono ❓ DECISIÓN, porque sin teléfono no hay botón de WhatsApp.
 
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `e397ebd`). `lib/profile.ts` (`getMissingProfileFields`): teléfono, ciudad, provincia y email verificado — este último solo en cuentas con contraseña, porque las de Google no tienen `emailVerified` en la base pero el email ya está verificado por Google. Foto opcional. Punto rojo del header (cacheado 60 s, invalidado al guardar el perfil) + "Completá tu perfil" en el menú; en el perfil del dueño, cartel con lo que falta, punto en "Ajustes" y junto a cada campo vacío. **Publicar sin teléfono bloqueado (D7)**: tarjeta en `/publish` para cargarlo ahí mismo y validación en `createListing`. Editar no se bloquea. Probado con el usuario de prueba (teléfono y provincia borrados y restaurados): cartel, puntos, tarjeta, validación de teléfono corto y guardado.
 ### VA-47 · Aviso de publicaciones gratis y cartel de invitación
 Del ítem que vino pegado en la lista: *"…una vez registrado, marcar con un aviso las publicaciones gratis"* + *"Cartel con invitación a registrarse comentando las publicaciones gratis iniciales"*.
 - **Decisión de los socios:** la cantidad y las condiciones de las publicaciones gratis **se van a definir más adelante con un cupón**. No implementar saldos ni descuentos ahora.
@@ -477,9 +487,13 @@ Del ítem que vino pegado en la lista: *"…una vez registrado, marcar con un av
 - Si el socio se refería a otra cosa (por ejemplo, el filtro del hero `HomeFilter.tsx`), ajustar.
 - **Relacionado (composición):** "En pleno ingreso poner el botón VER TODO AERONAVES y otro VER TODO REPUESTOS". Agregar dos botones debajo del buscador del hero (`components/ui/hero-banner.tsx`), visibles sin scrollear en mobile.
 
+
+**Estado (9/10/2026):** ❌ **descartado por el socio** (9/10). Se implementó el desplegable de "Repuestos" en el header y los botones "Ver todo aeronaves / Ver todo repuestos" en el hero, pero el socio pidió sacarlos; no se commiteó nada.
 ### VA-55 · Título de la Home legible en un solo color (composición)
 - `components/ui/hero-banner.tsx` l.62: "a bordo" usa un degradé `from-white via-red-100 to-[#E70F1F]` que **en vivo se lee mal** sobre el fondo. La composición pide "el título bien legible en un solo color, se puede hacer un difuminado a la imagen de atrás". Título en blanco sólido y un overlay con degradé oscuro detrás del bloque de texto (`bg-gradient-to-b from-black/40`).
 
+
+**Estado (9/10/2026):** ✅ cerrado en local. Primero (`0705fd2`) se puso el título en blanco sólido con un difuminado oscuro detrás; **el socio pidió volver al degradé** (9/10): `6ea8f9f` deja "a bordo" en degradé blanco → rojo **sin** recuadro oscuro, con el rojo final más claro (#FF5A64 en vez de #E70F1F) y una sombra suave para que se lea sobre el azul.
 ### VA-56 · Fondo estándar con filtro blanco en todas las páginas (menos la Home)
 **Pedido de los socios:** todas las páginas, menos la Home, tienen que tener una imagen de fondo con un filtro blanco suave, como `/terms` y `/privacy`.
 
@@ -578,10 +592,14 @@ Del ítem que vino pegado en la lista: *"…una vez registrado, marcar con un av
 - **Archivo:** `components/ui/HowItWorks.tsx` l.32–33.
 - **Hacer:** círculo `bg-primary` (rojo `#E70F1F`) con ícono `text-white`. Hover: `bg-red-700`. Quitar el borde translúcido.
 
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `ea41c8b`). Círculo `bg-primary` (rojo de marca) con ícono blanco, hover `bg-red-700`, sin borde.
 ### VA-50 · Tamaño del logo del footer
 - **Archivo:** `components/ui/Footer.tsx` l.19. Hoy es `w-80 sm:w-[384px] md:w-[448px] h-24`, que en la grilla de 4 columnas desborda la columna. Bajar a algo como `w-48 sm:w-56 h-14` (ajustar a ojo con el socio) y probar a 375 px.
 - De paso: el teléfono `+54 9 000 000 0000` (l.104) es un placeholder. ❓ Poner el real o quitar la línea.
 
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `7685be7`). Logo con ancho fluido y su proporción real (1842×128, máx. 288 px): entra en la columna a 375 y 1280 px. Teléfono real **+54 9 3456 44-5758** (D10) en `CONTACT_PHONE` de `lib/site.ts`, usado en el footer y en el JSON-LD de la organización.
 ### VA-51 · Imagen del footer
 - `Footer.tsx` ya usa `public/bkg-footer.png` (fondo azul con las barras "//", el archivo más reciente, de 78 KB) y en vivo se ve bien. **Parece resuelto.** ❓ Confirmar con el socio que es la imagen del Drive; si lo es, cerrar la tarea.
 
@@ -816,10 +834,10 @@ Notas para cuando se encare, a partir de lo que ya existe:
 | D4 | ¿Qué formato de descripción quiere el socio? | VA-53 | Pendiente (hay propuesta) |
 | D5 | Campos nuevos del avión | VA-54 | ✅ Según la composición. DURG = SMOH |
 | D6 | Imágenes | VA-40, 51, 52, 56 | Footer: parece listo. Logo: borrador generado. Fondos: usar los de `public/` según la tabla de VA-56 |
-| D7 | ¿Es obligatorio el teléfono para publicar? | VA-46 | Pendiente |
+| D7 | ¿Es obligatorio el teléfono para publicar? | VA-46 | ✅ Sí, se bloquea publicar sin teléfono (se puede cargar en el mismo `/publish`). La foto de perfil es opcional (9/10) |
 | D8 | Máximo de imágenes por publicación | VA-07 | Pendiente (sugerido 20) |
-| D9 | Interpretación de los menús desplegables | VA-45, VA-48 | VA-45 ✅ confirmado en vivo. VA-48 pendiente |
-| D10 | Teléfono real del footer | VA-50 | Pendiente |
+| D9 | Interpretación de los menús desplegables | VA-45, VA-48 | VA-45 ✅ confirmado en vivo. VA-48: se eligió el desplegable en el header, pero el socio después pidió sacarlo (descartado, 9/10) |
+| D10 | Teléfono real del footer | VA-50 | ✅ +54 9 3456 44-5758 (9/10) |
 | D11 | Publicaciones de prueba | VA-27 | ✅ No importan, no se borran |
 | D14 | Hosting | VA-30, VA-70 | ✅ Vercel (límite de 4,5 MB por request). Falta confirmar la región de las funciones vs. la de Supabase |
 | D12 | Modelos marcados `(PR)` en la composición: ¿"Proyecto" o "para más adelante"? | VA-43 | ✅ 8/10: "para más adelante". Las variantes heredan la categoría del modelo; Aero Commander 500 → `BP`, Turbo Commander 680 → `BT` |

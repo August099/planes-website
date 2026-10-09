@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 37 de 63 tareas hechas (VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-41 a VA-45, VA-54, VA-56, VA-57, VA-58, VA-60 y VA-70). Faltan 26 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 44 de 64 tareas cerradas (43 hechas + VA-48 descartada): VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-46, VA-48 (descartada), VA-49, VA-50, VA-54 a VA-58, VA-60 y VA-70. Faltan 20 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -77,6 +77,13 @@ Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://l
 | VA-45 | `4b55359` | **Filtros desplegables.** `/spareparts` ya no se rompe en celular (se ensanchaba a 457 px): botón "Filtros (n)" con panel lateral y "Ordenar" al lado, como `/planes`. Se puede ordenar repuestos. Secciones con contador y etiquetas de filtros aplicados en las dos páginas. `/planes` suma filtros **Año desde-hasta** y **Publica** (Particular / Intermediario / Fábrica), y Marca muestra 6 + "Ver todas". | `/planes` y `/spareparts` a 375 px → "Filtros". `components/ui/filters/FilterShell.tsx` |
 | VA-41 | `bbb3f74` | **Detalle ordenado para celular**: fotos → título y precio → vendedor → descripción → ficha (antes la descripción iba antes del precio). Un solo árbol de componentes, sin bloques duplicados. Datos clave en grilla de 2 columnas; la ficha no repite lo del resumen. El recuadro "Motor" no aparece en Bimotor. | Detalle de un avión y de un repuesto a 375 px. `components/ui/listing/KeyFacts.tsx`, `SellerContactCard.tsx` |
 | VA-42 | `a81c824` | **Zoom de fotos en celular**: tocar la foto abre la pantalla completa (antes no se podía: el botón solo aparecía con mouse). Visor con X arriba a la derecha, `Escape`, flechas, doble toque para zoom. La rueda del mouse ya no se "come" el scroll de la página sobre la foto. | Detalle → tocar la foto. `components/ui/Carousel.tsx` |
+| VA-40 | `a41e6d2` | **Logo "VA//" completo en el header del celular** (antes solo las barras): blanco sobre la Home, en color en el resto. Los PNG son borradores. | Cualquier página a 375 px. `components/ui/header-logo.tsx` |
+| VA-55 | `0705fd2` + `6ea8f9f` | Título de la Home: a pedido del socio queda el **degradé blanco → rojo** en "a bordo", sin recuadro oscuro, con un rojo más claro para que se lea. | `/` |
+| VA-49 | `ea41c8b` | Íconos de "Cómo funciona": círculo rojo con ícono blanco. | `/` → "Cómo funciona" |
+| VA-50 | `7685be7` | Logo del footer dentro de su columna (antes 448 px fijos) y **teléfono real** en el footer y en el JSON-LD. | Footer. `lib/site.ts` (`CONTACT_PHONE`) |
+| VA-48 | — | **Descartado** por el socio: no va el desplegable de "Repuestos" en el header ni los botones "Ver todo" del hero (se hicieron y se sacaron sin commitear). | — |
+| VA-46 | `e397ebd` | **Perfil incompleto**: punto rojo en el header y "Completá tu perfil" en el menú; en el perfil, cartel con lo que falta y puntos en los campos vacíos. **Sin teléfono no se publica**: `/publish` pide cargarlo ahí mismo y el servidor lo valida. | Usuario sin teléfono → `/profile/<id>` y `/publish`. `lib/profile.ts`, `components/ui/PhoneRequiredCard.tsx` |
+| VA-34 | `4de0300` | **"Compartir" siempre abre la ventana flotante** (cards y detalle, celular y escritorio). Antes: menú nativo del celular o copiar el link sin avisar. | Botón compartir de cualquier card o detalle. `components/ui/ShareDialog.tsx` |
 
 ### VA-57 · Verificación "campo del formulario → dónde se ve en el detalle"
 
@@ -155,6 +162,8 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 | VA-70 | `43f3d48` | La Home ya no baja 25 MB de JS: los íconos de categorías son propios (`components/icons/category/`), sin `react-icons`. | `/` → "Buscar Repuestos por Categoría" |
 
 ## Bugs encontrados en el camino (fuera del plan)
+
+- `3624591`: "Buscar Repuestos por Categoría" (Home) no tenía color de título; ahora azul de marca como los demás, y el subtítulo en voseo ("Encontrá…"). Pedido del socio (9/10).
 
 | Commit | Qué cambió | Dónde verlo |
 |---|---|---|
