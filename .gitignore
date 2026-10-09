@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+
+# Configuración local del editor (VA-61: tenía credenciales de Postgres local)
+.vscode/

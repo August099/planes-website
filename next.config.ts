@@ -3,20 +3,13 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "picsum.photos", // Permite URLs de Picsum
-      },
-      {
+        // Avisos de prueba que siguen en producción (VA-27): sacarlo cuando se reemplacen.
         protocol: 'https',
         hostname: 'loremflickr.com',
       },
       {
         protocol: "https",
         hostname: "**.supabase.co", // Permite URLs del storage de Supabase
-      },
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
       },
       {
         protocol: 'https',
@@ -32,10 +25,11 @@ const nextConfig = {
       },
     ],
   },
+  // Solo afecta al servidor de desarrollo (túneles de loca.lt para probar en el celular).
+  allowedDevOrigins: ['*.loca.lt'],
   experimental: {
     serverActions: {
-      allowedDevOrigins: ['*.loca.lt', 'localhost:3000'],
-      bodySizeLimit: "30mb", // Aumenta el límite a 10MB (o "20mb" si subes fotos muy pesadas)
+      bodySizeLimit: "30mb",
     },
   },
   staticPageGenerationTimeout: 120,
