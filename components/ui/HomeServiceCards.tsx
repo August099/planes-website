@@ -4,27 +4,29 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+// Imágenes en public/cards/ (VA-52), generadas con scripts/optimize-cards.mjs.
 export default function HomeServicesCards() {
   const cards = [
     {
       title: "AVIONES",
       status: "Disponible",
       isAvailable: true,
-      image: "/card-plane.png",
+      image: "/cards/planes.webp",
+      position: "object-[70%_65%]", // que se vea el avión, no solo el cielo
       href: "/planes",
     },
     {
       title: "REPUESTOS",
       status: "Disponible",
       isAvailable: true,
-      image: "/card-sparepart.png",
+      image: "/cards/spareparts.webp",
       href: "/spareparts",
     },
     {
       title: "SERVICIOS",
       status: "Próximamente",
       isAvailable: false,
-      image: "/card-service.png",
+      image: "/cards/services.webp",
       href: "/services",
       hasArrow: true,
     },
@@ -43,7 +45,8 @@ export default function HomeServicesCards() {
                   src={card.image}
                   alt={card.title}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className={`object-cover ${card.position ?? ""} group-hover:scale-105 transition-transform duration-500 ease-out`}
                 />
 
                 <div className="absolute inset-0 bg-[#001F58]/50 mix-blend-multiply transition-opacity duration-300 group-hover:bg-[#001F58]/40" />
