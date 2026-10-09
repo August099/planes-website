@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { notFound } from "next/navigation";
 import { ProfileView } from "@/components/ui/ProfileView";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { getMissingProfileFieldsCached } from "@/lib/cached-data";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -139,6 +140,7 @@ export default async function ProfilePage({ params }: Props) {
         isOwner={isOwner}
         currentUserFavIds={currentUserFavIds}
         userCoupons={userCoupons}
+        missingProfileFields={isOwner ? await getMissingProfileFieldsCached(id) : []}
       />
     </main>
   );

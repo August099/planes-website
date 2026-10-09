@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { User, Menu, ShieldCheck } from "lucide-react";
 import { auth, signOut } from "@/lib/auth";
-import { hasUnansweredQuestions as fetchHasUnanswered } from "@/lib/cached-data";
+import { hasUnansweredQuestions as fetchHasUnanswered, getMissingProfileFieldsCached } from "@/lib/cached-data";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +22,12 @@ export async function Header() {
   const isAdmin = Boolean((session?.user as any)?.isAdmin);
 
   // Preguntas recibidas sin responder (cacheado 60 s por usuario, VA-13)
-  const hasUnansweredQuestions = session?.user?.id ? await fetchHasUnanswered(session.user.id) : false;
+  const [hasUnansweredQuestions, missingProfileFields] = session?.user?.id
+    ? await Promise.all([fetchHasUnanswered(session.user.id), getMissingProfileFieldsCached(session.user.id)])
+    : [false, []];
+  // Perfil incompleto (VA-46): mismo punto rojo que las preguntas sin responder.
+  const profileIncomplete = missingProfileFields.length > 0;
+  const showUserDot = hasUnansweredQuestions || profileIncomplete;
 
   return (
     <HeaderWrapper>
@@ -61,7 +66,7 @@ export async function Header() {
                 >
                   <User className="h-4 w-4" />
                   {/* Puntito Rojo de Notificación en el Botón Desktop */}
-                  {hasUnansweredQuestions && (
+                  {showUserDot && (
                     <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full animate-pulse" />
                   )}
                 </DropdownMenuTrigger>
@@ -82,8 +87,14 @@ export async function Header() {
                   )}
 
                   <DropdownMenuItem className="p-0">
-                    <Link href={`/profile/${session.user.id}`} className="w-full px-2 py-1.5 text-sm">
-                      Mi Cuenta
+                    <Link href={`/profile/${session.user.id}`} className="w-full px-2 py-1.5 text-sm flex items-center justify-between gap-3">
+                      <span>Mi Cuenta</span>
+                      {profileIncomplete && (
+                        <span className="flex items-center gap-1 text-[11px] font-semibold text-red-600">
+                          Completá tu perfil
+                          <span className="w-2 h-2 bg-red-600 rounded-full" />
+                        </span>
+                      )}
                     </Link>
                   </DropdownMenuItem>
 
@@ -141,7 +152,7 @@ export async function Header() {
             <DropdownMenuTrigger className="relative p-2 rounded-lg border-none hover:bg-white/10 outline-none cursor-pointer">
               <Menu className="h-6 w-6" />
               {/* Puntito Rojo de Notificación en el Botón Hamburger Mobile */}
-              {hasUnansweredQuestions && (
+              {showUserDot && (
                 <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-600 border border-white rounded-full animate-pulse" />
               )}
             </DropdownMenuTrigger>
@@ -189,8 +200,14 @@ export async function Header() {
                   )}
 
                   <DropdownMenuItem className="p-0">
-                    <Link href={`/profile/${session.user.id}`} className="w-full px-2 py-1.5 text-sm font-medium">
-                      Mi Cuenta
+                    <Link href={`/profile/${session.user.id}`} className="w-full px-2 py-1.5 text-sm font-medium flex items-center justify-between gap-3">
+                      <span>Mi Cuenta</span>
+                      {profileIncomplete && (
+                        <span className="flex items-center gap-1 text-[11px] font-semibold text-red-600">
+                          Completá tu perfil
+                          <span className="w-2 h-2 bg-red-600 rounded-full" />
+                        </span>
+                      )}
                     </Link>
                   </DropdownMenuItem>
                   

@@ -36,6 +36,7 @@ import {
   Star,
   Clock,
 } from "lucide-react";
+import { PROFILE_FIELD_LABELS, type ProfileField } from "@/lib/profile";
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
@@ -62,6 +63,8 @@ interface Props {
   isOwner: boolean;
   currentUserFavIds: string[];
   userCoupons?: any[];
+  // VA-46: campos que le faltan al dueño (se calculan en el servidor, ver lib/profile.ts).
+  missingProfileFields?: ProfileField[];
 }
 
 /** Helper para calcular los días restantes de una publicación */
@@ -91,7 +94,13 @@ export function ProfileView({
   isOwner,
   currentUserFavIds,
   userCoupons = [],
+  missingProfileFields = [],
 }: Props) {
+  const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
+  const missingDot = (field: ProfileField) =>
+    isMissing(field) ? (
+      <span className="ml-1 inline-block w-2 h-2 rounded-full bg-red-600 align-middle" aria-label="Falta completar" />
+    ) : null;
   const [activeTab, setActiveTab] = useState<"aircrafts" | "spareparts" | "coupons" | "edit">("aircrafts");
   const [loadingSave, setLoadingSave] = useState(false);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
@@ -404,6 +413,29 @@ export function ProfileView({
         </div>
       </div>
 
+      {/* VA-46: aviso de perfil incompleto (solo el dueño) */}
+      {isOwner && missingProfileFields.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+          <div className="flex items-start gap-2">
+            <span className="mt-1.5 inline-block w-2.5 h-2.5 shrink-0 rounded-full bg-red-600" />
+            <div>
+              <p className="text-sm font-semibold text-red-800">Completá tu perfil para que te puedan contactar</p>
+              <p className="text-xs text-red-700">
+                Falta: {missingProfileFields.map((f) => PROFILE_FIELD_LABELS[f]).join(", ")}.
+                {missingProfileFields.includes("phone") && " Sin teléfono no se puede publicar."}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab("edit")}
+            className="min-h-11 shrink-0 rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 transition-colors cursor-pointer"
+          >
+            Completar ahora
+          </button>
+        </div>
+      )}
+
       {/* Selector de pestañas responsive */}
       {/* En celular las pestañas van en grilla de 2 columnas: con scroll horizontal "Ajustes" quedaba escondida (VA-60) */}
       <div className="grid grid-cols-2 gap-x-4 border-b border-slate-200 sm:flex sm:gap-6 sm:overflow-x-auto scrollbar-none">
@@ -456,6 +488,9 @@ export function ProfileView({
           >
             <Edit className="w-4 h-4" />
             Ajustes
+            {missingProfileFields.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-red-600" aria-label="Perfil incompleto" />
+            )}
           </button>
         )}
       </div>
@@ -784,15 +819,15 @@ export function ProfileView({
                 <input type="text" name="name" defaultValue={profileUser.name || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Teléfono de Contacto</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Teléfono de Contacto{missingDot("phone")}</label>
                 <input type="text" name="phone" defaultValue={profileUser.phone || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Ciudad</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Ciudad{missingDot("city")}</label>
                 <input type="text" name="city" defaultValue={profileUser.city || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Provincia</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Provincia{missingDot("province")}</label>
                 <input type="text" name="province" defaultValue={profileUser.province || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
               </div>
               <div>

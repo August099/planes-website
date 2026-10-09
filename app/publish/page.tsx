@@ -31,6 +31,9 @@ export default async function PublishPage({ searchParams }: Props) {
     );
   }
 
+  // VA-46: sin teléfono el formulario pide cargarlo antes de publicar.
+  const sellerPhone = await prisma.user.findUnique({ where: { id: user.id }, select: { phone: true } });
+
   const rawBrands = await prisma.aircraftBrand.findMany({
     select: {
       id: true,
@@ -84,6 +87,7 @@ export default async function PublishPage({ searchParams }: Props) {
         brandsData={JSON.parse(JSON.stringify(rawBrands))}
         spareCategoriesData={JSON.parse(JSON.stringify(rawSpareCategories))}
         editListing={editListing ?? undefined}
+        needsPhone={!sellerPhone?.phone?.trim()}
       />
     </main>
   );

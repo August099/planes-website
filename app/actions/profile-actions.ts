@@ -3,7 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { validateImage } from "@/lib/upload-validation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { profileCompletenessTag } from "@/lib/cached-data";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 
@@ -34,6 +35,8 @@ export async function updateProfileAction(formData: FormData) {
   }
 
   revalidatePath(`/profile/${user.id}`);
+  // Punto rojo del header por perfil incompleto (VA-46).
+  updateTag(profileCompletenessTag(user.id));
   return { success: true };
 }
 

@@ -187,6 +187,10 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
   const user = await getCurrentUser();
   if (!user?.id) return { ok: false, error: "Tenés que iniciar sesión." };
 
+  // VA-46 (decisión D7): sin teléfono no se publica (no habría WhatsApp ni llamada).
+  const seller = await prisma.user.findUnique({ where: { id: user.id }, select: { phone: true } });
+  const sellerHasPhone = !!seller?.phone?.trim();
+
   const parsed = listingSchema.safeParse(input);
   const listingType: ListingType = input?.listingType === "parts" ? "parts" : "aircraft";
   const imagePaths = Array.isArray(input?.images) ? input.images.filter((p) => typeof p === "string") : [];
@@ -199,6 +203,9 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
     return result;
   };
 
+  if (!sellerHasPhone) {
+    return fail({ ok: false, error: "Para publicar tenés que cargar tu teléfono de contacto en tu perfil." });
+  }
   if (!parsed.success) {
     return fail({ ok: false, error: "Revisá los campos marcados.", fieldErrors: toFieldErrors(parsed.error) });
   }

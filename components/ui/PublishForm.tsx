@@ -38,6 +38,7 @@ import {
     GripHorizontal,
     Rocket
 } from "lucide-react";
+import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
 
 export interface CategoryOption { 
     id: string; 
@@ -70,6 +71,8 @@ interface PublishFormProps {
     spareCategoriesData?: CategoryOption[];
     // Si viene, el formulario edita esa publicación (/publish?edit=<id>) en vez de crear una.
     editListing?: EditListingData;
+    // VA-46: el usuario no tiene teléfono cargado (no puede publicar hasta cargarlo).
+    needsPhone?: boolean;
 }
 
 interface EngineInput {
@@ -108,10 +111,12 @@ export default function PublishForm({
     userId,
     brandsData = [],
     spareCategoriesData = [],
-    editListing
+    editListing,
+    needsPhone = false
 }: PublishFormProps) {
     const errorRef = useRef<HTMLDivElement>(null);
     const isEditing = !!editListing;
+    const [phoneMissing, setPhoneMissing] = useState(needsPhone && !isEditing);
 
     // Sistema de Pasos
     const [activeTab, setActiveTab] = useState<"aircraft" | "parts">(editListing?.type ?? "aircraft");
@@ -603,6 +608,11 @@ export default function PublishForm({
       setFormError(null);
       setFieldErrors({});
 
+      if (phoneMissing) {
+        setErrorAndScroll("Para publicar tenés que cargar tu teléfono de contacto (arriba de todo).");
+        return;
+      }
+
       const validationError = validateForm();
       if (validationError) {
         setErrorAndScroll(validationError);
@@ -720,6 +730,8 @@ export default function PublishForm({
                 {isEditing ? "EDITAR PUBLICACIÓN" : "PUBLICAR PRODUCTO"}
               </h1>
             </div>
+
+            {phoneMissing && <PhoneRequiredCard onSaved={() => { setPhoneMissing(false); setFormError(null); }} />}
 
             {formError && (
               <div ref={errorRef} className="max-w-2xl mx-auto mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3 text-red-700 text-sm">
