@@ -3,6 +3,11 @@
 import { SlidersHorizontal, X, ChevronDown, ChevronRight } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
+// Mismo estilo para "Filtros" y "Ordenar" (pedido del socio, 9/10: en celular no eran iguales:
+// fondo, esquinas, peso y color del texto distintos).
+export const TOOLBAR_BUTTON_CLASS =
+  "min-h-11 lg:min-h-0 flex items-center justify-center gap-2 bg-white border border-slate-200 shadow-sm px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer";
+
 // Estructura común de las barras de filtros de /planes y /spareparts (VA-45):
 // en celular, botón "Filtros (n)" que abre un panel lateral; desde lg, barra lateral fija.
 export function FilterShell({
@@ -43,7 +48,7 @@ export function FilterShell({
         <button
           type="button"
           onClick={() => setIsOpenMobile(true)}
-          className="w-full min-h-11 flex items-center justify-center gap-2 bg-white border border-slate-200 shadow-sm px-4 py-2.5 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+          className={`w-full ${TOOLBAR_BUTTON_CLASS}`}
         >
           <SlidersHorizontal className="w-4 h-4" />
           <span>Filtros {activeCount > 0 ? `(${activeCount})` : ""}</span>

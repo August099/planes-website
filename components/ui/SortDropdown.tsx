@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ArrowUpDown, Check } from "lucide-react";
+import { TOOLBAR_BUTTON_CLASS } from "@/components/ui/filters/FilterShell";
 
 const SORT_OPTIONS = [
   { value: "price_desc", label: "Mayor precio" },
@@ -35,7 +36,7 @@ export function SortDropdown() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center justify-center gap-2 border rounded-lg px-4 py-2 min-h-11 lg:min-h-0 text-sm bg-white/80 hover:bg-gray-50 transition-colors">
+      <DropdownMenuTrigger className={TOOLBAR_BUTTON_CLASS}>
         <ArrowUpDown className="w-4 h-4" />
         {currentLabel}
       </DropdownMenuTrigger>
