@@ -1,5 +1,6 @@
 // Fondo de cada página (VA-56). Un solo lugar para cambiar qué imagen va en cada ruta.
-// Las imágenes son WebP de 1920 px generadas con scripts/optimize-backgrounds.mjs.
+// Las imágenes son WebP de 1920 px generadas con scripts/optimize-backgrounds.mjs a partir de
+// los originales de assets/originals/ (fuera de public/).
 // La Home no usa fondo estándar: tiene su propio hero.
 
 export const PAGE_BACKGROUNDS = {
@@ -7,13 +8,13 @@ export const PAGE_BACKGROUNDS = {
   planeDetail: "/backgrounds/aircraft.webp",
   spareparts: "/backgrounds/spareparts.webp",
   publish: "/backgrounds/publish.webp",
-  howtopublish: "/backgrounds/banner.webp", // bkg-publish2.png y bkg-banner.png son la misma imagen
+  howtopublish: "/backgrounds/banner.webp",
   questions: "/backgrounds/questions.webp",
   faq: "/backgrounds/faq.webp",
   ads: "/backgrounds/ads.webp",
   banners: "/backgrounds/banner.webp",
   legal: "/backgrounds/privacidad.webp", // /terms y /privacy
-  report: "/backgrounds/admin.webp", // bkg-qa.png y bkg-admin.png son la misma imagen
+  report: "/backgrounds/admin.webp",
   login: "/backgrounds/login.webp",
   register: "/backgrounds/register.webp",
   profile: "/backgrounds/profile.webp",

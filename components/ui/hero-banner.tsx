@@ -21,10 +21,10 @@ export function HeroBanner({
   const common = { alt: "Fondo Ventas Aeronáuticas", sizes: "100vw", loading: "eager" as const };
   const {
     props: { srcSet: desktopSrcSet },
-  } = getImageProps({ ...common, src: "/bkg-home2.png", width: 1671, height: 941 });
+  } = getImageProps({ ...common, src: "/backgrounds/home2.webp", width: 1671, height: 941 });
   const {
     props: { srcSet: mobileSrcSet, ...imgProps },
-  } = getImageProps({ ...common, src: "/bkg-home-mobile.png", width: 940, height: 1672 });
+  } = getImageProps({ ...common, src: "/backgrounds/home-mobile.webp", width: 940, height: 1672 });
 
   return (
     <section className="relative w-full h-screen min-h-[550px] sm:min-h-[600px] overflow-hidden">

@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 57 de 65 tareas cerradas (56 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60, VA-61, VA-70 a VA-75 y VA-77. VA-76 parcial. Faltan 8 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 58 de 65 tareas cerradas (57 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60 a VA-62, VA-70 a VA-75 y VA-77. VA-76 parcial. Faltan 7 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -175,6 +175,7 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 | VA-77 | `6a9d730` | **Explorar por provincia**: mapa de la Argentina en la Home (entre "Últimas Publicaciones" y las categorías de repuestos) con lista, select en celular y panel con "Ver aeronaves" / "Ver repuestos". Provincias canónicas (24, `lib/provinces.ts`): select en publicar y perfil, validadas en el servidor. Filtro `?province=` con chip en `/planes` y `/spareparts`. **`/spareparts` ahora muestra todas las monedas por defecto** (filtro "Todas / USD / ARS"). Normalización de datos viejos aplicada en `va_dev` (en producción, pendiente). | `/` → "Explorá por provincia"; `/planes?province=cordoba`; `scripts/normalize-provinces.ts` |
 | — | `cfc7d0b` | **Limpieza de lint**: imports y variables sin uso (28 avisos). `AppImage` ya no recibe `optimizedWidth`/`quality`, que no tenían efecto. | Sin cambio visible |
 | VA-61 | `9b28362` | **Código muerto fuera**: 9 componentes sin uso, `lib/aircraft-service.ts`, `debug-db.ts`, 8 archivos de `public/` (entre ellos un video de 8 MB), 5 dependencias y `.vscode/settings.json` (tenía la contraseña de Postgres local). `next.config.ts` sin dominios de prueba que no se usan. | Sin cambio visible. `npm install` actualiza las dependencias |
+| VA-62 | ver git log | **Imágenes**: el hero de la Home y el fondo de "Vender" pasan a WebP (63–108 KB, antes ~2,4 MB). Los originales salen de `public/` a `assets/originals/`: lo que se publica baja de 48 MB a 3 MB. | `/` (hero y "Vender") |
 
 ## Bugs encontrados en el camino (fuera del plan)
 

@@ -9,10 +9,11 @@ export function SellerCta() {
     <section className="relative w-full overflow-hidden">
       <div className="relative w-full h-[280px] sm:h-[320px] md:h-[360px] flex items-center justify-center">
         <Image
-          src="/bkg-cta.png"
+          src="/backgrounds/cta.webp"
           alt="Fondo CTA Vender Aeronave"
           fill
-          priority
+          // VA-62: está lejos del primer pantallazo; sin priority no compite con el hero.
+          sizes="100vw"
           className="object-cover object-[center_60%]"
         />
 
