@@ -17,6 +17,8 @@ import { FeaturedBrands } from "@/components/ui/FeaturedBrands";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationAndWebsiteJsonLd } from "@/lib/structured-data";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { ProvinceExplorer, type ProvinceCounts } from "@/components/ui/ProvinceExplorer";
+import { provinceByName } from "@/lib/provinces";
 
 // Título y descripción salen del layout; acá solo el canonical.
 export const metadata: Metadata = {
@@ -34,6 +36,8 @@ export default async function HomePage() {
     sparePartCategories,
     featuredBrandsFromDb,
     userFavorites,
+    aircraftByProvince,
+    sparePartsByProvince,
   ] = await Promise.all([
     prisma.aircraft.findMany({
       where: activeListingWhere(),
@@ -70,7 +74,23 @@ export default async function HomePage() {
           select: { aircraftId: true, sparePartId: true },
         })
       : Promise.resolve([]),
+    // VA-77: avisos visibles por provincia (mismo criterio que /planes y /spareparts). Dinámico,
+    // como el resto de la Home, para que coincida siempre con los listados.
+    prisma.aircraft.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
+    prisma.sparePart.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
   ]);
+
+  // { slug: { aircraft, parts } }. Las provincias que no son una de las 24 canónicas no cuentan
+  // (los listados filtran por igualdad exacta); ver scripts/normalize-provinces.ts.
+  const provinceCounts: ProvinceCounts = {};
+  const addCount = (province: string | null, field: "aircraft" | "parts", n: number) => {
+    const slug = provinceByName(province)?.slug;
+    if (!slug) return;
+    provinceCounts[slug] ??= { aircraft: 0, parts: 0 };
+    provinceCounts[slug][field] += n;
+  };
+  aircraftByProvince.forEach((g) => addCount(g.province, "aircraft", g._count._all));
+  sparePartsByProvince.forEach((g) => addCount(g.province, "parts", g._count._all));
 
   // Sets de búsqueda rápida para los IDs favoritos
   const userFavAircraftIds = new Set(
@@ -161,6 +181,8 @@ export default async function HomePage() {
           <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
 
           <LatestAircraft items={combinedLatestListings} />
+
+          <ProvinceExplorer counts={provinceCounts} />
 
           <SparePartCategoriesCarousel categories={sparePartCategories} />
         </main>

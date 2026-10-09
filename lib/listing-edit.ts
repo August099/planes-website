@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { assertListingOwner } from "@/lib/listing-auth";
 import type { EditListingData } from "@/lib/listing-schema";
+import { normalizeProvince } from "@/lib/provinces";
 
 const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 const isoDate = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : "");
@@ -60,7 +61,7 @@ export async function loadListingForEdit(id: string, type: "aircraft" | "parts")
         certDate: isoDate(a.certDate),
         plate: a.plate ?? "",
         city: a.city,
-        province: a.province,
+        province: normalizeProvince(a.province) ?? a.province,
         intDescription: a.intDescription ?? "",
         passengers: str(a.passengers),
         airconditioner: a.airconditioner,
@@ -114,7 +115,7 @@ export async function loadListingForEdit(id: string, type: "aircraft" | "parts")
       priceOnRequest: s.price === null,
       condition: s.condition,
       city: s.city,
-      province: s.province,
+      province: normalizeProvince(s.province) ?? s.province,
       description: s.description,
       partNumber: s.partNumber ?? "",
       stock: str(s.stock),

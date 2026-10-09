@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
+import { provinceBySlug } from "@/lib/provinces";
 import { getSparePartCategories } from "@/lib/cached-data";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { SparePartCard } from "@/components/ui/SparePartCard";
@@ -48,9 +49,13 @@ export default async function SparePartsPage({ searchParams }: Props) {
   // ==========================================
   const categoryParam = toArray(params.category);
   const conditionParam = toArray(params.condition);
-  const currency = params.currency === "ARS" ? "ARS" : "USD";
   const minPrice = params.minPrice ? Number(params.minPrice) : undefined;
   const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
+  // Moneda (VA-77): sin "currency" se ven todas (así los conteos por provincia de la Home coinciden
+  // con el listado). Con rango de precio hace falta una moneda: si no viene, USD.
+  const currencyParam = params.currency === "ARS" ? "ARS" : params.currency === "USD" ? "USD" : null;
+  const currency = currencyParam ?? (minPrice !== undefined || maxPrice !== undefined ? "USD" : null);
+  const province = provinceBySlug(typeof params.province === "string" ? params.province : null);
 
   // Orden (VA-45): mismas opciones que /planes (SortDropdown).
   const sort = typeof params.sort === "string" ? params.sort : "recent";
@@ -93,7 +98,8 @@ export default async function SparePartsPage({ searchParams }: Props) {
 
   const where: Prisma.SparePartWhereInput = {
     ...activeListingWhere(),
-    inPesos: currency === "ARS", // moneda: filtro real, siempre aplicado
+    ...(currency && { inPesos: currency === "ARS" }),
+    ...(province && { province: province.name }),
   };
 
   // Precio
@@ -162,7 +168,8 @@ export default async function SparePartsPage({ searchParams }: Props) {
 
     categoryParam.forEach((c) => urlParams.append("category", c));
     conditionParam.forEach((c) => urlParams.append("condition", c));
-    urlParams.set("currency", currency);
+    if (currency) urlParams.set("currency", currency);
+    if (province) urlParams.set("province", province.slug);
     if (params.minPrice) urlParams.set("minPrice", String(params.minPrice));
     if (params.maxPrice) urlParams.set("maxPrice", String(params.maxPrice));
 

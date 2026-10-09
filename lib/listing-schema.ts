@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isRequired } from "@/lib/aircraft-rules";
+import { normalizeProvince } from "@/lib/provinces";
 
 // Esquema único de una publicación nueva: lo usan el formulario (PublishForm) y el
 // servidor (createListing). Los números llegan como texto desde los inputs.
@@ -69,7 +70,15 @@ const common = {
   priceOnRequest: z.boolean().default(false),
   price,
   city: requiredText("La ciudad es obligatoria.", 100),
-  province: requiredText("La provincia es obligatoria.", 100),
+  // VA-77: una de las 24 provincias canónicas. Un alias ("Bs. As.", "CABA") se guarda normalizado.
+  province: requiredText("La provincia es obligatoria.", 100).transform((value, ctx) => {
+    const canonical = normalizeProvince(value);
+    if (!canonical) {
+      ctx.addIssue({ code: "custom", message: "Elegí una provincia de la lista." });
+      return z.NEVER;
+    }
+    return canonical;
+  }),
   description: requiredText("La descripción es obligatoria.", MAX_DESCRIPTION_LENGTH),
   images,
 };

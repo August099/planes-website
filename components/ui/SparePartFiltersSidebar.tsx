@@ -7,11 +7,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { SparepartCondition } from "@prisma/client";
 import { SPARE_PART_CONDITION_LABELS } from "@/lib/constants";
-import { FilterShell, FilterSection, AppliedFilterChips } from "@/components/ui/filters/FilterShell";
+import { FilterShell, FilterSection, AppliedFilterChips, ProvinceFilterSelect } from "@/components/ui/filters/FilterShell";
+import { provinceBySlug, provinceShortName } from "@/lib/provinces";
 
 type CategoryRow = { id: string; name: string; parentId: string | null; icon: string | null };
 type CategoryTreeNode = CategoryRow & { children: CategoryTreeNode[] };
-type SectionKey = "price" | "category" | "condition";
+type SectionKey = "price" | "category" | "condition" | "province";
+type Currency = "ALL" | "USD" | "ARS";
+
+const currencyFromUrl = (value: string | null): Currency => (value === "ARS" || value === "USD" ? value : "ALL");
 
 const CONDITION_LABELS: Record<string, string> = SPARE_PART_CONDITION_LABELS;
 
@@ -101,17 +105,19 @@ function SparePartFiltersForm({ categories }: Props) {
   const searchParams = useSearchParams();
 
   const [isOpenMobile, setIsOpenMobile] = useState(false);
-  const [currency, setCurrency] = useState<"ARS" | "USD">(searchParams.get("currency") === "ARS" ? "ARS" : "USD");
+  // VA-77: "Todas" las monedas por defecto; un rango de precio necesita una (USD si no se eligió).
+  const [currency, setCurrency] = useState<Currency>(currencyFromUrl(searchParams.get("currency")));
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") ?? "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") ?? "");
   const [categoryIds, setCategoryIds] = useState<string[]>(searchParams.getAll("category"));
   const [condition, setCondition] = useState<string[]>(searchParams.getAll("condition"));
+  const [province, setProvince] = useState(searchParams.get("province") ?? "");
 
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>(() => ({
-    // El precio arranca abierto: la moneda es un filtro que siempre se aplica.
     price: true,
     category: searchParams.has("category"),
     condition: searchParams.has("condition"),
+    province: searchParams.has("province"),
   }));
   const toggleSection = (section: SectionKey) => setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
 
@@ -138,16 +144,18 @@ function SparePartFiltersForm({ categories }: Props) {
     const params = new URLSearchParams();
     const sort = searchParams.get("sort");
     if (sort) params.set("sort", sort);
-    params.set("currency", currency);
+    const effectiveCurrency = currency === "ALL" && (minPrice || maxPrice) ? "USD" : currency;
+    if (effectiveCurrency !== "ALL") params.set("currency", effectiveCurrency);
     if (minPrice) params.set("minPrice", minPrice);
     if (maxPrice) params.set("maxPrice", maxPrice);
     categoryIds.forEach((c) => params.append("category", c));
     condition.forEach((c) => params.append("condition", c));
+    if (province) params.set("province", province);
     params.set("page", "1");
 
     router.push(`${pathname}?${params.toString()}`);
     setIsOpenMobile(false);
-  }, [searchParams, currency, minPrice, maxPrice, categoryIds, condition, router, pathname]);
+  }, [searchParams, currency, minPrice, maxPrice, categoryIds, condition, province, router, pathname]);
 
   const clearFilters = () => {
     const sort = searchParams.get("sort");
@@ -156,18 +164,22 @@ function SparePartFiltersForm({ categories }: Props) {
   };
 
   const counts = {
-    price: (minPrice ? 1 : 0) + (maxPrice ? 1 : 0) + (currency === "ARS" ? 1 : 0),
+    price: (minPrice ? 1 : 0) + (maxPrice ? 1 : 0) + (currency !== "ALL" ? 1 : 0),
     category: categoryIds.length,
     condition: condition.length,
+    province: province ? 1 : 0,
   };
-  const activeFilterCount = counts.price + counts.category + counts.condition;
+  const activeFilterCount = counts.price + counts.category + counts.condition + counts.province;
 
   const appliedChips = useMemo(() => {
     const nameOf = new Map(categories.map((c) => [c.id, c.name]));
-    const urlCurrency = searchParams.get("currency") === "ARS" ? "ARS" : "USD";
-    const money = (v: string) => `${urlCurrency} ${Number(v).toLocaleString("es-AR")}`;
+    const urlCurrency = currencyFromUrl(searchParams.get("currency"));
+    const money = (v: string) => `${urlCurrency === "ARS" ? "ARS" : "USD"} ${Number(v).toLocaleString("es-AR")}`;
     const chips: { key: string; value: string | null; label: string }[] = [];
     if (urlCurrency === "ARS") chips.push({ key: "currency", value: null, label: "En pesos" });
+    if (urlCurrency === "USD") chips.push({ key: "currency", value: null, label: "En dólares" });
+    const prov = provinceBySlug(searchParams.get("province"));
+    if (prov) chips.push({ key: "province", value: null, label: provinceShortName(prov.name) });
     const min = searchParams.get("minPrice");
     const max = searchParams.get("maxPrice");
     if (min) chips.push({ key: "minPrice", value: null, label: `Desde ${money(min)}` });
@@ -194,7 +206,7 @@ function SparePartFiltersForm({ categories }: Props) {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const currencyButton = (value: "USD" | "ARS", label: string) => (
+  const currencyButton = (value: Currency, label: string) => (
     <button
       type="button"
       onClick={() => setCurrency(value)}
@@ -214,8 +226,9 @@ function SparePartFiltersForm({ categories }: Props) {
       <FilterSection title="Precio" count={counts.price} open={openSections.price} onToggle={() => toggleSection("price")}>
         <div className="flex flex-col gap-2">
           <div className="flex rounded-md border overflow-hidden text-xs">
-            {currencyButton("USD", "Dólares (USD)")}
-            {currencyButton("ARS", "Pesos (ARS)")}
+            {currencyButton("ALL", "Todas")}
+            {currencyButton("USD", "USD")}
+            {currencyButton("ARS", "ARS")}
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -257,6 +270,10 @@ function SparePartFiltersForm({ categories }: Props) {
             />
           ))}
         </div>
+      </FilterSection>
+
+      <FilterSection title="Provincia" count={counts.province} open={openSections.province} onToggle={() => toggleSection("province")}>
+        <ProvinceFilterSelect value={province} onChange={setProvince} />
       </FilterSection>
 
       <FilterSection title="Condición" count={counts.condition} open={openSections.condition} onToggle={() => toggleSection("condition")}>

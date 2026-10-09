@@ -907,3 +907,54 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - **Home:** título legible en un solo color con difuminado de fondo. Botones "VER TODO AERONAVES" y "VER TODO REPUESTOS" al ingresar. "Ver todo repuestos" en el footer (ya existe como "Repuestos en venta").
 - **Ideas para más adelante (no implementar ahora):** últimos vistos en la Home, notificaciones por mail/WhatsApp/dentro de la página, reseñas, noticias, publicidad display, packs (Aviones: 1 / 3 / Broker; Repuestos: 1 / 5 / Broker; el crédito de repuestos ≈ 60 % más barato), renovaciones que terminan en publicación gratis.
 - **Taxonomía de repuestos:** el árbol completo de categorías, subcategorías y atributos está en la sección "Categorías y filtros en limpio" del documento. Verificar contra `Category`/`FilterGroup`/`Filter` cargados en la base, sin rehacerlos.
+
+---
+
+## VA-77 · Explorar por provincia (mapa de Argentina en la Home) — pedido del socio, 9/10
+
+**Contexto:** la provincia de los avisos (`Aircraft.province`, `SparePart.province`) es texto libre en `components/ui/PublishForm.tsx` (inputs "Ej: Buenos Aires"), lo que impide contar o filtrar bien. Hay que normalizarla antes de hacer el mapa. Colores de marca: azul `#001F58`, rojo `#E70F1F` (hover `#c5121b`). Fondo de la Home `#FAF5F5`.
+
+**Paso 1 · Provincias canónicas**
+1. `lib/provinces.ts` con las 24 jurisdicciones (nombre oficial, slug y código): Buenos Aires, Ciudad Autónoma de Buenos Aires, Catamarca, Chaco, Chubut, Córdoba, Corrientes, Entre Ríos, Formosa, Jujuy, La Pampa, La Rioja, Mendoza, Misiones, Neuquén, Río Negro, Salta, San Juan, San Luis, Santa Cruz, Santa Fe, Santiago del Estero, Tierra del Fuego, Antártida e Islas del Atlántico Sur, Tucumán. `normalizeProvince(input)` devuelve el nombre canónico o `null`: ignora mayúsculas, tildes, puntos y espacios, y reconoce alias comunes ("bs as", "bsas", "pba", "pcia de buenos aires", "provincia de buenos aires", "caba", "capital federal", "capital", "ciudad de buenos aires", "tierra del fuego", "tdf", "sgo del estero", "stgo del estero", "cordoba", "neuquen", "rio negro", "tucuman", "entre rios", etc.).
+2. En `PublishForm.tsx`, reemplazar los dos inputs de provincia (aeronave y repuesto) por un `<select>` con las 24, con el mismo estilo que los demás campos. Lo mismo en cualquier otro formulario que edite la provincia de un aviso o de un perfil.
+3. Validar en el servidor (actions/rutas que crean y editan avisos) que la provincia sea una de las 24: si llega un alias se normaliza; si no se reconoce, error claro.
+4. `scripts/normalize-provinces.ts` para los datos existentes (Aircraft, SparePart y el perfil del usuario). Por defecto dry-run: lista "valor actual → canónico" y los no reconocidos. Con `--apply` escribe. Correrlo primero en `va_dev` y mostrar el listado al socio antes de aplicar. **No correrlo contra producción.**
+
+**Paso 2 · Filtro por provincia en los listados**
+- `/planes` y `/spareparts` aceptan `?province=<slug>`: igualdad exacta con el nombre canónico, combinado con los filtros actuales.
+- Provincia en los filtros de la barra lateral (desktop y panel de filtros en mobile) y chip quitable del filtro activo, como los demás.
+- Conteos con el mismo criterio de "aviso visible" de `/planes` (`status ACTIVE` y `listingExpiresAt >= ahora` o `null`), también en repuestos.
+
+**Paso 3 · Mapa SVG de Argentina (estático y liviano)**
+- Sin librerías de mapas en runtime (nada de leaflet ni react-simple-maps en el bundle del cliente).
+- Paths generados una vez con `scripts/build-argentina-map.ts` (d3-geo y topojson como devDependencies) desde Natural Earth admin-1 (dominio público) o el IGN. Proyección ajustada a Argentina y simplificación para que el archivo pese menos de 60 KB.
+- Salida: `components/ui/argentina-map/paths.ts`, un path por provincia (por slug) más el `viewBox`.
+- Las Islas Malvinas aparecen y forman parte de Tierra del Fuego (mismo slug, se pintan juntas). En Natural Earth figuran como otro país: tomar ese polígono y asignarlo a Tierra del Fuego. La Antártida no va.
+- CABA es muy chica: además, un círculo clickeable de 10–12 px sobre su ubicación que actúa igual que su path.
+
+**Paso 4 · Componente en la Home**
+- `components/ui/ProvinceExplorer.tsx`: la consulta corre en el servidor; la interacción va en un client component chico.
+- Datos: en `app/page.tsx`, sumar al `Promise.all` dos `groupBy` por `province` (Aircraft y SparePart) con el criterio visible y armar `{ slug: { aircraft, parts } }`. Si VA-71 (caché) está hecho, cachearlo como el resto de la Home (por ejemplo 10 min); si no, dinámico.
+- Ubicación: dentro del `<main>`, entre `<LatestAircraft />` ("Últimas publicaciones") y `<SparePartCategoriesCarousel />`. Título "Explorá por provincia", con el estilo de título de las otras secciones.
+- Desktop (≥ md), dos columnas: izquierda el mapa; derecha la lista de las 24 en orden alfabético con "N avisos" (aeronaves + repuestos), las de 0 en gris, y debajo el panel de la provincia seleccionada.
+- Mobile (< md): mapa arriba (ancho completo, altura contenida), debajo un `<select>` nativo "Elegí una provincia" (con su cantidad) y debajo el panel. Sin scroll horizontal a 375 px.
+- Estados del mapa: base gris claro con borde blanco; con avisos azul muy suave (`#001F58` ~12 %); hover/foco rojo suave (`#E70F1F` ~45 %); seleccionada `#E70F1F` lleno. Hover en la lista resalta en el mapa y al revés. Click en mapa o lista selecciona y sincroniza el select. Transición de 150 ms, desactivada con `prefers-reduced-motion`.
+- Panel: "Santa Fe · 12 aeronaves · 30 repuestos", botones "Ver aeronaves" (`/planes?province=santa-fe`) y "Ver repuestos" (`/spareparts?province=santa-fe`) con los estilos existentes. Con 0 avisos: "Todavía no hay avisos en <Provincia>. ¿Tenés algo para vender?" y botón "Publicar" a `/publish`. Antes de elegir: "Tocá una provincia en el mapa para ver sus avisos".
+- Accesibilidad: cada path enfocable (`tabIndex=0`, `role="button"`, `aria-label` "Córdoba, 8 avisos"), se activa con Enter o Espacio; la lista usa `<button>`; el mapa tiene un `<title>` descriptivo.
+- Rendimiento: sin imágenes nuevas; el JS que suma al cliente tiene que ser chico (solo estado de hover y selección). No reintroducir lo que resolvió VA-70.
+
+**Aceptación**
+- A 375 y 1280 px la sección aparece entre "Últimas publicaciones" y "Categorías de repuestos", sin scroll horizontal.
+- Hover y selección pintan de rojo la provincia correcta; lista, select y mapa sincronizados; CABA y Tierra del Fuego (con Malvinas) seleccionables.
+- Los conteos coinciden con `/planes?province=…` y `/spareparts?province=…` (al menos 3 provincias en `va_dev`).
+- Publicar un aviso nuevo solo permite elegir una de las 24 provincias.
+- `npx next build` pasa y el JS de la Home no crece más de ~30 KB.
+
+**Estado (9/10/2026):** ✅ hecho en local (commit de VA-77), salvo aplicar la normalización (espera el OK del socio).
+- **Paso 1:** `lib/provinces.ts` (24 jurisdicciones con nombre, slug y código ISO 3166-2:AR; `normalizeProvince` con alias, prefijos "Provincia de"/"Pcia." y sufijo "Argentina"). `components/ui/ProvinceSelect.tsx` reemplaza los inputs de provincia en `PublishForm` (aeronave y repuesto) y en el perfil (`ProfileView`). `app/profile/[id]/profile-client.tsx` también tiene un input de provincia, pero no se importa en ningún lado (código muerto, para VA-61). El servidor valida en `listingSchema` (crear y editar avisos): alias → canónico; desconocido → "Elegí una provincia de la lista." También `updateProfileAction`. Al editar un aviso viejo, la provincia se muestra ya normalizada.
+- **Dry-run en `va_dev`** (`npx tsx scripts/normalize-provinces.ts`), **sin aplicar**: Aircraft "CABA" → "Ciudad Autónoma de Buenos Aires" (5) y "Santa fe" → "Santa Fe" (1); SparePart "CABA" → CABA canónica (8); User "CABA" (1) y "Entre Rios" → "Entre Ríos" (1). Ningún valor no reconocido. Hasta aplicarlo, esos avisos no cuentan en el mapa ni aparecen con `?province=` (igualdad exacta). El script se niega a correr contra una base que no sea local salvo con `--allow-remote`. **No correrlo contra producción** sin decisión explícita.
+- **Paso 2:** `?province=<slug>` en `/planes` y `/spareparts`, sección "Provincia" en ambas barras de filtros (`ProvinceFilterSelect` en `FilterShell.tsx`) y chip quitable. **Cambio de comportamiento en `/spareparts`:** la moneda dejaba de ser opcional (sin `currency` mostraba solo USD), así que los conteos por provincia nunca iban a coincidir. Ahora sin `currency` se ven **todas las monedas**, el filtro tiene "Todas / USD / ARS" y un rango de precio sin moneda usa USD.
+- **Paso 3:** `scripts/build-argentina-map.ts` (d3-geo + topojson, devDependencies) desde Natural Earth admin-1 1:10m (descargado aparte, 40,7 MB, no está en el repo). Transversa de Mercator centrada en 64° O, topología compartida, simplificación al 15 % de los vértices y 1 decimal. Resultado: `components/ui/argentina-map/paths.ts` de **21 KB** (8 KB comprimido), viewBox 320×675. Malvinas incluidas en Tierra del Fuego.
+- **Paso 4:** `ProvinceExplorer` (servidor: arma el SVG, así los paths van en el HTML y no en el JS) + `ProvinceExplorerClient` (solo hover y selección, por delegación de eventos y una regla CSS). En la Home, entre "Últimas Publicaciones" y "Buscar Repuestos por Categoría". Conteos con dos `groupBy` en el `Promise.all`, **dinámicos** (el resto de la Home no está cacheado, ver VA-71). Círculo de CABA de 12 px a 1280 px.
+- **Verificado:** orden de secciones y sin scroll horizontal a 375 y 1280 px. Hover desde la lista pinta el mapa, clic en el mapa marca la lista, el select en celular pinta el mapa y actualiza el panel, Enter sobre una provincia la elige. CABA (círculo) y Tierra del Fuego + Malvinas se pintan juntas. Conteos iguales a los listados en 5 provincias: Buenos Aires 8+10, Córdoba 7+7, Mendoza 6+8, Neuquén 3+4, Santa Fe 7+9. Validación: "Bs. As." y "CABA" pasan, "Narnia" da error. `next build` OK. **JS de la Home: 986 → 990 KB (+4 KB; gzip +1 KB).** El HTML crece unos 75 KB sin comprimir, porque el SVG va en el markup y en el payload de React (~17 KB comprimido).
+- **Pendiente:** (1) OK del socio para `npx tsx scripts/normalize-provinces.ts --apply` en `va_dev`; en producción lo decide y lo corre el socio. (2) En celular, Malvinas e Isla de los Estados son muy chicas para tocarlas, pero se pueden elegir con el select.

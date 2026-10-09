@@ -37,6 +37,7 @@ import {
   Clock,
 } from "lucide-react";
 import { PROFILE_FIELD_LABELS, type ProfileField } from "@/lib/profile";
+import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
@@ -828,7 +829,7 @@ export function ProfileView({
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">Provincia{missingDot("province")}</label>
-                <input type="text" name="province" defaultValue={profileUser.province || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
+                <ProvinceSelect name="province" defaultValue={profileUser.province} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">Facebook (URL)</label>

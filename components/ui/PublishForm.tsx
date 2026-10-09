@@ -23,6 +23,7 @@ import { PageBackground } from "@/components/ui/PageBackground";
 import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle, Send, AlertCircle, Upload, Paperclip, Search, X, GripHorizontal, Rocket, Sparkles } from "lucide-react";
 import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
 import { DescriptionTextarea } from "@/components/ui/DescriptionTextarea";
+import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
 import { LAUNCH_PROMO } from "@/lib/promo";
 
 export interface CategoryOption { 
@@ -1158,7 +1159,7 @@ export default function PublishForm({
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Provincia *</label>
-                                                <input type="text" placeholder="Ej: Buenos Aires" value={aircraftForm.province} onChange={e => setAircraftForm({...aircraftForm, province: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <ProvinceSelect required value={aircraftForm.province} onChange={(province) => setAircraftForm({...aircraftForm, province})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.province} />
                                             </div>
                                         </div>
@@ -1339,7 +1340,7 @@ export default function PublishForm({
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Provincia *</label>
-                                                <input type="text" placeholder="Ej: Buenos Aires" value={partsForm.province} onChange={e => setPartsForm({...partsForm, province: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <ProvinceSelect required value={partsForm.province} onChange={(province) => setPartsForm({...partsForm, province})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.province} />
                                             </div>
                                         </div>

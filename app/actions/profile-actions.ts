@@ -7,6 +7,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { profileCompletenessTag } from "@/lib/cached-data";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
+import { normalizeProvince } from "@/lib/provinces";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,6 +27,13 @@ export async function updateProfileAction(formData: FormData) {
       dataToUpdate[field] = value === "" ? null : value;
     }
   });
+
+  // VA-77: la provincia del perfil también es una de las 24 canónicas.
+  if (dataToUpdate.province) {
+    const canonical = normalizeProvince(dataToUpdate.province);
+    if (!canonical) throw new Error("Elegí una provincia de la lista.");
+    dataToUpdate.province = canonical;
+  }
 
   if (Object.keys(dataToUpdate).length > 0) {
     await prisma.user.update({

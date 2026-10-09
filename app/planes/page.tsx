@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
+import { provinceBySlug } from "@/lib/provinces";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { getAircraftTaxonomy } from "@/lib/cached-data";
 import { AircraftCard } from "@/components/ui/AircraftCard";
@@ -61,6 +62,8 @@ export default async function AvionesPage({ searchParams }: Props) {
   const financing = params.financing === "true";
   const trade = params.trade === "true";
   const rent = params.rent === "true";
+  // VA-77: provincia por slug, comparada con el nombre canónico. Un slug desconocido se ignora.
+  const province = provinceBySlug(typeof params.province === "string" ? params.province : null);
 
   const sort = (params.sort as string) ?? "recent";
 
@@ -93,6 +96,7 @@ export default async function AvionesPage({ searchParams }: Props) {
     ...(financing && { financing: true }),
     ...(trade && { trade: true }),
     ...(rent && { rent: true }),
+    ...(province && { province: province.name }),
     ...((minPrice !== undefined || maxPrice !== undefined) && {
       price: {
         ...(minPrice !== undefined && { gte: minPrice }),
@@ -167,6 +171,7 @@ export default async function AvionesPage({ searchParams }: Props) {
     if (financing) urlParams.set("financing", "true");
     if (trade) urlParams.set("trade", "true");
     if (rent) urlParams.set("rent", "true");
+    if (province) urlParams.set("province", province.slug);
     urlParams.set("sort", sort);
     urlParams.set("page", pageNumber.toString());
     return `?${urlParams.toString()}`;

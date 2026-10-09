@@ -5,14 +5,15 @@ import { useState, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { AIRCRAFT_GROUPS, ENGINE_LABELS, categoryDef } from "@/lib/aircraft-categories";
-import { FilterShell, FilterSection, AppliedFilterChips } from "@/components/ui/filters/FilterShell";
+import { FilterShell, FilterSection, AppliedFilterChips, ProvinceFilterSelect } from "@/components/ui/filters/FilterShell";
+import { provinceBySlug, provinceShortName } from "@/lib/provinces";
 
 type SubModel = { id: string; name: string; categoryOverride?: string | null };
 type Model = { id: string; name: string; defaultCategoryId?: string | null; variants: SubModel[] };
 type Brand = { id: string; name: string; logoUrl?: string | null; models: Model[] };
 type Category = { id: string; name: string };
 
-type SectionKey = "price" | "year" | "category" | "brand" | "seller" | "options" | "condition";
+type SectionKey = "price" | "year" | "category" | "brand" | "province" | "seller" | "options" | "condition";
 type Props = { categories: Category[]; brands: Brand[] };
 
 const OPTION_LABELS: Record<string, string> = {
@@ -57,6 +58,7 @@ function FiltersSidebarForm({ categories, brands }: Props) {
   const [financing, setFinancing] = useState(searchParams.get("financing") === "true");
   const [trade, setTrade] = useState(searchParams.get("trade") === "true");
   const [rent, setRent] = useState(searchParams.get("rent") === "true");
+  const [province, setProvince] = useState(searchParams.get("province") ?? "");
 
   // Las secciones con filtros activos arrancan abiertas, así se ve qué está aplicado (VA-31).
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>(() => ({
@@ -64,6 +66,7 @@ function FiltersSidebarForm({ categories, brands }: Props) {
     year: searchParams.has("minYear") || searchParams.has("maxYear"),
     category: searchParams.has("category"),
     brand: searchParams.has("brand") || searchParams.has("model") || searchParams.has("subModel"),
+    province: searchParams.has("province"),
     seller: searchParams.has("sellerType"),
     options: ["financing", "trade", "rent"].some((key) => searchParams.get(key) === "true"),
     condition: searchParams.has("condition"),
@@ -154,11 +157,12 @@ function FiltersSidebarForm({ categories, brands }: Props) {
     if (financing) params.set("financing", "true");
     if (trade) params.set("trade", "true");
     if (rent) params.set("rent", "true");
+    if (province) params.set("province", province);
     params.set("page", "1");
 
     router.push(`${pathname}?${params.toString()}`);
     setIsOpenMobile(false);
-  }, [searchParams, minPrice, maxPrice, minYear, maxYear, categoryIds, brandIds, modelIds, subModelIds, sellerTypes, condition, financing, trade, rent, router, pathname]);
+  }, [searchParams, minPrice, maxPrice, minYear, maxYear, categoryIds, brandIds, modelIds, subModelIds, sellerTypes, condition, financing, trade, rent, province, router, pathname]);
 
   const clearFilters = () => {
     const sort = searchParams.get("sort");
@@ -171,6 +175,7 @@ function FiltersSidebarForm({ categories, brands }: Props) {
     year: (minYear ? 1 : 0) + (maxYear ? 1 : 0),
     category: categoryIds.length,
     brand: brandIds.length + modelIds.length + subModelIds.length,
+    province: province ? 1 : 0,
     seller: sellerTypes.length,
     options: (financing ? 1 : 0) + (trade ? 1 : 0) + (rent ? 1 : 0),
     condition: condition.length,
@@ -207,6 +212,8 @@ function FiltersSidebarForm({ categories, brands }: Props) {
         chips.push({ key, value, label: nameOf.get(`${key}:${value}`) ?? value });
       }
     }
+    const prov = provinceBySlug(searchParams.get("province"));
+    if (prov) chips.push({ key: "province", value: null, label: provinceShortName(prov.name) });
     for (const value of searchParams.getAll("sellerType")) {
       chips.push({ key: "sellerType", value, label: SELLER_TYPE_LABELS[value] ?? value });
     }
@@ -395,6 +402,10 @@ function FiltersSidebarForm({ categories, brands }: Props) {
             Ver menos
           </button>
         )}
+      </FilterSection>
+
+      <FilterSection title="Provincia" count={counts.province} open={openSections.province} onToggle={() => toggleSection("province")}>
+        <ProvinceFilterSelect value={province} onChange={setProvince} />
       </FilterSection>
 
       <FilterSection title="Publica" count={counts.seller} open={openSections.seller} onToggle={() => toggleSection("seller")}>

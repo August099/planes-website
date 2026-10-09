@@ -2,6 +2,7 @@
 
 import { SlidersHorizontal, X, ChevronDown, ChevronRight } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { PROVINCES, provinceShortName } from "@/lib/provinces";
 
 // Mismo estilo para "Filtros" y "Ordenar" (pedido del socio, 9/10: en celular no eran iguales:
 // fondo, esquinas, peso y color del texto distintos).
@@ -146,5 +147,24 @@ export function AppliedFilterChips({
         </button>
       ))}
     </div>
+  );
+}
+
+// Provincia (VA-77): un solo valor, por slug (?province=santa-fe).
+export function ProvinceFilterSelect({ value, onChange }: { value: string; onChange: (slug: string) => void }) {
+  return (
+    <select
+      aria-label="Provincia"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-2 py-2 border rounded-md text-sm bg-white"
+    >
+      <option value="">Todas las provincias</option>
+      {PROVINCES.map((p) => (
+        <option key={p.slug} value={p.slug}>
+          {provinceShortName(p.name)}
+        </option>
+      ))}
+    </select>
   );
 }

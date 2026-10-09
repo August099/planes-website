@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 55 de 64 tareas cerradas (54 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60 y VA-70 a VA-75. VA-76 parcial. Faltan 9 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 56 de 65 tareas cerradas (55 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60, VA-70 a VA-75 y VA-77. VA-76 parcial. Faltan 9 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -172,6 +172,7 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 | VA-12 | `2bf14cc` | **Panel admin liviano**: los totales se calculan en la base (no se traen tablas enteras); tabla de publicaciones paginada en el servidor; CSV/purga por lotes. KPIs con el dólar oficial del día y EBITDA, retención y CAC como "Sin datos" en vez de números inventados. | `/admin`, `/admin/listings`, `/admin/searches`, `/admin/traffic`, `/admin/kpi` |
 | VA-52 | `de436d2` | **Cards de la Home** con las imágenes elegidas (Aviones: agrícola al atardecer; Repuestos: depósito), en WebP de menos de 75 KB (antes ~2,4 MB cada una). | `/` → cards Aviones / Repuestos / Servicios |
 | VA-53 | `c56fac3` | **Descripción con formato**: subtítulos (línea que termina en ":") y listas ("-"), máximo de 2000 caracteres con contador, y "Ver más" en celular. El recuadro "Motor" junto a las fotos muestra como mucho 4 datos; la ficha de abajo, todos. | Detalle de avión o repuesto; `/publish` (último paso) |
+| VA-77 | ver git log | **Explorar por provincia**: mapa de la Argentina en la Home (entre "Últimas Publicaciones" y las categorías de repuestos) con lista, select en celular y panel con "Ver aeronaves" / "Ver repuestos". Provincias canónicas (24, `lib/provinces.ts`): select en publicar y perfil, validadas en el servidor. Filtro `?province=` con chip en `/planes` y `/spareparts`. **`/spareparts` ahora muestra todas las monedas por defecto** (filtro "Todas / USD / ARS"). Normalización de datos viejos: dry-run hecho, **sin aplicar** (espera OK). | `/` → "Explorá por provincia"; `/planes?province=cordoba`; `scripts/normalize-provinces.ts` |
 
 ## Bugs encontrados en el camino (fuera del plan)
 
