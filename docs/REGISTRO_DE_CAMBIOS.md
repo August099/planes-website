@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 50 de 64 tareas cerradas (49 hechas + VA-48 descartada): VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49, VA-50, VA-54 a VA-58, VA-60 y VA-70 a VA-75. VA-76 parcial. Faltan 14 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 53 de 64 tareas cerradas (52 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49, VA-50, VA-54 a VA-58, VA-60 y VA-70 a VA-75. VA-76 parcial. Faltan 11 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -167,6 +167,9 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 | VA-74 | `9f269c1` | **HTML de `/planes`** 291 → 221 KB (gzip 26 → 19): cards con solo la primera foto en el HTML y filtro sin marcas/modelos vacíos. | `/planes` |
 | VA-75 | — | Verificado: producción usa el pooler de Supabase (6543) y la base está en Montreal, cerca de la región por defecto de Vercel (`iad1`). Confirmar la región en Vercel. | `docs/PLAN_FIXES_MVP.md` (VA-75) |
 | VA-76 | — | ⏳ Parcial: mediciones antes/después en `docs/perf.md` y `scripts/measure-pages.mjs`. Falta Lighthouse en pre-production y Speed Insights. | `docs/perf.md` |
+| VA-16 | `067b2c7` | **Favoritos sin duplicados**: dos índices únicos (`userId`+avión, `userId`+repuesto; migración `20261009120000_va16_favoritos_unicos`) y el botón borra o crea sin "buscar y después crear", así un doble clic no duplica. | Doble clic rápido en ❤️. **Producción:** buscar duplicados antes de migrar (consulta en el plan, VA-16) |
+| VA-15 | `b0e2db6` | **Analytics que mide**: visitante anónimo (`va_anon`) y origen (`va_src`: referrer y UTM) en todos los eventos; búsquedas registradas solo al buscar de verdad (Enter, clic en resultado o `/search`), no en cada tecla. Enter en el buscador de escritorio ahora va a `/search`. | `/admin` → visitantes únicos y fuentes de tráfico. `lib/analytics-client.ts`, `lib/analytics-context.ts` |
+| VA-12 | `2bf14cc` | **Panel admin liviano**: los totales se calculan en la base (no se traen tablas enteras); tabla de publicaciones paginada en el servidor; CSV/purga por lotes. KPIs con el dólar oficial del día y EBITDA, retención y CAC como "Sin datos" en vez de números inventados. | `/admin`, `/admin/listings`, `/admin/searches`, `/admin/traffic`, `/admin/kpi` |
 
 ## Bugs encontrados en el camino (fuera del plan)
 
@@ -202,7 +205,7 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 - `npm run dev` con `.env` → `va_dev` (Postgres 17 local, servicio `postgresql-x64-17`; si está detenido, hay que iniciarlo como administrador). Migraciones aplicadas en `va_dev`: baseline, VA-43, VA-44, VA-54 y VA-11.
 - **Después de cada migración: `npx prisma generate` y reiniciar `npm run dev`.** En Prisma 7, `migrate dev` no regenera el cliente.
 - Sesión de prueba: usuario `test-va30-user`. La cookie `authjs.session-token` se genera con `node --env-file=.env <scratchpad>/test-session.mjs` (usa el `AUTH_SECRET` local). Si el navegador del panel se reinicia, hay que volver a ponerla.
-- Producción (cuando se despliegue): `resolve --applied` de la baseline y después `npm run migrate:deploy`, que ahora aplica VA-43, VA-44, VA-54 y VA-11. Ver el plan, debajo de VA-10.
+- Producción (cuando se despliegue): `resolve --applied` de la baseline y después `npm run migrate:deploy`, que ahora aplica VA-43, VA-44, VA-54, VA-11 y VA-16 (antes, buscar favoritos duplicados: consulta en el plan, VA-16). Ver el plan, debajo de VA-10.
 
 ## Hallazgos pendientes (anotados, sin tocar)
 
