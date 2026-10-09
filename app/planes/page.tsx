@@ -101,7 +101,7 @@ export default async function AvionesPage({ searchParams }: Props) {
     }),
   };
 
-  const [aircrafts, totalAircrafts, { categories, brands }, userFavorites] = await Promise.all([
+  const [aircrafts, totalAircrafts, { categories, brands }, userFavorites, inUse] = await Promise.all([
     prisma.aircraft.findMany({
       where: whereClause,
       include: {
@@ -122,7 +122,29 @@ export default async function AvionesPage({ searchParams }: Props) {
           select: { aircraftId: true },
         })
       : Promise.resolve([]),
+    // VA-74: marcas, modelos y variantes con avisos activos (para no mandar al filtro toda la taxonomía).
+    prisma.aircraft.findMany({
+      where: activeListingWhere(now),
+      select: { brandId: true, modelId: true, subModelId: true },
+      distinct: ["brandId", "modelId", "subModelId"],
+    }),
   ]);
+
+  // Filtro: solo lo que tiene publicaciones activas, más lo que ya esté aplicado en la URL.
+  const usedIds = new Set<string>([...brandIds, ...modelIds, ...subModelIds]);
+  for (const a of inUse) {
+    if (a.brandId) usedIds.add(a.brandId);
+    if (a.modelId) usedIds.add(a.modelId);
+    if (a.subModelId) usedIds.add(a.subModelId);
+  }
+  const filterBrands = brands
+    .filter((b) => usedIds.has(b.id))
+    .map((b) => ({
+      ...b,
+      models: b.models
+        .filter((m) => usedIds.has(m.id))
+        .map((m) => ({ ...m, variants: m.variants.filter((v) => usedIds.has(v.id)) })),
+    }));
 
   const userFavIds = new Set(userFavorites.map((f) => f.aircraftId));
 
@@ -187,7 +209,7 @@ export default async function AvionesPage({ searchParams }: Props) {
         {/* Barra móvil simétrica: 50% Filtros | 50% Ordenar */}
         <div className="w-full flex lg:block items-center gap-3 lg:w-auto shrink-0">
           <div className="flex-1 lg:flex-none lg:w-72">
-            <AircraftFiltersWrapper categories={categories} brands={brands} />
+            <AircraftFiltersWrapper categories={categories} brands={filterBrands} />
           </div>
           <div className="flex-1 lg:hidden w-full *:w-full">
             <SortDropdown />

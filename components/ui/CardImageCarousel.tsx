@@ -28,6 +28,11 @@ export function ImageCarousel({
 }: ImageCarouselProps) {
   const swiperRef = useRef<SwiperType | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  // VA-74: en el HTML inicial va solo la primera foto de cada card; el resto se agrega cuando el
+  // usuario interactúa (mouse encima, toque o cambio de foto). Antes las 5 fotos con sus srcset
+  // ocupaban unos 67 KB del HTML de /planes.
+  const [revealed, setRevealed] = useState(false);
+  const reveal = () => setRevealed(true);
 
   const finalImages: ImageCarouselImage[] =
     images.length > 0
@@ -57,7 +62,12 @@ export function ImageCarousel({
   return (
     <div
       className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100"
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        reveal();
+      }}
+      onTouchStart={reveal}
+      onFocus={reveal}
       onMouseLeave={() => setIsHovered(false)}
     >
       <Swiper
@@ -68,19 +78,22 @@ export function ImageCarousel({
         spaceBetween={0}
         loop={hasMultipleImages}
         allowTouchMove={hasMultipleImages}
+        onSlideChange={reveal}
         className="w-full h-full"
       >
         {finalImages.map((image, index) => (
           <SwiperSlide key={`${image.id}-${index}`}>
             <div className="relative w-full h-full">
-              <AppImage
-                src={image.url}
-                alt={`${alt} - Foto ${index + 1}`}
-                fill
-                optimizedWidth={600}
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className="object-cover"
-              />
+              {(index === 0 || revealed) && (
+                <AppImage
+                  src={image.url}
+                  alt={`${alt} - Foto ${index + 1}`}
+                  fill
+                  optimizedWidth={600}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover"
+                />
+              )}
             </div>
           </SwiperSlide>
         ))}

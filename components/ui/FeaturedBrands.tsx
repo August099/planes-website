@@ -79,15 +79,16 @@ export function FeaturedBrands({ brands }: FeaturedBrandsProps) {
               className="flex items-center justify-center mx-6 sm:mx-10 w-28 sm:w-36 h-16 sm:h-20 transition-transform duration-300 hover:scale-110 shrink-0 cursor-pointer overflow-visible"
             >
               <div className="relative w-full h-full flex items-center justify-center">
-                {/* VA-73: next/image con tamaño chico (antes <img> directo a Supabase, en tamaño
-                    original y sin lazy). Las copias reutilizan la misma URL (caché del navegador). */}
+                {/* VA-73: next/image con tamaño fijo chico (antes <img> directo a Supabase, en tamaño
+                    original y sin lazy). Tamaño fijo y no "fill": el srcset queda en 1x/2x en vez de
+                    ~8 anchos (son 44 imágenes con las copias). Las copias reutilizan la misma URL. */}
                 <Image
                   src={brand.logoUrl!}
                   alt={isCopy ? "" : brand.name}
-                  fill
-                  sizes="144px"
+                  width={144}
+                  height={80}
                   loading="lazy"
-                  className="object-contain filter grayscale opacity-75 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+                  className="max-w-full max-h-full w-auto h-auto object-contain filter grayscale opacity-75 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
                 />
               </div>
             </Link>
