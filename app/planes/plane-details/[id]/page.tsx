@@ -5,10 +5,8 @@ import { Separator } from "@/components/ui/separator";
 import { FileText, AlertTriangle } from "lucide-react";
 import { QnaSection } from "@/components/ui/QnaSection";
 import { PlaneActionsHeader } from "@/components/ui/PlaneActionsHeader";
-import { AppImage } from "@/components/ui/AppImage";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
-import { ContactButtons } from "@/components/ui/ContactButtons";
 import type { Metadata } from "next";
 import { getAircraftDetail } from "@/lib/listing-data";
 import { isListingActive } from "@/lib/listing-filters";
@@ -19,7 +17,10 @@ import { TrackListingView } from "@/components/ui/listing/TrackListingView";
 import { FeaturesCard } from "@/components/ui/listing/FeaturesCard";
 import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSections";
 import { PublishedLine } from "@/components/ui/listing/PublishedLine";
-import { aircraftFeatures, aircraftSections } from "@/lib/listing-detail";
+import { aircraftFeatures, aircraftSections, showsEngineSummary } from "@/lib/listing-detail";
+import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
+import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
+import { AIRCRAFT_CONDITION_LABELS } from "@/lib/constants";
 import { ENGINE_LABELS } from "@/lib/aircraft-categories";
 import { aircraftJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
@@ -95,8 +96,8 @@ export default async function PlaneDetailsPage({
   const cleanPhone = seller.phone ? seller.phone.replace(/\D/g, "") : "";
   const whatsappUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${body}` : null;
 
-  const hasSingleEngine = aircraft.engines.length === 1;
-  const singleEngine = hasSingleEngine ? aircraft.engines[0] : null;
+  // Recuadro "Motor" del resumen: un solo motor y nunca en Bimotor (VA-41).
+  const singleEngine = showsEngineSummary(aircraft) ? aircraft.engines[0] : null;
 
   const formattedPrice = formatPrice(aircraft.price);
 
@@ -106,12 +107,35 @@ export default async function PlaneDetailsPage({
 
   // VA-57: características e "Información adicional", ya sin vacíos.
   const features = aircraftFeatures(aircraft);
-  const sections = aircraftSections(aircraft);
+  // Web: la ficha no repite lo del resumen. Impresión: ficha completa.
+  const sections = aircraftSections(aircraft, { omitSummary: true });
+  const printSections = aircraftSections(aircraft);
   const listingLocation = [aircraft.city, aircraft.province].filter(Boolean).join(", ");
 
   const displayBrand = aircraft.brand?.name || aircraft.customBrand;
   const displayModel = aircraft.model?.name || aircraft.customModel;
   const displaySubModel = aircraft.subModel?.name;
+  const hs = (n: number | null | undefined) => (n != null ? `${n.toLocaleString("es-AR")} hs` : null);
+  const keyFacts: KeyFact[] = [
+    { label: "Marca", value: displayBrand },
+    { label: "Modelo", value: displayModel },
+    { label: "Variante", value: displaySubModel },
+    { label: "Año", value: String(aircraft.year) },
+    { label: "Horas totales", value: hoursText },
+    { label: "Categoría", value: aircraft.category?.name },
+    { label: "Estado", value: AIRCRAFT_CONDITION_LABELS[aircraft.condition] ?? aircraft.condition },
+  ];
+  const engineSummary: KeyFact[] | null = singleEngine
+    ? [
+        { label: "Tipo", value: aircraft.engineType ? ENGINE_LABELS[aircraft.engineType] : null },
+        { label: "Marca", value: singleEngine.brand },
+        { label: "Modelo", value: singleEngine.model },
+        { label: "Potencia", value: singleEngine.horsepower != null ? `${singleEngine.horsepower} HP` : null },
+        { label: "Horas motor", value: hs(singleEngine.engineHours) },
+        { label: "TBO", value: tboText(singleEngine.TBO) },
+        { label: "DURG / SMOH", value: hs(singleEngine.DURG) },
+      ]
+    : null;
   const sellerLocation = [seller.city, seller.province].filter(Boolean).join(", ");
 
   return (
@@ -174,7 +198,7 @@ export default async function PlaneDetailsPage({
           </div>
         )}
 
-        <PrintSections sections={sections} />
+        <PrintSections sections={printSections} />
 
         {aircraft.description && (
           <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
@@ -192,186 +216,63 @@ export default async function PlaneDetailsPage({
         </div>
       </div>
 
-      {/* VISTA WEB NORMAL */}
+      {/* VISTA WEB — VA-41: un solo árbol, sin copias mobile/desktop. En celular las dos columnas son
+          "contents" y los bloques se ordenan con order-*: fotos → título y precio → vendedor →
+          descripción → ficha técnica → documentos. Desde lg: izquierda (fotos, descripción, ficha) y
+          derecha (resumen, vendedor, documentos). */}
       <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
         <PageBackground page="planeDetail" />
-        <section className="flex flex-col lg:flex-row items-start gap-8">
-          <div className="w-full lg:w-2/3 flex flex-col gap-8">
-            <AircraftGallery images={aircraft.images} title={aircraft.title} />
-            {/* Descripción */}
-              {aircraft.description && (
-                <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm mt-2">
-                  <h2 className="text-xl font-bold mb-3 text-[#001F58]">Descripción General</h2>
-                  <p className="whitespace-pre-line text-slate-700 text-sm leading-relaxed">{aircraft.description}</p>
-                </div>
-              )}
-
-            {/* BLOQUES VISIBLES SOLO EN MÓVIL (<lg) */}
-            <div className="flex flex-col gap-5 lg:hidden">
-              <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-                <PublishedLine createdAt={aircraft.createdAt} location={listingLocation} />
-
-                <PlaneActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} />
-                <Separator />
-
-                <div>
-                  <h1 className="text-xl font-bold text-[#001F58]">{aircraft.title}</h1>
-                  <h3 className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</h3>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-1 text-sm text-slate-700">
-                  <h4 className="font-bold text-[#001F58] mb-2">Datos de la aeronave</h4>
-                  {displayBrand && <p><span className="font-semibold text-slate-500">Marca:</span> {displayBrand}</p>}
-                  {displayModel && <p><span className="font-semibold text-slate-500">Modelo:</span> {displayModel}</p>}
-                  {displaySubModel && <p><span className="font-semibold text-slate-500">Variante:</span> {displaySubModel}</p>}
-                  <p><span className="font-semibold text-slate-500">Año:</span> {aircraft.year}</p>
-                  <p><span className="font-semibold text-slate-500">Horas totales:</span> {hoursText}</p>
-
-                  {/* Motor único en lateral móvil */}
-                  {hasSingleEngine && singleEngine && (
-                    <div className="mt-3 pt-3 border-t border-slate-100 space-y-1">
-                      <p className="font-bold text-[#001F58]">Motor</p>
-                      {aircraft.engineType && <p><span className="font-semibold text-slate-500">Tipo:</span> {ENGINE_LABELS[aircraft.engineType]}</p>}
-                      {singleEngine.TBO != null && <p><span className="font-semibold text-slate-500">TBO:</span> {tboText(singleEngine.TBO)}</p>}
-                      {singleEngine.horsepower != null && <p><span className="font-semibold text-slate-500">Potencia:</span> {singleEngine.horsepower} HP</p>}
-                      {singleEngine.engineHours != null && <p><span className="font-semibold text-slate-500">Horas Motor:</span> {singleEngine.engineHours.toLocaleString("es-AR")} hs</p>}
-                      {singleEngine.DURG != null && <p><span className="font-semibold text-slate-500">DURG / SMOH:</span> {singleEngine.DURG.toLocaleString("es-AR")} hs</p>}
-                      {singleEngine.brand && <p><span className="font-semibold text-slate-500">Marca:</span> {singleEngine.brand}</p>}
-                      {singleEngine.model && <p><span className="font-semibold text-slate-500">Modelo:</span> {singleEngine.model}</p>}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Vendedor y Contacto */}
-              <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-[#001F58]">Vendedor</h4>
-                  <a className="text-xs font-semibold text-blue-600 hover:underline" href={`/profile/${seller.id}`}>Ver perfil</a>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {seller.image ? (
-                    <AppImage className="rounded-full w-12 h-12 object-cover border border-slate-200" src={seller.image} alt={seller.name || "Foto de vendedor"} width={48} height={48} optimizedWidth={100} />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg border border-slate-200">
-                      {seller.name?.charAt(0).toUpperCase() || "V"}
-                    </div>
-                  )}
-                  <div>
-                    <h5 className="font-bold text-slate-800 text-sm">{seller.name}</h5>
-                    {sellerLocation && <p className="text-xs text-slate-500">{sellerLocation}</p>}
-                  </div>
-                </div>
-
-                <ContactButtons 
-                  phone={seller.phone} 
-                  email={seller.email} 
-                  whatsappUrl={whatsappUrl} 
-                  emailUrl={emailUrl} 
-                  entityId={aircraft.id} 
-                  entityType="AIRCRAFT" 
-                />
-              </div>
+        <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
+          <div className="contents lg:flex lg:w-2/3 lg:flex-col lg:gap-8">
+            <div className="order-1 lg:order-none">
+              <AircraftGallery images={aircraft.images} title={aircraft.title} />
             </div>
 
-            {/* VA-57: características con íconos + tablas una debajo de la otra */}
-            <FeaturesCard title="Características de la aeronave" features={features} />
-            <DetailSections sections={sections} />
-
-            {/* Documentación Adjunta (Para móvil) */}
-            {aircraft.documents.length > 0 && (
-              <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-3 lg:hidden mt-2">
-                <h4 className="font-bold text-[#001F58] text-sm">Documentación Adjunta</h4>
-                <div className="space-y-2">
-                  {aircraft.documents.map((doc) => (
-                    <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 border border-slate-200 rounded-xl p-3 hover:bg-slate-50 transition-colors w-full group">
-                      <FileText className="w-7 h-7 text-red-600 shrink-0" />
-                      <span className="text-xs font-semibold text-slate-700 group-hover:text-[#001F58] truncate">{doc.name}</span>
-                    </a>
-                  ))}
-                </div>
+            {aircraft.description && (
+              <div className="order-4 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
+                <h2 className="text-xl font-bold mb-3 text-[#001F58]">Descripción General</h2>
+                <p className="whitespace-pre-line text-slate-700 text-sm leading-relaxed">{aircraft.description}</p>
               </div>
             )}
+
+            {/* VA-57: características con íconos + tablas (sin repetir lo del resumen) */}
+            <div className="order-5 lg:order-none flex flex-col gap-5 lg:gap-8">
+              <FeaturesCard title="Características de la aeronave" features={features} />
+              <DetailSections sections={sections} />
+            </div>
           </div>
 
-          {/* Columna Derecha (DESKTOP >= lg) */}
-          <div className="hidden lg:flex w-1/3 flex-col gap-5">
-            <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
+          <div className="contents lg:flex lg:w-1/3 lg:flex-col lg:gap-5">
+            {/* Resumen: título, precio, acciones y datos clave */}
+            <div className="order-2 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
               <PublishedLine createdAt={aircraft.createdAt} location={listingLocation} />
-
               <PlaneActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} />
-
               <Separator />
-
               <div>
-                <p className="text-xl font-bold text-[#001F58]">{aircraft.title}</p>
-                <h3 className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</h3>
+                <h1 className="text-xl font-bold text-[#001F58]">{aircraft.title}</h1>
+                <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
               </div>
-
               <Separator />
-
-              <div className="space-y-1 text-sm text-slate-700">
-                <h4 className="font-bold text-[#001F58] mb-2">Datos de la aeronave</h4>
-                {displayBrand && <p><span className="font-semibold text-slate-500">Marca:</span> {displayBrand}</p>}
-                {displayModel && <p><span className="font-semibold text-slate-500">Modelo:</span> {displayModel}</p>}
-                {displaySubModel && <p><span className="font-semibold text-slate-500">Variante:</span> {displaySubModel}</p>}
-                <p><span className="font-semibold text-slate-500">Año:</span> {aircraft.year}</p>
-                <p><span className="font-semibold text-slate-500">Horas totales:</span> {hoursText}</p>
-
-                {/* Motor Único en Lateral */}
-                {hasSingleEngine && singleEngine && (
-                  <div className="mt-3 pt-3 border-t border-slate-100 space-y-1">
-                    <p className="font-bold text-[#001F58]">Motor</p>
-                    {aircraft.engineType && <p><span className="font-semibold text-slate-500">Tipo:</span> {ENGINE_LABELS[aircraft.engineType]}</p>}
-                    {singleEngine.TBO != null && <p><span className="font-semibold text-slate-500">TBO:</span> {tboText(singleEngine.TBO)}</p>}
-                    {singleEngine.horsepower != null && <p><span className="font-semibold text-slate-500">Potencia:</span> {singleEngine.horsepower} HP</p>}
-                      {singleEngine.engineHours != null && <p><span className="font-semibold text-slate-500">Horas Motor:</span> {singleEngine.engineHours.toLocaleString("es-AR")} hs</p>}
-                    {singleEngine.DURG != null && <p><span className="font-semibold text-slate-500">DURG / SMOH:</span> {singleEngine.DURG.toLocaleString("es-AR")} hs</p>}
-                    {singleEngine.brand && <p><span className="font-semibold text-slate-500">Marca:</span> {singleEngine.brand}</p>}
-                    {singleEngine.model && <p><span className="font-semibold text-slate-500">Modelo:</span> {singleEngine.model}</p>}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Vendedor */}
-            <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-bold text-[#001F58]">Vendedor</h4>
-                <a className="text-xs font-semibold text-blue-600 hover:underline" href={`/profile/${seller.id}`}>Ver perfil</a>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {seller.image ? (
-                  <AppImage className="rounded-full w-12 h-12 object-cover border border-slate-200" src={seller.image} alt={seller.name || "Foto de vendedor"} width={48} height={48} optimizedWidth={100} />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg border border-slate-200">
-                    {seller.name?.charAt(0).toUpperCase() || "V"}
-                  </div>
-                )}
-                <div>
-                  <h5 className="font-bold text-slate-800 text-sm">{seller.name}</h5>
-                  {sellerLocation && <p className="text-xs text-slate-500">{sellerLocation}</p>}
+              <KeyFacts title="Datos de la aeronave" facts={keyFacts} />
+              {engineSummary && (
+                <div className="pt-3 border-t border-slate-100">
+                  <KeyFacts title="Motor" facts={engineSummary} />
                 </div>
-              </div>
-
-              <ContactButtons 
-                phone={seller.phone} 
-                email={seller.email} 
-                whatsappUrl={whatsappUrl} 
-                emailUrl={emailUrl} 
-                entityId={aircraft.id} 
-                entityType="AIRCRAFT" 
-              />
+              )}
             </div>
 
-            {/* Documentación Adjunta (Desktop) */}
+            <SellerContactCard
+              className="order-3 lg:order-none"
+              seller={seller}
+              whatsappUrl={whatsappUrl}
+              emailUrl={emailUrl}
+              entityId={aircraft.id}
+              entityType="AIRCRAFT"
+            />
+
             {aircraft.documents.length > 0 && (
-              <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-3">
-                <h4 className="font-bold text-[#001F58] text-sm">Documentación Adjunta</h4>
+              <div className="order-6 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-3">
+                <h2 className="font-bold text-[#001F58] text-sm">Documentación Adjunta</h2>
                 <div className="space-y-2">
                   {aircraft.documents.map((doc) => (
                     <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 border border-slate-200 rounded-xl p-3 hover:bg-slate-50 transition-colors w-full group">

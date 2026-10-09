@@ -1,5 +1,6 @@
 import type { AircraftDetail, SparePartDetail } from "@/lib/listing-data";
 import { AIRCRAFT_CONDITION_LABELS, SPARE_PART_CONDITION_LABELS } from "@/lib/constants";
+import { categoryDef } from "@/lib/aircraft-categories";
 
 // Contenido del detalle de un aviso (VA-57): características con íconos y tablas de
 // "Información adicional". Es la única fuente para la vista web y la de impresión, y ya
@@ -81,13 +82,22 @@ export function aircraftFeatures(a: AircraftDetail): Feature[] {
   return f.filter((x): x is Feature => !!x);
 }
 
-export function aircraftSections(a: AircraftDetail): DetailSection[] {
+// Recuadro "Motor" junto a las fotos (VA-41 / composición): solo con un motor y nunca en
+// Bimotor (la categoría manda, aunque el aviso tenga cargado un solo motor).
+export function showsEngineSummary(a: AircraftDetail): boolean {
+  return a.engines.length === 1 && categoryDef(a.categoryId)?.group !== "Bimotor";
+}
+
+// omitSummary (vista web, VA-41): sin lo que ya está en el resumen de arriba ("General" y los
+// datos del motor del recuadro). La impresión / PDF sigue usando la ficha completa.
+export function aircraftSections(a: AircraftDetail, { omitSummary = false }: { omitSummary?: boolean } = {}): DetailSection[] {
   const multipleEngines = a.engines.length > 1;
   const brand = a.brand?.name || a.customBrand;
   const model = a.model?.name || a.customModel;
+  const engineInSummary = omitSummary && showsEngineSummary(a);
 
   const sections: (DetailSection | null)[] = [
-    section("General", [
+    omitSummary ? null : section("General", [
       { label: "Marca", value: text(brand) },
       { label: "Modelo", value: text(model) },
       { label: "Variante", value: text(a.subModel?.name) },
@@ -98,7 +108,9 @@ export function aircraftSections(a: AircraftDetail): DetailSection[] {
       { label: "Estado", value: AIRCRAFT_CONDITION[a.condition] ?? a.condition },
     ]),
     ...a.engines.map((e, i) =>
-      section(multipleEngines ? `Motor ${i + 1}` : "Motor", [
+      engineInSummary
+        ? section("Motor", [{ label: "Descripción", value: text(e.description) }])
+        : section(multipleEngines ? `Motor ${i + 1}` : "Motor", [
         { label: "Marca", value: text(e.brand) },
         { label: "Modelo", value: text(e.model) },
         { label: "Potencia", value: e.horsepower != null ? `${e.horsepower} HP` : undefined },
@@ -149,12 +161,13 @@ export function sparePartFeatures(s: SparePartDetail): Feature[] {
   return f.filter((x): x is Feature => !!x);
 }
 
-export function sparePartSections(s: SparePartDetail): DetailSection[] {
+// omitSummary (vista web, VA-41): sin "General", que ya está en el resumen. La impresión usa todo.
+export function sparePartSections(s: SparePartDetail, { omitSummary = false }: { omitSummary?: boolean } = {}): DetailSection[] {
   const attributes = Object.entries((s.attributes as Record<string, unknown>) || {}).filter(
     ([, v]) => v !== null && v !== undefined && String(v).trim() !== ""
   );
   const sections: (DetailSection | null)[] = [
-    section("General", [
+    omitSummary ? null : section("General", [
       { label: "Marca", value: text(s.brand) },
       { label: "Nº de parte", value: text(s.partNumber) },
       { label: "Categoría", value: sparePartCategoryPath(s).join(" › ") || undefined },

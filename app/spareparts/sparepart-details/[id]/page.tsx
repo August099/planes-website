@@ -6,7 +6,6 @@ import { QnaSection } from "@/components/ui/QnaSection";
 import { PlaneActionsHeader } from "@/components/ui/PlaneActionsHeader";
 import { AppImage } from "@/components/ui/AppImage";
 import { auth } from "@/lib/auth";
-import { ContactButtons } from "@/components/ui/ContactButtons";
 import type { Metadata } from "next";
 import { getSparePartDetail } from "@/lib/listing-data";
 import { isListingActive } from "@/lib/listing-filters";
@@ -18,6 +17,8 @@ import { FeaturesCard } from "@/components/ui/listing/FeaturesCard";
 import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSections";
 import { PublishedLine } from "@/components/ui/listing/PublishedLine";
 import { sparePartConditionLabel, sparePartFeatures, sparePartSections } from "@/lib/listing-detail";
+import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
+import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
 import { sparePartJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
@@ -102,7 +103,9 @@ export default async function SparePartDetailsPage({
   // VA-57: características e "Información adicional" (incluye atributos y aeronaves
   // compatibles), ya sin vacíos.
   const features = sparePartFeatures(sparePart);
-  const sections = sparePartSections(sparePart);
+  // Web: la ficha no repite lo del resumen. Impresión: ficha completa.
+  const sections = sparePartSections(sparePart, { omitSummary: true });
+  const printSections = sparePartSections(sparePart);
 
   // Reconstrucción de la jerarquía de categorías del repuesto.
   // sparePart.category es siempre el nivel más específico que eligió el vendedor:
@@ -126,6 +129,16 @@ export default async function SparePartDetailsPage({
     // Solo hay categoría raíz
     categoryName = leafCategory.name;
   }
+
+  // Datos clave del resumen (VA-41): grilla de 2 columnas.
+  const keyFacts: KeyFact[] = [
+    { label: "Marca", value: sparePart.brand },
+    { label: "Nº de parte", value: sparePart.partNumber },
+    { label: "Estado", value: sparePart.condition ? sparePartConditionLabel(sparePart.condition) : null },
+    { label: "Stock", value: `${sparePart.stock} ${sparePart.stock === 1 ? "unidad" : "unidades"}` },
+    { label: "Categoría", value: categoryName },
+    { label: "Subcategoría", value: subcategoryName },
+  ];
 
   return (
     <>
@@ -178,7 +191,7 @@ export default async function SparePartDetailsPage({
           </div>
         )}
 
-        <PrintSections sections={sections} />
+        <PrintSections sections={printSections} />
 
         {sparePart.description && (
           <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
@@ -200,199 +213,56 @@ export default async function SparePartDetailsPage({
         </div>
       </div>
 
-      {/* VISTA WEB NORMAL */}
+      {/* VISTA WEB — VA-41: un solo árbol, mismo orden que el detalle de avión. En celular:
+          fotos → título y precio → vendedor → descripción → ficha. Desde lg: dos columnas. */}
       <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
         <PageBackground page="spareparts" />
-        <section className="flex flex-col lg:flex-row items-start gap-8">
-          <div className="w-full lg:w-2/3 flex flex-col gap-8">
-            {/* 1. Galería de Imágenes */}
-            <AircraftGallery images={sparePart.images} title={sparePart.title} />
+        <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
+          <div className="contents lg:flex lg:w-2/3 lg:flex-col lg:gap-8">
+            <div className="order-1 lg:order-none">
+              <AircraftGallery images={sparePart.images} title={sparePart.title} />
+            </div>
 
-            {/* 2. DESCRIPCIÓN GENERAL (Ubicada inmediatamente debajo de las imágenes) */}
             {sparePart.description && (
-              <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
+              <div className="order-4 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
                 <h2 className="text-xl font-bold mb-3 text-[#001F58]">Descripción General</h2>
-                <p className="whitespace-pre-line text-slate-700 text-sm leading-relaxed">
-                  {sparePart.description}
-                </p>
+                <p className="whitespace-pre-line text-slate-700 text-sm leading-relaxed">{sparePart.description}</p>
               </div>
             )}
 
-            {/* BLOQUES VISIBLES SOLO EN MÓVIL (<lg) */}
-            <div className="flex flex-col gap-5 lg:hidden">
-              <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-                <PublishedLine createdAt={sparePart.createdAt} location={locationText} />
-
-                <PlaneActionsHeader
-                  title={sparePart.title}
-                  aircraftId={sparePart.id}
-                  type="SPARE_PART"
-                  isFavoriteInitial={isFavoriteInitial}
-                />
-
-                <Separator />
-
-                <div>
-                  <h1 className="text-xl font-bold text-[#001F58]">{sparePart.title}</h1>
-                  <h3 className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">
-                    {formattedPrice}
-                  </h3>
-                </div>
-
-                <Separator />
-
-                {/* DETALLES PRINCIPALES MÓVIL (lateral): solo Categoría y Subcategoría */}
-                <div className="space-y-1 text-sm text-slate-700">
-                  <h4 className="font-bold text-[#001F58] mb-2">Detalles principales</h4>
-                  {sparePart.brand && (
-                    <p><span className="font-semibold text-slate-500">Marca:</span> {sparePart.brand}</p>
-                  )}
-                  {sparePart.condition && (
-                    <p><span className="font-semibold text-slate-500">Estado:</span> {sparePartConditionLabel(sparePart.condition)}</p>
-                  )}
-                  {categoryName && (
-                    <p><span className="font-semibold text-slate-500">Categoría:</span> {categoryName}</p>
-                  )}
-                  {subcategoryName && (
-                    <p><span className="font-semibold text-slate-500">Subcategoría:</span> {subcategoryName}</p>
-                  )}
-                  <p><span className="font-semibold text-slate-500">Stock:</span> {sparePart.stock} {sparePart.stock === 1 ? "unidad" : "unidades"}</p>
-                </div>
-              </div>
-
-              {/* Vendedor y Contacto en Mobile */}
-              <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-[#001F58]">Vendedor</h4>
-                  <a
-                    className="text-xs font-semibold text-blue-600 hover:underline"
-                    href={`/profile/${seller.id}`}
-                  >
-                    Ver perfil
-                  </a>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {seller.image ? (
-                    <AppImage
-                      className="rounded-full w-12 h-12 object-cover border border-slate-200"
-                      src={seller.image}
-                      alt={seller.name || "Foto del vendedor"}
-                      width={48}
-                      height={48}
-                      optimizedWidth={100}
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg border border-slate-200">
-                      {seller.name?.charAt(0).toUpperCase() || "V"}
-                    </div>
-                  )}
-                  <div>
-                    <h5 className="font-bold text-slate-800 text-sm">{seller.name}</h5>
-                    {sellerLocation && <p className="text-xs text-slate-500">{sellerLocation}</p>}
-                  </div>
-                </div>
-
-                <ContactButtons 
-                  phone={seller.phone} 
-                  email={seller.email} 
-                  whatsappUrl={whatsappUrl} 
-                  emailUrl={emailUrl} 
-                  entityId={sparePart.id} 
-                  entityType="SPARE_PART" 
-                />
-              </div>
+            {/* VA-57: características con íconos + tablas (sin repetir lo del resumen) */}
+            <div className="order-5 lg:order-none flex flex-col gap-5 lg:gap-8">
+              <FeaturesCard title="Características del repuesto" features={features} />
+              <DetailSections sections={sections} />
             </div>
-
-            {/* VA-57: características con íconos + tablas una debajo de la otra */}
-            <FeaturesCard title="Características del repuesto" features={features} />
-            <DetailSections sections={sections} />
           </div>
 
-          {/* Columna Derecha (DESKTOP >= lg) - Flujo continuo sin sticky */}
-          <div className="hidden lg:flex w-1/3 flex-col gap-5">
-            <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
+          <div className="contents lg:flex lg:w-1/3 lg:flex-col lg:gap-5">
+            <div className="order-2 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
               <PublishedLine createdAt={sparePart.createdAt} location={locationText} />
-
               <PlaneActionsHeader
                 title={sparePart.title}
                 aircraftId={sparePart.id}
                 type="SPARE_PART"
                 isFavoriteInitial={isFavoriteInitial}
               />
-
               <Separator />
-
               <div>
-                <p className="text-xl font-bold text-[#001F58]">{sparePart.title}</p>
-                <h3 className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">
-                  {formattedPrice}
-                </h3>
+                <h1 className="text-xl font-bold text-[#001F58]">{sparePart.title}</h1>
+                <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
               </div>
-
               <Separator />
-
-              {/* DETALLES PRINCIPALES (lateral): solo Categoría y Subcategoría */}
-              <div className="space-y-1 text-sm text-slate-700">
-                <h4 className="font-bold text-[#001F58] mb-2">Detalles principales</h4>
-                {sparePart.brand && (
-                  <p><span className="font-semibold text-slate-500">Marca:</span> {sparePart.brand}</p>
-                )}
-                {sparePart.condition && (
-                  <p><span className="font-semibold text-slate-500">Estado:</span> {sparePartConditionLabel(sparePart.condition)}</p>
-                )}
-                {categoryName && (
-                  <p><span className="font-semibold text-slate-500">Categoría:</span> {categoryName}</p>
-                )}
-                {subcategoryName && (
-                  <p><span className="font-semibold text-slate-500">Subcategoría:</span> {subcategoryName}</p>
-                )}
-                <p><span className="font-semibold text-slate-500">Stock:</span> {sparePart.stock} {sparePart.stock === 1 ? "unidad" : "unidades"}</p>
-              </div>
+              <KeyFacts title="Detalles principales" facts={keyFacts} />
             </div>
 
-            {/* Vendedor */}
-            <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-bold text-[#001F58]">Vendedor</h4>
-                <a
-                  className="text-xs font-semibold text-blue-600 hover:underline"
-                  href={`/profile/${seller.id}`}
-                >
-                  Ver perfil
-                </a>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {seller.image ? (
-                  <AppImage
-                    className="rounded-full w-12 h-12 object-cover border border-slate-200"
-                    src={seller.image}
-                    alt={seller.name || "Foto del vendedor"}
-                    width={48}
-                    height={48}
-                    optimizedWidth={100}
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg border border-slate-200">
-                    {seller.name?.charAt(0).toUpperCase() || "V"}
-                  </div>
-                )}
-                <div>
-                  <h5 className="font-bold text-slate-800 text-sm">{seller.name}</h5>
-                  {sellerLocation && <p className="text-xs text-slate-500">{sellerLocation}</p>}
-                </div>
-              </div>
-
-              <ContactButtons 
-                phone={seller.phone} 
-                email={seller.email} 
-                whatsappUrl={whatsappUrl} 
-                emailUrl={emailUrl} 
-                entityId={sparePart.id} 
-                entityType="SPARE_PART" 
-              />
-            </div>
+            <SellerContactCard
+              className="order-3 lg:order-none"
+              seller={seller}
+              whatsappUrl={whatsappUrl}
+              emailUrl={emailUrl}
+              entityId={sparePart.id}
+              entityType="SPARE_PART"
+            />
           </div>
         </section>
 
