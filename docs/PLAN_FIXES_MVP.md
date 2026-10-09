@@ -729,6 +729,8 @@ Hay 103 errores y 50 warnings. Después de las fases anteriores, corregir:
 - Los `any` en los archivos que se toquen.
 - Los `no-unescaped-entities` (trivial).
 
+
+**Estado (9/10/2026):** ⏳ **parcial** (commits `cfc7d0b` y `2d81685`). Lint: de 68 errores + 34 warnings a **19 errores + 6 warnings**. Hecho: (1) 28 imports/variables sin uso; (2) **los 48 `any`**: `catch` como `unknown` con `errorMessage()` (`lib/errors.ts`), estados del admin tipados con lo que devuelve cada action, `ProfileView` y `QuestionsClient` con tipos explícitos, PDF y perfil con `Record` tipados, seeds tipados. Bugs que salieron al tiparlo: `/planes?condition=X` y `/spareparts?condition=X` daban **error 500** (ahora se ignoran valores que no son del enum); `getLiveEvents` pasaba cualquier texto a Prisma como tipo de evento; `/questions` rompía si una pregunta no tenía avión ni repuesto; en `/admin/listings` los Top 5 perdían el tipo de `views`/`contacts`. **Falta:** 10 `no-unescaped-entities` (comillas en textos) y 9 `react-hooks/set-state-in-effect` (renders de más), más 2 imágenes sin `alt` en los PDF y 3 `<img>` (vista de impresión y taxonomía).
 ---
 
 ## FASE 5b — Rendimiento y tiempos de carga
