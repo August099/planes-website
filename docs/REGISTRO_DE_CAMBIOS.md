@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 32 de 59 tareas hechas (VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-31, VA-43, VA-44, VA-54, VA-56, VA-57, VA-58 y VA-70). Faltan 27 (el 8/10 se sumaron VA-17, VA-31 y VA-58, pedidos del socio). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 33 de 62 tareas hechas (VA-01 a VA-11, VA-13, VA-14, VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-43, VA-44, VA-54, VA-56, VA-57, VA-58 y VA-70). Faltan 29 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-59 y VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -56,6 +56,7 @@ Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://l
 | VA-21 | `3e498ef` | El tipo de motor sale de la categoría (MP/BP → pistón, MT/BT → turbohélice); se quita el selector manual. Cerrada junto con VA-43. | `/publish`: ya no aparece "Tipo de Motor" |
 | VA-30 (edición) | `829b71e` | "Editar" en el perfil abre el mismo formulario (`/publish?edit=<id>&type=aircraft\|parts`): cambia fotos, documentos, motores, hélices, marca, modelo y categoría. Se borraron las actions sin uso, incluidas `createAircraft` y `createSparePart`, que permitían crear avisos sin sesión. | Perfil → ✏️ en un aviso · `lib/listing-edit.ts`, `app/publish/actions.ts` (`updateListing`) |
 | VA-31 | `24deb1f` | **Filtro de la Home coordinado con `/planes`** (pedido del socio). El precio de la Home ahora se manda como `minPrice`/`maxPrice` (antes `price=0-100k`, que se ignoraba). En la barra de filtros: secciones con filtros activos abiertas, marcas aplicadas primero y desplegadas, etiquetas de los filtros aplicados que se quitan con ×, y el estado se rearma desde la URL en cada cambio. | Home → elegir marca y precio → Buscar. `components/ui/HomeFilter.tsx`, `components/ui/PlanesFiltersSidebar.tsx` |
+| VA-32 | `3ec45a0` | **Galería del detalle con fondo blanco** como el resto de las tarjetas (antes se veía el fondo de la página alrededor de la foto y de las miniaturas). Las miniaturas ya no "saltan" al cargar. | Detalle de un avión o repuesto con varias fotos. `components/ui/Carousel.tsx` |
 | VA-23 | `7c6f4ab` | **Precios y estados legibles.** Todos los precios con el mismo formato ("US$ 180.500" / "AR$ …") vía `formatPrice`; el buscador del header ya no dice USD en repuestos en pesos. Estados con etiquetas ("Usado", "A reparar", "Pistón") también en el PDF y la card de repuesto. | Home (destacadas y últimas), `/planes`, `/spareparts`, buscador del header, PDF. `lib/format.ts`, `lib/constants.ts` |
 | VA-24 | `254194f` | Horas en 0 visibles en el PDF del avión (antes la fila desaparecía); año de la card destacada con `!= null`. | PDF de un avión con motor en 0 h. `components/ui/AircraftPDF.tsx` |
 | VA-25 | `1640ad2` | **Placeholder que existe** (`/placeholder.svg`) en los 15 lugares que usaban `/placeholder.png`; la card destacada muestra el placeholder si la foto no carga. | `/planes?brand=…` con el aviso "Mock 7" (foto de loremflickr caída). `PLACEHOLDER_IMAGE` en `lib/constants.ts` |
@@ -170,6 +171,7 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 
 ## Estado del entorno local (para retomar)
 
+- **Ramas:** el trabajo del plan va en `milton/auth-roles`. Flujo: ramas → `pre-production` (se prueba en https://planes-website-git-pre-production-diodo.vercel.app/) → `main`. Desde el 8/10 `main` (producción) muestra una página estática de "próximamente".
 - `npm run dev` con `.env` → `va_dev` (Postgres 17 local, servicio `postgresql-x64-17`; si está detenido, hay que iniciarlo como administrador). Migraciones aplicadas en `va_dev`: baseline, VA-43, VA-44, VA-54 y VA-11.
 - **Después de cada migración: `npx prisma generate` y reiniciar `npm run dev`.** En Prisma 7, `migrate dev` no regenera el cliente.
 - Sesión de prueba: usuario `test-va30-user`. La cookie `authjs.session-token` se genera con `node --env-file=.env <scratchpad>/test-session.mjs` (usa el `AUTH_SECRET` local). Si el navegador del panel se reinicia, hay que volver a ponerla.

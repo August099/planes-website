@@ -345,6 +345,12 @@ Revisando el flujo completo (`PublishForm.tsx` → `app/publish/actions.ts` → 
 
 **Estado (8/10/2026):** ✅ hecho en local (commit `24deb1f`). Probado: Home → Cessna + "Más de USD 300.000" → `/planes?brand=…&minPrice=300000` con 1 resultado, etiquetas "Desde USD 300.000" y "CESSNA", secciones Precio y Marca abiertas, Cessna primera y tildada. Quitar la etiqueta CESSNA actualiza la URL y el listado (25). A 375 px el panel de filtros muestra lo mismo. Los modelos y variantes se quitan junto con su marca.
 
+
+### VA-32 · Galería del detalle sin fondo propio (pedido del socio, 9/10)
+- **Problema:** el componente de imágenes del detalle de avión y de repuesto (`AircraftGallery` en `components/ui/Carousel.tsx`) no tiene fondo: alrededor de la foto (que usa `object-contain`) y en la tira de miniaturas se ve el fondo de la página. El resto de las tarjetas del detalle son `bg-white` con `border-slate-200`.
+- **Hacer:** mismo fondo que las demás tarjetas (`bg-white`, borde `slate-200`, `rounded-2xl`, `shadow-sm`) en el contenedor de la foto y en la tira de miniaturas. Ver a 375 y 1280 px con fotos horizontales y verticales.
+
+**Estado (9/10/2026):** ✅ hecho en local (commit `3ec45a0`). Contenedor y tira de miniaturas en `bg-white` (borde `slate-200`, igual que las demás tarjetas). Además, las miniaturas tienen desde el primer render el mismo ancho que calcula Swiper (5 / 7 / 9 por fila): antes de inicializarse, la primera ocupaba todo el ancho. Verificado a 375 px (57 px, 5 visibles) y 1280 px (79,3 px, 9 visibles). Aplica al detalle de avión y al de repuesto (mismo componente).
 ---
 
 ## FASE 4 — Lista del socio
@@ -608,6 +614,20 @@ Comparación del formulario de la composición (anexo A, "AVIONES") contra el sc
 
 **Estado (8/10/2026):** ✅ hecho en local (commit `0d59127`). `/admin/users` (enlace "Usuarios" en el menú del admin), `app/actions/admin-users-actions.ts`, `components/ui/FoundingMemberToggle.tsx`, `FOUNDING_MEMBER_LIMIT` en `lib/constants.ts`. Probado en `va_dev`: dar y quitar la insignia actualiza el contador (6 → 7 → 6), la búsqueda y el filtro "Solo fundadores" funcionan. El tope de 50 no se probó en vivo (hay 16 usuarios). En `va_dev` (copia de producción) hay 6 fundadores asignados automáticamente, entre ellos cuentas de prueba (`augusto@gmail.com`, `delivered@resend.dev`): revisarlos desde la pantalla nueva en producción. El panel admin no está adaptado a 375 px (barra lateral fija de 256 px); es de todo el admin, no de esta pantalla.
 
+
+### VA-59 · Precio de publicar un avión y un repuesto (por unidad) editable desde el admin (pedido del socio, 9/10)
+- **Alcance:** solo el **precio por menor** de publicar **un** avión y **un** repuesto. Los planes de suscripción son otra cosa y van en VA-80.
+- **Hoy:** no hay un precio por publicación guardado en ningún lado (publicar es gratis). Los packs de `app/plans/page.tsx` y los banners de `app/banners/page.tsx` (`PLAN_PRICES`) tienen precios escritos en el código.
+- **Hacer:**
+  - Guardar los dos precios en la base (por ejemplo, una tabla `ListingPrice` con `AIRCRAFT` / `SPARE_PART`, monto y moneda) con valores iniciales.
+  - Nueva sección **Precios** en el panel admin (`/admin/prices`) con los dos precios. Editar abre un **diálogo de confirmación** con precio anterior → nuevo y la variación en %; para cambios grandes (más del 50 % o a 0) pedir escribir "CONFIRMAR".
+  - Validar en el servidor: solo admin (como VA-02), número positivo con tope razonable.
+  - Historial de cambios (`ListingPriceChange`: tipo, precio anterior, nuevo, admin, fecha).
+  - El precio que se cobra se toma **siempre del servidor** (nunca del cliente): un cambio aplica a las compras nuevas, no a las que ya están en curso.
+  - Mostrar el precio vigente donde corresponda (`/publish`, `/howtopublish`) leyendo de la base.
+- **Relación:** el cobro en sí es de la Fase 6 (Mercado Pago). Mientras publicar sea gratis (cupón de lanzamiento, VA-47), el precio solo se muestra.
+- **Migración:** tablas nuevas (mostrar el SQL antes de aplicar, regla de la sección 0).
+
 ---
 
 ## FASE 5 — Responsive y limpieza
@@ -726,6 +746,23 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - **Renovaciones:** hoy `renewListingAction` renueva gratis e ilimitado. Definir si renovar consume saldo o cupón `RENEWAL`.
 - **Facturación:** según el documento maestro (Monotributo, Factura C, `BillingProfile`, `Invoice`, proveedor).
 
+
+### VA-80 · Planes de suscripción administrables, con cobro mensual por Mercado Pago (pedido del socio, 9/10)
+- **No entra en el MVP**, pero queda en la lista para implementarlo más adelante. Depende de la Fase 6 (Mercado Pago) y de VA-59.
+- **Hoy:** `app/plans/page.tsx` muestra planes y packs escritos en el código; sus botones van a `/checkout`, que no existe. Hay modelos `Plan` y `Subscription` en el schema, sin uso.
+- **Hacer:**
+  - **CRUD de planes en el panel admin** (`/admin/plans`): crear, editar y eliminar (o archivar si ya tiene suscriptores, para no romper suscripciones activas), con confirmación como en VA-59.
+  - **Campos de cada plan:**
+    - Título y precio mensual (y moneda).
+    - **Qué incluye para la lógica interna** (campos estructurados que usa el sistema): cantidad de publicaciones de aviones y de repuestos por período, si las publicaciones **no vencen** ("sin vencimiento"), insignia de verificado, etc.
+    - **Qué incluye para mostrar en `/plans`** (texto libre o lista de ítems, descripción, etiqueta "Más popular", orden).
+    - Activo / inactivo.
+  - **`/plans` lee los planes de la base** (solo los activos) en vez del código.
+  - **Cobro:** suscripción mensual con débito automático de Mercado Pago (preapproval). Webhook que acredita el período, renueva `currentPeriodEnd` y maneja rechazos (VA de la Fase 6: idempotencia y `MP_WEBHOOK_SECRET`).
+  - **Perfil:** ver el plan actual, la próxima fecha de cobro y un botón **"Cancelar suscripción"** (con confirmación) que la cancela en Mercado Pago y deja usar el plan hasta el fin del período pagado (`cancelAtPeriodEnd`).
+  - **Publicaciones sin vencimiento:** si el plan lo tiene configurado, las publicaciones del suscriptor se crean y renuevan sin `listingExpiresAt` (`activeListingWhere` ya acepta `null`). Definir qué pasa cuando la suscripción se cancela (sugerido: vuelven a tener vencimiento a partir de ese momento).
+  - Cambios de precio de un plan: aplican a los cobros siguientes; avisar al suscriptor.
+- **Migración:** campos nuevos en `Plan` (features internas y de display, `noExpiry`, orden) y en `Subscription` si hace falta (mostrar el SQL antes de aplicar).
 ---
 
 ## 7. Orden sugerido de ejecución
