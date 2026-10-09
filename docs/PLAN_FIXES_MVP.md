@@ -435,6 +435,8 @@ Revisando el flujo completo (`PublishForm.tsx` → `app/publish/actions.ts` → 
      - Pistón/Turbohélice como hijos de Monomotor y Bimotor (VA-43).
 - **Aceptación:** a 375 px, `/planes` y `/spareparts` muestran las cards a ancho completo, los filtros se abren en un drawer y `document.documentElement.scrollWidth === 375`.
 
+**Estado (9/10/2026):** ✅ hecho en local (commit `4b55359`). Estructura común en `components/ui/filters/FilterShell.tsx` (`FilterShell`, `FilterSection` con contador, `AppliedFilterChips`), usada por las dos barras. `/spareparts`: panel lateral en celular, "Filtros" + "Ordenar" lado a lado, orden con `SortDropdown` (antes no se podía ordenar), grilla de 3 columnas con la barra lateral. `/planes`: filtros nuevos **Año** (`minYear`/`maxYear`) y **Publica** (`sellerType` → `seller.userType`), Marca con 6 + "Ver todas (N)". Aplicar/limpiar conserva el orden. Verificado: a 375 px sin scroll horizontal y cards de 333 px; conteos iguales a la base (año 2020–2026: 11, intermediarios: 8, repuestos en pesos: 22); orden por precio ascendente correcto; aplicar categoría desde el panel conserva moneda y orden. Ojo: el registro todavía solo asigna `PARTICULAR`/`RESELLER`; "Fábrica" va a dar 0 hasta que haya cuentas de ese tipo.
+
 ### VA-46 · Círculo rojo si falta información del perfil
 - **Archivos:** `components/ui/Header.tsx` (ya hay un puntito rojo para preguntas sin responder, l.75–77), `components/ui/ProfileView.tsx`.
 - **Hacer:**
