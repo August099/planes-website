@@ -114,7 +114,9 @@ export function AircraftGallery({ images, title }: GalleryProps) {
 
   return (
     <>
-      <div ref={containerRef} className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+      {/* Mismo fondo que el resto de las tarjetas del detalle (VA-32): antes era transparente
+          y alrededor de la foto y de las miniaturas se veía el fondo de la página. */}
+      <div ref={containerRef} className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white">
         {/* Carrusel Principal */}
         <Swiper
           onSwiper={(swiper) => (swiperRef.current = swiper)}
@@ -162,7 +164,7 @@ export function AircraftGallery({ images, title }: GalleryProps) {
 
         {/* Miniaturas */}
         {images.length > 1 && (
-          <div className="p-3 bg-transparent border-none">
+          <div className="p-3 bg-white border-t border-slate-100">
             <Swiper
               onSwiper={setThumbsSwiper}
               modules={[Thumbs]}
@@ -176,8 +178,10 @@ export function AircraftGallery({ images, title }: GalleryProps) {
               className="w-full"
             >
               {images.map((image, index) => (
-                <SwiperSlide key={index} className="cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
-                  <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-transparent border-0 shadow-none">
+                // Ancho inicial igual al de slidesPerView (5 / 7 / 9): antes de que Swiper se inicialice,
+                // la primera miniatura ocupaba todo el ancho y la tira "saltaba" (VA-32).
+                <SwiperSlide key={index} className="cursor-pointer opacity-70 hover:opacity-100 transition-opacity !w-[calc((100%-32px)/5)] sm:!w-[calc((100%-48px)/7)] lg:!w-[calc((100%-64px)/9)]">
+                  <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-slate-50 border-0 shadow-none">
                     <Image
                       src={image.url}
                       alt={photoAlt(image, index)}
