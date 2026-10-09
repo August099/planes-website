@@ -56,16 +56,15 @@ export function HeroBanner({
           } as React.CSSProperties
         }
       >
-        <div className="relative isolate">
-          {/* Difuminado oscuro detrás del bloque de texto (VA-55, composición): el título se lee
-              sobre cualquier parte de la foto sin tapar la imagen. */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -inset-x-10 -inset-y-12 -z-10 rounded-[3rem] bg-black/40 blur-2xl"
-          />
-          {/* Un solo color (VA-55): antes "a bordo" tenía un degradé blanco → rojo que se leía mal. */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight md:leading-none whitespace-normal md:whitespace-nowrap text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]">
-            Bienvenido a bordo
+        <div>
+          {/* VA-55 (pedido del socio, 9/10): se mantiene el degradé blanco → rojo en "a bordo", sin
+              recuadro oscuro detrás. El rojo final es más claro que el de marca (#E70F1F) para que
+              se lea sobre el azul de la foto, y una sombra suave le da contraste. */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight md:leading-none whitespace-normal md:whitespace-nowrap drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]">
+            <span className="text-white">Bienvenido </span>
+            <span className="bg-gradient-to-r from-white via-red-200 to-[#FF5A64] bg-clip-text text-transparent">
+              a bordo
+            </span>
           </h1>
 
           <span className="block h-6 sm:h-8 md:h-10" />
