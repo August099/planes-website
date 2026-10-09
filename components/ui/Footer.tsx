@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, Phone } from "lucide-react";
+import { CONTACT_PHONE } from "@/lib/site";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
 
 export function Footer() {
@@ -16,7 +17,9 @@ export function Footer() {
       <div className="relative z-10 container mx-auto px-4 pt-12 pb-8 sm:pt-16 sm:pb-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div>
-            <div className="relative w-80 sm:w-[384px] md:w-[448px] h-24 mb-3">
+            {/* VA-50: ancho fluido con la proporción real del logo (1842×128); antes medía 448 px
+                fijos y se salía de la columna en la grilla de 4. */}
+            <div className="relative w-full max-w-72 aspect-[1842/128] mb-4">
               <Image
                 src="/logo-full-white.png"
                 alt="Ventas Aeronáuticas"
@@ -101,8 +104,8 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0 text-white" />
-                <a href="tel:+5490000000000" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
-                  +54 9 000 000 0000
+                <a href={`tel:${CONTACT_PHONE.e164}`} className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  {CONTACT_PHONE.display}
                 </a>
               </li>
               <li className="flex items-center gap-2">

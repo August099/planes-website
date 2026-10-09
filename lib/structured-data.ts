@@ -1,6 +1,6 @@
 import type { AircraftDetail, SparePartDetail } from "@/lib/listing-data";
 import { aircraftName, sparePartCurrency, truncate } from "@/lib/listing-seo";
-import { absoluteUrl, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
+import { absoluteUrl, CONTACT_PHONE, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 
 // Generadores de JSON-LD (schema.org). Validar con https://search.google.com/test/rich-results
 
@@ -15,6 +15,7 @@ export function organizationAndWebsiteJsonLd() {
       name: SITE_NAME,
       url: absoluteUrl("/"),
       logo: absoluteUrl("/logo-va-color.png"),
+      telephone: CONTACT_PHONE.e164,
       sameAs: [INSTAGRAM_URL],
     },
     {
