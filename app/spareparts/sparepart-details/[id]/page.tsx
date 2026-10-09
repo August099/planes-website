@@ -177,7 +177,6 @@ export default async function SparePartDetailsPage({
               src={sparePart.images[0].url}
               alt={sparePart.title}
               fill
-              optimizedWidth={1200}
               className="object-contain"
             />
           </div>

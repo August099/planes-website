@@ -85,7 +85,7 @@ export function ReportContent() {
       }
 
       setSubmitted(true);
-    } catch (err) {
+    } catch {
       setError("Ocurrió un error al enviar tu reporte. Probá de nuevo.");
     } finally {
       setLoading(false);

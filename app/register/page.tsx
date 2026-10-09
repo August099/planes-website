@@ -3,8 +3,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Eye, EyeOff, FileText, Check } from "lucide-react";
+import { Eye, EyeOff, FileText } from "lucide-react";
 
 import { registerUserAction } from "@/app/actions/register-action";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,6 @@ import { TermsContent } from "@/lib/terms-content";
 import { PageBackground } from "@/components/ui/PageBackground";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);

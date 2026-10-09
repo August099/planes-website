@@ -6,7 +6,6 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { getAircraftTaxonomy, getSparePartCategories } from "@/lib/cached-data";
 import { HowItWorks } from "@/components/ui/HowItWorks";
 import { SellerCta } from "@/components/ui/SellerCta";
-import { TrustBlock } from "@/components/ui/TrustBlock";
 import { SparePartCategoriesCarousel } from "@/components/ui/SparePartCategoriesCarousel";
 import { FeaturedAircraftCarousel } from "@/components/ui/FeaturedAircraftCarousel";
 import { LatestAircraft, ListingItem } from "@/components/ui/LatestListings";

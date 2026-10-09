@@ -35,7 +35,6 @@ export function SellerContactCard({
             alt={seller.name || "Foto de vendedor"}
             width={48}
             height={48}
-            optimizedWidth={100}
           />
         ) : (
           <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg border border-slate-200">

@@ -13,13 +13,9 @@ import {
   Plus, 
   Copy, 
   Check, 
-  RefreshCw, 
   Sparkles, 
   CheckCircle2, 
-  XCircle, 
-  Clock,
-  Layers,
-  Calendar
+  XCircle
 } from "lucide-react";
 
 export default function AdminCouponsPage() {

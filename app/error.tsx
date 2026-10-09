@@ -5,7 +5,6 @@ import { Repeat, Plane } from "lucide-react";
 import { PageBackground } from "@/components/ui/PageBackground";
 
 export default function Error({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };

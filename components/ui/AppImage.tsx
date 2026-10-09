@@ -7,22 +7,18 @@ import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 
 interface AppImageProps extends Omit<ImageProps, "src"> {
   src: string | null | undefined;
-  optimizedWidth?: number;
-  quality?: number;
   fallbackSrc?: string;
 }
 
 export function AppImage({
   src,
   alt,
-  optimizedWidth = 800,
-  quality = 75,
   fallbackSrc = PLACEHOLDER_IMAGE,
   className,
   ...props
 }: AppImageProps) {
   const [imgSrc, setImgSrc] = useState<string>(
-    getOptimizedImageUrl(src, optimizedWidth, quality)
+    getOptimizedImageUrl(src)
   );
 
   return (

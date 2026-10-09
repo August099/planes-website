@@ -9,8 +9,7 @@ import {
   ArrowUpRight, 
   Reply, 
   CheckCircle2, 
-  Clock, 
-  AlertCircle 
+  Clock
 } from "lucide-react";
 import { answerQuestionAction } from "@/app/actions/questions";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";

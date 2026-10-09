@@ -121,9 +121,7 @@ export function AircraftPDF({
 }: AircraftPDFProps) {
   const sellerLocation = [seller.city, seller.province].filter(Boolean).join(", ");
   const hasMultipleEngines = aircraft.engines.length > 1;
-  const singleEngine = aircraft.engines.length === 1 ? aircraft.engines[0] : null;
   const hasMultiplePropellers = aircraft.propeller.length > 1;
-  const singlePropeller = aircraft.propeller.length === 1 ? aircraft.propeller[0] : null;
 
   return (
     <Document>

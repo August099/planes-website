@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Sparkles, ArrowRight } from "lucide-react";
+import { X, ArrowRight } from "lucide-react";
 
 export function PromoBanner() {
   const [visible, setVisible] = useState(true);

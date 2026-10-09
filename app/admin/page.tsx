@@ -17,8 +17,7 @@ import {
   Mail,
   Phone,
   Download,
-  Trash2,
-  TrendingUp
+  Trash2
 } from "lucide-react";
 
 export default function AdminOverviewPage() {
@@ -59,7 +58,7 @@ export default function AdminOverviewPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (err) {
+    } catch {
       alert("Error al generar la planilla CSV.");
     } finally {
       setActionLoading(false);

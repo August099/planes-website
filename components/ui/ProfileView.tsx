@@ -32,7 +32,6 @@ import {
   Trash2,
   Ticket,
   Plus,
-  X,
   Star,
   Clock,
 } from "lucide-react";
@@ -133,7 +132,7 @@ export function ProfileView({
       if (!res.success) {
         alert(res.error || "Ocurrió un error al intentar renovar.");
       }
-    } catch (error) {
+    } catch {
       alert("Error de conexión al renovar.");
     } finally {
       setLoadingRenewId(null);
@@ -147,7 +146,7 @@ export function ProfileView({
       if (!res.success) {
         alert(res.error || "Error al eliminar la publicación.");
       }
-    } catch (error) {
+    } catch {
       alert("Error al eliminar la publicación.");
     }
   };
@@ -162,7 +161,7 @@ export function ProfileView({
       await updateProfileAction(formData);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (error) {
+    } catch {
       alert("Error al actualizar los datos.");
     } finally {
       setLoadingSave(false);
@@ -208,7 +207,7 @@ export function ProfileView({
         setConfirmPassword("");
         setTimeout(() => setPasswordSuccess(false), 4000);
       }
-    } catch (err) {
+    } catch {
       setPasswordError("Ocurrió un error inesperado. Probá de nuevo más tarde.");
     } finally {
       setLoadingPassword(false);
@@ -225,7 +224,7 @@ export function ProfileView({
 
     try {
       await updateAvatarAction(formData);
-    } catch (error) {
+    } catch {
       alert("Error al subir la imagen.");
     } finally {
       setLoadingAvatar(false);
@@ -237,7 +236,7 @@ export function ProfileView({
     setLoadingAvatar(true);
     try {
       await removeAvatarAction();
-    } catch (error) {
+    } catch {
       alert("Error al eliminar la imagen.");
     } finally {
       setLoadingAvatar(false);

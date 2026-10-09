@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { MessageSquare, Send, Reply } from "lucide-react";
+import { MessageSquare, Reply } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { createQuestionAction, answerQuestionAction } from "@/app/actions/questions";
 
