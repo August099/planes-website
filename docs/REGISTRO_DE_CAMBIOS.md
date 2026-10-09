@@ -163,6 +163,7 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 
 ## Bugs encontrados en el camino (fuera del plan)
 
+- `c0a0d50`: "Filtros" y "Ordenar" (en `/planes` y `/spareparts`) no eran iguales en celular (fondo, esquinas, peso y color del texto). Ahora comparten `TOOLBAR_BUTTON_CLASS`. Pedido del socio (9/10).
 - `3624591`: "Buscar Repuestos por Categoría" (Home) no tenía color de título; ahora azul de marca como los demás, y el subtítulo en voseo ("Encontrá…"). Pedido del socio (9/10).
 
 | Commit | Qué cambió | Dónde verlo |
