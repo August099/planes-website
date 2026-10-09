@@ -1,5 +1,5 @@
 import type { AircraftDetail, SparePartDetail } from "@/lib/listing-data";
-import type { Guide } from "@/lib/guides";
+import { GUIDES_PATH, guidePath, type Guide } from "@/lib/guides";
 import { aircraftName, sparePartCurrency, truncate } from "@/lib/listing-seo";
 import { absoluteUrl, CONTACT_PHONE, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 
@@ -152,7 +152,7 @@ export function faqPageJsonLd(faqs: { question: string; answer: string }[]) {
 
 // Guías (VA-78): Article + BreadcrumbList; el glosario suma DefinedTermSet.
 export function guideJsonLd(guide: Guide) {
-  const path = `/guias/${guide.slug}`;
+  const path = guidePath(guide.slug);
   const organization = { "@id": absoluteUrl("/#organization"), "@type": "Organization", name: SITE_NAME, url: absoluteUrl("/") };
   const article = {
     "@context": "https://schema.org",
@@ -169,7 +169,8 @@ export function guideJsonLd(guide: Guide) {
   };
   const trail = breadcrumbs([
     { name: "Inicio", path: "/" },
-    { name: "Guías", path: "/guias" },
+    { name: "Servicios", path: "/services" },
+    { name: "Guías", path: GUIDES_PATH },
     { name: guide.title, path },
   ]);
   if (!guide.isGlossary) return [article, trail];
@@ -196,6 +197,7 @@ export function guideJsonLd(guide: Guide) {
 export function guidesIndexJsonLd() {
   return breadcrumbs([
     { name: "Inicio", path: "/" },
-    { name: "Guías", path: "/guias" },
+    { name: "Servicios", path: "/services" },
+    { name: "Guías", path: GUIDES_PATH },
   ]);
 }

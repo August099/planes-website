@@ -142,7 +142,6 @@ const NAV = [
   { href: "/planes", label: "Aviones" },
   { href: "/spareparts", label: "Repuestos" },
   { href: "/services", label: "Servicios" },
-  { href: "/guias", label: "Guías" },
   { href: "/publish", label: "Vender" },
 ];
 

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Clock } from "lucide-react";
-import { AUDIENCE_LABELS, type Guide } from "@/lib/guides";
+import { AUDIENCE_LABELS, guidePath, type Guide } from "@/lib/guides";
 
-// Tarjeta de una guía (VA-78): Home, /guias y "Otras guías". Toda la tarjeta es el link.
+// Tarjeta de una guía (VA-78): Home, /services/guides y "Otras guías". Toda la tarjeta es el link.
 // Server component, sin JS de cliente.
 // variant="dark" (VA-79): tarjeta de vidrio para la zona oscura de la Home.
 const STYLES = {
@@ -38,7 +38,7 @@ export function GuideCard({
   const st = STYLES[variant];
   return (
     <Link
-      href={`/guias/${guide.slug}`}
+      href={guidePath(guide.slug)}
       className={`group flex h-full flex-col gap-2 rounded-2xl border p-4 sm:gap-3 sm:p-5 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-[#E70F1F] ${st.card} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E70F1F] motion-reduce:transition-none motion-reduce:hover:translate-y-0`}
     >
       <div className="flex items-center justify-between gap-3">

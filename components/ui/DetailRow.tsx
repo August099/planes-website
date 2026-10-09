@@ -7,7 +7,7 @@ type DetailRowProps = {
   highlight?: boolean;
   multiline?: boolean;
   last?: boolean;
-  // Link de ayuda junto a la etiqueta (por ejemplo, al glosario de /guias).
+  // Link de ayuda junto a la etiqueta (por ejemplo, al glosario de /services/guides).
   helpHref?: string;
 };
 

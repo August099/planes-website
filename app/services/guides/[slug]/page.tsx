@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ExternalLink } from "lucide-react";
-import { GUIDES, GUIDE_DISCLAIMER, formatGuideDate, getGuide, type GuideLink } from "@/lib/guides";
+import { GUIDES, GUIDES_PATH, GUIDE_DISCLAIMER, formatGuideDate, getGuide, guidePath, type GuideLink } from "@/lib/guides";
 import { GuideCard } from "@/components/ui/guides/GuideCard";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const guide = getGuide(slug);
   if (!guide) return {};
-  const path = `/guias/${guide.slug}`;
+  const path = guidePath(guide.slug);
   return {
     title: guide.title,
     description: guide.metaDescription,
@@ -79,7 +79,13 @@ export default async function GuidePage({ params }: Props) {
               </li>
               <li aria-hidden>›</li>
               <li>
-                <Link href="/guias" className="hover:text-[#001F58] hover:underline">
+                <Link href="/services" className="hover:text-[#001F58] hover:underline">
+                  Servicios
+                </Link>
+              </li>
+              <li aria-hidden>›</li>
+              <li>
+                <Link href={GUIDES_PATH} className="hover:text-[#001F58] hover:underline">
                   Guías
                 </Link>
               </li>

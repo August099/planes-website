@@ -33,6 +33,20 @@ const nextConfig = {
     },
   },
   staticPageGenerationTimeout: 120,
+  // Las guías se mudaron de /guias a /services/guides, con slugs en inglés (cambio sobre VA-78, 9/10).
+  // permanent: true → 308.
+  async redirects() {
+    const guides: [string, string][] = [
+      ["como-comprar-un-avion-usado", "buying-a-used-aircraft"],
+      ["como-vender-tu-avion", "selling-your-aircraft"],
+      ["transferencia-de-aeronaves-anac", "aircraft-transfer-anac"],
+      ["glosario-aeronautico", "aviation-glossary"],
+    ];
+    return [
+      { source: "/guias", destination: "/services/guides", permanent: true },
+      ...guides.map(([from, to]) => ({ source: `/guias/${from}`, destination: `/services/guides/${to}`, permanent: true })),
+    ];
+  },
 };
 
 module.exports = nextConfig;

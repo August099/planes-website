@@ -269,7 +269,7 @@ export default async function PlaneDetailsPage({
             {/* VA-78: link discreto a la guía de pre-compra */}
             <p className="order-3 lg:order-none -mt-2 px-1 text-xs text-slate-500">
               ¿Primera compra?{" "}
-              <Link href="/guias/como-comprar-un-avion-usado" className="font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
+              <Link href="/services/guides/buying-a-used-aircraft" className="font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
                 Leé el checklist de pre-compra
               </Link>
             </p>

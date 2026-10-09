@@ -121,7 +121,7 @@ export default function HowToPublishPage() {
                 {/* VA-78: guía para vender */}
                 <p className="mb-20 text-center text-sm text-slate-600">
                     ¿Querés vender más rápido?{" "}
-                    <Link href="/guias/como-vender-tu-avion" className="font-semibold text-[#E70F1F] hover:underline">
+                    <Link href="/services/guides/selling-your-aircraft" className="font-semibold text-[#E70F1F] hover:underline">
                         Leé la guía para vender tu avión
                     </Link>
                 </p>

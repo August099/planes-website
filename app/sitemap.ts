@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
 import { absoluteUrl } from "@/lib/site";
-import { GUIDES } from "@/lib/guides";
+import { GUIDES, GUIDES_PATH, guidePath } from "@/lib/guides";
 
 // Se regenera como máximo una vez por hora.
 export const revalidate = 3600;
@@ -15,7 +15,7 @@ const STATIC_PAGES: { path: string; changeFrequency: "daily" | "weekly" | "month
   { path: "/plans", changeFrequency: "monthly", priority: 0.5 },
   { path: "/services", changeFrequency: "monthly", priority: 0.4 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.4 },
-  { path: "/guias", changeFrequency: "monthly", priority: 0.6 },
+  { path: GUIDES_PATH, changeFrequency: "monthly", priority: 0.6 },
   { path: "/terms", changeFrequency: "monthly", priority: 0.2 },
   { path: "/privacy", changeFrequency: "monthly", priority: 0.2 },
 ];
@@ -36,7 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     // Guías (VA-78)
     ...GUIDES.map((g) => ({
-      url: absoluteUrl(`/guias/${g.slug}`),
+      url: absoluteUrl(guidePath(g.slug)),
       lastModified: new Date(g.updatedAt),
       changeFrequency: "monthly" as const,
       priority: 0.6,

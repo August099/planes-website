@@ -1152,7 +1152,7 @@ export default function PublishForm({
                                             {/* VA-78: guía para vender */}
                                             <p className="text-xs text-slate-500 mt-1">
                                                 ¿Qué conviene contar en el aviso?{" "}
-                                                <Link href="/guias/como-vender-tu-avion" target="_blank" className="font-semibold text-[#E70F1F] hover:underline">
+                                                <Link href="/services/guides/selling-your-aircraft" target="_blank" className="font-semibold text-[#E70F1F] hover:underline">
                                                     Leé la guía para vender tu avión
                                                 </Link>
                                             </p>

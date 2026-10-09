@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { GUIDES } from "@/lib/guides";
+import { GUIDES, GUIDES_PATH } from "@/lib/guides";
 import { GuideCard } from "@/components/ui/guides/GuideCard";
 import { SectionTitle } from "@/components/ui/home/SectionTitle";
 
@@ -15,7 +15,7 @@ export function GuidesSection() {
             </SectionTitle>
             <p className="mt-1 text-sm text-white/80">Todo lo que conviene saber antes de cerrar una operación</p>
           </div>
-          <Link href="/guias" className="text-sm font-semibold text-white underline-offset-4 hover:underline">
+          <Link href={GUIDES_PATH} className="text-sm font-semibold text-white underline-offset-4 hover:underline">
             Ver todas las guías →
           </Link>
         </div>

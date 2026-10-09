@@ -11,7 +11,7 @@ export const PAGE_BACKGROUNDS = {
   howtopublish: "/backgrounds/banner.webp",
   questions: "/backgrounds/questions.webp",
   faq: "/backgrounds/faq.webp",
-  guides: "/backgrounds/faq.webp", // /guias y /guias/[slug] (VA-78)
+  guides: "/backgrounds/faq.webp", // /services/guides y sus guías (VA-78)
   ads: "/backgrounds/ads.webp",
   banners: "/backgrounds/banner.webp",
   legal: "/backgrounds/privacidad.webp", // /terms y /privacy

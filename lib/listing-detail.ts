@@ -115,7 +115,7 @@ export function aircraftSections(a: AircraftDetail, { omitSummary = false }: { o
         { label: "Potencia", value: e.horsepower != null ? `${e.horsepower} HP` : undefined },
         { label: "Horas totales", value: hours(e.engineHours) },
         { label: "TBO", value: hours(e.TBO) },
-        { label: "DURG / SMOH", value: hours(e.DURG), helpHref: "/guias/glosario-aeronautico#smoh" },
+        { label: "DURG / SMOH", value: hours(e.DURG), helpHref: "/services/guides/aviation-glossary#smoh" },
         { label: "Descripción", value: text(e.description) },
       ])
     ),

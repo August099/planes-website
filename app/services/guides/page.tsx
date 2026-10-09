@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { GUIDES } from "@/lib/guides";
+import { GUIDES, GUIDES_PATH } from "@/lib/guides";
 import { GuideCard } from "@/components/ui/guides/GuideCard";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { guidesIndexJsonLd } from "@/lib/structured-data";
 
-// Índice de guías (VA-78). Estática: sin base de datos ni cookies.
+// Índice de guías (VA-78), dentro de Servicios. Estática: sin base de datos ni cookies.
 export const metadata: Metadata = {
   title: "Guías para comprar y vender aeronaves",
   description:
     "Checklist de pre-compra, consejos para vender tu avión, la transferencia ante ANAC y un glosario de términos aeronáuticos.",
-  alternates: { canonical: "/guias" },
+  alternates: { canonical: GUIDES_PATH },
   openGraph: {
     title: "Guías para comprar y vender aeronaves",
     description:
       "Checklist de pre-compra, consejos para vender tu avión, la transferencia ante ANAC y un glosario de términos aeronáuticos.",
-    url: "/guias",
+    url: GUIDES_PATH,
     type: "website",
   },
 };
@@ -33,6 +33,12 @@ export default function GuidesIndexPage() {
             <li>
               <Link href="/" className="hover:text-[#001F58] hover:underline">
                 Inicio
+              </Link>
+            </li>
+            <li aria-hidden>›</li>
+            <li>
+              <Link href="/services" className="hover:text-[#001F58] hover:underline">
+                Servicios
               </Link>
             </li>
             <li aria-hidden>›</li>
