@@ -15,9 +15,3 @@ export async function requireUser() {
   return user;
 }
 
-export async function requireCompleteProfile() {
-  const user = await requireUser();
-  const sellerType = (user as any).sellerType;
-  if (!sellerType) redirect("/completar-perfil");
-  return user;
-}
