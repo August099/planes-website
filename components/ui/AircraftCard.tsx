@@ -14,6 +14,7 @@ import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
 import { useRouter } from "next/navigation";
 import { ImageCarousel } from "./CardImageCarousel";
 import { formatPrice } from "@/lib/format";
+import { errorMessage } from "@/lib/errors";
 
 
 
@@ -98,9 +99,9 @@ export function AircraftCard({
       if (onFavoriteToggle) {
         onFavoriteToggle(id, res.isFavorite);
       }
-    } catch (error: any) {
+    } catch (error) {
       setIsFavorite(!nextState);
-      if (error.message === "UNAUTHENTICATED") {
+      if (errorMessage(error) === "UNAUTHENTICATED") {
         router.push("/login");
       }
     } finally {

@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma'; 
 import fs from 'fs';
+import { FilterType, Prisma } from '@prisma/client';
 
 async function main() {
   console.log('🚀 Iniciando la carga de Taxonomía de Producción...');
@@ -63,7 +64,16 @@ async function main() {
 
   // 3. Cargar Repuestos (Árbol y Filtros)
   console.log('Cargando Categorías y Filtros de Repuestos...');
-  async function processCategory(categoryData: any, parentId: string | null = null) {
+  type SeedFilter = {
+    name: string;
+    slug: string;
+    type: FilterType;
+    config?: Prisma.InputJsonValue;
+    options?: string[];
+  };
+  type SeedCategory = { name: string; slug: string; filters?: SeedFilter[]; children?: SeedCategory[] };
+
+  async function processCategory(categoryData: SeedCategory, parentId: string | null = null) {
     const category = await prisma.category.upsert({
       where: { slug: categoryData.slug },
       update: { parentId },

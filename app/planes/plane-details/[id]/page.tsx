@@ -179,7 +179,7 @@ export default async function PlaneDetailsPage({
           <div className="space-y-2">
             <h3 className="text-xs font-bold uppercase text-[#001F58] tracking-wider">Fotografías de la Aeronave</h3>
             <div className="grid grid-cols-3 gap-3">
-              {aircraft.images.slice(0, 3).map((img: any, idx: number) => (
+              {aircraft.images.slice(0, 3).map((img, idx) => (
                 <div key={img.id || idx} className="h-36 relative rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
                   <img src={img.url} alt={`${aircraft.title} – foto ${idx + 1}`} className="w-full h-full object-cover" />
                 </div>

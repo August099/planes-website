@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 export default function AdminCouponsPage() {
-  const [coupons, setCoupons] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<Awaited<ReturnType<typeof getAdminCoupons>>>([]);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
@@ -342,7 +342,7 @@ export default function AdminCouponsPage() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        scope: e.target.value as any,
+                        scope: e.target.value as CreateCouponInput["scope"],
                       })
                     }
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-[#001F58]"
@@ -366,7 +366,7 @@ export default function AdminCouponsPage() {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          discountType: e.target.value as any,
+                          discountType: e.target.value as CreateCouponInput["discountType"],
                         })
                       }
                       className="w-full px-3 py-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none"

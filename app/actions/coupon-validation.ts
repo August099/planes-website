@@ -128,7 +128,7 @@ export async function claimCouponToProfile(code: string) {
 
     revalidatePath(`/profile/${user.id}`);
     return { success: true, message: "¡Cupón guardado con éxito en tu perfil!" };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error al guardar cupón:", error);
     return { success: false, error: "No se pudo guardar el cupón." };
   }

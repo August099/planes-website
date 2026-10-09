@@ -18,7 +18,7 @@ export async function updateProfileAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) throw new Error("UNAUTHENTICATED");
 
-  const dataToUpdate: Record<string, any> = {};
+  const dataToUpdate: Record<string, string | null> = {};
 
   const fields = ["name", "phone", "city", "province", "facebook", "instagram"];
   fields.forEach((field) => {

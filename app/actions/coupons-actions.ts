@@ -4,6 +4,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth-helpers";
+import { errorMessage } from "@/lib/errors";
 
 async function verifyAdmin() {
   const user = await getCurrentUser();
@@ -108,12 +109,12 @@ export async function createAdminCoupon(data: CreateCouponInput) {
 
     revalidatePath("/admin/coupons");
     return { success: true };
-  } catch (error: any) {
-    if (error?.message === "UNAUTHORIZED") {
+  } catch (error) {
+    if (errorMessage(error) === "UNAUTHORIZED") {
       return { success: false, error: "No autorizado." };
     }
     console.error("Error al crear cupón:", error);
-    return { success: false, error: error.message || "Error al crear el cupón." };
+    return { success: false, error: errorMessage(error) || "Error al crear el cupón." };
   }
 }
 

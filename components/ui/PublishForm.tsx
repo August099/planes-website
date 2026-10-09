@@ -824,7 +824,7 @@ export default function PublishForm({
 
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Condición *</label>
-                                                <select value={aircraftForm.condition} onChange={e => setAircraftForm({...aircraftForm, condition: e.target.value as any})} disabled={aircraftForm.year !== currentYear} className="w-full p-2.5 rounded-xl border border-slate-300 disabled:bg-slate-100 bg-white">
+                                                <select value={aircraftForm.condition} onChange={e => setAircraftForm({...aircraftForm, condition: e.target.value as "USADO" | "NUEVO"})} disabled={aircraftForm.year !== currentYear} className="w-full p-2.5 rounded-xl border border-slate-300 disabled:bg-slate-100 bg-white">
                                                     <option value="USADO">Usado</option>
                                                     {aircraftForm.year === currentYear && <option value="NUEVO">Nuevo</option>}
                                                 </select>

@@ -19,10 +19,11 @@ import {
   Download,
   Trash2
 } from "lucide-react";
+import { errorMessage } from "@/lib/errors";
 
 export default function AdminOverviewPage() {
   const [period, setPeriod] = useState<PeriodFilter>("30d");
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Awaited<ReturnType<typeof getDashboardOverview>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -76,8 +77,8 @@ export default function AdminOverviewPage() {
       const res = await archiveAndPurgeOldAnalytics();
       alert(res.message);
       fetchOverview(period);
-    } catch (err: any) {
-      alert(err.message || "Error al respaldar y purgar analíticas.");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al respaldar y purgar analíticas.");
     } finally {
       setActionLoading(false);
     }
@@ -246,7 +247,7 @@ export default function AdminOverviewPage() {
                         </td>
                       </tr>
                     ) : (
-                      data.chartData.map((row: any) => {
+                      data.chartData.map((row) => {
                         const ratio = row.views > 0 ? ((row.contacts / row.views) * 100).toFixed(1) : "0.0";
                         return (
                           <tr key={row.date} className="hover:bg-slate-50">

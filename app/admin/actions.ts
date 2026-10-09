@@ -67,7 +67,7 @@ const DIRECT_TRAFFIC_LABEL = "Tráfico Directo / App";
 
 async function requireAdmin(message = "Acceso denegado.") {
   const user = await getCurrentUser();
-  if (!user || !(user as any).isAdmin) {
+  if (!user?.isAdmin) {
     throw new Error(message);
   }
   return user;
@@ -318,7 +318,7 @@ export async function archiveAndPurgeOldAnalytics() {
       purgedCount: deleteResult.count,
       message: `Se exportaron y purgaron ${deleteResult.count} eventos exitosamente.`,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error en el proceso de archivado/purga:", error);
     throw new Error("No se pudo respaldar la información. La purga fue cancelada por seguridad.");
   }
@@ -425,6 +425,16 @@ export async function getDashboardOverview(period: PeriodFilter = "30d", range?:
 }
 
 type ListingKind = "A" | "S";
+type ListingDetail = {
+  id: string;
+  title: string;
+  type: "Aeronave" | "Repuesto";
+  price: number | null;
+  inPesos: boolean;
+  status: string;
+  createdAt: Date;
+  detailUrl: string;
+};
 const listingKey = (kind: ListingKind, id: string) => `${kind}:${id}`;
 
 // Publicaciones con vistas y contactos del período (VA-12): la tabla viene paginada desde la base
@@ -549,7 +559,7 @@ export async function getListingsAnalytics(
   aircraftLeads.forEach((l) => (metricFor(listingKey("A", l.aircraftId)).contacts += l._count));
   sparePartLeads.forEach((l) => (metricFor(listingKey("S", l.sparePartId)).contacts += l._count));
 
-  const details = new Map<string, any>();
+  const details = new Map<string, ListingDetail>();
   aircrafts.forEach((item) =>
     details.set(listingKey("A", item.id), {
       id: item.id,
@@ -585,18 +595,17 @@ export async function getListingsAnalytics(
     })
     .filter((item): item is NonNullable<typeof item> => item !== null);
 
-  const topList = (rows: { id: string; kind: ListingKind; n: number }[], field: "views" | "contacts") =>
-    rows
-      .map((row) => {
-        const detail = details.get(listingKey(row.kind, row.id));
-        return detail ? { ...detail, [field]: row.n } : null;
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null);
+  // Une cada fila del ranking con los datos de su publicación (las que ya no existen se descartan).
+  const withDetail = (rows: { id: string; kind: ListingKind; n: number }[]) =>
+    rows.flatMap((row) => {
+      const detail = details.get(listingKey(row.kind, row.id));
+      return detail ? [{ detail, n: row.n }] : [];
+    });
 
   return {
     listings,
-    mostViewed: topList(topViewedRows, "views"),
-    mostContacted: topList(topContactedRows, "contacts"),
+    mostViewed: withDetail(topViewedRows).map(({ detail, n }) => ({ ...detail, views: n })),
+    mostContacted: withDetail(topContactedRows).map(({ detail, n }) => ({ ...detail, contacts: n })),
     page: currentPage,
     pageSize: size,
     totalItems,
@@ -827,8 +836,9 @@ export async function getOpportunitiesAnalytics(period: PeriodFilter = "30d", ra
 export async function getLiveEvents(typeFilter?: string) {
   await requireAdmin();
 
-  const whereClause: any = {};
-  if (typeFilter && typeFilter !== "ALL") {
+  // Solo filtra por un tipo de evento que exista (antes cualquier texto llegaba a Prisma).
+  const whereClause: Prisma.AnalyticsEventWhereInput = {};
+  if (typeFilter && (Object.values(AnalyticsEventType) as string[]).includes(typeFilter)) {
     whereClause.eventType = typeFilter as AnalyticsEventType;
   }
 

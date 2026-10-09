@@ -15,6 +15,7 @@ import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
 import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/format";
 import { formatEnum, SPARE_PART_CONDITION_LABELS } from "@/lib/constants";
+import { errorMessage } from "@/lib/errors";
 
 
 
@@ -79,9 +80,9 @@ export function SparePartCard({
       if (onFavoriteToggle) {
         onFavoriteToggle(id, res.isFavorite);
       }
-    } catch (error: any) {
+    } catch (error) {
       setIsFavorite(!nextState);
-      if (error.message === "UNAUTHENTICATED") {
+      if (errorMessage(error) === "UNAUTHENTICATED") {
         router.push("/login");
       }
     } finally {

@@ -11,12 +11,15 @@ import {
   CheckCircle2, 
   Clock
 } from "lucide-react";
-import { answerQuestionAction } from "@/app/actions/questions";
+import { answerQuestionAction, type getUserQuestionsAction } from "@/app/actions/questions";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { errorMessage } from "@/lib/errors";
+
+type UserQuestions = Awaited<ReturnType<typeof getUserQuestionsAction>>;
 
 interface QuestionsClientProps {
-  receivedQuestions: any[];
-  sentQuestions: any[];
+  receivedQuestions: UserQuestions["receivedQuestions"];
+  sentQuestions: UserQuestions["sentQuestions"];
 }
 
 export function QuestionsClient({
@@ -48,8 +51,8 @@ export function QuestionsClient({
       }
       setReplyingToId(null);
       setAnswerText("");
-    } catch (err: any) {
-      alert(err.message || "Error al responder");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al responder");
     } finally {
       setIsAnswering(false);
     }
@@ -114,9 +117,12 @@ export function QuestionsClient({
           ) : (
             receivedQuestions.map((q) => {
               const item = q.aircraft || q.sparePart;
+              // Una pregunta siempre es de un avión o de un repuesto; si faltaran los dos, no rompe la página.
               const detailsUrl = q.aircraft
                 ? `/planes/plane-details/${q.aircraft.id}`
-                : `/spareparts/sparepart-details/${q.sparePart.id}`;
+                : q.sparePart
+                  ? `/spareparts/sparepart-details/${q.sparePart.id}`
+                  : "/questions";
               const imageUrl = item?.images?.[0]?.url || PLACEHOLDER_IMAGE;
               const isPending = !q.answer;
 
@@ -236,9 +242,12 @@ export function QuestionsClient({
           ) : (
             sentQuestions.map((q) => {
               const item = q.aircraft || q.sparePart;
+              // Una pregunta siempre es de un avión o de un repuesto; si faltaran los dos, no rompe la página.
               const detailsUrl = q.aircraft
                 ? `/planes/plane-details/${q.aircraft.id}`
-                : `/spareparts/sparepart-details/${q.sparePart.id}`;
+                : q.sparePart
+                  ? `/spareparts/sparepart-details/${q.sparePart.id}`
+                  : "/questions";
               const imageUrl = item?.images?.[0]?.url || PLACEHOLDER_IMAGE;
 
               return (

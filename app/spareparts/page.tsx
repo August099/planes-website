@@ -8,7 +8,7 @@ import { SparePartCard } from "@/components/ui/SparePartCard";
 import { SparePartFiltersWrapper } from "@/components/ui/SparePartFiltersWrapper";
 import { SortDropdown } from "@/components/ui/SortDropdown";
 import Link from "next/link";
-import { Prisma } from "@prisma/client";
+import { Prisma, SparepartCondition } from "@prisma/client";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
 
@@ -48,7 +48,10 @@ export default async function SparePartsPage({ searchParams }: Props) {
   // Leer TODOS los params que el sidebar actual manda
   // ==========================================
   const categoryParam = toArray(params.category);
-  const conditionParam = toArray(params.condition);
+  // Solo valores del enum: antes "?condition=X" llegaba a Prisma y la página daba error 500.
+  const conditionParam = toArray(params.condition).filter((c): c is SparepartCondition =>
+    (Object.values(SparepartCondition) as string[]).includes(c)
+  );
   const minPrice = params.minPrice ? Number(params.minPrice) : undefined;
   const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
   // Moneda (VA-77): sin "currency" se ven todas (así los conteos por provincia de la Home coinciden
@@ -111,7 +114,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
 
   // Condición
   if (conditionParam.length > 0) {
-    where.condition = { in: conditionParam as any };
+    where.condition = { in: conditionParam };
   }
 
   if (categoryParam.length > 0) {

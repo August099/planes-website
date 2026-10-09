@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { MessageSquare, Reply } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { createQuestionAction, answerQuestionAction } from "@/app/actions/questions";
+import { errorMessage } from "@/lib/errors";
 
 export interface QuestionData {
   id: string;
@@ -65,8 +66,8 @@ export function QnaSection({
         return;
       }
       setNewQuestion("");
-    } catch (err: any) {
-      setErrorMsg(err.message || "Error al enviar la pregunta");
+    } catch (err) {
+      setErrorMsg(errorMessage(err) || "Error al enviar la pregunta");
     } finally {
       setIsSubmitting(false);
     }
@@ -89,8 +90,8 @@ export function QnaSection({
       }
       setReplyingToId(null);
       setAnswerText("");
-    } catch (err: any) {
-      alert(err.message || "Error al responder");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al responder");
     } finally {
       setIsAnswering(false);
     }

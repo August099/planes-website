@@ -11,6 +11,7 @@ import {
   Clock,
   Loader2,
 } from "lucide-react";
+import { errorMessage } from "@/lib/errors";
 
 interface ReportItem {
   id: string;
@@ -37,8 +38,8 @@ export function AdminReportsTable({ reports }: { reports: ReportItem[] }) {
     setLoadingId(reportId);
     try {
       await updateReportStatusAction(reportId, newStatus);
-    } catch (err: any) {
-      alert(err.message || "Error al actualizar el estado");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al actualizar el estado");
     } finally {
       setLoadingId(null);
     }

@@ -27,7 +27,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const blob = await pdf(
     <SparePartPDF
-      sparePart={{ ...sparePart, attributes: (sparePart.attributes as Record<string, any>) ?? {} }}
+      sparePart={{ ...sparePart, attributes: (sparePart.attributes as Record<string, unknown> | null) ?? {} }}
       seller={seller}
       formattedPrice={formattedPrice}
     />

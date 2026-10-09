@@ -7,7 +7,7 @@ import { getAircraftTaxonomy } from "@/lib/cached-data";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SortDropdown } from "@/components/ui/SortDropdown";
 import { AircraftFiltersWrapper } from "@/components/ui/AircraftFiltersWrapper";
-import { Prisma, UserType } from "@prisma/client";
+import { AircraftCondition, Prisma, UserType } from "@prisma/client";
 import Link from "next/link";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
@@ -48,7 +48,10 @@ export default async function AvionesPage({ searchParams }: Props) {
   const brandIds = toArray(params.brand);
   const modelIds = toArray(params.model);
   const subModelIds = toArray(params.subModel);
-  const conditions = toArray(params.condition);
+  // Solo valores del enum: antes "?condition=X" llegaba a Prisma y la página daba error 500.
+  const conditions = toArray(params.condition).filter((c): c is AircraftCondition =>
+    (Object.values(AircraftCondition) as string[]).includes(c)
+  );
   const minPrice = params.minPrice ? Number(params.minPrice) : undefined;
   const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
   // VA-45: año desde-hasta y tipo de vendedor ("Publica"). Valores inválidos se ignoran.
@@ -85,7 +88,7 @@ export default async function AvionesPage({ searchParams }: Props) {
     ...(brandIds.length > 0 && { brandId: { in: brandIds } }),
     ...(modelIds.length > 0 && { modelId: { in: modelIds } }),
     ...(subModelIds.length > 0 && { subModelId: { in: subModelIds } }),
-    ...(conditions.length > 0 && { condition: { in: conditions as any } }),
+    ...(conditions.length > 0 && { condition: { in: conditions } }),
     ...((minYear !== undefined || maxYear !== undefined) && {
       year: {
         ...(minYear !== undefined && { gte: minYear }),

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Heart, Share2, Printer, TriangleAlert } from "lucide-react";
 import { ShareDialog } from "@/components/ui/ShareDialog";
 import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
+import { errorMessage } from "@/lib/errors";
 
 interface Props {
   title: string;
@@ -32,9 +33,9 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
     try {
       const res = await toggleFavoriteAction(aircraftId, type);
       setIsFavorite(res.isFavorite);
-    } catch (error: any) {
+    } catch (error) {
       setIsFavorite(previousState);
-      if (error?.message === "UNAUTHENTICATED") {
+      if (errorMessage(error) === "UNAUTHENTICATED") {
         alert("Tenés que iniciar sesión para guardar favoritos.");
       } else {
         alert("Ocurrió un error al actualizar favoritos.");

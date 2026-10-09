@@ -75,7 +75,7 @@ type SparePartPDFProps = {
     province: string;
     createdAt: Date;
     inPesos: boolean;
-    attributes: Record<string, any>;
+    attributes: Record<string, unknown>;
     category: { name: string; parent: { name: string } | null } | null;
     images: { url: string }[];
   };

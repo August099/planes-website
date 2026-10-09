@@ -25,6 +25,7 @@ import {
 } from "@/app/actions/admin-taxonomy-actions";
 import { Plus, Plane, Wrench, CheckCircle2, ExternalLink, Pencil, Trash2, X, Check, ImageIcon, Upload } from "lucide-react";
 import { FilterType } from "@prisma/client";
+import { errorMessage } from "@/lib/errors";
 
 interface SubModel {
   id: string;
@@ -188,8 +189,8 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       await createAircraftBrandAction(name, logoUrl);
       form.reset();
       showFeedback("Marca agregada exitosamente");
-    } catch (err: any) {
-      alert(err?.message || "Error al guardar la marca");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al guardar la marca");
     } finally {
       setLoading(false);
     }
@@ -210,8 +211,8 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       await updateAircraftBrandAction(id, editName, finalLogoUrl);
       cancelEditing();
       showFeedback("Marca actualizada");
-    } catch (err: any) {
-      alert(err?.message || "Error al actualizar la marca");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al actualizar la marca");
     } finally {
       setLoading(false);
     }

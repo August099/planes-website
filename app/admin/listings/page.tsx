@@ -5,8 +5,10 @@ import { getListingsAnalytics } from "../actions";
 import Link from "next/link";
 import { Eye, PhoneCall, ExternalLink, Plane, Wrench, ChevronLeft, ChevronRight } from "lucide-react";
 
+type ListingsData = Awaited<ReturnType<typeof getListingsAnalytics>>;
+
 export default function AdminListingsPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ListingsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -31,7 +33,7 @@ export default function AdminListingsPage() {
     return <div className="py-20 text-center text-slate-400">Cargando métricas de publicaciones...</div>;
   }
 
-  const formatPrice = (item: any) => {
+  const formatPrice = (item: { price: number | null; type: string; inPesos: boolean }) => {
     if (!item.price) return "A Consultar";
 
     if (item.type === "Aeronave" || !item.inPesos) {
@@ -78,7 +80,7 @@ export default function AdminListingsPage() {
             Top 5 Más Vistas
           </h3>
           <div className="space-y-3">
-            {data?.mostViewed?.map((item: any) => (
+            {data?.mostViewed?.map((item) => (
               <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-slate-800 truncate">{item.title}</p>
@@ -98,7 +100,7 @@ export default function AdminListingsPage() {
             Top 5 Más Contactadas
           </h3>
           <div className="space-y-3">
-            {data?.mostContacted?.map((item: any) => (
+            {data?.mostContacted?.map((item) => (
               <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-slate-800 truncate">{item.title}</p>
@@ -167,7 +169,7 @@ export default function AdminListingsPage() {
                   </td>
                 </tr>
               ) : (
-                currentListings.map((item: any) => (
+                currentListings.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50">
                     <td className="py-3 pl-1 pr-3 font-medium text-slate-800 max-w-[200px] sm:max-w-[280px]">
                       <span className="block truncate" title={item.title}>

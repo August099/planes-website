@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { notFound } from "next/navigation";
-import { ProfileView } from "@/components/ui/ProfileView";
+import { ProfileView, type ProfileCoupon } from "@/components/ui/ProfileView";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { getMissingProfileFieldsCached } from "@/lib/cached-data";
 
@@ -72,7 +72,7 @@ export default async function ProfilePage({ params }: Props) {
   }
 
   // Obtener los cupones guardados/utilizados por el usuario si es el propietario
-  let userCoupons: any[] = [];
+  let userCoupons: ProfileCoupon[] = [];
   if (isOwner) {
     const usages = await prisma.couponUsage.findMany({
       where: { userId: id },

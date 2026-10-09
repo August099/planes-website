@@ -58,11 +58,51 @@ function InstagramIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+// Lo que la vista usa de cada aviso del perfil (app/profile/[id]/page.tsx manda más campos).
+type ProfileListing = {
+  id: string;
+  title: string;
+  price: number | null;
+  city: string;
+  province: string;
+  category: { id: string; name: string } | null;
+  images: { url: string }[];
+  listingExpiresAt: string | null;
+  // Solo para el dueño.
+  _count?: { favorites: number; questions: number; analyticsEvents: number };
+};
+
+export type ProfileUserData = {
+  id: string;
+  name: string | null;
+  email?: string | null;
+  phone?: string | null;
+  image: string | null;
+  city: string | null;
+  province: string | null;
+  userType: string;
+  isFoundingMember: boolean;
+  facebook: string | null;
+  instagram: string | null;
+  createdAt: string;
+  aircrafts: (ProfileListing & { year: number; totalTimeHours: number | null })[];
+  spareParts: (ProfileListing & { inPesos: boolean })[];
+};
+
+export type ProfileCoupon = {
+  usageId: string;
+  code: string;
+  type: string;
+  discountType: string | null;
+  discountValue: number;
+  purchaseId: string | null;
+};
+
 interface Props {
-  profileUser: any;
+  profileUser: ProfileUserData;
   isOwner: boolean;
   currentUserFavIds: string[];
-  userCoupons?: any[];
+  userCoupons?: ProfileCoupon[];
   // VA-46: campos que le faltan al dueño (se calculan en el servidor, ver lib/profile.ts).
   missingProfileFields?: ProfileField[];
 }
@@ -498,7 +538,7 @@ export function ProfileView({
       {/* Pestaña Aeronaves */}
       {activeTab === "aircrafts" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-          {profileUser.aircrafts?.map((item: any) => {
+          {profileUser.aircrafts?.map((item) => {
             const remainingStatus = getRemainingDaysText(item.listingExpiresAt);
 
             return (
@@ -602,7 +642,7 @@ export function ProfileView({
       {/* Pestaña Repuestos */}
       {activeTab === "spareparts" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-          {profileUser.spareParts?.map((item: any) => {
+          {profileUser.spareParts?.map((item) => {
             const remainingStatus = getRemainingDaysText(item.listingExpiresAt);
 
             return (
