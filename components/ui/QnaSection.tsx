@@ -130,7 +130,7 @@ export function QnaSection({
         </form>
       ) : (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-          <strong>Modo Vendedor:</strong> Estás viendo esta publicación como el dueño. Puedes responder a las preguntas realizadas por los interesados abajo.
+          <strong>Modo Vendedor:</strong> Estás viendo esta publicación como el dueño. Podés responder las preguntas de los interesados acá abajo.
         </div>
       )}
 
@@ -177,7 +177,7 @@ export function QnaSection({
 
                       <div className="flex flex-col gap-2 mt-2">
                         <textarea
-                          placeholder="Escribe tu respuesta aquí..."
+                          placeholder="Escribí tu respuesta acá..."
                           value={answerText}
                           maxLength={1000}
                           onChange={(e) => setAnswerText(e.target.value)}

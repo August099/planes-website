@@ -123,7 +123,7 @@ export function AircraftGallery({ images }: GalleryProps) {
           </button>
 
           <div className="absolute top-5 left-5 z-50 text-slate-300 text-xs font-medium bg-black/50 px-3 py-1.5 rounded-full border border-slate-800">
-            Pellizca o usa la rueda del mouse para Zoom ({Math.round(lightboxScale * 100)}%)
+            Pellizcá o usá la rueda del mouse para hacer zoom ({Math.round(lightboxScale * 100)}%)
           </div>
 
           <div className="relative w-full h-full flex items-center justify-center overflow-hidden">

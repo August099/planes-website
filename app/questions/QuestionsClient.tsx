@@ -65,7 +65,7 @@ export function QuestionsClient({
           Mis Consultas
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Gestiona las preguntas sobre tus publicaciones y el estado de tus consultas enviadas.
+          Gestioná las preguntas sobre tus publicaciones y el estado de tus consultas enviadas.
         </p>
       </div>
 
@@ -104,7 +104,7 @@ export function QuestionsClient({
         <div className="space-y-4">
           {receivedQuestions.length === 0 ? (
             <div className="p-8 text-center text-slate-400 text-sm bg-white rounded-2xl border border-dashed border-slate-200">
-              No has recibido preguntas en tus publicaciones por el momento.
+              Todavía no recibiste preguntas en tus publicaciones.
             </div>
           ) : (
             receivedQuestions.map((q) => {
@@ -170,7 +170,7 @@ export function QuestionsClient({
                         {replyingToId === q.id ? (
                           <div className="space-y-2">
                             <textarea
-                              placeholder="Escribe tu respuesta aquí..."
+                              placeholder="Escribí tu respuesta acá..."
                               value={answerText}
                               maxLength={1000}
                               onChange={(e) => setAnswerText(e.target.value)}

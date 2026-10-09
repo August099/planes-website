@@ -79,14 +79,14 @@ export function ReportContent() {
         setError(
           res.status < 500 && data?.error
             ? data.error
-            : "Ocurrió un error al enviar tu reporte. Por favor, reintenta."
+            : "Ocurrió un error al enviar tu reporte. Probá de nuevo."
         );
         return;
       }
 
       setSubmitted(true);
     } catch (err) {
-      setError("Ocurrió un error al enviar tu reporte. Por favor, reintenta.");
+      setError("Ocurrió un error al enviar tu reporte. Probá de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -206,7 +206,7 @@ export function ReportContent() {
                 maxLength={1000}
                 onChange={(e) => setDetails(e.target.value)}
                 rows={3}
-                placeholder="Si deseas, puedes darnos más detalles del problema..."
+                placeholder="Si querés, podés darnos más detalles del problema..."
                 className="w-full px-3 py-2 bg-white/80 border border-[#001F58]/20 rounded-lg focus:ring-2 focus:ring-[#001F58] focus:outline-none text-[#001F58] text-xs sm:text-sm font-sans placeholder:text-[#001F58]/40"
               />
             </div>

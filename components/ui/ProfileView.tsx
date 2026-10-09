@@ -199,7 +199,7 @@ export function ProfileView({
         setTimeout(() => setPasswordSuccess(false), 4000);
       }
     } catch (err) {
-      setPasswordError("Ocurrió un error inesperado. Reintenta más tarde.");
+      setPasswordError("Ocurrió un error inesperado. Probá de nuevo más tarde.");
     } finally {
       setLoadingPassword(false);
     }
@@ -722,7 +722,7 @@ export function ProfileView({
 
             {userCoupons.length === 0 ? (
               <div className="p-6 text-center text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                No tienes cupones guardados actualmente.
+                No tenés cupones guardados.
               </div>
             ) : (
               <div className="space-y-2">
@@ -825,7 +825,7 @@ export function ProfileView({
                 Seguridad & Contraseña
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                Actualiza tu contraseña. Debe contener al menos 8 caracteres, una letra mayúscula, un número y un carácter especial.
+                Actualizá tu contraseña. Tiene que tener al menos 8 caracteres, una letra mayúscula, un número y un carácter especial.
               </p>
             </div>
 

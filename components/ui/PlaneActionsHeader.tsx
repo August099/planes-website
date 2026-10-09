@@ -63,7 +63,7 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
     } catch (error: any) {
       setIsFavorite(previousState);
       if (error?.message === "UNAUTHENTICATED") {
-        alert("Debes iniciar sesión para guardar favoritos.");
+        alert("Tenés que iniciar sesión para guardar favoritos.");
       } else {
         alert("Ocurrió un error al actualizar favoritos.");
       }

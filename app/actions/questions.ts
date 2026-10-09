@@ -26,7 +26,7 @@ export async function answerQuestionAction({
   const session = await auth();
 
   if (!session?.user?.id) {
-    return { success: false, error: "Debes iniciar sesión." };
+    return { success: false, error: "Tenés que iniciar sesión." };
   }
 
   const answer = String(answerText ?? "").trim();
@@ -52,7 +52,7 @@ export async function answerQuestionAction({
   const sellerId = question.aircraft?.sellerId || question.sparePart?.sellerId;
 
   if (sellerId !== session.user.id) {
-    return { success: false, error: "No tienes permiso para responder esta pregunta." };
+    return { success: false, error: "No tenés permiso para responder esta pregunta." };
   }
 
   await prisma.question.update({
@@ -86,7 +86,7 @@ export async function createQuestionAction({
   const session = await auth();
 
   if (!session?.user?.id) {
-    return { success: false, error: "Debes iniciar sesión para hacer una pregunta." };
+    return { success: false, error: "Tenés que iniciar sesión para hacer una pregunta." };
   }
 
   const text = String(questionText ?? "").trim();

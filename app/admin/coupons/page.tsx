@@ -110,7 +110,7 @@ export default function AdminCouponsPage() {
         <div>
           <h1 className="text-2xl font-bold text-[#001F58]">Gestión de Cupones</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Crea y administra los códigos promocionales para publicaciones y renovaciones.
+            Creá y administrá los códigos promocionales para publicaciones y renovaciones.
           </p>
         </div>
 

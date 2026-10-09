@@ -28,7 +28,7 @@ export default function Forbidden() {
         </h2>
 
         <p className="text-sm sm:text-base text-[#001F58]/70 leading-relaxed mb-8">
-          No cuentas con las credenciales o rango necesario para ingresar a esta zona restringida de la plataforma.
+          No tenés los permisos necesarios para entrar a esta sección de la plataforma.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

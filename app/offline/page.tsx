@@ -28,7 +28,7 @@ export default function OfflinePage() {
         </h2>
 
         <p className="text-sm sm:text-base text-[#001F58]/70 leading-relaxed mb-8">
-          Parece que perdiste enlace con la red. Revisa tus conexiones de Wi-Fi o datos móviles para continuar navegando.
+          Parece que perdiste enlace con la red. Revisá tu conexión Wi-Fi o datos móviles para continuar navegando.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

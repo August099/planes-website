@@ -84,7 +84,7 @@ export default function RegisterPage() {
 
           {errorMessage === "TermsRequired" && (
             <div className="rounded-xl bg-red-50 p-3 text-xs sm:text-sm text-red-600 border border-red-200">
-              Debes aceptar los Términos y Condiciones para registrarte.
+              Tenés que aceptar los Términos y Condiciones para registrarte.
             </div>
           )}
 

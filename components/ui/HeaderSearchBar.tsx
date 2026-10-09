@@ -129,7 +129,7 @@ export default function HeaderSearchBar() {
           onFocus={() =>
             query.trim().length >= 2 && setIsOpen(true)
           }
-          placeholder="Buscar aeronaves, repuestos y mas..."
+          placeholder="Buscar aeronaves, repuestos y más..."
           className="w-full py-2 pl-5 pr-11 bg-white/95 text-slate-800 text-xs sm:text-sm rounded-full border border-slate-200/80 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#001F58]/30 placeholder:text-slate-400 placeholder:font-light"
         />
 

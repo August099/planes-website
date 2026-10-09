@@ -232,7 +232,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
   // MODELOS
   const handleAddModel = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedBrandId) return alert("Selecciona una marca primero");
+    if (!selectedBrandId) return alert("Seleccioná una marca primero");
     setLoading(true);
     const form = e.currentTarget;
     const name = new FormData(form).get("name") as string;
@@ -271,7 +271,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
   // SUBMODELOS / VARIANTES
   const handleAddSubModel = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedModelId) return alert("Selecciona un modelo primero");
+    if (!selectedModelId) return alert("Seleccioná un modelo primero");
     setLoading(true);
     const form = e.currentTarget;
     const name = new FormData(form).get("name") as string;
