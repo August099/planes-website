@@ -20,25 +20,9 @@ import Image from "next/image";
 import Link from "next/link";
 import Stepper, { Step } from "@/components/ui/Stepper";
 import { PageBackground } from "@/components/ui/PageBackground";
-import { 
-    Plane, 
-    Wrench, 
-    Plus, 
-    Trash2, 
-    CheckCircle2, 
-    Gauge, 
-    FileText,
-    HelpCircle,
-    Send,
-    AlertCircle,
-    Upload,
-    Paperclip,
-    Search,
-    X,
-    GripHorizontal,
-    Rocket
-} from "lucide-react";
+import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle, Send, AlertCircle, Upload, Paperclip, Search, X, GripHorizontal, Rocket, Sparkles } from "lucide-react";
 import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
+import { LAUNCH_PROMO } from "@/lib/promo";
 
 export interface CategoryOption { 
     id: string; 
@@ -730,6 +714,14 @@ export default function PublishForm({
                 {isEditing ? "EDITAR PUBLICACIÓN" : "PUBLICAR PRODUCTO"}
               </h1>
             </div>
+
+            {/* VA-47: aviso de la promoción de lanzamiento al publicar un avión */}
+            {LAUNCH_PROMO.enabled && !isEditing && activeTab === "aircraft" && (
+              <div className="max-w-2xl mx-auto mb-6 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                <Sparkles className="h-5 w-5 shrink-0 text-emerald-600" />
+                <p><span className="font-bold">{LAUNCH_PROMO.title}:</span> {LAUNCH_PROMO.text.toLowerCase()}.</p>
+              </div>
+            )}
 
             {phoneMissing && <PhoneRequiredCard onSaved={() => { setPhoneMissing(false); setFormError(null); }} />}
 

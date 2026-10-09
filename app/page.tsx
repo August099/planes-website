@@ -11,6 +11,7 @@ import { SparePartCategoriesCarousel } from "@/components/ui/SparePartCategories
 import { FeaturedAircraftCarousel } from "@/components/ui/FeaturedAircraftCarousel";
 import { LatestAircraft, ListingItem } from "@/components/ui/LatestListings";
 import { HeroBanner } from "@/components/ui/hero-banner";
+import { LaunchPromoBanner } from "@/components/ui/LaunchPromoBanner";
 import HomeServicesCards from "@/components/ui/HomeServiceCards";
 import { FeaturedBrands } from "@/components/ui/FeaturedBrands";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -150,6 +151,9 @@ export default async function HomePage() {
       <JsonLd data={organizationAndWebsiteJsonLd()} />
       <div className="bg-[#FAF5F5] min-h-screen">
         <HeroBanner />
+
+        {/* VA-47: invitación a registrarse, solo para visitantes sin cuenta */}
+        {!user && <LaunchPromoBanner />}
 
         <FeaturedBrands brands={featuredBrandsFromDb} />
 
