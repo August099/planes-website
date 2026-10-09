@@ -18,6 +18,7 @@ import {
 import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
 import { useRouter } from "next/navigation";
 import { ImageCarousel } from "./CardImageCarousel";
+import { formatPrice } from "@/lib/format";
 
 // Iconos personalizados para el menú de compartir
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -83,16 +84,7 @@ export function AircraftCard({
   const [copiedDesktop, setCopiedDesktop] = useState(false);
   const router = useRouter();
 
-  const numericPrice =
-    price !== null && price !== undefined ? Number(price) : NaN;
-  const formattedPrice =
-    !isNaN(numericPrice) && numericPrice > 0
-      ? new Intl.NumberFormat("es-AR", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 0,
-        }).format(numericPrice)
-      : "Consultar";
+  const formattedPrice = formatPrice(price, { fallback: "Consultar" });
 
   const locationText = [city, province].filter(Boolean).join(", ");
 

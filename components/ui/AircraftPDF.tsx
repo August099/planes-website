@@ -1,5 +1,7 @@
 // components/pdf/AircraftPDF.tsx
 import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
+import { AIRCRAFT_CONDITION_LABELS, formatEnum } from "@/lib/constants";
+import { ENGINE_LABELS } from "@/lib/aircraft-categories";
 
 const styles = StyleSheet.create({
   page: { padding: 30, fontSize: 10, fontFamily: "Helvetica", color: "#1e293b" },
@@ -200,12 +202,12 @@ export function AircraftPDF({
               </View>
               <View style={styles.row}>
                 <Text style={styles.label}>Condición:</Text>
-                <Text>{aircraft.condition}</Text>
+                <Text>{formatEnum(aircraft.condition, AIRCRAFT_CONDITION_LABELS)}</Text>
               </View>
               {aircraft.engineType && (
                 <View style={styles.row}>
                   <Text style={styles.label}>Tipo Motor:</Text>
-                  <Text>{aircraft.engineType}</Text>
+                  <Text>{ENGINE_LABELS[aircraft.engineType as keyof typeof ENGINE_LABELS] ?? formatEnum(aircraft.engineType)}</Text>
                 </View>
               )}
             </View>

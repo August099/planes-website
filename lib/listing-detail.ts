@@ -1,4 +1,5 @@
 import type { AircraftDetail, SparePartDetail } from "@/lib/listing-data";
+import { AIRCRAFT_CONDITION_LABELS, SPARE_PART_CONDITION_LABELS } from "@/lib/constants";
 
 // Contenido del detalle de un aviso (VA-57): características con íconos y tablas de
 // "Información adicional". Es la única fuente para la vista web y la de impresión, y ya
@@ -37,13 +38,8 @@ export interface DetailSection {
   rows: DetailRowData[];
 }
 
-const AIRCRAFT_CONDITION: Record<string, string> = { NUEVO: "Nuevo", USADO: "Usado" };
-const SPARE_PART_CONDITION: Record<string, string> = {
-  NUEVO: "Nuevo",
-  USADO: "Usado",
-  RECORRIDO: "Recorrido",
-  REPARAR: "A reparar",
-};
+const AIRCRAFT_CONDITION = AIRCRAFT_CONDITION_LABELS;
+const SPARE_PART_CONDITION = SPARE_PART_CONDITION_LABELS;
 
 // certDate se guarda como fecha (medianoche UTC): se formatea en UTC para no correr el día.
 const formatDate = (d: Date) => d.toLocaleDateString("es-AR", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });

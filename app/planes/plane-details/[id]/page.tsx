@@ -22,6 +22,7 @@ import { PublishedLine } from "@/components/ui/listing/PublishedLine";
 import { aircraftFeatures, aircraftSections } from "@/lib/listing-detail";
 import { ENGINE_LABELS } from "@/lib/aircraft-categories";
 import { aircraftJsonLd } from "@/lib/structured-data";
+import { formatPrice } from "@/lib/format";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -96,13 +97,7 @@ export default async function PlaneDetailsPage({
   const hasSingleEngine = aircraft.engines.length === 1;
   const singleEngine = hasSingleEngine ? aircraft.engines[0] : null;
 
-  const formattedPrice = aircraft.price
-    ? new Intl.NumberFormat("es-AR", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 0,
-      }).format(Number(aircraft.price))
-    : "Consultar precio";
+  const formattedPrice = formatPrice(aircraft.price);
 
   // VA-44: las horas son opcionales en Agrícola, Experimental y Proyecto.
   const tboText = (tbo: number | null) => (tbo != null ? `${tbo} hs` : "No informado");

@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
 import { useRouter } from "next/navigation";
+import { formatPrice } from "@/lib/format";
+import { formatEnum, SPARE_PART_CONDITION_LABELS } from "@/lib/constants";
 
 // Iconos personalizados para el menú de compartir
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -74,18 +76,11 @@ export function SparePartCard({
   const [copiedDesktop, setCopiedDesktop] = useState(false);
   const router = useRouter();
 
-  const priceNumber = price !== null ? Number(price) : null;
-  const numberFormatted = priceNumber !== null 
-    ? new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(priceNumber)
-    : null;
-
-  const formattedPrice = numberFormatted
-    ? `${inPesos ? "AR$" : "US$"} ${numberFormatted}`
-    : "Consultar";
+  const formattedPrice = formatPrice(price, { inPesos, fallback: "Consultar" });
 
   const locationText = [city, province].filter(Boolean).join(", ");
   const categoryLabel = typeof category === "object" && category !== null ? category.name : category;
-  const formattedCondition = condition ? condition.replace(/_/g, " ") : null;
+  const formattedCondition = condition ? formatEnum(condition, SPARE_PART_CONDITION_LABELS) : null;
   const brandAndModel = [brand, model].filter(Boolean).join(" ");
   const specs = [categoryLabel, brandAndModel].filter(Boolean);
 

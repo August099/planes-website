@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
 import { AnalyticsEventType } from "@prisma/client";
+import { formatPrice } from "@/lib/format";
 
 export interface SearchResultItem {
   id: string;
@@ -85,9 +86,7 @@ export async function searchGlobal(
       subtitle: `${a.city ?? "Ubicación no especificada"}${
         a.province ? `, ${a.province}` : ""
       } • ${
-        a.price
-          ? `USD $${Number(a.price).toLocaleString()}`
-          : "A Consultar"
+        formatPrice(a.price)
       }`,
       url: `/planes/plane-details/${a.id}`,
     }));
@@ -122,6 +121,7 @@ export async function searchGlobal(
         id: true,
         title: true,
         price: true,
+        inPesos: true,
         city: true,
       },
       take: 5,
@@ -132,9 +132,7 @@ export async function searchGlobal(
       title: s.title,
       type: "Repuesto",
       subtitle: `${s.city ?? "Ubicación no especificada"} • ${
-        s.price
-          ? `USD $${Number(s.price).toLocaleString()}`
-          : "A Consultar"
+        formatPrice(s.price, { inPesos: s.inPesos })
       }`,
       url: `/spareparts/sparepart-details/${s.id}`,
     }));

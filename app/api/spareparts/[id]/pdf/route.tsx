@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { pdf } from "@react-pdf/renderer";
 import { SparePartPDF } from "@/components/ui/SparePartPDF";
+import { formatPrice } from "@/lib/format";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,14 +23,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return new Response("Vendedor no encontrado", { status: 404 });
   }
 
-  const priceNumber = sparePart.price ? Number(sparePart.price) : null;
-  const numberFormatted =
-    priceNumber !== null
-      ? new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(priceNumber)
-      : null;
-  const formattedPrice = numberFormatted
-    ? `${sparePart.inPesos ? "AR$" : "US$"} ${numberFormatted}`
-    : "Consultar precio";
+  const formattedPrice = formatPrice(sparePart.price, { inPesos: sparePart.inPesos });
 
   const blob = await pdf(
     <SparePartPDF

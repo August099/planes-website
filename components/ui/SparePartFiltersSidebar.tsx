@@ -7,16 +7,12 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X, ChevronDown, ChevronRight } from "lucide-react";
 import { SparepartCondition } from "@prisma/client";
+import { SPARE_PART_CONDITION_LABELS } from "@/lib/constants";
 
 type CategoryRow = { id: string; name: string; parentId: string | null; icon: string | null };
 type CategoryTreeNode = CategoryRow & { children: CategoryTreeNode[] };
 
-const CONDITION_LABELS: Record<SparepartCondition, string> = {
-  NUEVO: "Nuevo",
-  USADO: "Usado",
-  RECORRIDO: "Recorrido",
-  REPARAR: "A reparar",
-};
+const CONDITION_LABELS: Record<string, string> = SPARE_PART_CONDITION_LABELS;
 
 const CONDITIONS = Object.values(SparepartCondition);
 

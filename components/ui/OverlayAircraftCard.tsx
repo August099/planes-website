@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { formatPrice } from "@/lib/format";
 
 type CategoryProp = { id?: string; name: string } | string | null;
 
@@ -45,14 +46,7 @@ export function OverlayAircraftCard({
       ? `${brandName} ${modelName}`.trim()
       : title || "Aeronave";
 
-  const numericPrice =
-    price !== null && price !== undefined ? Number(price) : NaN;
-  const formattedPrice =
-    !isNaN(numericPrice) && numericPrice > 0
-      ? `$${new Intl.NumberFormat("es-AR", {
-          maximumFractionDigits: 0,
-        }).format(numericPrice)}`
-      : "Consultar";
+  const formattedPrice = formatPrice(price, { fallback: "Consultar" });
 
   return (
     <Link href={`/planes/plane-details/${id}`} className="group block h-full">

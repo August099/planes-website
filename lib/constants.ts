@@ -68,10 +68,17 @@ export const SPARE_PART_CATEGORY_LABELS: Record<string, string> = {
   EQUIPO_DE_FUMIGACION: "Equipo de fumigación",
 };
 
+// Estados según los enums de Prisma (VA-23). El mapa anterior tenía REMANUFACTURADO, que no existe.
+export const AIRCRAFT_CONDITION_LABELS: Record<string, string> = {
+  NUEVO: "Nuevo",
+  USADO: "Usado",
+};
+
 export const SPARE_PART_CONDITION_LABELS: Record<string, string> = {
   NUEVO: "Nuevo",
   USADO: "Usado",
-  REMANUFACTURADO: "Remanufacturado",
+  RECORRIDO: "Recorrido",
+  REPARAR: "A reparar",
 };
 
 export const REPORT_STATUS_LABELS: Record<string, string> = {

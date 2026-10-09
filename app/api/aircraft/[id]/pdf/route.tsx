@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { pdf } from "@react-pdf/renderer";
 import { AircraftPDF } from "@/components/ui/AircraftPDF";
+import { formatPrice } from "@/lib/format";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -27,13 +28,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return new Response("Vendedor no encontrado", { status: 404 });
   }
 
-  const formattedPrice = aircraft.price
-    ? new Intl.NumberFormat("es-AR", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 0,
-      }).format(Number(aircraft.price))
-    : "Consultar precio";
+  const formattedPrice = formatPrice(aircraft.price);
 
   const displayBrand = aircraft.brand?.name || aircraft.customBrand;
   const displayModel = aircraft.model?.name || aircraft.customModel;

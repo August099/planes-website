@@ -19,6 +19,7 @@ import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSec
 import { PublishedLine } from "@/components/ui/listing/PublishedLine";
 import { sparePartConditionLabel, sparePartFeatures, sparePartSections } from "@/lib/listing-detail";
 import { sparePartJsonLd } from "@/lib/structured-data";
+import { formatPrice } from "@/lib/format";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -91,14 +92,7 @@ export default async function SparePartDetailsPage({
     : null;
 
   // Formato explícito de precio (AR$ o US$)
-  const priceNumber = sparePart.price ? Number(sparePart.price) : null;
-  const numberFormatted = priceNumber !== null 
-    ? new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(priceNumber)
-    : null;
-
-  const formattedPrice = numberFormatted
-    ? `${sparePart.inPesos ? "AR$" : "US$"} ${numberFormatted}`
-    : "Consultar precio";
+  const formattedPrice = formatPrice(sparePart.price, { inPesos: sparePart.inPesos });
 
   // Ubicación del vendedor / producto
   const locationText = `${sparePart.city}, ${sparePart.province}`;
