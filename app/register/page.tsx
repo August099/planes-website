@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, FileText, Check } from "lucide-react";
@@ -12,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TermsContent } from "@/lib/terms-content";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -48,15 +48,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16 flex items-center justify-center py-16">
-      <Image
-        src="/bkg-register.jpg"
-        alt="Fondo Registro"
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
+      <PageBackground page="register" />
 
       <div className="container mx-auto px-4 max-w-lg">
         <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl space-y-6">

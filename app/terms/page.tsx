@@ -1,7 +1,7 @@
 // app/terms/page.tsx
 import type { Metadata } from "next";
-import Image from "next/image";
 import { TermsContent, termsSections } from "@/lib/terms-content";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 export const metadata: Metadata = {
   title: "Términos y condiciones",
@@ -11,17 +11,10 @@ export const metadata: Metadata = {
 
 export default function TerminosPage() {
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16">
-      <Image
-        src="/bkg-terms.jpg"
-        alt=""
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen">
+      <PageBackground page="legal" />
 
-      <div className="container mx-auto px-4 pt-20 pb-36 max-w-6xl">
+      <div className="container mx-auto px-4 pt-20 pb-20 max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           <aside className="md:col-span-1 flex flex-col gap-2 border-l border-[#001F58]/20 pl-4 md:sticky md:top-24">
             <p className="text-xs font-semibold text-[#001F58]/50 uppercase tracking-wider mb-2">

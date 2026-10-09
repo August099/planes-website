@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { PageBackground } from "@/components/ui/PageBackground";
 import {
   Plane,
   Wrench,
@@ -94,15 +94,8 @@ export function ReportContent() {
 
   if (submitted) {
     return (
-      <main className="relative isolate overflow-hidden min-h-screen -mb-16 flex items-center justify-center py-16">
-        <Image
-          src="/bkg-report.jpg"
-          alt="Fondo Reporte"
-          fill
-          priority
-          className="-z-20 object-cover"
-        />
-        <div className="absolute inset-0 -z-10 bg-background/85" />
+      <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
+        <PageBackground page="report" />
 
         <div className="container mx-auto px-4 max-w-md">
           <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-8 backdrop-blur-sm shadow-xl text-center space-y-6">
@@ -126,15 +119,8 @@ export function ReportContent() {
   }
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16 flex items-center justify-center py-16">
-      <Image
-        src="/bkg-report.jpg"
-        alt="Fondo Reporte"
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
+      <PageBackground page="report" />
 
       <div className="container mx-auto px-4 max-w-lg">
         <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl space-y-6">

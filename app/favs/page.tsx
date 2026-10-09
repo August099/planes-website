@@ -3,9 +3,9 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
-import Image from "next/image";
 import { Heart } from "lucide-react";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 export default async function FavoritesPage() {
   const user = await getCurrentUser();
@@ -34,16 +34,7 @@ export default async function FavoritesPage() {
 
   return (
     <main className="relative isolate min-h-[calc(100vh-80px)] container mx-auto px-4 py-8 pb-16">
-      <div className="fixed inset-0 -z-10 pointer-events-none">
-        <Image
-          src="/bkg-forms.png"
-          alt="Fondo Favoritos"
-          fill
-          priority
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-background/85" />
-      </div>
+      <PageBackground page="default" />
 
       <div className="flex items-center gap-3 mb-8">
         <div className="p-2.5 bg-red-50 text-red-600 rounded-xl border border-red-100">

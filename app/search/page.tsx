@@ -5,6 +5,7 @@ import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 import Link from "next/link";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 interface Props {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -106,6 +107,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
 
   return (
     <main className="container mx-auto px-4 py-8">
+      <PageBackground page="default" />
       <h1 className="text-2xl font-medium mb-6">
         Resultados para "{query}" ({totalItems})
       </h1>

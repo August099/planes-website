@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { signIn } from "next-auth/react";
@@ -11,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 interface LoginFormProps {
   // Vienen de la página (searchParams del servidor). Antes se leían con useSearchParams dentro
@@ -73,15 +73,8 @@ export default function LoginForm({ errorParam = null, successParam = null, call
   };
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16 flex items-center justify-center py-16">
-      <Image
-        src="/bkg-login.jpg"
-        alt="Fondo Iniciar Sesión"
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
+      <PageBackground page="login" />
 
       <div className="container mx-auto px-4 max-w-md">
         <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-8 backdrop-blur-sm shadow-xl space-y-6">

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 const policySections = [
   { id: "recoleccion", title: "1. Datos que recolectamos" },
@@ -18,18 +18,10 @@ export const metadata: Metadata = {
 
 export default function PrivacidadPage() {
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16">
-      {/* Fondo optimizado con la imagen solicitada */}
-      <Image
-        src="/bkg-privacidad.jpg"
-        alt=""
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen">
+      <PageBackground page="legal" />
 
-      <div className="container mx-auto px-4 pt-20 pb-36 max-w-6xl">
+      <div className="container mx-auto px-4 pt-20 pb-20 max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           
           {/* MENÚ LATERAL: Índices del documento legal */}

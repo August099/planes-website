@@ -1,10 +1,21 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
+import { PageBackground } from "@/components/ui/PageBackground";
+import type { PageBackgroundKey } from "@/lib/page-backgrounds";
 
 // Lo que ve quien no es el dueño cuando la publicación está vencida o pausada (VA-14).
-export function InactiveListingNotice({ backHref, backLabel }: { backHref: string; backLabel: string }) {
+export function InactiveListingNotice({
+  backHref,
+  backLabel,
+  background,
+}: {
+  backHref: string;
+  backLabel: string;
+  background: PageBackgroundKey;
+}) {
   return (
     <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center">
+      <PageBackground page={background} />
       <div className="p-8 max-w-md bg-white rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto border border-amber-200">
           <AlertTriangle className="w-6 h-6" />

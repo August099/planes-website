@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { faqPageJsonLd } from "@/lib/structured-data";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 const faqs = [
   { id: "pregunta-1", question: "Pregunta 1", answer: "Respuesta 1" },
@@ -26,18 +26,11 @@ export default function FAQPage() {
   );
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16">
+    <main className="relative isolate overflow-hidden min-h-screen">
       {realFaqs.length > 0 && <JsonLd data={faqPageJsonLd(realFaqs)} />}
-      <Image
-        src="/bkg-faq.jpg"
-        alt=""
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+      <PageBackground page="faq" />
 
-      <div className="container mx-auto px-4 pt-20 pb-36 max-w-6xl">
+      <div className="container mx-auto px-4 pt-20 pb-20 max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           
           <aside className="md:col-span-1 flex flex-col gap-2 border-l border-[#001F58]/20 pl-4 md:sticky md:top-24">

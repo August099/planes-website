@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { MercadoPagoConfig, Preference } from "mercadopago";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 
 const PLAN_PRICES: Record<string, { title: string; price: number }> = {
@@ -99,17 +99,10 @@ export default async function BannerRequestPage({
   }
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16">
-        <Image
-            src="/bkg-ads.jpg"
-            alt="Fondo Publicidad"
-            fill
-            priority
-            className="-z-20 object-cover object-center"
-        />
-        <div className="absolute inset-0 -z-10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm" />
+    <main className="relative isolate overflow-hidden min-h-screen">
+        <PageBackground page="banners" />
 
-      <div className="container mx-auto px-4 pt-16 pb-36 max-w-2xl">
+      <div className="container mx-auto px-4 pt-16 pb-20 max-w-2xl">
         <div className="mb-8 text-center">
           <Link
             href="/ads"

@@ -3,7 +3,7 @@ import { activeListingWhere } from "@/lib/listing-filters";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { notFound } from "next/navigation";
 import { ProfileView } from "@/components/ui/ProfileView";
-import Image from "next/image";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -132,16 +132,7 @@ export default async function ProfilePage({ params }: Props) {
 
   return (
     <main className="relative min-h-[calc(100vh-80px)] container mx-auto px-4 py-8 pb-16">
-      <div className="fixed inset-0 -z-10 pointer-events-none">
-        <Image
-          src="/bkg-forms.png"
-          alt="Fondo Perfil"
-          fill
-          priority
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-background/85" />
-      </div>
+      <PageBackground page="profile" />
 
       <ProfileView
         profileUser={profileUser}

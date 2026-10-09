@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Check, Megaphone, Target, BarChart3, Zap, ArrowRight, ShieldCheck } from "lucide-react";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 export default function AdsPage() {
   const adPlans = [
@@ -56,17 +56,10 @@ export default function AdsPage() {
   ];
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16">
-      <Image
-        src="/bkg-ads.jpg"
-        alt="Fondo Publicidad"
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen">
+      <PageBackground page="ads" />
 
-      <div className="container mx-auto px-4 pt-16 pb-36 max-w-6xl">
+      <div className="container mx-auto px-4 pt-16 pb-20 max-w-6xl">
         <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#001F58]/10 border border-[#001F58]/20 text-[#001F58] text-xs font-semibold uppercase tracking-wider mb-4">
             <Megaphone className="w-4 h-4 text-red-600" />

@@ -8,8 +8,8 @@ import { SortDropdown } from "@/components/ui/SortDropdown";
 import { AircraftFiltersWrapper } from "@/components/ui/AircraftFiltersWrapper";
 import { Prisma } from "@prisma/client";
 import Link from "next/link";
-import Image from "next/image";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -152,10 +152,7 @@ export default async function AvionesPage({ searchParams }: Props) {
 
   return (
     <main className="relative isolate min-h-screen px-4 py-8">
-      <div className="absolute inset-0 -z-20 overflow-hidden">
-        <Image src="/bkg-forms.png" alt="Fondo Formularios" fill priority className="object-cover" />
-      </div>
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+      <PageBackground page="planes" />
 
       {/* Encabezado: Título a la izquierda, Sort (solo Desktop) a la derecha */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">

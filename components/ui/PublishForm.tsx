@@ -19,6 +19,7 @@ import { listingSchema, toFieldErrors, MAX_LISTING_IMAGES, type EditListingData,
 import Image from "next/image";
 import Link from "next/link";
 import Stepper, { Step } from "@/components/ui/Stepper";
+import { PageBackground } from "@/components/ui/PageBackground";
 import { 
     Plane, 
     Wrench, 
@@ -710,11 +711,10 @@ export default function PublishForm({
     }
 
     return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16">
-        <Image src="/bkg-forms.png" alt="Fondo" fill priority className="-z-20 object-cover" />
-        <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen">
+        <PageBackground page="publish" />
 
-        <div className="container mx-auto px-4 pt-16 pb-36 max-w-7xl">
+        <div className="container mx-auto px-4 pt-16 pb-20 max-w-7xl">
             <div className="text-center max-w-3xl mx-auto mb-10">
               <h1 className="font-heading text-3xl sm:text-5xl font-semibold text-[#001F58] mb-4">
                 {isEditing ? "EDITAR PUBLICACIÓN" : "PUBLICAR PRODUCTO"}

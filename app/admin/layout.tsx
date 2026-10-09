@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
-import Image from "next/image";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 export default async function AdminLayout({
   children,
@@ -73,14 +73,7 @@ export default async function AdminLayout({
       {/* ÁREA DE CONTENIDO */}
       <div className="relative flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto">
         <main className="relative flex-1 p-6 sm:p-8 pb-32">
-          <Image
-            src="/bkg-profile.jpg"
-            alt=""
-            fill
-            priority
-            className="-z-20 object-cover"
-          />
-          <div className="absolute inset-0 -z-10 bg-background/85" />
+          <PageBackground page="admin" />
           {children}
         </main>
       </div>

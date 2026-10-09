@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import { PageBackground } from "@/components/ui/PageBackground";
 import { 
     UserPlus, 
     ListPlus, 
@@ -21,15 +21,7 @@ export const metadata: Metadata = {
 export default function HowToPublishPage() {
     return (
         <main className="relative isolate overflow-hidden min-h-screen">
-            {/* Fondo general */}
-            <Image 
-                src="/bkg-publish2.png" 
-                alt="Fondo de la plataforma" 
-                fill 
-                priority 
-                className="-z-20 object-cover" 
-            />
-            <div className="absolute inset-0 -z-10 bg-slate-50/90 backdrop-blur-[2px]" />
+            <PageBackground page="howtopublish" />
 
             <div className="container mx-auto px-4 pt-16 pb-24 max-w-4xl">
                 

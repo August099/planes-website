@@ -8,6 +8,7 @@ import { SparePartFiltersWrapper } from "@/components/ui/SparePartFiltersWrapper
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -176,6 +177,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
 
   return (
     <main className="mx-auto px-4 py-8">
+      <PageBackground page="spareparts" />
       <h1 className="text-2xl font-medium mb-6">
         Repuestos en venta ({totalSpareParts})
       </h1>

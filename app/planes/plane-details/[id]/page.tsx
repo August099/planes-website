@@ -23,6 +23,7 @@ import { aircraftFeatures, aircraftSections } from "@/lib/listing-detail";
 import { ENGINE_LABELS } from "@/lib/aircraft-categories";
 import { aircraftJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -68,7 +69,7 @@ export default async function PlaneDetailsPage({
   const isInactive = !isListingActive(aircraft);
 
   if (isInactive && !isOwner) {
-    return <InactiveListingNotice backHref="/planes" backLabel="Ver otros aviones" />;
+    return <InactiveListingNotice backHref="/planes" backLabel="Ver otros aviones" background="planeDetail" />;
   }
 
   const seller = aircraft.seller;
@@ -193,6 +194,7 @@ export default async function PlaneDetailsPage({
 
       {/* VISTA WEB NORMAL */}
       <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
+        <PageBackground page="planeDetail" />
         <section className="flex flex-col lg:flex-row items-start gap-8">
           <div className="w-full lg:w-2/3 flex flex-col gap-8">
             <AircraftGallery images={aircraft.images} title={aircraft.title} />

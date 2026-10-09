@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { PageBackground } from "@/components/ui/PageBackground";
 import {
   Users,
   Wrench,
@@ -58,17 +58,7 @@ export default function ServicesPage() {
 
   return (
     <main className="relative min-h-[calc(100vh-80px)] container mx-auto px-4 py-12 pb-20">
-      {/* Fondo adaptado igual al resto de las páginas */}
-      <div className="fixed inset-0 -z-10 pointer-events-none">
-        <Image
-          src="/bkg-forms.png"
-          alt="Fondo Servicios"
-          fill
-          priority
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-background/85" />
-      </div>
+      <PageBackground page="default" />
 
       <div className="relative max-w-4xl mx-auto space-y-10 bg-white/70 backdrop-blur-md p-6 sm:p-10 rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
         {/* Cinta diagonal "PRÓXIMAMENTE": solo desde lg. En celular y tablet tapaba el título (VA-29). */}
