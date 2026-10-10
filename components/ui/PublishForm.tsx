@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createListing, sendManagedListingEmail, updateListing } from "@/app/publish/actions";
 import { compressImage } from "@/lib/image-compressor";
@@ -141,8 +141,11 @@ export default function PublishForm({
         setCompatibleModels(compatibleModels.filter(m => m !== model));
     };
 
+    // Marca inicial: la de la publicación que se edita o, si no hay, la primera de la lista.
+    // Antes se completaba en un efecto después del primer render (VA-63).
+    const initialBrandId = editListing?.aircraft?.brandId || brandsData[0]?.id || "";
     const [selectedBrandModels, setSelectedBrandModels] = useState<ModelOption[]>(
-        () => brandsData.find((b) => b.id === editListing?.aircraft?.brandId)?.models ?? []
+        () => brandsData.find((b) => b.id === initialBrandId)?.models ?? []
     );
     const [selectedModelVariants, setSelectedModelVariants] = useState<SubModelOption[]>(
         () =>
@@ -204,8 +207,15 @@ export default function PublishForm({
 
     const currentYear = new Date().getFullYear();
 
+    // Solo los modelos del año en curso pueden ser "Nuevo"; la marca vacía toma la inicial.
+    const withInitialFixes = <T extends { year: number; condition: "USADO" | "NUEVO"; brandId: string }>(form: T): T => ({
+        ...form,
+        brandId: form.brandId || initialBrandId,
+        condition: form.year === currentYear ? form.condition : "USADO",
+    });
+
     // ESTADO: Formulario de aeronaves
-    const [aircraftForm, setAircraftForm] = useState(() => editListing?.aircraft ?? {
+    const [aircraftForm, setAircraftForm] = useState(() => withInitialFixes(editListing?.aircraft ?? {
         title: "",
         year: currentYear,
         condition: "USADO" as "USADO" | "NUEVO",
@@ -238,7 +248,7 @@ export default function PublishForm({
         oxygen: false,
         extDescription: "",
         description: "",
-    });
+    }));
 
     // VA-43: "Tipo de aeronave" + "Motorización" resuelven la categoría (MP/MT/BP/BT/...).
     // pendingGroup guarda el tipo elegido mientras todavía falta la motorización.
@@ -262,12 +272,6 @@ export default function PublishForm({
     const handleEngineChange = (engine: EngineKind) => {
         setAircraftForm((prev) => withCategory(prev, resolveCategoryId(selectedGroup, engine)));
     };
-
-    useEffect(() => {
-        if (aircraftForm.year !== currentYear) {
-            setAircraftForm(prev => ({ ...prev, condition: "USADO" }));
-        }
-    }, [aircraftForm.year, currentYear]);
 
     const [engines, setEngines] = useState<EngineInput[]>(editListing?.engines ?? []);
     const [propellers, setPropellers] = useState<PropellerInput[]>(editListing?.propellers ?? []);
@@ -295,17 +299,6 @@ export default function PublishForm({
     );
     const [documents, setDocuments] = useState<File[]>([]);
     const [existingDocuments, setExistingDocuments] = useState<{ name: string; url: string }[]>(editListing?.documents ?? []);
-
-    useEffect(() => {
-      if (brandsData && brandsData.length > 0 && !aircraftForm.brandId) {
-        const firstBrand = brandsData[0];
-        setAircraftForm((prev) => ({
-          ...prev,
-          brandId: firstBrand.id,
-        }));
-        setSelectedBrandModels(firstBrand.models || []);
-      }
-    }, [brandsData]);
 
     const setErrorAndScroll = (msg: string) => {
       setFormError(msg);
@@ -818,7 +811,10 @@ export default function PublishForm({
 
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Año *</label>
-                                                <input type="number" min="1900" max={currentYear} value={aircraftForm.year} onChange={e => setAircraftForm({...aircraftForm, year: Number(e.target.value)})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <input type="number" min="1900" max={currentYear} value={aircraftForm.year} onChange={e => {
+                                                    const year = Number(e.target.value);
+                                                    setAircraftForm({...aircraftForm, year, condition: year === currentYear ? aircraftForm.condition : "USADO"});
+                                                }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.year} />
                                             </div>
 

@@ -121,6 +121,7 @@ export function SparePartPDF({ sparePart, seller, formattedPrice }: SparePartPDF
 
         {/* Imagen principal */}
         {sparePart.images[0] && (
+          // eslint-disable-next-line jsx-a11y/alt-text -- el <Image> de @react-pdf/renderer no admite alt
           <Image src={sparePart.images[0].url} style={styles.image} />
         )}
 

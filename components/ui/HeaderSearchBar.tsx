@@ -7,48 +7,51 @@ import { searchGlobal, SearchResultItem, SearchType } from "@/app/actions/search
 import { logSearch } from "@/app/actions/analytics-actions";
 import { ensureAnalyticsCookies } from "@/lib/analytics-client";
 
+function sectionSearchType(pathname: string): SearchType | null {
+  if (pathname.startsWith("/spareparts")) return "Repuesto";
+  if (pathname.startsWith("/planes")) return "Aeronave";
+  return null;
+}
+
 export default function HeaderSearchBar() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResultItem[]>([]);
-  const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-
-  const [searchType, setSearchType] = useState<SearchType>("Aeronave");
 
   const router = useRouter();
   const pathname = usePathname();
 
+  // Tipo según la sección actual; se ajusta al cambiar de sección sin un efecto (VA-63).
+  const section = sectionSearchType(pathname);
+  const [searchType, setSearchType] = useState<SearchType>(section ?? "Aeronave");
+  const [prevSection, setPrevSection] = useState(section);
+  if (section !== prevSection) {
+    setPrevSection(section);
+    if (section) setSearchType(section);
+  }
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Determinar el tipo según la sección actual
-  useEffect(() => {
-    if (pathname.startsWith("/spareparts")) {
-      setSearchType("Repuesto");
-    } else if (pathname.startsWith("/planes")) {
-      setSearchType("Aeronave");
-    }
-  }, [pathname]);
+  // Resultados preliminares: se guardan junto con la búsqueda que los trajo, así "cargando",
+  // "sin texto" y "abierto" se derivan en el render en vez de sincronizarse en un efecto (VA-63).
+  const hasQuery = query.trim().length >= 2;
+  const searchKey = `${searchType}|${query}`;
+  const [fetched, setFetched] = useState<{ key: string; items: SearchResultItem[] }>({ key: "", items: [] });
+  const results = hasQuery ? fetched.items : [];
+  const loading = hasQuery && fetched.key !== searchKey;
+  const open = isOpen && hasQuery;
 
-  // Buscar resultados preliminares
   useEffect(() => {
-    if (query.trim().length < 2) {
-      setResults([]);
-      setIsOpen(false);
-      return;
-    }
-
-    setLoading(true);
+    if (!hasQuery) return;
 
     const timer = setTimeout(async () => {
       const res = await searchGlobal(query, searchType);
 
-      setResults(res);
+      setFetched({ key: `${searchType}|${query}`, items: res });
       setIsOpen(true);
-      setLoading(false);
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [query, searchType]);
+  }, [query, searchType, hasQuery]);
 
   // Cerrar dropdown al hacer click afuera
   useEffect(() => {
@@ -138,7 +141,7 @@ export default function HeaderSearchBar() {
       </div>
 
       {/* Dropdown */}
-      {isOpen && (
+      {open && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
 
           {/* SWITCH */}
@@ -188,7 +191,7 @@ export default function HeaderSearchBar() {
           {/* RESULTADOS */}
           {results.length === 0 ? (
             <div className="p-4 text-center text-xs text-slate-400">
-              No se encontraron resultados preliminares para "{query}"
+              No se encontraron resultados preliminares para “{query}”
             </div>
           ) : (
             <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">

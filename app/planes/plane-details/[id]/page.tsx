@@ -158,6 +158,9 @@ export default async function PlaneDetailsPage({
       {/* VISTA Y FORMATO DE EXPORTACIÓN PDF */}
       <div id="pdf-content" className="hidden print:block font-sans text-slate-900 p-10 max-w-4xl mx-auto space-y-6">
         <div className="flex flex-col items-center justify-center border-b-2 border-[#001F58] pb-4 space-y-2 text-center">
+          {/* Vista de impresión: <img> a propósito; next/image cargaría diferido dentro de un bloque
+              oculto y las fotos podrían salir en blanco en el PDF. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-full.png" alt="Ventas Aeronáuticas" className="h-14 w-auto object-contain mx-auto" />
           <div className="flex items-center gap-4 text-[11px] text-slate-500 font-medium">
             <span>Ficha Técnica de Publicación</span>
@@ -182,6 +185,7 @@ export default async function PlaneDetailsPage({
             <div className="grid grid-cols-3 gap-3">
               {aircraft.images.slice(0, 3).map((img, idx) => (
                 <div key={img.id || idx} className="h-36 relative rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- vista de impresión (ver arriba) */}
                   <img src={img.url} alt={`${aircraft.title} – foto ${idx + 1}`} className="w-full h-full object-cover" />
                 </div>
               ))}

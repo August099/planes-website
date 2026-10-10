@@ -41,7 +41,6 @@ export default function AdminCouponsPage() {
   });
 
   const fetchCoupons = async () => {
-    setLoading(true);
     try {
       const data = await getAdminCoupons();
       setCoupons(data);
@@ -53,7 +52,10 @@ export default function AdminCouponsPage() {
   };
 
   useEffect(() => {
-    fetchCoupons();
+    getAdminCoupons()
+      .then(setCoupons)
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleCopy = (code: string) => {

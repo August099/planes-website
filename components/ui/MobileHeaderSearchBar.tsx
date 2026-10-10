@@ -10,8 +10,7 @@ import { ensureAnalyticsCookies } from "@/lib/analytics-client";
 export default function MobileHeaderSearchBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResultItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [fetched, setFetched] = useState<{ query: string; items: SearchResultItem[] }>({ query: "", items: [] });
 
   const router = useRouter();
   const pathname = usePathname(); // Detectamos la ruta actual
@@ -33,21 +32,21 @@ export default function MobileHeaderSearchBar() {
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (query.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+  // Los resultados se guardan con la búsqueda que los trajo; "cargando" se deriva (VA-63).
+  const hasQuery = query.trim().length >= 2;
+  const results = hasQuery ? fetched.items : [];
+  const loading = hasQuery && fetched.query !== query;
 
-    setLoading(true);
+  useEffect(() => {
+    if (!hasQuery) return;
+
     const timer = setTimeout(async () => {
       const res = await searchGlobal(query);
-      setResults(res);
-      setLoading(false);
+      setFetched({ query, items: res });
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, hasQuery]);
 
   const handleSelect = (url: string) => {
     // VA-15: la búsqueda se registra al elegir un resultado (no en cada tecla).
@@ -142,7 +141,7 @@ export default function MobileHeaderSearchBar() {
           <div className="flex-1 overflow-y-auto bg-white p-2">
             {query.trim().length >= 2 && results.length === 0 && !loading && (
               <div className="p-8 text-center text-xs text-slate-400">
-                No se encontraron resultados para "{query}"
+                No se encontraron resultados para “{query}”
               </div>
             )}
 

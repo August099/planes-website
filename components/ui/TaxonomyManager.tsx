@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   createAircraftCategoryAction,
   updateAircraftCategoryAction,
@@ -724,9 +725,11 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                       <div className="flex items-center gap-2">
                         {brand.logoUrl ? (
                           <div className="relative w-6 h-6 rounded border bg-white overflow-hidden shrink-0 flex items-center justify-center">
-                            <img
+                            <Image
                               src={brand.logoUrl}
                               alt={brand.name}
+                              width={24}
+                              height={24}
                               className="w-full h-full object-contain p-0.5"
                             />
                           </div>

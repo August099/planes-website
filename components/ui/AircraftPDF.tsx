@@ -155,6 +155,7 @@ export function AircraftPDF({
         {aircraft.images.length > 0 && (
           <View style={styles.imagesRow}>
             {aircraft.images.slice(0, 3).map((img, idx) => (
+              // eslint-disable-next-line jsx-a11y/alt-text -- el <Image> de @react-pdf/renderer no admite alt
               <Image key={idx} src={img.url} style={styles.image} />
             ))}
           </View>

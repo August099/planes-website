@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -67,8 +67,12 @@ export function AdminNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // Cerrar el panel al navegar.
-  useEffect(() => setOpen(false), [pathname]);
+  // Cerrar el panel al navegar (se ajusta en el render, sin efecto: VA-63).
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setOpen(false);
+  }
 
   return (
     <>

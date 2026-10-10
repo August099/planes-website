@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import {
   OverlayAircraftCard,
   AircraftCardProps,
@@ -24,29 +24,33 @@ interface Props {
   aircrafts: FeaturedAircraftProps[];
 }
 
+function pickFeatured(aircrafts: FeaturedAircraftProps[]) {
+  let pool = [...aircrafts];
+
+  if (pool.length >= 20) {
+    // Si hay 20 o más, tomamos las 10 con más vistas
+    pool.sort((a, b) => (b.viewsCount || 0) - (a.viewsCount || 0));
+    pool = pool.slice(0, 10);
+  }
+
+  // Mezclamos aleatoriamente y tomamos 2
+  return pool.sort(() => 0.5 - Math.random()).slice(0, 2);
+}
+
+const subscribeNothing = () => () => {};
+
 // Aeronaves Destacadas: diseño original (tarjetas de foto con marca, modelo, precio y año encima),
 // restaurado el 10/10 a pedido del socio; las flechas son las unificadas de VA-82.
 export function FeaturedAircraftCarousel({ aircrafts }: Props) {
-  const [selectedAircrafts, setSelectedAircrafts] = useState<FeaturedAircraftProps[]>([]);
+  // La elección es al azar, así que se hace solo en el navegador: en el servidor y durante la
+  // hidratación no se renderiza nada, para evitar descalces (VA-63, antes con setState en un efecto).
+  const isClient = useSyncExternalStore(subscribeNothing, () => true, () => false);
+  if (!isClient || !aircrafts || aircrafts.length === 0) return null;
+  return <FeaturedCarousel aircrafts={aircrafts} />;
+}
 
-  useEffect(() => {
-    if (!aircrafts || aircrafts.length === 0) return;
-
-    let pool = [...aircrafts];
-
-    if (pool.length >= 20) {
-      // Si hay 20 o más, tomamos las 10 con más vistas
-      pool.sort((a, b) => (b.viewsCount || 0) - (a.viewsCount || 0));
-      pool = pool.slice(0, 10);
-    }
-
-    // Mezclamos aleatoriamente en el cliente y tomamos 2
-    const shuffled = pool.sort(() => 0.5 - Math.random());
-    setSelectedAircrafts(shuffled.slice(0, 2));
-  }, [aircrafts]);
-
-  // Si no se han seleccionado aún en el cliente, no renderizamos nada para evitar parpadeos/descalces
-  if (selectedAircrafts.length === 0) return null;
+function FeaturedCarousel({ aircrafts }: Props) {
+  const [selectedAircrafts] = useState(() => pickFeatured(aircrafts));
 
   return (
     <section className="py-8 relative">

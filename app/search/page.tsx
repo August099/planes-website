@@ -114,7 +114,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
       {/* VA-15: la búsqueda se registra acá (una vez por pestaña y término), no en cada tecla */}
       {currentPage === 1 && <TrackSearch query={query} resultsCount={totalItems} />}
       <h1 className="text-2xl font-medium mb-6">
-        Resultados para "{query}" ({totalItems})
+        Resultados para “{query}” ({totalItems})
       </h1>
 
       <section className="w-full">
