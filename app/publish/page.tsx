@@ -33,7 +33,16 @@ export default async function PublishPage({ searchParams }: Props) {
   }
 
   // VA-46: sin teléfono el formulario pide cargarlo antes de publicar.
-  const sellerPhone = await prisma.user.findUnique({ where: { id: user.id }, select: { phone: true } });
+  const sellerPhone = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { phone: true, userTypeConfirmed: true },
+  });
+
+  // VA-33: el filtro "Publica" depende del tipo de cuenta; si nunca se confirmó (cuentas de Google
+  // anteriores a VA-87), se pregunta antes de una publicación nueva.
+  if (!edit && sellerPhone && !sellerPhone.userTypeConfirmed) {
+    redirect("/onboarding/account-type?from=publish");
+  }
 
   const rawBrands = await prisma.aircraftBrand.findMany({
     select: {

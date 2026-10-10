@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { FOUNDING_MEMBER_LIMIT } from "@/lib/constants";
 import { FoundingMemberToggle } from "@/components/ui/FoundingMemberToggle";
+import { UserTypeSelect } from "@/components/admin/UserTypeSelect";
 
 const PAGE_SIZE = 50;
 
@@ -46,6 +47,8 @@ export default async function AdminUsersPage({ searchParams }: Props) {
         passwordHash: true,
         isAdmin: true,
         isFoundingMember: true,
+        userType: true,
+        userTypeConfirmed: true,
         _count: { select: { aircrafts: true, spareParts: true, accounts: true } },
       },
     }),
@@ -73,6 +76,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
           </h1>
           <p className="mt-1 text-sm text-slate-600">
             Los miembros fundadores se asignan a mano, así las cuentas de prueba no ocupan lugares.
+            El tipo de cuenta alimenta el filtro “Publica”; “Fábrica” solo se asigna desde acá.
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800">
@@ -101,20 +105,21 @@ export default async function AdminUsersPage({ searchParams }: Props) {
       </form>
 
       <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-        <table className="w-full min-w-[760px] text-sm">
+        <table className="w-full min-w-[920px] text-sm">
           <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-3">Usuario</th>
               <th className="px-4 py-3">Alta</th>
               <th className="px-4 py-3">Ingreso</th>
               <th className="px-4 py-3 text-center">Avisos</th>
+              <th className="px-4 py-3">Tipo de cuenta</th>
               <th className="px-4 py-3">Miembro fundador</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {users.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
                   No hay usuarios con esa búsqueda.
                 </td>
               </tr>
@@ -142,6 +147,9 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td className="px-4 py-3 text-center text-slate-600">{u._count.aircrafts + u._count.spareParts}</td>
+                  <td className="px-4 py-3">
+                    <UserTypeSelect userId={u.id} userType={u.userType} confirmed={u.userTypeConfirmed} />
+                  </td>
                   <td className="px-4 py-3">
                     <FoundingMemberToggle userId={u.id} isFounding={u.isFoundingMember} />
                   </td>

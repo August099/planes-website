@@ -10,12 +10,14 @@ export async function chooseAccountTypeAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user?.id) redirect("/login");
 
+  // Solo un destino fijo (no una URL libre), así no sirve para redirigir a otro sitio (VA-33).
+  const fromPublish = formData.get("from") === "publish";
   const userType = parseSelectableUserType(formData.get("userType"));
-  if (!userType) redirect("/onboarding/account-type?error=1");
+  if (!userType) redirect(`/onboarding/account-type?error=1${fromPublish ? "&from=publish" : ""}`);
 
   await prisma.user.update({
     where: { id: user.id },
     data: { userType, userTypeConfirmed: true },
   });
-  redirect(`/profile/${user.id}`);
+  redirect(fromPublish ? "/publish" : `/profile/${user.id}`);
 }

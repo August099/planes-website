@@ -17,11 +17,13 @@ const HINTS: Record<string, string> = {
 };
 
 interface Props {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; from?: string }>;
 }
 
 // VA-87: después del primer login con Google (pages.newUser en lib/auth.ts) se elige el tipo de
 // cuenta una sola vez. Si ya está confirmado, no se vuelve a mostrar.
+// VA-33: las cuentas que no lo confirmaron (Google anteriores a VA-87) llegan acá desde /publish
+// con ?from=publish y, al elegir, vuelven a publicar.
 export default async function AccountTypePage({ searchParams }: Props) {
   const user = await getCurrentUser();
   if (!user?.id) redirect("/login?callbackUrl=/onboarding/account-type");
@@ -30,20 +32,30 @@ export default async function AccountTypePage({ searchParams }: Props) {
     where: { id: user.id },
     select: { userTypeConfirmed: true, userType: true, name: true },
   });
-  if (!dbUser || dbUser.userTypeConfirmed) redirect(`/profile/${user.id}`);
-  const { error } = await searchParams;
+  const { error, from } = await searchParams;
+  const fromPublish = from === "publish";
+  if (!dbUser || dbUser.userTypeConfirmed) redirect(fromPublish ? "/publish" : `/profile/${user.id}`);
 
   return (
     <main className="relative isolate min-h-[calc(100vh-80px)] px-4 py-12">
       <PageBackground page="login" />
       <div className="mx-auto max-w-lg rounded-lg border border-[#001F58]/10 bg-white p-6 sm:p-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Un paso más</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          {fromPublish ? "Antes de publicar" : "Un paso más"}
+        </p>
         <h1 className="mt-1 text-2xl font-bold text-[#001F58]">
-          {dbUser.name ? `Hola, ${dbUser.name.split(" ")[0]}.` : "Hola."} ¿Cómo vas a usar tu cuenta?
+          {fromPublish ? (
+            "¿Quién publica?"
+          ) : (
+            <>
+              {dbUser.name ? `Hola, ${dbUser.name.split(" ")[0]}.` : "Hola."} ¿Cómo vas a usar tu cuenta?
+            </>
+          )}
         </h1>
         <p className="mt-2 text-sm text-slate-600">Lo vas a poder cambiar cuando quieras desde Mi perfil.</p>
 
         <form action={chooseAccountTypeAction} className="mt-6 space-y-3">
+          {fromPublish && <input type="hidden" name="from" value="publish" />}
           <fieldset className="space-y-3">
             <legend className="sr-only">Tipo de cuenta</legend>
             {USER_TYPE_OPTIONS.map((o) => (
