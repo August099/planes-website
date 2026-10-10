@@ -102,6 +102,21 @@ model Plan {
   billingType             PlanBillingType  @default(ONE_TIME)
   isUnlimitedAircraft     Boolean          @default(false)
   isUnlimitedSpareParts   Boolean          @default(false)
+  // VA-80: las publicaciones del suscriptor no vencen mientras la suscripción esté vigente.
+  noExpiry                Boolean          @default(false)
+  // VA-80: lo que se muestra en /plans (la lógica usa los campos de arriba).
+  currency                String           @default("ARS")
+  description             String?
+  features                String[]         @default([])
+  badge                   String?
+  isPopular               Boolean          @default(false)
+  showInAircraftTab       Boolean          @default(false)
+  showInPartsTab          Boolean          @default(false)
+  sortOrder               Int              @default(0)
+  // VA-80: archivado = fuera de /plans y del alta, pero conserva compras y suscripciones.
+  archivedAt              DateTime?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @default(now()) @updatedAt
   purchases               Purchase[]
   subscriptions           Subscription[]
 }

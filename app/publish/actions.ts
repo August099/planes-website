@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { EMAIL_FROM, escapeHtml, getSupportEmail } from "@/lib/mail";
 import { AnalyticsEventType } from "@prisma/client";
+import { hasNoExpiryPlan } from "@/lib/subscriptions";
 import {
   listingSchema,
   toFieldErrors,
@@ -228,8 +229,10 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
   if (!uploads.ok) return fail({ ok: false, error: uploads.error, fieldErrors: { images: uploads.error } });
 
   const now = new Date();
-  const expiresAt = new Date(now);
-  expiresAt.setDate(now.getDate() + 45);
+  // VA-80: con un plan "sin vencimiento" vigente, la publicación no vence (activeListingWhere
+  // acepta listingExpiresAt null).
+  const expiresAt: Date | null = (await hasNoExpiryPlan(user.id)) ? null : new Date(now);
+  expiresAt?.setDate(now.getDate() + 45);
 
   try {
     let id: string;

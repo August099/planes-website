@@ -1,8 +1,9 @@
-import { getListingPrices } from "@/lib/listing-prices";
+import { getPlanCards } from "@/lib/plans";
 import { PlansClient } from "./PlansClient";
 
-// VA-59: los precios por aviso vienen de la base (cacheados con tag); la página sigue estática.
+// VA-59 / VA-80: precios por aviso y planes salen de la base (cacheados con tags); la página sigue
+// estática y se regenera cuando el admin cambia un precio o un plan.
 export default async function PlansPage() {
-  const prices = await getListingPrices();
-  return <PlansClient listingPrices={{ aircraft: prices.AIRCRAFT.amount, sparePart: prices.SPARE_PART.amount }} />;
+  const { aircraft, parts } = await getPlanCards();
+  return <PlansClient aircraftPlans={aircraft} partsPlans={parts} />;
 }

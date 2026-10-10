@@ -40,6 +40,8 @@ import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
 import { USER_TYPE_LABELS, USER_TYPE_OPTIONS } from "@/lib/user-types";
 import { StorefrontHeader, type StorefrontData } from "@/components/ui/profile/StorefrontHeader";
 import { StorefrontEditor } from "@/components/ui/profile/StorefrontEditor";
+import { SubscriptionPanel } from "@/components/ui/profile/SubscriptionPanel";
+import type { SubscriptionSummary } from "@/lib/subscriptions";
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
@@ -110,6 +112,8 @@ interface Props {
   missingProfileFields?: ProfileField[];
   // VA-87: datos de la página personalizada; null si el vendedor no tiene el beneficio del plan.
   storefront?: StorefrontData | null;
+  // VA-80: plan del dueño del perfil (solo se pasa cuando lo mira el dueño).
+  subscription?: SubscriptionSummary | null;
 }
 
 /** Helper para calcular los días restantes de una publicación */
@@ -141,6 +145,7 @@ export function ProfileView({
   userCoupons = [],
   missingProfileFields = [],
   storefront = null,
+  subscription = null,
 }: Props) {
   const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
   const missingDot = (field: ProfileField) =>
@@ -869,6 +874,8 @@ export function ProfileView({
       {/* Pestaña Ajustes */}
       {isOwner && activeTab === "edit" && (
         <div className="space-y-6 max-w-2xl mx-auto md:mx-0">
+          <SubscriptionPanel subscription={subscription} />
+
           {/* Formulario de información de la cuenta */}
           <form onSubmit={handleUpdate} className="p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 space-y-4">
             <h2 className="text-lg font-bold text-[#001F58]">Editar Información de Cuenta</h2>

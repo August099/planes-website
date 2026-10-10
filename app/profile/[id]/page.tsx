@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ProfileView, type ProfileCoupon } from "@/components/ui/ProfileView";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { getMissingProfileFieldsCached } from "@/lib/cached-data";
-import { hasCustomPage } from "@/lib/subscriptions";
+import { getSubscriptionSummary, hasCustomPage } from "@/lib/subscriptions";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
@@ -164,6 +164,7 @@ export default async function ProfilePage({ params }: Props) {
         userCoupons={userCoupons}
         missingProfileFields={isOwner ? await getMissingProfileFieldsCached(id) : []}
         storefront={storefront}
+        subscription={isOwner ? await getSubscriptionSummary(id) : null}
       />
     </main>
   );

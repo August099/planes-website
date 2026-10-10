@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { hasNoExpiryPlan } from "@/lib/subscriptions";
 import { prisma } from "@/lib/prisma";
 import { assertListingOwner } from "@/lib/listing-auth";
 import { pathFromPublicUrl, removeUploads } from "@/lib/listing-uploads";
@@ -29,15 +30,17 @@ export async function renewListingAction(id: string, type: "aircraft" | "sparepa
     if (type === "aircraft") {
       const current = await prisma.aircraft.findUnique({
         where: { id },
-        select: { listingExpiresAt: true },
+        select: { listingExpiresAt: true, sellerId: true },
       });
 
       const baseDate = current?.listingExpiresAt && new Date(current.listingExpiresAt) > now
         ? new Date(current.listingExpiresAt)
         : now;
 
-      const newExpiration = new Date(baseDate);
-      newExpiration.setDate(baseDate.getDate() + 45);
+      // VA-80: con un plan "sin vencimiento" vigente del vendedor, no vence.
+      const newExpiration: Date | null =
+        current && (await hasNoExpiryPlan(current.sellerId)) ? null : new Date(baseDate);
+      newExpiration?.setDate(baseDate.getDate() + 45);
 
       await prisma.aircraft.update({
         where: { id },
@@ -53,15 +56,17 @@ export async function renewListingAction(id: string, type: "aircraft" | "sparepa
     } else {
       const current = await prisma.sparePart.findUnique({
         where: { id },
-        select: { listingExpiresAt: true },
+        select: { listingExpiresAt: true, sellerId: true },
       });
 
       const baseDate = current?.listingExpiresAt && new Date(current.listingExpiresAt) > now
         ? new Date(current.listingExpiresAt)
         : now;
 
-      const newExpiration = new Date(baseDate);
-      newExpiration.setDate(baseDate.getDate() + 45);
+      // VA-80: con un plan "sin vencimiento" vigente del vendedor, no vence.
+      const newExpiration: Date | null =
+        current && (await hasNoExpiryPlan(current.sellerId)) ? null : new Date(baseDate);
+      newExpiration?.setDate(baseDate.getDate() + 45);
 
       await prisma.sparePart.update({
         where: { id },
