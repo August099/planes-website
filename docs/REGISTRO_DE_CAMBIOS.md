@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 71 de 74 tareas cerradas (70 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60 a VA-63, VA-70 a VA-75, VA-77 a VA-79 y VA-81 a VA-87. Faltan 3: VA-59, VA-76 (parcial) y VA-80 (no es del MVP). Nota del 10/10: el conteo anterior tenía un error de uno (la lista sumaba 69, no 68) (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 72 de 74 tareas cerradas (71 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-63, VA-70 a VA-75, VA-77 a VA-79 y VA-81 a VA-87. Faltan 2: VA-76 (parcial) y VA-80 (no es del MVP). Nota del 10/10: el conteo anterior tenía un error de uno (la lista sumaba 69, no 68) (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -86,6 +86,7 @@ Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://l
 | VA-46 | `e397ebd` | **Perfil incompleto**: punto rojo en el header y "Completá tu perfil" en el menú; en el perfil, cartel con lo que falta y puntos en los campos vacíos. **Sin teléfono no se publica**: `/publish` pide cargarlo ahí mismo y el servidor lo valida. | Usuario sin teléfono → `/profile/<id>` y `/publish`. `lib/profile.ts`, `components/ui/PhoneRequiredCard.tsx` |
 | VA-47 | `b79db15` | **Promoción de lanzamiento** ("publicá tu avión 100% gratis"): cartel en la Home para visitantes (máx. 2 veces o hasta cerrarlo) y aviso en `/publish`. Solo visual; se apaga o cambia en `lib/promo.ts`. | `/` sin sesión; `/publish` con sesión |
 | VA-33 | `597f2d8` | **Tipo de cuenta antes de publicar y desde el admin** (lo demás salió con VA-87). Las cuentas sin tipo confirmado (Google anteriores a VA-87) ven "¿Quién publica?" al entrar a `/publish` y vuelven al formulario. En `/admin/users`, columna "Tipo de cuenta" con Particular, Empresa y **Fábrica** (solo el admin la asigna) y aviso "Sin confirmar". | `/admin/users`; `/publish` con una cuenta de Google vieja |
+| VA-59 | `ffdc71e` | **Precio por aviso editable desde el admin.** Tablas `ListingPrice` (avión AR$ 30.000, repuesto AR$ 15.000) y `ListingPriceChange` (historial). `/admin/prices`: diálogo con antes → después y variación; cambios grandes (más del 50 % o a/desde 0) piden escribir CONFIRMAR, también validado en el servidor. El precio vigente se ve en `/plans`, `/howtopublish` y `/publish`. Migración aplicada en `va_dev`; en producción, `npm run migrate:deploy`. | `/admin/prices` → Cambiar precio |
 | VA-34 | `4de0300` | **"Compartir" siempre abre la ventana flotante** (cards y detalle, celular y escritorio). Antes: menú nativo del celular o copiar el link sin avisar. | Botón compartir de cualquier card o detalle. `components/ui/ShareDialog.tsx` |
 
 ### VA-57 · Verificación "campo del formulario → dónde se ve en el detalle"
