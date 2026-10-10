@@ -23,7 +23,7 @@ export type PlanCard = {
 };
 
 const NUMBER = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
-const formatARS = (amount: number) => (amount === 0 ? "Gratis" : `$ ${NUMBER.format(amount)}`);
+const formatARS = (amount: number) => (amount === 0 ? "Gratis" : `AR$ ${NUMBER.format(amount)}`);
 
 const getActivePlans = unstable_cache(
   async () =>

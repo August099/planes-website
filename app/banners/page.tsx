@@ -127,7 +127,7 @@ export default async function BannerRequestPage({
               <p className="text-sm font-bold text-[#001F58]">{planInfo.title}</p>
             </div>
             <p className="text-base font-extrabold text-red-600">
-              ${planInfo.price.toLocaleString("es-AR")} ARS
+              AR$ {planInfo.price.toLocaleString("es-AR")}
             </p>
           </div>
 
@@ -185,9 +185,9 @@ export default async function BannerRequestPage({
 
             <Button
               type="submit"
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-md mt-2 flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-[#E70F1F] hover:bg-[#C20D1A] text-white font-bold text-xs rounded-md transition-colors mt-2 flex items-center justify-center gap-2"
             >
-              💳 Ir a Pagar
+              Ir a pagar
             </Button>
           </form>
         </div>

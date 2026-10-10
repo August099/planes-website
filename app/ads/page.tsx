@@ -30,7 +30,7 @@ export default function AdsPage() {
       description: "Ubicación VIP en la portada principal del sitio. Cautiva a todos los visitantes que ingresan.",
       popular: true,
       features: [
-        "Ubicación privileged en la página de inicio (Home)",
+        "Ubicación privilegiada en la página de inicio (Home)",
         "Formato horizontal panorámico HD",
         "Enlace directo personalizado a tu oferta",
         "Soporte de diseño para adaptar tu pieza publicitaria",
@@ -71,7 +71,7 @@ export default function AdsPage() {
             ESPACIOS PUBLICITARIOS
           </h1>
           <p className="text-sm sm:text-base text-[#001F58]/80 leading-relaxed">
-            Llegá directamente a pilotos, propietarios de aeronaves, escuelas de vuelo y empresas del sector aeronáutico en todo el país. Todo desde $ARS 25.000/mes.
+            Llegá directamente a pilotos, propietarios de aeronaves, escuelas de vuelo y empresas del sector aeronáutico en todo el país. Desde AR$ 25.000 por mes.
           </p>
         </div>
 

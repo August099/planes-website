@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { usePathname } from "next/navigation";
 import { 
   MessageSquare, 
@@ -139,7 +139,7 @@ export function QuestionsClient({
                   <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 gap-3">
                     <div className="flex items-center gap-3">
                       <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
-                        <Image src={imageUrl} alt={item?.title || "Producto"} fill className="object-cover" />
+                        <AppImage src={imageUrl} alt={item?.title || "Producto"} fill sizes="64px" className="object-cover" />
                       </div>
                       <span className="text-sm font-bold text-[#001F58] line-clamp-1">
                         {item?.title}
@@ -256,7 +256,7 @@ export function QuestionsClient({
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 gap-3">
                     <div className="flex items-center gap-3">
                       <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
-                        <Image src={imageUrl} alt={item?.title || "Producto"} fill className="object-cover" />
+                        <AppImage src={imageUrl} alt={item?.title || "Producto"} fill sizes="64px" className="object-cover" />
                       </div>
                       <div>
                         <span className="text-sm font-bold text-[#001F58] line-clamp-1">

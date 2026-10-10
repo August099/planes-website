@@ -10,7 +10,7 @@ import "swiper/css/parallax";
 import "swiper/css/thumbs";
 import "swiper/css/zoom";
 
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { X, Maximize } from "lucide-react";
 
 type GalleryProps = {
@@ -108,7 +108,8 @@ export function AircraftGallery({ images, title }: GalleryProps) {
           {images.map((image, index) => (
             <SwiperSlide key={index} className="flex items-center justify-center cursor-zoom-in">
               <div className="relative w-full h-full flex items-center justify-center group">
-                <Image
+                {/* AppImage: si la foto no carga, muestra el placeholder en vez de un ícono roto. */}
+                <AppImage
                   src={image.url}
                   alt={photoAlt(image, index)}
                   width={1200}
@@ -154,10 +155,11 @@ export function AircraftGallery({ images, title }: GalleryProps) {
                 // la primera miniatura ocupaba todo el ancho y la tira "saltaba" (VA-32).
                 <SwiperSlide key={index} className="cursor-pointer opacity-70 hover:opacity-100 transition-opacity !w-[calc((100%-32px)/5)] sm:!w-[calc((100%-48px)/7)] lg:!w-[calc((100%-64px)/9)]">
                   <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-slate-50 border-0 shadow-none">
-                    <Image
+                    <AppImage
                       src={image.url}
                       alt={photoAlt(image, index)}
                       fill
+                      sizes="(min-width: 1024px) 120px, (min-width: 640px) 100px, 20vw"
                       className="object-cover rounded"
                     />
                   </div>
@@ -214,7 +216,7 @@ export function AircraftGallery({ images, title }: GalleryProps) {
               {images.map((image, index) => (
                 <SwiperSlide key={index} className="flex items-center justify-center">
                   <div className="swiper-zoom-container w-full h-full flex items-center justify-center">
-                    <Image
+                    <AppImage
                       src={image.url}
                       alt={photoAlt(image, index)}
                       width={1600}
