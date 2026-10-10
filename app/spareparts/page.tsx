@@ -11,6 +11,7 @@ import Link from "next/link";
 import { Prisma, SparepartCondition } from "@prisma/client";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -202,6 +203,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
   return (
     <main className="mx-auto px-4 py-8">
       <PageBackground page="spareparts" />
+      <Breadcrumbs items={[{ label: "Repuestos" }]} className="-mt-4 mb-2" />
       {/* Misma disposición que /planes (VA-45): en celular, "Filtros" (panel lateral) y "Ordenar"
           lado a lado; desde lg, barra lateral + grilla. */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">

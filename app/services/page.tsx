@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { GuideIndex } from "@/components/ui/guides/GuideIndex";
 import { GUIDES, GUIDES_PATH } from "@/lib/guides";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export const metadata: Metadata = {
   // El layout agrega " | Ventas Aeronáuticas".
@@ -48,6 +49,7 @@ export default function ServicesPage() {
   return (
     <main className="relative min-h-[calc(100vh-80px)] container mx-auto px-4 py-12 pb-20">
       <PageBackground page="default" />
+      <Breadcrumbs items={[{ label: "Servicios" }]} className="mx-auto max-w-5xl -mt-8 mb-4" />
 
       <div className="mx-auto max-w-5xl space-y-14 rounded-lg border border-[#001F58]/10 bg-white p-6 sm:p-10">
         {/* Encabezado */}

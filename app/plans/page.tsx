@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check, Plane, Wrench, Zap, ArrowRight, ShieldCheck, Repeat } from "lucide-react";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export default function PlansPage() {
   const [activeTab, setActiveTab] = useState<"aircraft" | "parts">("aircraft");
@@ -157,7 +158,8 @@ export default function PlansPage() {
     <main className="relative isolate overflow-hidden min-h-screen">
       <PageBackground page="plans" />
 
-      <div className="container mx-auto px-4 pt-16 pb-20 max-w-6xl">
+      <div className="container mx-auto px-4 pt-6 pb-20 max-w-6xl">
+        <Breadcrumbs items={[{ label: "Planes y suscripciones" }]} className="mb-8 sm:mb-12" />
         <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#001F58]/10 border border-[#001F58]/20 text-[#001F58] text-xs font-semibold uppercase tracking-wider mb-4">
             <Zap className="w-4 h-4 text-red-600" />

@@ -25,6 +25,7 @@ import { AIRCRAFT_CONDITION_LABELS } from "@/lib/constants";
 import { aircraftJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -219,6 +220,7 @@ export default async function PlaneDetailsPage({
           derecha (resumen, vendedor, documentos). */}
       <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
         <PageBackground page="planeDetail" />
+        <Breadcrumbs items={[{ label: "Aviones", href: "/planes" }, { label: aircraft.title }]} jsonLd={false} className="-mt-4 -mb-6" />
         <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
           <div className="contents lg:flex lg:w-2/3 lg:flex-col lg:gap-8">
             <div className="order-1 lg:order-none">

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 const policySections = [
   { id: "recoleccion", title: "1. Datos que recolectamos" },
@@ -21,7 +22,8 @@ export default function PrivacidadPage() {
     <main className="relative isolate overflow-hidden min-h-screen">
       <PageBackground page="legal" />
 
-      <div className="container mx-auto px-4 pt-20 pb-20 max-w-6xl">
+      <div className="container mx-auto px-4 pt-6 pb-20 max-w-6xl">
+        <Breadcrumbs items={[{ label: "Privacidad" }]} className="mb-8 sm:mb-12" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           
           {/* MENÚ LATERAL: Índices del documento legal */}

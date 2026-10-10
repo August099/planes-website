@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ProfileView, type ProfileCoupon } from "@/components/ui/ProfileView";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { getMissingProfileFieldsCached } from "@/lib/cached-data";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -134,6 +135,7 @@ export default async function ProfilePage({ params }: Props) {
   return (
     <main className="relative min-h-[calc(100vh-80px)] container mx-auto px-4 py-8 pb-16">
       <PageBackground page="profile" />
+      <Breadcrumbs items={[{ label: "Perfil" }, { label: rawProfileUser.name ?? "Usuario" }]} className="-mt-4 mb-2" />
 
       <ProfileView
         profileUser={profileUser}

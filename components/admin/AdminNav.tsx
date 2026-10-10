@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 
-const NAV_ITEMS = [
+export const NAV_ITEMS = [
   { label: "Resumen", href: "/admin", icon: BarChart3 },
   { label: "Publicaciones", href: "/admin/listings", icon: Plane },
   { label: "Usuarios", href: "/admin/users", icon: Users },

@@ -23,6 +23,7 @@ import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
 import { sparePartJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -217,6 +218,7 @@ export default async function SparePartDetailsPage({
           fotos → título y precio → vendedor → descripción → ficha. Desde lg: dos columnas. */}
       <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
         <PageBackground page="spareparts" />
+        <Breadcrumbs items={[{ label: "Repuestos", href: "/spareparts" }, { label: sparePart.title }]} jsonLd={false} className="-mt-4 -mb-6" />
         <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
           <div className="contents lg:flex lg:w-2/3 lg:flex-col lg:gap-8">
             <div className="order-1 lg:order-none">

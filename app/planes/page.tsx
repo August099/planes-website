@@ -11,6 +11,7 @@ import { AircraftCondition, Prisma, UserType } from "@prisma/client";
 import Link from "next/link";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -201,6 +202,7 @@ export default async function AvionesPage({ searchParams }: Props) {
   return (
     <main className="relative isolate min-h-screen px-4 py-8">
       <PageBackground page="planes" />
+      <Breadcrumbs items={[{ label: "Aviones" }]} className="-mt-4 mb-2" />
 
       {/* Encabezado: Título a la izquierda, Sort (solo Desktop) a la derecha */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">

@@ -11,6 +11,7 @@ import {
     Ticket,
     ShieldCheck
 } from "lucide-react";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Cómo publicar tu avión o repuesto",
@@ -23,7 +24,8 @@ export default function HowToPublishPage() {
         <main className="relative isolate overflow-hidden min-h-screen">
             <PageBackground page="howtopublish" />
 
-            <div className="container mx-auto px-4 pt-16 pb-24 max-w-4xl">
+            <div className="container mx-auto px-4 pt-6 pb-24 max-w-4xl">
+                <Breadcrumbs items={[{ label: "Cómo publicar" }]} className="mb-8 sm:mb-12" />
                 
                 {/* Encabezado Principal */}
                 <div className="text-center mb-16">

@@ -7,6 +7,7 @@ import { GuideIndex } from "@/components/ui/guides/GuideIndex";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { guideJsonLd } from "@/lib/structured-data";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -70,31 +71,11 @@ export default async function GuidePage({ params }: Props) {
 
       <div className="container mx-auto px-4 pt-10 pb-20 sm:pt-14">
         <article className="mx-auto max-w-3xl rounded-lg border border-[#001F58]/10 bg-white p-5 sm:p-10">
-          <nav aria-label="Ruta de navegación" className="mb-5 text-xs text-slate-500">
-            <ol className="flex flex-wrap items-center gap-1.5">
-              <li>
-                <Link href="/" className="hover:text-[#001F58] hover:underline">
-                  Inicio
-                </Link>
-              </li>
-              <li aria-hidden>›</li>
-              <li>
-                <Link href="/services" className="hover:text-[#001F58] hover:underline">
-                  Servicios
-                </Link>
-              </li>
-              <li aria-hidden>›</li>
-              <li>
-                <Link href={GUIDES_PATH} className="hover:text-[#001F58] hover:underline">
-                  Guías
-                </Link>
-              </li>
-              <li aria-hidden>›</li>
-              <li aria-current="page" className="font-medium text-[#001F58]">
-                {guide.title}
-              </li>
-            </ol>
-          </nav>
+          <Breadcrumbs
+            items={[{ label: "Servicios", href: "/services" }, { label: "Guías", href: GUIDES_PATH }, { label: guide.title }]}
+            jsonLd={false}
+            className="mb-5"
+          />
 
           <h1 className="font-heading text-2xl font-bold leading-tight text-[#001F58] sm:text-4xl">{guide.title}</h1>
           <p className="mt-3 text-sm text-slate-500">

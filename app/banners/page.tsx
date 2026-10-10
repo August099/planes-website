@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { MercadoPagoConfig, Preference } from "mercadopago";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 
 const PLAN_PRICES: Record<string, { title: string; price: number }> = {
@@ -102,7 +103,8 @@ export default async function BannerRequestPage({
     <main className="relative isolate overflow-hidden min-h-screen">
         <PageBackground page="banners" />
 
-      <div className="container mx-auto px-4 pt-16 pb-20 max-w-2xl">
+      <div className="container mx-auto px-4 pt-6 pb-20 max-w-2xl">
+        <Breadcrumbs items={[{ label: "Espacios publicitarios", href: "/ads" }, { label: "Configurá tu banner" }]} className="mb-8 sm:mb-12" />
         <div className="mb-8 text-center">
           <Link
             href="/ads"

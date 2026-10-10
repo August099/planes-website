@@ -13,6 +13,7 @@ import {
   Send,
   Loader2,
 } from "lucide-react";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export function ReportContent() {
   const searchParams = useSearchParams();
@@ -95,6 +96,7 @@ export function ReportContent() {
   if (submitted) {
     return (
       <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
+      <Breadcrumbs items={[{ label: "Reportar publicación" }]} className="absolute inset-x-0 top-0 container mx-auto px-4 pt-3" />
         <PageBackground page="report" />
 
         <div className="container mx-auto px-4 max-w-md">
@@ -120,6 +122,7 @@ export function ReportContent() {
 
   return (
     <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
+      <Breadcrumbs items={[{ label: "Reportar publicación" }]} className="absolute inset-x-0 top-0 container mx-auto px-4 pt-3" />
       <PageBackground page="report" />
 
       <div className="container mx-auto px-4 max-w-lg">

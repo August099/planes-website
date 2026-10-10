@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import PublishForm from "@/components/ui/PublishForm";
 import { loadListingForEdit } from "@/lib/listing-edit";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,7 @@ export default async function PublishPage({ searchParams }: Props) {
 
   return (
     <main className="min-h-screen">
+      <Breadcrumbs items={[{ label: "Publicar" }]} className="container mx-auto px-4 pt-4" />
       <PublishForm
         userId={user.id}
         brandsData={JSON.parse(JSON.stringify(rawBrands))}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Check, Megaphone, Target, BarChart3, Zap, ArrowRight, ShieldCheck } from "lucide-react";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export default function AdsPage() {
   const adPlans = [
@@ -59,7 +60,8 @@ export default function AdsPage() {
     <main className="relative isolate overflow-hidden min-h-screen">
       <PageBackground page="ads" />
 
-      <div className="container mx-auto px-4 pt-16 pb-20 max-w-6xl">
+      <div className="container mx-auto px-4 pt-6 pb-20 max-w-6xl">
+        <Breadcrumbs items={[{ label: "Espacios publicitarios" }]} className="mb-8 sm:mb-12" />
         <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#001F58]/10 border border-[#001F58]/20 text-[#001F58] text-xs font-semibold uppercase tracking-wider mb-4">
             <Megaphone className="w-4 h-4 text-red-600" />

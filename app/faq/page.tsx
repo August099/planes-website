@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { faqPageJsonLd } from "@/lib/structured-data";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 const faqs = [
   { id: "pregunta-1", question: "Pregunta 1", answer: "Respuesta 1" },
@@ -30,7 +31,8 @@ export default function FAQPage() {
       {realFaqs.length > 0 && <JsonLd data={faqPageJsonLd(realFaqs)} />}
       <PageBackground page="faq" />
 
-      <div className="container mx-auto px-4 pt-20 pb-20 max-w-6xl">
+      <div className="container mx-auto px-4 pt-6 pb-20 max-w-6xl">
+        <Breadcrumbs items={[{ label: "Preguntas frecuentes" }]} className="mb-8 sm:mb-12" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           
           <aside className="md:col-span-1 flex flex-col gap-2 border-l border-[#001F58]/20 pl-4 md:sticky md:top-24">

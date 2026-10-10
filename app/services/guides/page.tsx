@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { GUIDES, GUIDES_PATH, formatGuideDate } from "@/lib/guides";
 import { GuideIndex } from "@/components/ui/guides/GuideIndex";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { guidesIndexJsonLd } from "@/lib/structured-data";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 // Índice de guías (VA-78), dentro de Servicios. Estática: sin base de datos ni cookies.
 export const metadata: Metadata = {
@@ -28,25 +28,7 @@ export default function GuidesIndexPage() {
       <PageBackground page="guides" />
 
       <div className="container mx-auto max-w-6xl px-4 pt-12 pb-20 sm:pt-16">
-        <nav aria-label="Ruta de navegación" className="mb-6 text-xs text-slate-500">
-          <ol className="flex flex-wrap items-center gap-1.5">
-            <li>
-              <Link href="/" className="hover:text-[#001F58] hover:underline">
-                Inicio
-              </Link>
-            </li>
-            <li aria-hidden>›</li>
-            <li>
-              <Link href="/services" className="hover:text-[#001F58] hover:underline">
-                Servicios
-              </Link>
-            </li>
-            <li aria-hidden>›</li>
-            <li aria-current="page" className="font-medium text-[#001F58]">
-              Guías
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs items={[{ label: "Servicios", href: "/services" }, { label: "Guías" }]} jsonLd={false} className="mb-6" />
 
         {/* VA-85: asimétrico. A la izquierda la presentación, a la derecha el índice numerado. */}
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-14">

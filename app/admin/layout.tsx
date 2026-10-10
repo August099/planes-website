@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminBreadcrumbs } from "@/components/admin/AdminBreadcrumbs";
 
 export default async function AdminLayout({
   children,
@@ -23,6 +24,7 @@ export default async function AdminLayout({
       <div className="relative flex-1 flex flex-col min-w-0 min-h-screen">
         <main className="relative flex-1 p-4 sm:p-8 pb-32">
           <PageBackground page="admin" />
+          <AdminBreadcrumbs />
           {children}
         </main>
       </div>
