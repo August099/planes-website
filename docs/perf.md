@@ -59,12 +59,24 @@ Lectura:
 - **No es el número de PageSpeed.** PageSpeed simula el throttling y calibra la CPU; acá el throttling es real sobre esta PC (4 núcleos), así que el TBT tiende a salir peor. Sirve para comparar antes/después en la misma máquina.
 - **CLS en 0** en las tres: nada se corre al cargar.
 - **LCP:** cumple en `/planes` y en el detalle. En la Home, el LCP es el mismo FCP (texto del hero): lo que lo retrasa es bajar y procesar el HTML (203 KB) y el CSS que bloquea el render, no una imagen.
-- **TBT:** no cumple. En `/planes` cada card monta su propio Swiper al hidratar (21 por página, `components/ui/CardImageCarousel.tsx`). **Propuesta:** mostrar la primera foto como imagen fija y montar Swiper recién cuando el usuario pasa el mouse, toca o usa las flechas (ya se hace algo parecido con las fotos, VA-74). Cambia apenas el comportamiento: en celular, el primer deslizamiento monta el carrusel.
+- **TBT:** no cumple. En `/planes` cada card montaba su propio Swiper al hidratar (21 por página, `components/ui/CardImageCarousel.tsx`). Resuelto el mismo día (ver abajo).
 - Nota del 10/10: una medición anterior daba LCP de 10–24 s. No era el sitio: quedaban **620 procesos de Edge sin interfaz** de los scripts de capturas (el `kill` cerraba solo el proceso principal) y la CPU estaba al 100 %. Los scripts ahora cierran el árbol completo.
+
+## Laboratorio local, 10/10/2026 — después de montar Swiper al interactuar (commit `7f11a14`)
+
+Mismo método. Las cards muestran la primera foto fija y Swiper se descarga (`next/dynamic`) y se monta recién al pasar el mouse, tocar o enfocar la card (`components/ui/CardImageSwiper.tsx`).
+
+| Página | LCP | TBT | CLS |
+|---|---|---|---|
+| `/planes` | 2,06 s | **224 ms** (antes 881) | 0 |
+| `/` | 2,98 s | 597 ms | 0 |
+| Detalle de avión | 1,98 s | 295 ms | 0 |
+
+La Home y el detalle no usan estas cards: sus diferencias con la tabla anterior son la variación normal entre corridas en esta PC. **Pendiente para llegar a < 200 ms:** la Home (hidratación del header, los carruseles de Destacadas, Últimos avisos y Categorías de repuestos) y el LCP de la Home (HTML + CSS que bloquea el render).
 
 ## Pendiente (VA-76)
 
 1. **Lighthouse en pre-production** (https://planes-website-git-pre-production-diodo.vercel.app/), cuando se mergee esta rama: PageSpeed Insights (https://pagespeed.web.dev/) en modo celular sobre `/`, `/planes` y un detalle. Anotar acá Performance, LCP, TBT y CLS. Objetivo: Performance ≥ 85 en la Home, LCP < 2,5 s, TBT < 200 ms.
-2. **Vercel Speed Insights**: requiere instalar `@vercel/speed-insights` y agregar `<SpeedInsights />` al layout, y activarlo en el panel de Vercel. No se instaló todavía (pide confirmación).
-3. **TBT de `/planes`** (881 ms en laboratorio): montar Swiper en las cards recién al interactuar (ver arriba). Espera el OK del socio porque cambia un poco el comportamiento en celular.
+2. **Vercel Speed Insights**: instalado y en el layout (commit `356efaf`). Falta **activarlo en el panel de Vercel** (proyecto → Speed Insights → Enable); sin eso no se registran datos.
+3. **TBT y LCP de la Home** (597 ms y 2,98 s en laboratorio): ver la tabla de arriba.
 4. **Cachear datos de listados y detalles** (`unstable_cache` con tags, invalidados al publicar/editar/borrar/renovar/preguntar): siguen siendo dinámicos por los favoritos del usuario. Ahorra consultas a la base en cada visita.
