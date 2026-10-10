@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 68 de 74 tareas cerradas (67 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60 a VA-63, VA-70 a VA-75, VA-77 a VA-79 y VA-81 a VA-87. VA-76 parcial. Faltan 6 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 71 de 74 tareas cerradas (70 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60 a VA-63, VA-70 a VA-75, VA-77 a VA-79 y VA-81 a VA-87. Faltan 3: VA-59, VA-76 (parcial) y VA-80 (no es del MVP). Nota del 10/10: el conteo anterior tenía un error de uno (la lista sumaba 69, no 68) (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -60,6 +60,7 @@ Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://l
 | VA-23 | `7c6f4ab` | **Precios y estados legibles.** Todos los precios con el mismo formato ("US$ 180.500" / "AR$ …") vía `formatPrice`; el buscador del header ya no dice USD en repuestos en pesos. Estados con etiquetas ("Usado", "A reparar", "Pistón") también en el PDF y la card de repuesto. | Home (destacadas y últimas), `/planes`, `/spareparts`, buscador del header, PDF. `lib/format.ts`, `lib/constants.ts` |
 | VA-24 | `254194f` | Horas en 0 visibles en el PDF del avión (antes la fila desaparecía); año de la card destacada con `!= null`. | PDF de un avión con motor en 0 h. `components/ui/AircraftPDF.tsx` |
 | VA-25 | `1640ad2` | **Placeholder que existe** (`/placeholder.svg`) en los 15 lugares que usaban `/placeholder.png`; la card destacada muestra el placeholder si la foto no carga. | `/planes?brand=…` con el aviso "Mock 7" (foto de loremflickr caída). `PLACEHOLDER_IMAGE` en `lib/constants.ts` |
+| VA-27 | — | Cerrada sin cambios: el placeholder que faltaba ya se arregló en VA-25; los avisos de prueba de producción no se tocan (decisión de los socios). | — |
 | VA-26 | `607bc3b` | Tipos de next-auth limpios y fuera `requireCompleteProfile` (iba a `/completar-perfil`, que no existe). | Sin cambio visible. `types/next-auth.d.ts`, `lib/auth-helpers.ts` |
 | VA-28 | `ec0a4b6` | **Tildes y voseo**: "¿Querés vender tu aeronave?", "Publicar mi avión", "Pellizcá o usá la rueda…", "y más...", y mensajes de error en voseo ("Tenés que iniciar sesión…"). | Home (bloque "¿Querés vender…"), zoom de la galería, buscador, preguntas, cupones. 18 archivos |
 | VA-29 | `d21ce1e` | Cinta "Próximamente" de `/services`: badge arriba del título en celular y tablet; cinta diagonal solo desde 1024 px. | http://localhost:3000/services a 375 px |
@@ -84,6 +85,7 @@ Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://l
 | VA-48 | — | **Descartado** por el socio: no va el desplegable de "Repuestos" en el header ni los botones "Ver todo" del hero (se hicieron y se sacaron sin commitear). | — |
 | VA-46 | `e397ebd` | **Perfil incompleto**: punto rojo en el header y "Completá tu perfil" en el menú; en el perfil, cartel con lo que falta y puntos en los campos vacíos. **Sin teléfono no se publica**: `/publish` pide cargarlo ahí mismo y el servidor lo valida. | Usuario sin teléfono → `/profile/<id>` y `/publish`. `lib/profile.ts`, `components/ui/PhoneRequiredCard.tsx` |
 | VA-47 | `b79db15` | **Promoción de lanzamiento** ("publicá tu avión 100% gratis"): cartel en la Home para visitantes (máx. 2 veces o hasta cerrarlo) y aviso en `/publish`. Solo visual; se apaga o cambia en `lib/promo.ts`. | `/` sin sesión; `/publish` con sesión |
+| VA-33 | `597f2d8` | **Tipo de cuenta antes de publicar y desde el admin** (lo demás salió con VA-87). Las cuentas sin tipo confirmado (Google anteriores a VA-87) ven "¿Quién publica?" al entrar a `/publish` y vuelven al formulario. En `/admin/users`, columna "Tipo de cuenta" con Particular, Empresa y **Fábrica** (solo el admin la asigna) y aviso "Sin confirmar". | `/admin/users`; `/publish` con una cuenta de Google vieja |
 | VA-34 | `4de0300` | **"Compartir" siempre abre la ventana flotante** (cards y detalle, celular y escritorio). Antes: menú nativo del celular o copiar el link sin avisar. | Botón compartir de cualquier card o detalle. `components/ui/ShareDialog.tsx` |
 
 ### VA-57 · Verificación "campo del formulario → dónde se ve en el detalle"

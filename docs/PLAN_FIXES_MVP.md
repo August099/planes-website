@@ -307,6 +307,8 @@ Opcional, cuando haya volumen: búsqueda con `contains` sobre `title`/`descripti
 - En vivo hay publicaciones de prueba con imágenes de `loremflickr.com` que no cargan. **Los socios confirmaron que no importa**: se van a reemplazar por publicaciones reales. No borrar nada.
 - Lo único que sí hay que corregir es el fallback `"/placeholder.png"`, que no existe (VA-25). Así, una publicación real sin foto o con una foto caída muestra el placeholder en vez de un ícono roto.
 
+**Estado (10/10/2026):** ✅ cerrada sin cambios nuevos. El fallback ya se corrigió en VA-25 (commit `1640ad2`): `PLACEHOLDER_IMAGE = "/placeholder.svg"` en `lib/constants.ts`, y el archivo existe en `public/`. Las publicaciones de prueba de producción no se tocan (decisión de los socios). Cuando se reemplacen por avisos reales, sacar `loremflickr.com` de `images.remotePatterns` en `next.config.ts`.
+
 ### VA-28 · Textos sin tildes y detalles de copy (visto en vivo)
 - `components/ui/SellerCta.tsx` l.24/29/38: "¿Queres vender tu aeronave?", "Publica en minutos y llega…" y "Publicar mi avion" → "¿Querés…?", "Publicá en minutos y llegá…" y "Publicar mi avión".
 - `components/ui/Carousel.tsx`: "Pellizca o usa la rueda…" → "Pellizcá o usá la rueda…".
@@ -372,6 +374,8 @@ Revisando el flujo completo (`PublishForm.tsx` → `app/publish/actions.ts` → 
   5. **Admin:** mostrar y poder corregir el tipo en `/admin/users` (VA-58), por si alguien se equivoca.
   6. Mientras haya cuentas sin confirmar, el filtro "Publica" puede dar resultados incompletos: opcionalmente mostrar el filtro recién cuando la mayoría de los vendedores con avisos estén confirmados.
 - **Migración:** `ALTER TABLE "User" ADD COLUMN "userTypeConfirmed" BOOLEAN NOT NULL DEFAULT false` + `UPDATE ... SET true WHERE "passwordHash" IS NOT NULL` (mostrar el SQL antes de aplicar).
+
+**Estado (10/10/2026):** ✅ hecho en local. La mayor parte salió con **VA-87** (commit `839c15c`): etiquetas en `lib/user-types.ts`, tipo editable en "Mi perfil", `userTypeConfirmed` con su migración y la pregunta después del primer login con Google. Las opciones del usuario quedaron en dos ("Particular / Privado" y "Empresa / Taller / Broker"), como pidió el socio en VA-87. **Commit `597f2d8`** completa lo que faltaba: (4) **antes de publicar**, si el tipo no está confirmado (cuentas de Google anteriores a VA-87), `/publish` lleva a "¿Quién publica?" (`/onboarding/account-type?from=publish`, destino fijo) y vuelve a publicar; en la edición de un aviso no pregunta. (5) **Admin:** columna "Tipo de cuenta" en `/admin/users` con los tres tipos ("Fábrica" solo se asigna desde ahí) y aviso "Sin confirmar"; guardar lo marca como confirmado (`setUserTypeAction`). **No se hizo** el punto 6 opcional (ocultar el filtro "Publica" mientras haya cuentas sin confirmar). **Verificado** en el build de producción con un usuario de prueba sin confirmar: `/publish` → "¿Quién publica?" → elegir → vuelve a `/publish`, y la segunda vez ya no pregunta; en el admin, cambiar a Fábrica se guarda y queda confirmado. El usuario de prueba quedó como estaba.
 
 ### VA-34 · "Compartir" siempre con ventana flotante (pedido del socio, 9/10)
 - **Problema:** cada botón de compartir hacía algo distinto: en las cards, menú nativo del celular o copiar el link sin avisar en escritorio; en el detalle, menú nativo si existía.
