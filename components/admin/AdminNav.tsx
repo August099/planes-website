@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Banknote,
   BarChart3,
   FileWarning,
   Globe2,
@@ -28,6 +29,7 @@ export const NAV_ITEMS = [
   { label: "Reportes", href: "/admin/report", icon: FileWarning },
   { label: "Añadir taxonomía", href: "/admin/taxonomy", icon: Tag },
   { label: "Cupones", href: "/admin/coupons", icon: Receipt },
+  { label: "Precios", href: "/admin/prices", icon: Banknote },
 ];
 
 function NavLinks({ pathname }: { pathname: string }) {

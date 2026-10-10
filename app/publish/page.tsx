@@ -5,6 +5,7 @@ import Link from "next/link";
 import PublishForm from "@/components/ui/PublishForm";
 import { loadListingForEdit } from "@/lib/listing-edit";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { getListingPrices } from "@/lib/listing-prices";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,8 @@ export default async function PublishPage({ searchParams }: Props) {
       </main>
     );
   }
+
+  const listingPrices = await getListingPrices();
 
   // VA-46: sin teléfono el formulario pide cargarlo antes de publicar.
   const sellerPhone = await prisma.user.findUnique({
@@ -99,6 +102,7 @@ export default async function PublishPage({ searchParams }: Props) {
         spareCategoriesData={JSON.parse(JSON.stringify(rawSpareCategories))}
         editListing={editListing ?? undefined}
         needsPhone={!sellerPhone?.phone?.trim()}
+        listingPrices={{ aircraft: listingPrices.AIRCRAFT.label, sparePart: listingPrices.SPARE_PART.label }}
       />
     </main>
   );

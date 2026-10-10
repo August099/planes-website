@@ -45,6 +45,7 @@ model User {
   sessions                  Session[]
   spareParts                SparePart[]
   Subscription              Subscription?
+  listingPriceChanges       ListingPriceChange[]
 }
 
 model Account {
@@ -103,6 +104,29 @@ model Plan {
   isUnlimitedSpareParts   Boolean          @default(false)
   purchases               Purchase[]
   subscriptions           Subscription[]
+}
+
+// VA-59: precio por menor de publicar un avión o un repuesto, editable desde /admin/prices.
+// Una fila por tipo. Lo que se cobre se lee siempre de acá en el servidor (Fase 6).
+model ListingPrice {
+  kind      ListingKind @id
+  amount    Decimal     @db.Decimal(12, 2)
+  currency  String      @default("ARS")
+  updatedAt DateTime    @updatedAt
+}
+
+// VA-59: historial de cambios de precio (quién, cuándo, de cuánto a cuánto).
+model ListingPriceChange {
+  id             String      @id @default(cuid())
+  kind           ListingKind
+  previousAmount Decimal     @db.Decimal(12, 2)
+  newAmount      Decimal     @db.Decimal(12, 2)
+  currency       String      @default("ARS")
+  adminId        String?
+  admin          User?       @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  createdAt      DateTime    @default(now())
+
+  @@index([kind, createdAt])
 }
 
 model Purchase {
@@ -598,6 +622,11 @@ enum CouponScope {
   AIRCRAFT
   SPARE_PART
   AD_BANNER
+}
+
+enum ListingKind {
+  AIRCRAFT
+  SPARE_PART
 }
 
 enum UserType {

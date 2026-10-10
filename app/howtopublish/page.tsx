@@ -12,6 +12,7 @@ import {
     ShieldCheck
 } from "lucide-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { getListingPrices } from "@/lib/listing-prices";
 
 export const metadata: Metadata = {
   title: "Cómo publicar tu avión o repuesto",
@@ -19,7 +20,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/howtopublish" },
 };
 
-export default function HowToPublishPage() {
+export default async function HowToPublishPage() {
+  // VA-59: precio vigente de publicar, editable desde /admin/prices.
+  const prices = await getListingPrices();
     return (
         <main className="relative isolate overflow-hidden min-h-screen">
             <PageBackground page="howtopublish" />
@@ -86,6 +89,16 @@ export default function HowToPublishPage() {
                             <p className="text-lg text-blue-100 mb-4">
                                 Antes de que el anuncio se haga público, el sistema te pedirá abonar el costo de la publicación mediante nuestra pasarela de pago segura. 
                             </p>
+                            <dl className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-white/20 bg-white/20 tabular-nums">
+                                <div className="bg-[#001F58] px-4 py-3">
+                                    <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-200">Un avión</dt>
+                                    <dd className="mt-0.5 text-xl font-bold text-white">{prices.AIRCRAFT.label}</dd>
+                                </div>
+                                <div className="bg-[#001F58] px-4 py-3">
+                                    <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-200">Un repuesto</dt>
+                                    <dd className="mt-0.5 text-xl font-bold text-white">{prices.SPARE_PART.label}</dd>
+                                </div>
+                            </dl>
                             <div className="bg-white/10 border border-white/20 p-4 rounded-xl flex items-start gap-3">
                                 <Ticket className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
                                 <p className="text-base text-white font-medium">

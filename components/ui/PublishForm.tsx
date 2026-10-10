@@ -59,6 +59,8 @@ interface PublishFormProps {
     editListing?: EditListingData;
     // VA-46: el usuario no tiene teléfono cargado (no puede publicar hasta cargarlo).
     needsPhone?: boolean;
+    // VA-59: precio vigente por aviso (texto ya formateado), editable desde /admin/prices.
+    listingPrices?: { aircraft: string; sparePart: string };
 }
 
 interface EngineInput {
@@ -98,7 +100,8 @@ export default function PublishForm({
     brandsData = [],
     spareCategoriesData = [],
     editListing,
-    needsPhone = false
+    needsPhone = false,
+    listingPrices
 }: PublishFormProps) {
     const errorRef = useRef<HTMLDivElement>(null);
     const isEditing = !!editListing;
@@ -710,12 +713,26 @@ export default function PublishForm({
               </h1>
             </div>
 
-            {/* VA-47: aviso de la promoción de lanzamiento al publicar un avión */}
+            {/* VA-47: aviso de la promoción de lanzamiento al publicar un avión; VA-59: con el precio
+                vigente tachado. */}
             {LAUNCH_PROMO.enabled && !isEditing && activeTab === "aircraft" && (
               <div className="max-w-2xl mx-auto mb-6 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
                 <Sparkles className="h-5 w-5 shrink-0 text-emerald-600" />
-                <p><span className="font-bold">{LAUNCH_PROMO.title}:</span> {LAUNCH_PROMO.text.toLowerCase()}.</p>
+                <p>
+                  <span className="font-bold">{LAUNCH_PROMO.title}:</span> {LAUNCH_PROMO.text.toLowerCase()}.
+                  {listingPrices && listingPrices.aircraft !== "Gratis" && (
+                    <> Precio por aviso: <s className="tabular-nums">{listingPrices.aircraft}</s>.</>
+                  )}
+                </p>
               </div>
+            )}
+
+            {/* VA-59: precio por aviso de un repuesto. Hasta la Fase 6 (Mercado Pago) no se cobra. */}
+            {listingPrices && !isEditing && activeTab === "parts" && (
+              <p className="max-w-2xl mx-auto mb-6 border-l-2 border-[#001F58]/30 pl-3 text-sm text-slate-600">
+                Precio por aviso de repuesto: <span className="font-semibold tabular-nums text-[#001F58]">{listingPrices.sparePart}</span>
+                {listingPrices.sparePart !== "Gratis" && " · por ahora no se cobra; el pago se habilita más adelante."}
+              </p>
             )}
 
             {phoneMissing && <PhoneRequiredCard onSaved={() => { setPhoneMissing(false); setFormError(null); }} />}
