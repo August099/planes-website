@@ -43,3 +43,18 @@ export async function toggleFavoriteAction(itemId: string, type: "AIRCRAFT" | "S
   revalidatePath("/favs");
   return { isFavorite: true };
 }
+
+// VA-76: IDs de los favoritos del usuario, para páginas estáticas (la Home) que los marcan desde el
+// navegador en vez de leer la sesión en el servidor. Sin sesión devuelve null.
+export async function getMyFavoriteIds(): Promise<{ aircraft: string[]; spareParts: string[] } | null> {
+  const user = await getCurrentUser();
+  if (!user?.id) return null;
+  const favorites = await prisma.favorite.findMany({
+    where: { userId: user.id },
+    select: { aircraftId: true, sparePartId: true },
+  });
+  return {
+    aircraft: favorites.flatMap((f) => (f.aircraftId ? [f.aircraftId] : [])),
+    spareParts: favorites.flatMap((f) => (f.sparePartId ? [f.sparePartId] : [])),
+  };
+}

@@ -77,6 +77,7 @@ export async function renewListingAction(id: string, type: "aircraft" | "sparepa
     }
 
     revalidatePath("/profile");
+    revalidatePath("/"); // VA-76: la Home es estática
     return { success: true };
   } catch (error) {
     const authError = listingAuthError(error);
@@ -126,6 +127,7 @@ export async function deleteListingAction(id: string, type: "AIRCRAFT" | "SPARE_
     revalidatePath("/profile");
     revalidatePath("/planes");
     revalidatePath("/spareparts");
+    revalidatePath("/"); // VA-76: la Home es estática
 
     return { success: true };
   } catch (error) {

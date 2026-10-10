@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { LAUNCH_PROMO } from "@/lib/promo";
+import { useViewerStatus } from "@/components/ui/FavoriteIdsProvider";
 
 const STORAGE_KEY = "va_launch_promo";
 
@@ -32,17 +33,21 @@ function writeState(state: PromoState) {
 
 // Cartel de la Home para visitantes sin cuenta (VA-47). Se ve como mucho LAUNCH_PROMO.maxViews
 // veces por navegador, o hasta que lo cierren. Nada de ventanas emergentes.
+// VA-76: la Home es estática, así que "sin cuenta" se sabe en el navegador (FavoriteIdsProvider);
+// solo cuenta una vista cuando se confirma que no hay sesión.
 export function LaunchPromoBanner() {
   const [visible, setVisible] = useState(false);
+  const viewer = useViewerStatus();
 
   useEffect(() => {
     if (!LAUNCH_PROMO.enabled) return;
+    if (viewer !== null && viewer !== "anonymous") return;
     const state = readState();
     if (state.dismissed || state.views >= LAUNCH_PROMO.maxViews) return;
     writeState({ ...state, views: state.views + 1 });
     // eslint-disable-next-line react-hooks/set-state-in-effect -- el estado depende de localStorage, que solo existe en el navegador
     setVisible(true);
-  }, []);
+  }, [viewer]);
 
   if (!visible) return null;
 

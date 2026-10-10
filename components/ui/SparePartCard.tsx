@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/format";
 import { formatEnum, SPARE_PART_CONDITION_LABELS } from "@/lib/constants";
 import { errorMessage } from "@/lib/errors";
+import { useFavoriteIds } from "@/components/ui/FavoriteIdsProvider";
 
 
 
@@ -50,7 +51,11 @@ export function SparePartCard({
   isFavoriteInitial = false,
   onFavoriteToggle,
 }: SparePartCardProps) {
-  const [isFavorite, setIsFavorite] = useState(isFavoriteInitial);
+  // VA-76: en páginas estáticas (la Home) el favorito llega después, desde FavoriteIdsProvider;
+  // lo que el usuario toca en la card manda sobre eso.
+  const favoriteIds = useFavoriteIds();
+  const [favoriteOverride, setIsFavorite] = useState<boolean | null>(null);
+  const isFavorite = favoriteOverride ?? (isFavoriteInitial || !!favoriteIds?.spareParts.includes(id));
   const [loadingFav, setLoadingFav] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const router = useRouter();
