@@ -14,6 +14,7 @@ import { HeroBanner } from "@/components/ui/hero-banner";
 import { LaunchPromoBanner } from "@/components/ui/LaunchPromoBanner";
 import HomeServicesCards from "@/components/ui/HomeServiceCards";
 import { FeaturedBrands } from "@/components/ui/FeaturedBrands";
+import { AircraftTypesSection } from "@/components/ui/AircraftTypesSection";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationAndWebsiteJsonLd } from "@/lib/structured-data";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
@@ -39,6 +40,7 @@ export default async function HomePage() {
     userFavorites,
     aircraftByProvince,
     sparePartsByProvince,
+    aircraftByCategory,
   ] = await Promise.all([
     prisma.aircraft.findMany({
       where: activeListingWhere(),
@@ -79,7 +81,12 @@ export default async function HomePage() {
     // como el resto de la Home, para que coincida siempre con los listados.
     prisma.aircraft.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
     prisma.sparePart.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
+    // VA-86: avisos visibles por categoría de aeronave (mismo criterio que /planes).
+    prisma.aircraft.groupBy({ by: ["categoryId"], where: activeListingWhere(), _count: { _all: true } }),
   ]);
+  const categoryCounts: Record<string, number> = Object.fromEntries(
+    aircraftByCategory.filter((g) => g.categoryId).map((g) => [g.categoryId as string, g._count._all])
+  );
 
   // { slug: { aircraft, parts } }. Las provincias que no son una de las 24 canónicas no cuentan
   // (los listados filtran por igualdad exacta); ver scripts/normalize-provinces.ts.
@@ -180,6 +187,7 @@ export default async function HomePage() {
           {/* VA-47: invitación a registrarse, solo para visitantes sin cuenta */}
           {!user && <LaunchPromoBanner />}
           <FeaturedBrands brands={featuredBrandsFromDb} />
+          <AircraftTypesSection counts={categoryCounts} />
           <div className="container mx-auto px-4 pb-12">
             <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
           </div>
