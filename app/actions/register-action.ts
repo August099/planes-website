@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { UserType } from "@prisma/client";
 import { issueVerificationEmail } from "@/lib/verification";
+import { parseSelectableUserType } from "@/lib/user-types";
 
 export async function registerUserAction(formData: FormData) {
   try {
@@ -39,7 +40,10 @@ export async function registerUserAction(formData: FormData) {
     }
 
     // 5. Mapear el valor del formulario al Enum de Prisma (UserType)
-    const userType: UserType = userTypeInput === "COMPANY" ? UserType.RESELLER : UserType.PARTICULAR;
+    // VA-87: mismas opciones que el perfil y la pantalla de Google (lib/user-types.ts). "COMPANY"
+    // queda por compatibilidad con formularios viejos.
+    const userType: UserType =
+      parseSelectableUserType(userTypeInput) ?? (userTypeInput === "COMPANY" ? UserType.RESELLER : UserType.PARTICULAR);
 
     // 6. Enhashear contraseña
     const passwordHash = await bcrypt.hash(password, 10);
@@ -53,6 +57,7 @@ export async function registerUserAction(formData: FormData) {
         email: email.toLowerCase().trim(),
         passwordHash,
         userType,
+        userTypeConfirmed: true,
       },
     });
 

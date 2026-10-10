@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TermsContent } from "@/lib/terms-content";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { USER_TYPE_OPTIONS } from "@/lib/user-types";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -141,8 +142,11 @@ export default function RegisterPage() {
                 defaultValue="PARTICULAR"
                 className="w-full px-3 py-2 text-xs sm:text-sm rounded-md border border-[#001F58]/20 bg-white/80 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#001F58] font-medium"
               >
-                <option value="PARTICULAR">Particular / Privado</option>
-                <option value="COMPANY">Empresa / Taller / Broker</option>
+                {USER_TYPE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
               </select>
             </div>
 

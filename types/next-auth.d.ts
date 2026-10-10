@@ -7,6 +7,9 @@ declare module "next-auth" {
     user: {
       id: string;
       isAdmin?: boolean;
+      // VA-87: fecha (ISO) en que se verificó el email, leída de la base.
+      emailVerifiedAt?: string | null;
+      userTypeConfirmed?: boolean;
     } & DefaultSession["user"];
   }
 
@@ -20,5 +23,7 @@ declare module "next-auth/jwt" {
     id?: string;
     isAdmin?: boolean;
     isAdminCheckedAt?: number;
+    emailVerified?: string | null;
+    userTypeConfirmed?: boolean;
   }
 }

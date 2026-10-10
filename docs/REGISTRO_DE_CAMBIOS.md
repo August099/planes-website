@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 66 de 73 tareas cerradas (65 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60 a VA-62, VA-70 a VA-75, VA-77 a VA-79 y VA-81 a VA-86. VA-63 y VA-76 parciales. Faltan 7 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 67 de 74 tareas cerradas (66 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60 a VA-62, VA-70 a VA-75, VA-77 a VA-79 y VA-81 a VA-87. VA-63 y VA-76 parciales. Faltan 7 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -185,6 +185,7 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 | VA-86 | `c2d85a8` | **Explorá por tipo de aeronave** en la Home (pedido del socio): 7 aeronaves con nombre, descripción y cantidad de avisos, cada una con el link a `/planes` filtrado. 4 + 3 en computadora, 3 por fila en tablet y carrusel deslizable en celular, sin JS. | `/` (debajo de las marcas) |
 | VA-86 (ajuste) | `b1b1338` | Tipos de aeronave: 15 % más chicos en escritorio (4 + 3) y en celular 2 por fila hacia abajo (la última centrada), en vez del carrusel. | `/` |
 | VA-81 | `0db84bf` | **Ruta de navegación** (Inicio › … › página) en todas las páginas internas, con su `BreadcrumbList` para Google, y en el panel admin. | Cualquier página interna, arriba del título |
+| VA-87 | ver git log | **Google sin el falso "email no verificado"** (Auth.js crea los usuarios de OAuth con el email sin verificar; ahora se guarda al entrar). **Menú:** punto rojo fijo solo con consultas pendientes, sin "Completá tu perfil". **Tipo de cuenta** editable en "Mi perfil" y elegido una vez al entrar con Google. **Página personalizada** (portada, logo, nombre comercial, contacto) para quien tenga un plan con ese beneficio. Destacadas vuelve al diseño original. Migración nueva: en producción, `npm run migrate:deploy`. | `/profile/[id]`, menú del header, `/onboarding/account-type` |
 
 ## Bugs encontrados en el camino (fuera del plan)
 

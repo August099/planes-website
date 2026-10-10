@@ -6,6 +6,8 @@ import FacebookProvider from "next-auth/providers/facebook";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
+import { profileCompletenessTag } from "@/lib/cached-data";
 
 // En Auth.js v5 un throw común en authorize() llega al cliente como "CredentialsSignin".
 // Con CredentialsSignin + code, el login recibe res.code === "EmailNotVerified" (VA-20).
@@ -79,6 +81,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   session: { strategy: "jwt" },
+  // VA-87: después del primer login con Google, elegir el tipo de cuenta una sola vez.
+  pages: { newUser: "/onboarding/account-type" },
+  events: {
+    // VA-87 · Causa del falso "email no verificado": Auth.js crea los usuarios de OAuth con
+    // emailVerified: null (ignora lo que devuelve profile()) y, al vincular Google a una cuenta que
+    // ya existía, no toca el usuario. Si Google confirma el email, se guarda acá, en los dos casos.
+    async signIn({ user, account, profile }) {
+      if (account?.provider !== "google" || !user?.id) return;
+      if (!(profile as { email_verified?: boolean } | undefined)?.email_verified) return;
+      const updated = await prisma.user.updateMany({
+        where: { id: user.id, emailVerified: null },
+        data: { emailVerified: new Date() },
+      });
+      if (updated.count > 0) revalidateTag(profileCompletenessTag(user.id), { expire: 0 });
+    },
+  },
   callbacks: {
     async jwt({ token, user, trigger }) {
       if (user) {
@@ -90,11 +108,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const checkedAt = typeof token.isAdminCheckedAt === "number" ? token.isAdminCheckedAt : 0;
       const stale = Date.now() - checkedAt > ADMIN_RECHECK_MS;
       if (token?.email && (user || trigger === "update" || stale)) {
+        // VA-87: también emailVerified y userTypeConfirmed, leídos de la base (no del proveedor).
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
-          select: { isAdmin: true },
+          select: { isAdmin: true, emailVerified: true, userTypeConfirmed: true },
         });
         token.isAdmin = dbUser?.isAdmin ?? false;
+        token.emailVerified = dbUser?.emailVerified ? dbUser.emailVerified.toISOString() : null;
+        token.userTypeConfirmed = dbUser?.userTypeConfirmed ?? false;
         token.isAdminCheckedAt = Date.now();
       }
 
@@ -104,6 +125,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token && session.user) {
         session.user.id = token.sub as string;
         session.user.isAdmin = (token.isAdmin as boolean) || false;
+        session.user.emailVerifiedAt = (token.emailVerified as string | null | undefined) ?? null;
+        session.user.userTypeConfirmed = (token.userTypeConfirmed as boolean | undefined) ?? false;
       }
       return session;
     },

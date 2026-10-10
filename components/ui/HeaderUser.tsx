@@ -43,24 +43,19 @@ function useHeaderUser() {
     userId,
     isAdmin: !!ind?.isAdmin || !!session?.user?.isAdmin,
     hasUnanswered: !!ind?.hasUnanswered,
-    profileIncomplete: !!ind?.profileIncomplete,
   };
 }
 
 const logout = () => signOut({ redirectTo: "/" });
 
-function ProfileHint() {
-  return (
-    <span className="flex items-center gap-1 text-[11px] font-semibold text-red-600">
-      Completá tu perfil
-      <span className="w-2 h-2 bg-red-600 rounded-full" />
-    </span>
-  );
+// VA-87: punto rojo fijo (sin animación). Solo con algo pendiente de verdad: consultas sin
+// responder. "Completá tu perfil" salió del menú: esos datos se completan desde "Mi perfil".
+function PendingDot({ className = "" }: { className?: string }) {
+  return <span aria-hidden className={`block rounded-full bg-[#E70F1F] ${className}`} />;
 }
 
 export function DesktopUserMenu() {
-  const { status, userId, isAdmin, hasUnanswered, profileIncomplete } = useHeaderUser();
-  const showDot = hasUnanswered || profileIncomplete;
+  const { status, userId, isAdmin, hasUnanswered } = useHeaderUser();
 
   // Mientras se resuelve la sesión: un lugar del mismo tamaño, sin saltos.
   if (status === "loading") return <div className="h-9 w-9 rounded-lg bg-slate-200/40" aria-hidden />;
@@ -82,12 +77,10 @@ export function DesktopUserMenu() {
       <DropdownMenu>
         <DropdownMenuTrigger
           className="relative flex items-center justify-center p-2.5 rounded-lg bg-[#E70F1F] hover:bg-red-700 text-white transition-colors outline-none cursor-pointer shadow-sm border-none"
-          aria-label="Menú de usuario"
+          aria-label={hasUnanswered ? "Menú de usuario (tenés consultas sin responder)" : "Menú de usuario"}
         >
           <User className="h-4 w-4" />
-          {showDot && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full animate-pulse" />
-          )}
+          {hasUnanswered && <PendingDot className="absolute -top-1 -right-1 h-3 w-3 border-2 border-white" />}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="bg-white text-slate-900 min-w-[180px]">
           {isAdmin && (
@@ -107,13 +100,12 @@ export function DesktopUserMenu() {
           <DropdownMenuItem className="p-0">
             <Link href={`/profile/${userId}`} className="w-full px-2 py-1.5 text-sm flex items-center justify-between gap-3">
               <span>Mi Cuenta</span>
-              {profileIncomplete && <ProfileHint />}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem className="p-0">
             <Link href="/questions" className="w-full px-2 py-1.5 text-sm flex items-center justify-between">
               <span>Mis consultas</span>
-              {hasUnanswered && <span className="w-2 h-2 bg-red-600 rounded-full" />}
+              {hasUnanswered && <PendingDot className="h-2 w-2" />}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem className="p-0">
@@ -146,19 +138,16 @@ const NAV = [
 ];
 
 export function MobileMenu() {
-  const { status, userId, isAdmin, hasUnanswered, profileIncomplete } = useHeaderUser();
-  const showDot = hasUnanswered || profileIncomplete;
+  const { status, userId, isAdmin, hasUnanswered } = useHeaderUser();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         className="relative p-2 rounded-lg border-none hover:bg-white/10 outline-none cursor-pointer"
-        aria-label="Abrir menú"
+        aria-label={hasUnanswered ? "Abrir menú (tenés consultas sin responder)" : "Abrir menú"}
       >
         <Menu className="h-6 w-6" />
-        {showDot && (
-          <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-600 border border-white rounded-full animate-pulse" />
-        )}
+        {hasUnanswered && <PendingDot className="absolute top-1.5 right-1.5 h-2.5 w-2.5 border border-white" />}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 bg-white text-slate-900 p-2 space-y-1">
         {NAV.map((item) => (
@@ -187,13 +176,12 @@ export function MobileMenu() {
             <DropdownMenuItem className="p-0">
               <Link href={`/profile/${userId}`} className="w-full px-2 py-1.5 text-sm font-medium flex items-center justify-between gap-3">
                 <span>Mi Cuenta</span>
-                {profileIncomplete && <ProfileHint />}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem className="p-0">
               <Link href="/questions" className="w-full px-2 py-1.5 text-sm font-medium flex items-center justify-between">
                 <span>Mis consultas</span>
-                {hasUnanswered && <span className="w-2 h-2 bg-red-600 rounded-full" />}
+                {hasUnanswered && <PendingDot className="h-2 w-2" />}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem className="p-0">

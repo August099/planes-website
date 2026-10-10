@@ -8,6 +8,8 @@ import { profileCompletenessTag } from "@/lib/cached-data";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import { normalizeProvince } from "@/lib/provinces";
+import { parseSelectableUserType } from "@/lib/user-types";
+import { hasCustomPage } from "@/lib/subscriptions";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,7 +20,7 @@ export async function updateProfileAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) throw new Error("UNAUTHENTICATED");
 
-  const dataToUpdate: Record<string, string | null> = {};
+  const dataToUpdate: Record<string, string | null | boolean> = {};
 
   const fields = ["name", "phone", "city", "province", "facebook", "instagram"];
   fields.forEach((field) => {
@@ -28,8 +30,41 @@ export async function updateProfileAction(formData: FormData) {
     }
   });
 
+  // VA-87: tipo de cuenta, solo uno de los que se pueden elegir.
+  if (formData.has("userType")) {
+    const userType = parseSelectableUserType(formData.get("userType"));
+    if (!userType) throw new Error("Elegí un tipo de cuenta de la lista.");
+    dataToUpdate.userType = userType;
+    dataToUpdate.userTypeConfirmed = true;
+  }
+
+  // VA-87: datos de la página personalizada, solo con el beneficio del plan.
+  const storefrontFields = ["businessName", "bio", "website", "whatsapp"].filter((f) => formData.has(f));
+  if (storefrontFields.length > 0) {
+    if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye página personalizada.");
+    for (const field of storefrontFields) {
+      const value = String(formData.get(field) ?? "").trim();
+      dataToUpdate[field] = value === "" ? null : value.slice(0, field === "bio" ? 1500 : 200);
+    }
+    const website = dataToUpdate.website;
+    if (typeof website === "string") {
+      const withProtocol = /^https?:\/\//i.test(website) ? website : `https://${website}`;
+      try {
+        dataToUpdate.website = new URL(withProtocol).toString();
+      } catch {
+        throw new Error("La web no es una dirección válida.");
+      }
+    }
+    const whatsapp = dataToUpdate.whatsapp;
+    if (typeof whatsapp === "string") {
+      const digits = whatsapp.replace(/\D/g, "");
+      if (digits.length < 8 || digits.length > 15) throw new Error("El WhatsApp tiene que tener entre 8 y 15 números.");
+      dataToUpdate.whatsapp = digits;
+    }
+  }
+
   // VA-77: la provincia del perfil también es una de las 24 canónicas.
-  if (dataToUpdate.province) {
+  if (typeof dataToUpdate.province === "string") {
     const canonical = normalizeProvince(dataToUpdate.province);
     if (!canonical) throw new Error("Elegí una provincia de la lista.");
     dataToUpdate.province = canonical;
@@ -160,4 +195,33 @@ export async function changePasswordAction({ currentPassword, newPassword }: Cha
     console.error("Error al cambiar la contraseña:", error);
     return { error: "Ocurrió un error inesperado en el servidor." };
   }
+}
+// VA-87: portada y logo de la página personalizada. Llegan ya comprimidas desde el navegador
+// (límite de 4,5 MB de Vercel) y se validan igual que el avatar.
+export async function uploadStorefrontImageAction(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("UNAUTHENTICATED");
+  if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye página personalizada.");
+
+  const kind = formData.get("kind");
+  if (kind !== "cover" && kind !== "logo") throw new Error("Imagen inválida.");
+  const file = formData.get("image") as File | null;
+  if (!file || file.size === 0) throw new Error("NO_FILE");
+
+  const validation = await validateImage(file);
+  if (!validation.ok) throw new Error(validation.error);
+
+  const filePath = `${user.id}/${kind}.${validation.file.ext}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const { error } = await supabase.storage
+    .from("avatars")
+    .upload(filePath, buffer, { contentType: validation.file.contentType, upsert: true });
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+  const url = `${data.publicUrl}?t=${Date.now()}`;
+  await prisma.user.update({ where: { id: user.id }, data: kind === "cover" ? { coverUrl: url } : { logoUrl: url } });
+
+  revalidatePath(`/profile/${user.id}`);
+  return { success: true, url };
 }

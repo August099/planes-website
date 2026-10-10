@@ -37,6 +37,9 @@ import {
 } from "lucide-react";
 import { PROFILE_FIELD_LABELS, type ProfileField } from "@/lib/profile";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
+import { USER_TYPE_LABELS, USER_TYPE_OPTIONS } from "@/lib/user-types";
+import { StorefrontHeader, type StorefrontData } from "@/components/ui/profile/StorefrontHeader";
+import { StorefrontEditor } from "@/components/ui/profile/StorefrontEditor";
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
@@ -105,6 +108,8 @@ interface Props {
   userCoupons?: ProfileCoupon[];
   // VA-46: campos que le faltan al dueño (se calculan en el servidor, ver lib/profile.ts).
   missingProfileFields?: ProfileField[];
+  // VA-87: datos de la página personalizada; null si el vendedor no tiene el beneficio del plan.
+  storefront?: StorefrontData | null;
 }
 
 /** Helper para calcular los días restantes de una publicación */
@@ -135,6 +140,7 @@ export function ProfileView({
   currentUserFavIds,
   userCoupons = [],
   missingProfileFields = [],
+  storefront = null,
 }: Props) {
   const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
   const missingDot = (field: ProfileField) =>
@@ -308,150 +314,164 @@ export function ProfileView({
 
   return (
     <div className="space-y-6">
-      {/* Header Card del Perfil */}
-      <div className="p-6 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6">
-        <div className="relative group w-24 h-24 rounded-full overflow-hidden bg-slate-200 border-2 border-[#001F58]/10 shrink-0 flex items-center justify-center">
-          {profileUser.image ? (
-            <Image
-              src={profileUser.image}
-              alt={profileUser.name || "Usuario"}
-              fill
-              className="object-cover"
-            />
-          ) : (
-            <svg
-              className="w-16 h-16 text-slate-400 translate-y-2"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-            </svg>
-          )}
-
-          {loadingAvatar && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white z-10">
-              <Loader2 className="w-5 h-5 animate-spin" />
-            </div>
-          )}
-
-          {isOwner && !loadingAvatar && (
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                title="Cambiar foto"
-                className="p-1.5 rounded-full bg-white/90 text-slate-800 hover:bg-white cursor-pointer"
+      {/* VA-87: con el beneficio "Página personalizada", encabezado de tienda; si no, el común. */}
+      {storefront ? (
+        <StorefrontHeader
+          storefront={storefront}
+          fallbackName={profileUser.name || "Usuario de Ventas Aeronáuticas"}
+          userTypeLabel={USER_TYPE_LABELS[profileUser.userType as keyof typeof USER_TYPE_LABELS] ?? profileUser.userType}
+          location={locationText}
+          memberSince={memberSince}
+          instagram={profileUser.instagram}
+          facebook={profileUser.facebook}
+          isOwner={isOwner}
+          onEdit={() => setActiveTab("edit")}
+        />
+      ) : (
+        <div className="p-6 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6">
+          <div className="relative group w-24 h-24 rounded-full overflow-hidden bg-slate-200 border-2 border-[#001F58]/10 shrink-0 flex items-center justify-center">
+            {profileUser.image ? (
+              <Image
+                src={profileUser.image}
+                alt={profileUser.name || "Usuario"}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <svg
+                className="w-16 h-16 text-slate-400 translate-y-2"
+                fill="currentColor"
+                viewBox="0 0 24 24"
               >
-                <Camera className="w-4 h-4" />
-              </button>
-              {profileUser.image && (
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              </svg>
+            )}
+
+            {loadingAvatar && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white z-10">
+                <Loader2 className="w-5 h-5 animate-spin" />
+              </div>
+            )}
+
+            {isOwner && !loadingAvatar && (
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
                 <button
                   type="button"
-                  onClick={handleRemoveAvatar}
-                  title="Eliminar foto"
-                  className="p-1.5 rounded-full bg-red-600/90 text-white hover:bg-red-600 cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Cambiar foto"
+                  className="p-1.5 rounded-full bg-white/90 text-slate-800 hover:bg-white cursor-pointer"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Camera className="w-4 h-4" />
+                </button>
+                {profileUser.image && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    title="Eliminar foto"
+                    className="p-1.5 rounded-full bg-red-600/90 text-white hover:bg-red-600 cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleAvatarChange}
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+            />
+          </div>
+
+          <div className="flex-1 text-center md:text-left space-y-2 w-full">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+              <div>
+                {/* NOMBRE DEL USUARIO */}
+                <h1 className="text-2xl font-bold text-[#001F58]">
+                  {profileUser.name || "Usuario de Ventas Aeronáuticas"}
+                </h1>
+
+                {/* INSIGNIAS: TIPO DE CUENTA Y MIEMBRO FUNDADOR */}
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-1.5">
+                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold uppercase tracking-wider">
+                    {USER_TYPE_LABELS[profileUser.userType as keyof typeof USER_TYPE_LABELS] ?? profileUser.userType}
+                  </span>
+
+                  {profileUser.isFoundingMember && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold shadow-2xs">
+                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
+                      Miembro Fundador
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {isOwner && (
+                <button
+                  onClick={() => setActiveTab("edit")}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer self-center md:self-auto"
+                >
+                  <Edit className="w-4 h-4" />
+                  Editar Perfil
                 </button>
               )}
             </div>
-          )}
 
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleAvatarChange}
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-          />
-        </div>
-
-        <div className="flex-1 text-center md:text-left space-y-2 w-full">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-            <div>
-              {/* NOMBRE DEL USUARIO */}
-              <h1 className="text-2xl font-bold text-[#001F58]">
-                {profileUser.name || "Usuario de Ventas Aeronáuticas"}
-              </h1>
-
-              {/* INSIGNIAS: TIPO DE CUENTA Y MIEMBRO FUNDADOR */}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-1.5">
-                <span className="inline-block px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold uppercase tracking-wider">
-                  {profileUser.userType}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-slate-500 pt-1">
+              {locationText && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {locationText}
                 </span>
+              )}
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                Miembro desde {memberSince}
+              </span>
 
-                {profileUser.isFoundingMember && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold shadow-2xs">
-                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
-                    Miembro Fundador
-                  </span>
+              {isOwner && profileUser.phone && (
+                <span className="flex items-center gap-1 font-medium text-slate-700">
+                  <Phone className="w-3.5 h-3.5 text-blue-600" />
+                  {profileUser.phone}
+                </span>
+              )}
+              {isOwner && (
+                <span className="flex items-center gap-1 font-medium text-slate-700">
+                  <Mail className="w-3.5 h-3.5 text-blue-600" />
+                  {profileUser.email}
+                </span>
+              )}
+            </div>
+
+            {(profileUser.facebook || profileUser.instagram) && (
+              <div className="flex items-center justify-center md:justify-start gap-3 pt-2">
+                {profileUser.facebook && (
+                  <a
+                    href={profileUser.facebook}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-slate-400 hover:text-blue-600 transition-colors"
+                  >
+                    <FacebookIcon className="w-4 h-4" />
+                  </a>
+                )}
+                {profileUser.instagram && (
+                  <a
+                    href={profileUser.instagram}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-slate-400 hover:text-pink-600 transition-colors"
+                  >
+                    <InstagramIcon className="w-4 h-4" />
+                  </a>
                 )}
               </div>
-            </div>
-
-            {isOwner && (
-              <button
-                onClick={() => setActiveTab("edit")}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer self-center md:self-auto"
-              >
-                <Edit className="w-4 h-4" />
-                Editar Perfil
-              </button>
             )}
           </div>
-
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-slate-500 pt-1">
-            {locationText && (
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5" />
-                {locationText}
-              </span>
-            )}
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" />
-              Miembro desde {memberSince}
-            </span>
-
-            {isOwner && profileUser.phone && (
-              <span className="flex items-center gap-1 font-medium text-slate-700">
-                <Phone className="w-3.5 h-3.5 text-blue-600" />
-                {profileUser.phone}
-              </span>
-            )}
-            {isOwner && (
-              <span className="flex items-center gap-1 font-medium text-slate-700">
-                <Mail className="w-3.5 h-3.5 text-blue-600" />
-                {profileUser.email}
-              </span>
-            )}
-          </div>
-
-          {(profileUser.facebook || profileUser.instagram) && (
-            <div className="flex items-center justify-center md:justify-start gap-3 pt-2">
-              {profileUser.facebook && (
-                <a
-                  href={profileUser.facebook}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-slate-400 hover:text-blue-600 transition-colors"
-                >
-                  <FacebookIcon className="w-4 h-4" />
-                </a>
-              )}
-              {profileUser.instagram && (
-                <a
-                  href={profileUser.instagram}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-slate-400 hover:text-pink-600 transition-colors"
-                >
-                  <InstagramIcon className="w-4 h-4" />
-                </a>
-              )}
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
       {/* VA-46: aviso de perfil incompleto (solo el dueño) */}
       {isOwner && missingProfileFields.length > 0 && (
@@ -859,6 +879,16 @@ export function ProfileView({
                 <input type="text" name="name" defaultValue={profileUser.name || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
               </div>
               <div>
+                <label htmlFor="profile-user-type" className="block text-xs font-semibold text-slate-600 mb-1">Tipo de cuenta</label>
+                <select id="profile-user-type" name="userType" defaultValue={profileUser.userType} className="w-full px-3 py-2 text-xs border rounded-xl bg-white">
+                  {USER_TYPE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">Teléfono de Contacto{missingDot("phone")}</label>
                 <input type="text" name="phone" defaultValue={profileUser.phone || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
               </div>
@@ -896,6 +926,8 @@ export function ProfileView({
               )}
             </div>
           </form>
+
+          {storefront && <StorefrontEditor storefront={storefront} />}
 
           {/* Formulario de Cambio de Contraseña */}
           <form onSubmit={handleChangePasswordSubmit} className="p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 space-y-4">

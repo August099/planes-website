@@ -25,6 +25,14 @@ model User {
   city                      String?
   province                  String?
   userType                  UserType         @default(PARTICULAR)
+  // VA-87: el usuario ya eligió su tipo de cuenta (en /register o en /onboarding/account-type).
+  userTypeConfirmed         Boolean          @default(false)
+  // VA-87: página personalizada (solo con un plan que la incluya, lib/subscriptions.ts).
+  businessName              String?
+  coverUrl                  String?
+  logoUrl                   String?
+  website                   String?
+  whatsapp                  String?
   accounts                  Account[]
   adBanners                 AdBanner[]
   aircrafts                 Aircraft[]
@@ -84,6 +92,8 @@ model Plan {
   savingsPercent          Int?
   usageDescription        String?
   includesVerifiedBadge   Boolean          @default(false)
+  // VA-87: el plan da "Página personalizada" en /profile/[id].
+  includesCustomPage      Boolean          @default(false)
   isActive                Boolean          @default(true)
   aircraftListingsCount   Int              @default(0)
   sparePartsListingsCount Int              @default(0)

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ProfileView, type ProfileCoupon } from "@/components/ui/ProfileView";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { getMissingProfileFieldsCached } from "@/lib/cached-data";
+import { hasCustomPage } from "@/lib/subscriptions";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
@@ -31,6 +32,13 @@ export default async function ProfilePage({ params }: Props) {
       facebook: true,
       instagram: true,
       createdAt: true,
+      // VA-87: página personalizada
+      businessName: true,
+      bio: true,
+      coverUrl: true,
+      logoUrl: true,
+      website: true,
+      whatsapp: true,
       aircrafts: {
         where: isOwner ? undefined : activeListingWhere(),
         include: {
@@ -71,6 +79,18 @@ export default async function ProfilePage({ params }: Props) {
   if (!rawProfileUser) {
     notFound();
   }
+
+  // VA-87: con el beneficio del plan, el perfil se muestra como página personalizada.
+  const storefront = (await hasCustomPage(id))
+    ? {
+        businessName: rawProfileUser.businessName,
+        bio: rawProfileUser.bio,
+        coverUrl: rawProfileUser.coverUrl,
+        logoUrl: rawProfileUser.logoUrl,
+        website: rawProfileUser.website,
+        whatsapp: rawProfileUser.whatsapp,
+      }
+    : null;
 
   // Obtener los cupones guardados/utilizados por el usuario si es el propietario
   let userCoupons: ProfileCoupon[] = [];
@@ -143,6 +163,7 @@ export default async function ProfilePage({ params }: Props) {
         currentUserFavIds={currentUserFavIds}
         userCoupons={userCoupons}
         missingProfileFields={isOwner ? await getMissingProfileFieldsCached(id) : []}
+        storefront={storefront}
       />
     </main>
   );
