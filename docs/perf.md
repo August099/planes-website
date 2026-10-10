@@ -74,9 +74,26 @@ Mismo método. Las cards muestran la primera foto fija y Swiper se descarga (`ne
 
 La Home y el detalle no usan estas cards: sus diferencias con la tabla anterior son la variación normal entre corridas en esta PC. **Pendiente para llegar a < 200 ms:** la Home (hidratación del header, los carruseles de Destacadas, Últimos avisos y Categorías de repuestos) y el LCP de la Home (HTML + CSS que bloquea el render).
 
+## Laboratorio local, 11/10/2026 — Home estática y menú del header al usarlo
+
+Mismo método (perfil de celular de Lighthouse, mediana de 5).
+
+| Página | TTFB | JS de la Home | LCP | TBT | CLS |
+|---|---|---|---|---|---|
+| `/` antes | 0,52 s | 979 KB | 2,73–2,98 s | 442–597 ms | 0 |
+| `/` ahora | **0,03 s** | **841 KB** (256 KB gzip) | **2,41 s** ✓ | **387 ms** | 0 |
+| `/planes` ahora | 0,12 s | — | 2,02 s | 207 ms | 0 |
+
+Qué cambió:
+- **Home estática** (commit `4682eb8`): leía la sesión solo para marcar favoritos, así que se renderizaba en cada visita con `no-store`. Ahora es estática con `revalidate = 300` y `revalidatePath("/")` al publicar, editar, renovar o borrar un aviso (`Cache-Control: s-maxage=300`, cache HIT). Los favoritos y "¿hay sesión?" (para el cartel de lanzamiento) llegan con un solo pedido desde el navegador (`FavoriteIdsProvider`). En Vercel esto es lo que más baja el LCP real: la Home sale del CDN.
+- **Menú del header al usarlo** (commit `c13d9c3`): el desplegable de `@base-ui` (~140 KB) viajaba con todas las páginas. Ahora hay un botón igual y el módulo se descarga al acercarse (mouse, foco o toque); el clic lo abre ya montado.
+- Revisado y descartado: el chunk de 112 KB de polyfills es `noModule` (los navegadores actuales no lo descargan).
+
+Lo que queda del TBT de la Home es la hidratación de la página (header, filtro del hero y los tres carruseles de Swiper). Bajarlo más pide cargar los carruseles de abajo recién al verlos, que cambia el HTML inicial de "Últimos avisos" (links que hoy lee Google): no se hizo.
+
 ## Pendiente (VA-76)
 
 1. **Lighthouse en pre-production** (https://planes-website-git-pre-production-diodo.vercel.app/), cuando se mergee esta rama: PageSpeed Insights (https://pagespeed.web.dev/) en modo celular sobre `/`, `/planes` y un detalle. Anotar acá Performance, LCP, TBT y CLS. Objetivo: Performance ≥ 85 en la Home, LCP < 2,5 s, TBT < 200 ms.
 2. **Vercel Speed Insights**: instalado y en el layout (commit `356efaf`). Falta **activarlo en el panel de Vercel** (proyecto → Speed Insights → Enable); sin eso no se registran datos.
-3. **TBT y LCP de la Home** (597 ms y 2,98 s en laboratorio): ver la tabla de arriba.
+3. **TBT de la Home** (387 ms en laboratorio; el LCP ya cumple): ver arriba.
 4. **Cachear datos de listados y detalles** (`unstable_cache` con tags, invalidados al publicar/editar/borrar/renovar/preguntar): siguen siendo dinámicos por los favoritos del usuario. Ahorra consultas a la base en cada visita.
