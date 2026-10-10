@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Sparkles, X } from "lucide-react";
+import { X } from "lucide-react";
 import { LAUNCH_PROMO } from "@/lib/promo";
 
 const STORAGE_KEY = "va_launch_promo";
@@ -53,15 +53,14 @@ export function LaunchPromoBanner() {
 
   return (
     <section aria-label={LAUNCH_PROMO.title} className="container mx-auto px-4 pt-8">
-      <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl bg-[#001F58] px-5 py-5 pr-14 text-white shadow-lg">
-        <Sparkles className="hidden sm:block h-8 w-8 shrink-0 text-[#FF5A64]" />
+      <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border-l-4 border-[#E70F1F] bg-[#001F58] px-5 py-5 pr-14 text-white">
         <div className="flex-1">
           <p className="text-xs font-bold uppercase tracking-wider text-[#FF5A64]">{LAUNCH_PROMO.title}</p>
           <p className="text-lg sm:text-xl font-bold">{LAUNCH_PROMO.text}</p>
         </div>
         <Link
           href="/register"
-          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#E70F1F] px-5 text-sm font-bold hover:bg-red-700 transition-colors"
+          className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#E70F1F] px-5 text-sm font-bold hover:bg-[#C20D1A] transition-colors"
         >
           Crear cuenta gratis
         </Link>

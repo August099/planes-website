@@ -40,7 +40,7 @@ export default function HomeServicesCards() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {cards.map((card, index) => (
             <Link key={index} href={card.href} className="block group">
-              <div className="relative w-full h-40 sm:h-48 md:h-52 rounded-2xl overflow-hidden border border-white/20 bg-[#001F58] shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer">
+              <div className="relative w-full h-40 sm:h-48 md:h-52 rounded-lg overflow-hidden border border-white/20 bg-[#001F58] transition-colors duration-300 hover:border-[#E70F1F] cursor-pointer">
                 <Image
                   src={card.image}
                   alt={card.title}

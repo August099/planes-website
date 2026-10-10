@@ -19,6 +19,7 @@ import { organizationAndWebsiteJsonLd } from "@/lib/structured-data";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { ProvinceExplorer, type ProvinceCounts } from "@/components/ui/ProvinceExplorer";
 import { provinceByName } from "@/lib/provinces";
+import { BrandSlashes } from "@/components/ui/BrandSlashes";
 
 // Título y descripción salen del layout; acá solo el canonical.
 export const metadata: Metadata = {
@@ -187,9 +188,6 @@ export default async function HomePage() {
         {/* Zona 2 · Altura: últimas publicaciones + provincias + categorías */}
         <div className="home-zone home-zone-2">
           <div aria-hidden className="home-zone-bg" />
-          {/* Resplandores montados sobre el límite entre la zona 1 y la 2 */}
-          <div aria-hidden className="home-glow home-glow--red -top-[22rem] -left-[18rem] sm:-left-[12rem]" />
-          <div aria-hidden className="home-glow home-glow--sky -top-[16rem] -right-[20rem] sm:-right-[10rem]" />
           <div className="container mx-auto px-4 py-8 space-y-16">
             <LatestAircraft items={combinedLatestListings} />
             <ProvinceExplorer counts={provinceCounts} />
@@ -219,12 +217,3 @@ export default async function HomePage() {
 
 
 
-// Motivo "//" de la marca (las barras del footer), en SVG inline y muy tenue (VA-79).
-function BrandSlashes({ className = "" }: { className?: string }) {
-  return (
-    <svg aria-hidden viewBox="0 0 400 160" fill="none" className={`home-slashes ${className}`}>
-      <path d="M150 4h120L126 156H6z" stroke="currentColor" strokeWidth="8" />
-      <path d="M300 4h60L216 156h-60z" stroke="currentColor" strokeWidth="8" />
-    </svg>
-  );
-}

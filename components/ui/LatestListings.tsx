@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 
@@ -13,6 +12,7 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { CarouselArrow } from "@/components/ui/home/CarouselArrow";
 
 type CategoryProp = { id?: string; name: string } | string | null;
 
@@ -75,14 +75,7 @@ export function LatestAircraft({ items }: LatestListingsProps) {
 
       {/* CARRUSEL SWIPER */}
       <div className="relative">
-        {/* FLECHA IZQUIERDA */}
-        <button
-          id="swiper-latest-listings-prev"
-          className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-          aria-label="Anterior"
-        >
-          <ChevronLeft className="w-10 h-10 sm:w-12 sm:h-12 stroke-[2.5]" />
-        </button>
+        <CarouselArrow id="swiper-latest-listings-prev" direction="prev" />
 
         <Swiper
           modules={[Navigation]}
@@ -140,14 +133,7 @@ export function LatestAircraft({ items }: LatestListingsProps) {
           ))}
         </Swiper>
 
-        {/* FLECHA DERECHA */}
-        <button
-          id="swiper-latest-listings-next"
-          className="absolute -right-4 top-1/2 -translate-y-1/2 z-20 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-          aria-label="Siguiente"
-        >
-          <ChevronRight className="w-10 h-10 sm:w-12 sm:h-12 stroke-[2.5]" />
-        </button>
+        <CarouselArrow id="swiper-latest-listings-next" direction="next" />
       </div>
     </section>
   );

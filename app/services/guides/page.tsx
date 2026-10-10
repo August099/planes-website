@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { GUIDES, GUIDES_PATH } from "@/lib/guides";
-import { GuideCard } from "@/components/ui/guides/GuideCard";
+import { GUIDES, GUIDES_PATH, formatGuideDate } from "@/lib/guides";
+import { GuideIndex } from "@/components/ui/guides/GuideIndex";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { guidesIndexJsonLd } from "@/lib/structured-data";
@@ -48,17 +48,22 @@ export default function GuidesIndexPage() {
           </ol>
         </nav>
 
-        <h1 className="font-heading text-3xl font-semibold text-[#001F58] sm:text-4xl">
-          Guías para comprar y vender aeronaves
-        </h1>
-        <p className="mt-2 mb-10 max-w-2xl border-b border-[#001F58]/20 pb-4 text-sm text-[#001F58]/70">
-          Todo lo que conviene saber antes de cerrar una operación.
-        </p>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-          {GUIDES.map((guide) => (
-            <GuideCard key={guide.slug} guide={guide} headingLevel="h2" />
-          ))}
+        {/* VA-85: asimétrico. A la izquierda la presentación, a la derecha el índice numerado. */}
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-14">
+          <div>
+            <h1 className="font-heading text-3xl font-semibold text-[#001F58] sm:text-4xl">
+              Guías para comprar y vender aeronaves
+            </h1>
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-700">
+              Todo lo que conviene saber antes de cerrar una operación.
+            </p>
+            <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 tabular-nums">
+              {GUIDES.length} guías · Revisadas el {formatGuideDate(GUIDES[0].updatedAt)}
+            </p>
+          </div>
+          <div className="rounded-lg border border-[#001F58]/10 bg-white px-5 sm:px-6">
+            <GuideIndex guides={GUIDES} headingLevel="h2" />
+          </div>
         </div>
       </div>
     </main>

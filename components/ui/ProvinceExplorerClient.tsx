@@ -49,7 +49,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
 
       <div
         data-province-map
-        className="home-card h-[380px] sm:h-[460px] md:h-[600px] rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
+        className="home-card h-[380px] sm:h-[460px] md:h-[600px] rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
         {...mapHandlers}
       >
         {map}
@@ -62,7 +62,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
           <select
             value={selected ?? ""}
             onChange={(e) => setSelected(e.target.value || null)}
-            className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-[#001F58]"
+            className="w-full rounded-md border border-slate-300 bg-white p-3 text-sm text-[#001F58]"
           >
             <option value="">Elegí una provincia</option>
             {provinces.map((p) => (
@@ -74,7 +74,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
         </label>
 
         {/* Desktop: lista de las 24, sincronizada con el mapa */}
-        <ul className="home-card hidden md:grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+        <ul className="home-card hidden md:grid grid-cols-2 gap-1 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
           {provinces.map((p) => {
             const total = p.aircraft + p.parts;
             const isSelected = p.slug === selected;
@@ -110,7 +110,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
         </ul>
 
         {/* Panel de la provincia elegida */}
-        <div className="home-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-live="polite">
+        <div className="home-card rounded-lg border border-slate-200 bg-white p-5 shadow-sm" aria-live="polite">
           {!current ? (
             <p className="text-sm text-slate-500">Tocá una provincia en el mapa para ver sus avisos</p>
           ) : current.aircraft + current.parts === 0 ? (
@@ -120,7 +120,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
               </p>
               <Link
                 href="/publish"
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#E70F1F] px-5 text-sm font-bold text-white hover:bg-[#c5121b] transition-colors"
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#E70F1F] px-5 text-sm font-bold text-white hover:bg-[#C20D1A] transition-colors"
               >
                 Publicar
               </Link>
@@ -139,13 +139,13 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Link
                   href={`/planes?province=${current.slug}`}
-                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-[#E70F1F] px-5 text-sm font-bold text-white hover:bg-[#c5121b] transition-colors"
+                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md bg-[#E70F1F] px-5 text-sm font-bold text-white hover:bg-[#C20D1A] transition-colors"
                 >
                   Ver aeronaves
                 </Link>
                 <Link
                   href={`/spareparts?province=${current.slug}`}
-                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-[#001F58]/20 bg-white px-5 text-sm font-bold text-[#001F58] hover:bg-slate-50 transition-colors"
+                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-[#001F58]/20 bg-white px-5 text-sm font-bold text-[#001F58] hover:bg-slate-50 transition-colors"
                 >
                   Ver repuestos
                 </Link>

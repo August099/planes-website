@@ -46,7 +46,7 @@ export function HeroBanner({
       {/* VA-79: la foto no termina en un borde recto; se funde con el celeste de la zona 1. */}
       <div
         aria-hidden
-        className="absolute inset-x-0 bottom-0 h-40 sm:h-56 pointer-events-none bg-gradient-to-b from-transparent via-[#CFE3F6]/55 to-[#CFE3F6]"
+        className="absolute inset-x-0 bottom-0 h-16 sm:h-24 pointer-events-none bg-gradient-to-b from-transparent to-[#CFE3F6]"
       />
 
       {/* Contenedor del Texto */}

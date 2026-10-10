@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { DynamicCategoryIcon } from "@/components/ui/DynamicCategoryIcon";
 
 // Importaciones de Swiper
@@ -13,6 +12,7 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { CarouselArrow } from "@/components/ui/home/CarouselArrow";
 
 export interface CategoryItem {
   id: string;
@@ -46,14 +46,7 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
 
       {/* CONTENEDOR DEL CARRUSEL */}
       <div className="relative px-1">
-        {/* BOTÓN NAVEGACIÓN IZQUIERDA */}
-        <button
-          id="swiper-button-prev-cat"
-          className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-0 disabled:pointer-events-none transition-all duration-200"
-          aria-label="Anterior"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
+        <CarouselArrow id="swiper-button-prev-cat" direction="prev" />
 
         {/* SWIPER */}
         <Swiper
@@ -82,7 +75,7 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
               spaceBetween: 20,
             },
           }}
-          className="py-2 !overflow-hidden rounded-2xl"
+          className="py-2 !overflow-hidden"
         >
           {categories.map((cat) => (
             <SwiperSlide key={cat.id} className="h-auto">
@@ -90,32 +83,21 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
                 href={`/spareparts?category=${cat.id}`}
                 className="block h-full"
               >
-                <Card className="home-card aspect-square w-full bg-white dark:bg-white border-slate-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-200 group/card cursor-pointer rounded-2xl overflow-hidden">
-                  <CardContent className="p-4 flex flex-col items-center text-center justify-center h-full w-full">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3 group-hover/card:bg-primary group-hover/card:text-white transition-colors duration-200 shrink-0">
-                      <DynamicCategoryIcon
-                        name={cat.icon}
-                        className="h-6 w-6 text-[#001F58] group-hover/card:text-white transition-colors"
-                      />
-                    </div>
-                    <span className="font-semibold text-xs sm:text-sm text-slate-800 group-hover/card:text-primary transition-colors line-clamp-2">
-                      {cat.name}
-                    </span>
-                  </CardContent>
+                <Card className="home-card group/card flex h-full min-h-28 w-full flex-col justify-between gap-3 rounded-lg border-slate-200 bg-white p-4 shadow-sm transition-colors duration-200 hover:border-[#E70F1F] cursor-pointer">
+                  <DynamicCategoryIcon
+                    name={cat.icon}
+                    className="h-6 w-6 text-[#001F58] transition-colors group-hover/card:text-[#E70F1F]"
+                  />
+                  <span className="line-clamp-2 text-left text-xs font-semibold leading-snug text-slate-800 sm:text-sm">
+                    {cat.name}
+                  </span>
                 </Card>
               </Link>
             </SwiperSlide>
           ))}
         </Swiper>
 
-        {/* BOTÓN NAVEGACIÓN DERECHA */}
-        <button
-          id="swiper-button-next-cat"
-          className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-0 disabled:pointer-events-none transition-all duration-200"
-          aria-label="Siguiente"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
+        <CarouselArrow id="swiper-button-next-cat" direction="next" />
       </div>
     </section>
   );

@@ -211,8 +211,7 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
    de la web sigue con el fondo estándar con filtro blanco (VA-56).
    Paleta sacada del hero (backgrounds/home2.webp y home-mobile.webp).
    ========================================================================== */
-.home-theme,
-body:has(.home-theme) [data-site-footer] {
+.home-theme {
   --va-navy: #001f58;      /* marca */
   --va-navy-deep: #001331; /* sombra del hangar del hero */
   --va-blue: #0a4c96;      /* azul del cielo del hero */
@@ -250,31 +249,8 @@ body:has(.home-theme) [data-site-footer] {
   background: linear-gradient(180deg, var(--va-blue) 0%, var(--va-navy) 42%, var(--va-navy-deep) 100%);
 }
 
-/* Resplandores (radial-gradient, sin filter: blur) */
-.home-glow {
-  position: absolute;
-  z-index: -1;
-  pointer-events: none;
-  width: min(900px, 130vw);
-  aspect-ratio: 1;
-  border-radius: 9999px;
-  animation: home-drift 26s ease-in-out infinite;
-}
-.home-glow--red {
-  background: radial-gradient(closest-side, rgb(231 15 31 / 0.11), rgb(231 15 31 / 0) 72%);
-}
-.home-glow--sky {
-  background: radial-gradient(closest-side, rgb(23 103 176 / 0.16), rgb(23 103 176 / 0) 72%);
-  animation-duration: 31s;
-  animation-direction: reverse;
-}
-@keyframes home-drift {
-  0%, 100% { transform: translate3d(0, 0, 0); opacity: 1; }
-  50% { transform: translate3d(5%, 4%, 0); opacity: 0.8; }
-}
-
-/* Motivo "//" de la marca, muy tenue (SVG inline en la página) */
-.home-slashes {
+/* Motivo "//" de la marca, muy tenue (components/ui/BrandSlashes.tsx: Home y footer) */
+.brand-slashes {
   position: absolute;
   z-index: -1;
   pointer-events: none;
@@ -286,20 +262,6 @@ body:has(.home-theme) [data-site-footer] {
 .home-theme .home-card,
 .home-theme [data-card] {
   background-color: #fff;
-  border-color: rgb(0 31 88 / 0.08);
-  box-shadow: 0 12px 32px -16px rgb(0 31 88 / 0.3);
-}
-
-/* El footer continúa el color final de la zona 4, solo en la Home. */
-body:has(.home-theme) [data-site-footer] {
-  background-color: var(--va-navy-deep);
-}
-body:has(.home-theme) [data-footer-bg] {
-  display: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-glow {
-    animation: none;
-  }
+  border-color: rgb(0 31 88 / 0.12);
+  box-shadow: 0 1px 2px rgb(0 31 88 / 0.06);
 }

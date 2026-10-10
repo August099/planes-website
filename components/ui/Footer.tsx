@@ -1,20 +1,17 @@
 import Link from "next/link";
 import Image from "next/image";
+import { BrandSlashes } from "@/components/ui/BrandSlashes";
 import { Mail, Phone } from "lucide-react";
 import { CONTACT_PHONE } from "@/lib/site";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
 
+// VA-83: el mismo footer en todo el sitio: azul profundo liso (el color con que termina la Home)
+// y el "//" de la marca en SVG, en lugar de la imagen bkg-footer.png.
 export function Footer() {
   return (
-    <footer data-site-footer className="relative bg-[#001F58] text-white overflow-hidden">
-      <Image
-        src="/bkg-footer.png"
-        alt="Fondo Footer"
-        // VA-79: en la Home se oculta y el footer sigue el color de la zona 4 (app/globals.css).
-        data-footer-bg
-        fill
-        className="object-cover object-[center_30%]"
-      />
+    <footer className="relative isolate bg-[#001331] text-white overflow-hidden">
+      <BrandSlashes className="-top-8 right-[-5rem] w-80 sm:w-[30rem]" />
+      <BrandSlashes className="-bottom-10 -left-20 w-64 sm:w-96 -scale-x-100" />
 
       <div className="relative z-10 container mx-auto px-4 pt-12 pb-8 sm:pt-16 sm:pb-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">

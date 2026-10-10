@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  OverlayAircraftCard,
-  AircraftCardProps,
-} from "@/components/ui/OverlayAircraftCard";
+import Link from "next/link";
+import { AppImage } from "@/components/ui/AppImage";
+import { formatPrice } from "@/lib/format";
 
 // Swiper React
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -15,13 +13,88 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { CarouselArrow } from "@/components/ui/home/CarouselArrow";
 
-export interface FeaturedAircraftProps extends AircraftCardProps {
+type NamedOrString = string | { name: string } | null | undefined;
+
+export interface FeaturedAircraftProps {
+  id: string;
+  title?: string;
+  brand?: NamedOrString;
+  model?: NamedOrString;
+  price: { toNumber?: () => number } | number | string | null;
+  year: number | null;
+  category?: { id?: string; name: string } | string | null;
+  totalTimeHours?: number | null;
+  city?: string | null;
+  province?: string | null;
+  imageUrl: string;
   viewsCount?: number;
 }
 
 interface Props {
   aircrafts: FeaturedAircraftProps[];
+}
+
+const nameOf = (v: NamedOrString) => (typeof v === "object" && v !== null ? v.name : v || "");
+
+// VA-85: cada destacada es una pieza asimétrica: la foto grande (protagonista) y al costado una
+// "ficha" con los datos que se comparan (año, TT, ubicación) en números tabulares.
+function FeaturedSlide({ aircraft, badge }: { aircraft: FeaturedAircraftProps; badge?: string }) {
+  const brand = nameOf(aircraft.brand);
+  const model = nameOf(aircraft.model);
+  const displayTitle = brand || model ? `${brand} ${model}`.trim() : aircraft.title || "Aeronave";
+  const category = typeof aircraft.category === "object" && aircraft.category !== null ? aircraft.category.name : aircraft.category;
+  const location = [aircraft.city, aircraft.province].filter(Boolean).join(", ");
+  const rows: [string, string | null | undefined][] = [
+    ["Año", aircraft.year != null ? String(aircraft.year) : null],
+    ["Horas totales", aircraft.totalTimeHours != null ? `${aircraft.totalTimeHours.toLocaleString("es-AR")} hs` : "No informadas"],
+    ["Categoría", category],
+    ["Ubicación", location],
+  ];
+
+  return (
+    <Link
+      href={`/planes/plane-details/${aircraft.id}`}
+      className="group grid overflow-hidden rounded-lg border border-[#001F58]/10 bg-white lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]"
+    >
+      <div className="relative aspect-[16/10] bg-slate-200 lg:aspect-auto lg:min-h-[360px]">
+        <AppImage
+          src={aircraft.imageUrl}
+          alt={displayTitle}
+          fill
+          sizes="(min-width: 1024px) 760px, 100vw"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02] motion-reduce:transition-none"
+        />
+        {badge && (
+          <span className="absolute left-3 top-3 rounded-sm bg-[#E70F1F] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
+            {badge}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-5 p-5 sm:p-6">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ficha de la aeronave</p>
+          <h3 className="mt-1 text-xl font-bold leading-tight text-[#001F58] sm:text-2xl">{displayTitle}</h3>
+        </div>
+        <dl className="divide-y divide-[#001F58]/10 border-y border-[#001F58]/10 text-sm">
+          {rows
+            .filter(([, v]) => !!v)
+            .map(([label, value]) => (
+              <div key={label} className="flex items-baseline justify-between gap-4 py-2">
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">{label}</dt>
+                <dd className="text-right font-medium tabular-nums text-slate-800">{value}</dd>
+              </div>
+            ))}
+        </dl>
+        <div className="mt-auto flex items-end justify-between gap-4">
+          <span className="text-2xl font-bold tabular-nums text-[#001F58]">{formatPrice(aircraft.price, { fallback: "Consultar" })}</span>
+          <span className="text-sm font-semibold text-[#C20D1A] group-hover:underline">Ver ficha →</span>
+        </div>
+      </div>
+    </Link>
+  );
 }
 
 export function FeaturedAircraftCarousel({ aircrafts }: Props) {
@@ -53,52 +126,25 @@ export function FeaturedAircraftCarousel({ aircrafts }: Props) {
         <SectionTitle>Aeronaves Destacadas</SectionTitle>
       </div>
 
-      {/* CONTENEDOR CON NAVEGACIÓN LATERAL */}
-      <div className="relative px-6 sm:px-10">
-        {/* FLECHA IZQUIERDA */}
-        <button
-          id="swiper-aircraft-prev"
-          className="absolute -left-2 sm:left-0 top-1/2 -translate-y-1/2 z-20 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-          aria-label="Anterior"
-        >
-          <ChevronLeft className="w-10 h-10 sm:w-12 sm:h-12 stroke-[2.5]" />
-        </button>
-
-        {/* SWIPER */}
+      <div className="relative">
+        <CarouselArrow id="swiper-aircraft-prev" direction="prev" />
         <Swiper
           modules={[Navigation]}
           navigation={{
             prevEl: "#swiper-aircraft-prev",
             nextEl: "#swiper-aircraft-next",
           }}
-          spaceBetween={20}
+          spaceBetween={24}
           slidesPerView={1}
-          breakpoints={{
-            640: {
-              slidesPerView: 2,
-              spaceBetween: 24,
-            },
-          }}
           className="py-2"
         >
           {selectedAircrafts.map((aircraft, index) => (
             <SwiperSlide key={aircraft.id} className="h-auto">
-              <OverlayAircraftCard
-                {...aircraft}
-                featuredBadge={index === 0 ? "Dato Destacado" : undefined}
-              />
+              <FeaturedSlide aircraft={aircraft} badge={index === 0 ? "Dato destacado" : undefined} />
             </SwiperSlide>
           ))}
         </Swiper>
-
-        {/* FLECHA DERECHA */}
-        <button
-          id="swiper-aircraft-next"
-          className="absolute -right-2 sm:right-0 top-1/2 -translate-y-1/2 z-20 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-          aria-label="Siguiente"
-        >
-          <ChevronRight className="w-10 h-10 sm:w-12 sm:h-12 stroke-[2.5]" />
-        </button>
+        <CarouselArrow id="swiper-aircraft-next" direction="next" />
       </div>
     </section>
   );

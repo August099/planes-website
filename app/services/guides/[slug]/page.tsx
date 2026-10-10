@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { GUIDES, GUIDES_PATH, GUIDE_DISCLAIMER, formatGuideDate, getGuide, guidePath, type GuideLink } from "@/lib/guides";
-import { GuideCard } from "@/components/ui/guides/GuideCard";
+import { GuideIndex } from "@/components/ui/guides/GuideIndex";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { guideJsonLd } from "@/lib/structured-data";
@@ -69,7 +69,7 @@ export default async function GuidePage({ params }: Props) {
       <PageBackground page="guides" />
 
       <div className="container mx-auto px-4 pt-10 pb-20 sm:pt-14">
-        <article className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-10">
+        <article className="mx-auto max-w-3xl rounded-lg border border-[#001F58]/10 bg-white p-5 sm:p-10">
           <nav aria-label="Ruta de navegación" className="mb-5 text-xs text-slate-500">
             <ol className="flex flex-wrap items-center gap-1.5">
               <li>
@@ -102,7 +102,7 @@ export default async function GuidePage({ params }: Props) {
           </p>
 
           {guide.source && (
-            <p className="mt-5 rounded-xl border border-[#001F58]/15 bg-[#001F58]/5 p-4 text-sm text-slate-700">
+            <p className="mt-5 rounded-md border-l-4 border-[#001F58] bg-[#001F58]/5 p-4 text-sm text-slate-700">
               Fuente oficial: <InlineLink link={guide.source} />
             </p>
           )}
@@ -157,8 +157,8 @@ export default async function GuidePage({ params }: Props) {
                   href={c.href}
                   className={
                     i === 0
-                      ? "inline-flex min-h-11 items-center justify-center rounded-xl bg-[#E70F1F] px-6 text-sm font-bold text-white transition-colors hover:bg-[#c5121b]"
-                      : "inline-flex min-h-11 items-center justify-center rounded-xl border border-[#001F58]/20 bg-white px-6 text-sm font-bold text-[#001F58] transition-colors hover:bg-slate-50"
+                      ? "inline-flex min-h-11 items-center justify-center rounded-md bg-[#E70F1F] px-6 text-sm font-bold text-white transition-colors hover:bg-[#c5121b]"
+                      : "inline-flex min-h-11 items-center justify-center rounded-md border border-[#001F58]/20 bg-white px-6 text-sm font-bold text-[#001F58] transition-colors hover:bg-slate-50"
                   }
                 >
                   {c.label}
@@ -172,15 +172,11 @@ export default async function GuidePage({ params }: Props) {
           </p>
         </article>
 
-        <section aria-labelledby="otras-guias" className="mx-auto mt-12 max-w-6xl">
+        <section aria-labelledby="otras-guias" className="mx-auto mt-12 max-w-3xl">
           <h2 id="otras-guias" className="font-heading mb-5 text-xl font-bold text-[#001F58]">
             Otras guías
           </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {others.map((g) => (
-              <GuideCard key={g.slug} guide={g} />
-            ))}
-          </div>
+          <GuideIndex guides={others} />
         </section>
       </div>
     </main>
