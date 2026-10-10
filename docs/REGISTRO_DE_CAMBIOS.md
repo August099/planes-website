@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 65 de 73 tareas cerradas (64 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60 a VA-62, VA-70 a VA-75, VA-77 a VA-79 y VA-82 a VA-86. VA-63 y VA-76 parciales. Faltan 8 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso:** 66 de 73 tareas cerradas (65 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-26, VA-28 a VA-32, VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-58, VA-60 a VA-62, VA-70 a VA-75, VA-77 a VA-79 y VA-81 a VA-86. VA-63 y VA-76 parciales. Faltan 7 (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -183,6 +183,8 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 | — | ver git log | **Pautas de diseño**: `docs/DESIGN_GUIDELINES.md` (pedido del socio) y la regla en `AGENTS.md`. Nuevas tareas VA-81 a VA-85 (breadcrumb en todas las páginas, flechas de carruseles, footer único con "//", foto de SellerCta más visible, revisión de Home/Servicios/Guías según las pautas). | `docs/DESIGN_GUIDELINES.md` |
 | VA-82 a VA-85 | `a1b376e` | **Home, Servicios y Guías según las pautas** (dirección mixta ficha técnica + carta de navegación, colores de fondo de VA-79): flechas de carruseles iguales; footer azul profundo con "//" en todo el sitio; banner "Vender" con la foto entera; Destacadas como foto + ficha; Cómo funciona como ruta de waypoints; Guías como índice numerado; /services sin vidrio ni tarjetas con ícono. | `/`, `/services`, `/services/guides`, footer en todas las páginas |
 | VA-86 | `c2d85a8` | **Explorá por tipo de aeronave** en la Home (pedido del socio): 7 aeronaves con nombre, descripción y cantidad de avisos, cada una con el link a `/planes` filtrado. 4 + 3 en computadora, 3 por fila en tablet y carrusel deslizable en celular, sin JS. | `/` (debajo de las marcas) |
+| VA-86 (ajuste) | `b1b1338` | Tipos de aeronave: 15 % más chicos en escritorio (4 + 3) y en celular 2 por fila hacia abajo (la última centrada), en vez del carrusel. | `/` |
+| VA-81 | `0db84bf` | **Ruta de navegación** (Inicio › … › página) en todas las páginas internas, con su `BreadcrumbList` para Google, y en el panel admin. | Cualquier página interna, arriba del título |
 
 ## Bugs encontrados en el camino (fuera del plan)
 
