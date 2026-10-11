@@ -25,6 +25,8 @@ import { sparePartJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { RecommendationRail } from "@/components/ui/recommendations/RecommendationRail";
+import { getAircraftForPart, getSimilarParts } from "@/lib/recommendations";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -113,6 +115,18 @@ export default async function SparePartDetailsPage({
   // Reconstrucción de la jerarquía de categorías del repuesto.
   // sparePart.category es siempre el nivel más específico que eligió el vendedor:
   // puede ser la Subcategoría (2 niveles) o la Sección (3 niveles, sub-subcategoría).
+  // VA-88: bloque A (repuestos similares) y bloque B (aeronaves del modelo o la marca asociados).
+  const recSource = {
+    id: sparePart.id,
+    title: sparePart.title,
+    partNumber: sparePart.partNumber,
+    description: sparePart.description,
+    categoryId: sparePart.categoryId,
+    brand: sparePart.brand,
+    aircrafts: sparePart.aircrafts,
+  };
+  const [similarParts, relatedAircraft] = await Promise.all([getSimilarParts(recSource), getAircraftForPart(recSource)]);
+
   const leafCategory = sparePart.category;
   const midCategory = leafCategory?.parent ?? null;
   const rootCategory = midCategory?.parent ?? null;
@@ -286,6 +300,10 @@ export default async function SparePartDetailsPage({
           sellerId={sparePart.sellerId}
           currentUserId={session?.user?.id}
         />
+
+        {/* VA-88: recomendaciones, al pie (después de las preguntas) */}
+        {similarParts && <RecommendationRail kind="sparePart" id="similares" block={similarParts} />}
+        {relatedAircraft && <RecommendationRail kind="aircraft" id="aeronaves-relacionadas" block={relatedAircraft} />}
       </main>
     </>
   );

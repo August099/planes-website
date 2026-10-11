@@ -3,7 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { getAnalyticsContext } from "@/lib/analytics-context";
 import { getCurrentUser } from "@/lib/auth-helpers";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { RECOMMENDATIONS_TAG } from "@/lib/recommendations";
 import { Resend } from "resend";
 import { EMAIL_FROM, escapeHtml, getSupportEmail } from "@/lib/mail";
 import { AnalyticsEventType } from "@prisma/client";
@@ -301,6 +302,7 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
 
     revalidatePath("/");
     revalidatePath(listingType === "aircraft" ? "/planes" : "/spareparts");
+    updateTag(RECOMMENDATIONS_TAG); // VA-88
     return { ok: true, id, url: listingUrl(listingType, id) };
   } catch (error) {
     console.error("Error al crear la publicación:", error);
@@ -462,6 +464,7 @@ export async function updateListing(id: string, input: ListingInput): Promise<Li
 
     revalidatePath("/");
     revalidatePath("/profile");
+    updateTag(RECOMMENDATIONS_TAG); // VA-88
     return { ok: true, id, url: listingUrl(listingType, id) };
   } catch (error) {
     console.error("Error al editar la publicación:", error);

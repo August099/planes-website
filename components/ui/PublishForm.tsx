@@ -1431,9 +1431,10 @@ export default function PublishForm({
                                             )}
                                         </div>
 
-                                        <div className="p-5 bg-blue-50/50 rounded-xl border border-[#001F58]/10">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58] mb-2">Aeronaves Compatibles</h4>
-                                            <p className="text-[10px] text-slate-500 mb-4">Si tu artículo es exclusivo para ciertos modelos de avión, buscalos y marcalos acá. (Ideal para motores, hélices, tren de aterrizaje, frenos, cubiertas y agrícolas).</p>
+                                        <div className="p-5 bg-blue-50/60 rounded-xl border-2 border-[#001F58]/20">
+                                            {/* VA-88: más visible; con esto el repuesto aparece recomendado en los avisos de ese modelo */}
+                                            <h4 className="font-bold text-base text-[#001F58]">¿Para qué aeronave es?</h4>
+                                            <p className="text-sm text-slate-600 mt-1 mb-4">Así aparece recomendado en los avisos de ese modelo. Podés elegir varias (ideal para motores, hélices, tren de aterrizaje, frenos, cubiertas y agrícolas).</p>
                                             
                                             <div className="relative max-w-lg">
                                                 <div className="flex items-center gap-2 border border-slate-300 rounded-xl p-2.5 bg-white shadow-sm">

@@ -23,8 +23,8 @@ import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
 import { DescriptionBody, ListingDescription } from "@/components/ui/listing/ListingDescription";
 import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
 import { ListingLocationMap } from "@/components/ui/ListingLocationMap";
-import { SimilarCompare } from "@/components/ui/compare/SimilarCompare";
-import { getSimilarAircraft } from "@/lib/similar-aircraft";
+import { CompareSimilarLink, RecommendationRail } from "@/components/ui/recommendations/RecommendationRail";
+import { getPartsForAircraft, getSimilarAircraft } from "@/lib/recommendations";
 import { aircraftJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
@@ -110,8 +110,19 @@ export default async function PlaneDetailsPage({
 
   // VA-57: características e "Información adicional", ya sin vacíos.
   const features = aircraftFeatures(aircraft);
-  // VA-83: atajo "Comparar con similares" (misma categoría y precio parecido).
-  const similar = await getSimilarAircraft(aircraft);
+  // VA-88: "Aeronaves similares" (unifica el "Comparar con similares" de VA-83) y "Repuestos para…".
+  const [similar, parts] = await Promise.all([
+    getSimilarAircraft({
+      id: aircraft.id,
+      categoryId: aircraft.categoryId,
+      brandId: aircraft.brandId,
+      modelId: aircraft.modelId,
+      price: aircraft.price == null ? null : Number(aircraft.price),
+      year: aircraft.year,
+      province: aircraft.province,
+    }),
+    getPartsForAircraft({ id: aircraft.id, brandName: aircraft.brand?.name ?? null, modelName: aircraft.model?.name ?? null }),
+  ]);
   // Web: la ficha no repite lo del resumen. Impresión: ficha completa.
   const sections = aircraftSections(aircraft, { omitSummary: true });
   const printSections = aircraftSections(aircraft);
@@ -235,7 +246,6 @@ export default async function PlaneDetailsPage({
             <div className="order-5 lg:order-none flex flex-col gap-5 lg:gap-8">
               <FeaturesCard title="Características de la aeronave" features={features} />
               <DetailSections sections={sections} />
-              <SimilarCompare currentId={aircraft.id} items={similar} />
             </div>
           </div>
 
@@ -309,6 +319,17 @@ export default async function PlaneDetailsPage({
           sellerId={aircraft.sellerId}
           currentUserId={session?.user?.id}
         />
+
+        {/* VA-88: recomendaciones, al pie (después de las preguntas) */}
+        {similar && (
+          <RecommendationRail
+            kind="aircraft"
+            id="similares"
+            block={similar}
+            action={!isInactive ? <CompareSimilarLink currentId={aircraft.id} items={similar.items} /> : undefined}
+          />
+        )}
+        {parts && <RecommendationRail kind="sparePart" id="repuestos-para" block={parts} />}
       </main>
     </>
   );

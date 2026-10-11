@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { RECOMMENDATIONS_TAG } from "@/lib/recommendations";
 import { hasNoExpiryPlan } from "@/lib/subscriptions";
 import { prisma } from "@/lib/prisma";
 import { assertListingOwner } from "@/lib/listing-auth";
@@ -83,6 +84,7 @@ export async function renewListingAction(id: string, type: "aircraft" | "sparepa
 
     revalidatePath("/profile");
     revalidatePath("/"); // VA-76: la Home es estática
+    updateTag(RECOMMENDATIONS_TAG); // VA-88
     return { success: true };
   } catch (error) {
     const authError = listingAuthError(error);
@@ -133,6 +135,7 @@ export async function deleteListingAction(id: string, type: "AIRCRAFT" | "SPARE_
     revalidatePath("/planes");
     revalidatePath("/spareparts");
     revalidatePath("/"); // VA-76: la Home es estática
+    updateTag(RECOMMENDATIONS_TAG); // VA-88
 
     return { success: true };
   } catch (error) {
