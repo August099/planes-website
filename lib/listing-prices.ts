@@ -12,7 +12,7 @@ export type ListingPriceInfo = { amount: number; currency: string; label: string
 export type ListingPrices = Record<ListingKind, ListingPriceInfo>;
 
 // Valores de la migración, por si la tabla estuviera vacía (por ejemplo, una base sin el seed).
-const DEFAULTS: Record<ListingKind, number> = { AIRCRAFT: 30000, SPARE_PART: 15000 };
+const DEFAULTS: Record<ListingKind, number> = { AIRCRAFT: 30000, SPARE_PART: 15000, HANGAR: 30000 };
 
 export const getListingPrices = unstable_cache(
   async (): Promise<ListingPrices> => {

@@ -7,6 +7,7 @@ const NUMBER = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
 export const LISTING_KIND_LABELS: Record<ListingKind, string> = {
   AIRCRAFT: "Publicar un avión",
   SPARE_PART: "Publicar un repuesto",
+  HANGAR: "Publicar un hangar",
 };
 
 /** Tope del precio, para que un cero de más no pase. */

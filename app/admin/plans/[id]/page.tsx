@@ -15,7 +15,8 @@ export default async function EditPlanPage({ params }: Props) {
   if (!admin?.isAdmin) redirect("/");
   const { id } = await params;
   const p = await prisma.plan.findUnique({ where: { id } });
-  if (!p || p.type === "AD_BANNER") notFound();
+  // Los packs de hangares (VA-84) se editan cuando el formulario de planes los soporte.
+  if (!p || p.type === "AD_BANNER" || p.type === "HANGAR_PACK") notFound();
   if (p.archivedAt) redirect("/admin/plans");
 
   return (
