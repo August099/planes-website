@@ -144,6 +144,34 @@ model ListingPriceChange {
   @@index([kind, createdAt])
 }
 
+// VA-85: guías de /services/guides, editables desde /admin/guides. Solo las PUBLISHED se ven en
+// el sitio, el sitemap y el JSON-LD; las DRAFT dan 404 al público y el admin las ve en la vista previa.
+model Guide {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  excerpt         String
+  audience        GuideAudience
+  // Nombre de un ícono de lucide (de la lista de lib/guide-icons.ts).
+  icon            String
+  metaDescription String
+  // [{ heading, id?, paragraphs[], bullets[], links[{ label, href }] }]
+  sections        Json
+  // Fuente oficial con link visible ({ label, href }) y botones al pie ([{ label, href }]).
+  source          Json?
+  cta             Json          @default("[]")
+  // El glosario se muestra como lista de definiciones y publica DefinedTermSet.
+  isGlossary      Boolean       @default(false)
+  status          GuideStatus   @default(DRAFT)
+  order           Int           @default(0)
+  reviewedBy      String?
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status, order])
+}
+
 model Purchase {
   id             String        @id @default(cuid())
   userId         String
@@ -643,6 +671,17 @@ enum CouponScope {
   AIRCRAFT
   SPARE_PART
   AD_BANNER
+}
+
+enum GuideAudience {
+  comprador
+  vendedor
+  todos
+}
+
+enum GuideStatus {
+  DRAFT
+  PUBLISHED
 }
 
 enum ListingKind {

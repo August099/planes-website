@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Banknote,
+  BookOpen,
   Layers,
   BarChart3,
   FileWarning,
@@ -32,6 +33,7 @@ export const NAV_ITEMS = [
   { label: "Cupones", href: "/admin/coupons", icon: Receipt },
   { label: "Precios", href: "/admin/prices", icon: Banknote },
   { label: "Planes", href: "/admin/plans", icon: Layers },
+  { label: "Guías", href: "/admin/guides", icon: BookOpen },
 ];
 
 function NavLinks({ pathname }: { pathname: string }) {

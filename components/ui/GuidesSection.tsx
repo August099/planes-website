@@ -1,11 +1,15 @@
 import Link from "next/link";
-import { GUIDES, GUIDES_PATH } from "@/lib/guides";
+import { GUIDES_PATH } from "@/lib/guides";
+import { getPublishedGuides } from "@/lib/guides-data";
 import { GuideIndex } from "@/components/ui/guides/GuideIndex";
 import { SectionTitle } from "@/components/ui/home/SectionTitle";
 
 // "Guías para comprar y vender" en la Home (VA-78). Server component: no suma JS de cliente.
 // VA-85: layout asimétrico (intro a la izquierda, índice numerado a la derecha) en vez de 4 tarjetas.
-export function GuidesSection() {
+// VA-85: las 4 primeras guías publicadas según su orden (se ordenan desde /admin/guides).
+export async function GuidesSection() {
+  const guides = (await getPublishedGuides()).slice(0, 4);
+  if (guides.length === 0) return null;
   return (
     <section className="w-full py-12 sm:py-16" aria-labelledby="home-guides-title">
       <div className="container mx-auto grid gap-8 px-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)] lg:gap-14">
@@ -23,7 +27,7 @@ export function GuidesSection() {
             Ver todas las guías →
           </Link>
         </div>
-        <GuideIndex guides={GUIDES} tone="dark" />
+        <GuideIndex guides={guides} tone="dark" />
       </div>
     </section>
   );

@@ -2,7 +2,8 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
 import { absoluteUrl } from "@/lib/site";
-import { GUIDES, GUIDES_PATH, guidePath } from "@/lib/guides";
+import { GUIDES_PATH, guidePath } from "@/lib/guides";
+import { getPublishedGuides } from "@/lib/guides-data";
 
 // Se regenera como máximo una vez por hora.
 export const revalidate = 3600;
@@ -35,7 +36,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: page.priority,
     })),
     // Guías (VA-78)
-    ...GUIDES.map((g) => ({
+    // VA-85: solo las guías publicadas.
+    ...(await getPublishedGuides()).map((g) => ({
       url: absoluteUrl(guidePath(g.slug)),
       lastModified: new Date(g.updatedAt),
       changeFrequency: "monthly" as const,

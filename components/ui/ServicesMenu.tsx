@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { GUIDES, GUIDES_PATH, guidePath } from "@/lib/guides";
+import { GUIDES_PATH, guidePath } from "@/lib/guides";
+import { getPublishedGuides } from "@/lib/guides-data";
 
 // Menú desplegable de "Servicios" en el header de escritorio (pedido del socio, 11/10, con
 // referencia al menú de adidas): al pasar el mouse o al llegar con Tab se abre un panel a todo el
 // ancho con cada sección de Servicios. Hoy: Guías y el comparador de aeronaves (VA-83). Para sumar
-// una sección, agregarla a SERVICE_SECTIONS.
+// una herramienta, agregarla a SERVICE_TOOLS (las guías salen de /admin/guides).
 //
 // Solo CSS (hover y focus-within): no suma JavaScript. Es un componente de servidor: de las guías
 // pasan solo títulos y links, no su contenido.
@@ -13,13 +14,20 @@ import { GUIDES, GUIDES_PATH, guidePath } from "@/lib/guides";
 type MenuLink = { label: string; href: string; hint?: string };
 type MenuSection = { title: string; href: string; links: MenuLink[]; more?: string };
 
-const SERVICE_SECTIONS: MenuSection[] = [
-  {
-    title: "Guías",
-    href: GUIDES_PATH,
-    links: GUIDES.map((g) => ({ label: g.title, href: guidePath(g.slug) })),
-    more: "Ver todas las guías",
-  },
+// VA-85: las guías salen de la base (publicadas, por orden); se muestran hasta 5.
+const MENU_GUIDES = 5;
+
+async function serviceSections(): Promise<MenuSection[]> {
+  const guides = (await getPublishedGuides()).slice(0, MENU_GUIDES);
+  return [
+    ...(guides.length
+      ? [{ title: "Guías", href: GUIDES_PATH, links: guides.map((g) => ({ label: g.title, href: guidePath(g.slug) })), more: "Ver todas las guías" }]
+      : []),
+    ...SERVICE_TOOLS,
+  ];
+}
+
+const SERVICE_TOOLS: MenuSection[] = [
   {
     title: "Herramientas",
     href: "/planes/compare",
@@ -27,7 +35,8 @@ const SERVICE_SECTIONS: MenuSection[] = [
   },
 ];
 
-export function ServicesMenu({ linkClass }: { linkClass: string }) {
+export async function ServicesMenu({ linkClass }: { linkClass: string }) {
+  const sections = await serviceSections();
   return (
     <div className="group flex h-20 items-center">
       <Link href="/services" className={`${linkClass} flex items-center gap-1`} aria-haspopup="true">
@@ -50,7 +59,7 @@ export function ServicesMenu({ linkClass }: { linkClass: string }) {
             </Link>
           </div>
 
-          {SERVICE_SECTIONS.map((section) => (
+          {sections.map((section) => (
             <div key={section.title}>
               <Link href={section.href} className="text-sm font-bold text-[#001F58] hover:text-[#E70F1F]">
                 {section.title}

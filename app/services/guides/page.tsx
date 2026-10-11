@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { GUIDES, GUIDES_PATH, formatGuideDate } from "@/lib/guides";
+import { GUIDES_PATH, formatGuideDate } from "@/lib/guides";
+import { getPublishedGuides } from "@/lib/guides-data";
 import { GuideIndex } from "@/components/ui/guides/GuideIndex";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { guidesIndexJsonLd } from "@/lib/structured-data";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
-// Índice de guías (VA-78), dentro de Servicios. Estática: sin base de datos ni cookies.
+// Índice de guías (VA-78), dentro de Servicios. VA-85: lee las guías publicadas de la base (en
+// caché con el tag "guides"); sigue siendo estática y se regenera cuando el admin guarda.
 export const metadata: Metadata = {
   title: "Guías para comprar y vender aeronaves",
   description:
@@ -21,7 +23,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function GuidesIndexPage() {
+export default async function GuidesIndexPage() {
+  const guides = await getPublishedGuides();
+  const lastReview = guides.map((g) => g.updatedAt).sort().at(-1);
   return (
     <main className="relative isolate min-h-screen">
       <JsonLd data={guidesIndexJsonLd()} />
@@ -40,11 +44,11 @@ export default function GuidesIndexPage() {
               Todo lo que conviene saber antes de cerrar una operación.
             </p>
             <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 tabular-nums">
-              {GUIDES.length} guías · Revisadas el {formatGuideDate(GUIDES[0].updatedAt)}
+              {guides.length} guías{lastReview ? ` · Última revisión el ${formatGuideDate(lastReview)}` : ""}
             </p>
           </div>
           <div className="rounded-lg border border-[#001F58]/10 bg-white px-5 sm:px-6">
-            <GuideIndex guides={GUIDES} headingLevel="h2" />
+            <GuideIndex guides={guides} headingLevel="h2" />
           </div>
         </div>
       </div>

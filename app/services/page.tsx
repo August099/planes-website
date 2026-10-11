@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { GuideIndex } from "@/components/ui/guides/GuideIndex";
-import { GUIDES, GUIDES_PATH } from "@/lib/guides";
+import { GUIDES_PATH } from "@/lib/guides";
+import { getPublishedGuides } from "@/lib/guides-data";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export const metadata: Metadata = {
@@ -45,7 +46,7 @@ const LABEL = "text-[11px] font-semibold uppercase tracking-[0.16em]";
 
 // VA-85: sin panel de vidrio ni grilla de tarjetas con ícono. Encabezado a la izquierda, "Disponible
 // ahora" asimétrico (presentación + índice de guías) y "Próximamente" como lista con códigos.
-export default function ServicesPage() {
+export default async function ServicesPage() {
   return (
     <main className="relative min-h-[calc(100vh-80px)] container mx-auto px-4 py-12 pb-20">
       <PageBackground page="default" />
@@ -90,7 +91,7 @@ export default function ServicesPage() {
               </Link>
             </div>
             <div className="relative z-10">
-              <GuideIndex guides={GUIDES} />
+              <GuideIndex guides={await getPublishedGuides()} />
             </div>
           </div>
         </section>

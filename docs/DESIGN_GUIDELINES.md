@@ -86,7 +86,7 @@ No sumar verdes, violetas ni otros colores de relleno: el verde quedó solo para
 | Mapa de zona aproximada | `components/ui/ListingLocationMap.tsx` (Leaflet al entrar en pantalla, círculo de ~5 km) |
 | Datos de una aeronave (etiquetas y secciones) | `lib/aircraft-fields.ts` (la misma lista en detalle, comparador y PDF) |
 | Comparar aeronaves | `components/ui/compare/CompareButton.tsx` y la bandeja `CompareTray` |
-| Menú de Servicios (sumar una sección) | `SERVICE_SECTIONS` en `components/ui/ServicesMenu.tsx` |
+| Menú de Servicios (sumar una herramienta) | `SERVICE_TOOLS` en `components/ui/ServicesMenu.tsx` (las guías salen de /admin/guides) |
 
 ### Rendimiento (para que una página nueva no lo empeore)
 - Páginas públicas **estáticas** siempre que se pueda: no leer la sesión en el servidor; lo del usuario se pide desde el navegador (ver `FavoriteIdsProvider` y `HeaderUser`). Datos de la base con `unstable_cache` + tag y `updateTag`/`revalidatePath` en la action que los cambia.
