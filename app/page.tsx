@@ -197,7 +197,7 @@ export default async function HomePage() {
         <div className="home-zone home-zone-4 pb-8">
           <div aria-hidden className="home-zone-bg" />
           <BrandSlashes className="-top-6 right-[-4rem] w-72 sm:w-[28rem]" />
-          <BrandSlashes className="bottom-24 -left-24 w-64 sm:w-96 -scale-x-100" />
+          <BrandSlashes className="bottom-24 -left-24 w-64 sm:w-96" />
           <HowItWorks />
           <GuidesSection />
           <HomeServicesCards />

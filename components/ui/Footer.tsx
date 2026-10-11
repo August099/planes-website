@@ -11,7 +11,7 @@ export function Footer() {
   return (
     <footer className="relative isolate bg-[#001331] text-white overflow-hidden">
       <BrandSlashes className="-top-8 right-[-5rem] w-80 sm:w-[30rem]" />
-      <BrandSlashes className="-bottom-10 -left-20 w-64 sm:w-96 -scale-x-100" />
+      <BrandSlashes className="-bottom-10 -left-20 w-64 sm:w-96" />
 
       <div className="relative z-10 container mx-auto px-4 pt-12 pb-8 sm:pt-16 sm:pb-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
