@@ -5,6 +5,7 @@ import { HeaderLogo } from "./header-logo";
 import HeaderSearchBar from "./HeaderSearchBar";
 import MobileHeaderSearchBar from "./MobileHeaderSearchBar";
 import { DesktopUserMenu, MobileMenu } from "./HeaderUser";
+import { ServicesMenu } from "./ServicesMenu";
 
 // Header estático (VA-71): no lee la sesión en el servidor. Antes llamaba a auth() y consultaba
 // la base en cada request, y eso hacía dinámicas todas las páginas del sitio (cache-control:
@@ -34,9 +35,8 @@ export function Header() {
             <Link href="/spareparts" className={linkClass}>
               Repuestos
             </Link>
-            <Link href="/services" className={linkClass}>
-              Servicios
-            </Link>
+            {/* Servicios abre un panel con cada sección (guías, comparador) */}
+            <ServicesMenu linkClass={linkClass} />
             {/* Sin sesión, el proxy manda a /login y vuelve a /publish después de ingresar. */}
             <Link href="/publish" className={linkClass}>
               Vender

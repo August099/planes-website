@@ -89,13 +89,20 @@ export function MobileDropdown({ userId, isAdmin, hasUnanswered, loading }: Menu
         {hasUnanswered && <PendingDot className="absolute top-1.5 right-1.5 h-2.5 w-2.5 border border-white" />}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 bg-white text-slate-900 p-2 space-y-1">
-        {NAV.map((item) => (
+        {NAV.map((item) => [
           <DropdownMenuItem key={item.href} className="p-0">
             <Link href={item.href} className="w-full px-2 py-1.5 text-sm font-medium">
               {item.label}
             </Link>
-          </DropdownMenuItem>
-        ))}
+          </DropdownMenuItem>,
+          ...(item.sub ?? []).map((s) => (
+            <DropdownMenuItem key={s.href} className="p-0">
+              <Link href={s.href} className="w-full border-l-2 border-[#001F58]/15 py-1 pl-4 pr-2 text-sm text-slate-600">
+                {s.label}
+              </Link>
+            </DropdownMenuItem>
+          )),
+        ])}
 
         <DropdownMenuSeparator />
 

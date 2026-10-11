@@ -11,11 +11,19 @@ export function PendingDot({ className = "" }: { className?: string }) {
   return <span aria-hidden className={`block rounded-full bg-[#E70F1F] ${className}`} />;
 }
 
-export const NAV = [
+// "sub": secciones de Servicios que se listan debajo en el menú de celular (como el panel de escritorio).
+export const NAV: { href: string; label: string; sub?: { href: string; label: string }[] }[] = [
   { href: "/", label: "Inicio" },
   { href: "/planes", label: "Aviones" },
   { href: "/spareparts", label: "Repuestos" },
-  { href: "/services", label: "Servicios" },
+  {
+    href: "/services",
+    label: "Servicios",
+    sub: [
+      { href: "/services/guides", label: "Guías" },
+      { href: "/planes/compare", label: "Comparador de aeronaves" },
+    ],
+  },
   { href: "/publish", label: "Vender" },
 ];
 
