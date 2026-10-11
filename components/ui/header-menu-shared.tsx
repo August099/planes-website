@@ -21,6 +21,7 @@ export const NAV: { href: string; label: string; sub?: { href: string; label: st
     label: "Servicios",
     sub: [
       { href: "/services/guides", label: "Guías" },
+      { href: "/services/hangars", label: "Hangares" },
       { href: "/planes/compare", label: "Comparador de aeronaves" },
     ],
   },

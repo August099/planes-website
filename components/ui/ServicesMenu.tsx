@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
+import { HANGARS_PATH } from "@/lib/hangars";
 import { GUIDES_PATH, guidePath } from "@/lib/guides";
 import { getPublishedGuides } from "@/lib/guides-data";
 
@@ -17,17 +18,24 @@ type MenuSection = { title: string; href: string; links: MenuLink[]; more?: stri
 // VA-85: las guías salen de la base (publicadas, por orden); se muestran hasta 5.
 const MENU_GUIDES = 5;
 
-async function serviceSections(): Promise<MenuSection[]> {
+// Cada columna puede tener más de una sección (Hangares y Herramientas van apiladas en la última).
+async function serviceColumns(): Promise<MenuSection[][]> {
   const guides = (await getPublishedGuides()).slice(0, MENU_GUIDES);
   return [
     ...(guides.length
-      ? [{ title: "Guías", href: GUIDES_PATH, links: guides.map((g) => ({ label: g.title, href: guidePath(g.slug) })), more: "Ver todas las guías" }]
+      ? [[{ title: "Guías", href: GUIDES_PATH, links: guides.map((g) => ({ label: g.title, href: guidePath(g.slug) })), more: "Ver todas las guías" }]]
       : []),
-    ...SERVICE_TOOLS,
+    SERVICE_TOOLS,
   ];
 }
 
 const SERVICE_TOOLS: MenuSection[] = [
+  // VA-84: por ahora solo el listado (pedido del socio, 11/10).
+  {
+    title: "Hangares",
+    href: HANGARS_PATH,
+    links: [{ label: "Hangares en alquiler y venta", href: HANGARS_PATH, hint: "Espacios, hangares completos y venta" }],
+  },
   {
     title: "Herramientas",
     href: "/planes/compare",
@@ -36,7 +44,7 @@ const SERVICE_TOOLS: MenuSection[] = [
 ];
 
 export async function ServicesMenu({ linkClass }: { linkClass: string }) {
-  const sections = await serviceSections();
+  const columns = await serviceColumns();
   return (
     <div className="group flex h-20 items-center">
       <Link href="/services" className={`${linkClass} flex items-center gap-1`} aria-haspopup="true">
@@ -59,31 +67,35 @@ export async function ServicesMenu({ linkClass }: { linkClass: string }) {
             </Link>
           </div>
 
-          {sections.map((section) => (
-            <div key={section.title}>
-              <Link href={section.href} className="text-sm font-bold text-[#001F58] hover:text-[#E70F1F]">
-                {section.title}
-              </Link>
-              <ul className="mt-3 space-y-2.5">
-                {section.links.map((l, i) => (
-                  <li key={l.href}>
-                    <Link href={l.href} className="group/link flex gap-3 text-sm text-slate-700 hover:text-[#001F58]">
-                      {section.links.length > 1 && (
-                        <span className="w-5 shrink-0 font-semibold tabular-nums text-[#E70F1F]">{String(i + 1).padStart(2, "0")}</span>
-                      )}
-                      <span>
-                        <span className="group-hover/link:underline">{l.label}</span>
-                        {l.hint && <span className="block text-xs text-slate-500">{l.hint}</span>}
-                      </span>
+          {columns.map((sections) => (
+            <div key={sections[0].title} className="space-y-8">
+              {sections.map((section) => (
+                <div key={section.title}>
+                  <Link href={section.href} className="text-sm font-bold text-[#001F58] hover:text-[#E70F1F]">
+                    {section.title}
+                  </Link>
+                  <ul className="mt-3 space-y-2.5">
+                    {section.links.map((l, i) => (
+                      <li key={l.href}>
+                        <Link href={l.href} className="group/link flex gap-3 text-sm text-slate-700 hover:text-[#001F58]">
+                          {section.links.length > 1 && (
+                            <span className="w-5 shrink-0 font-semibold tabular-nums text-[#E70F1F]">{String(i + 1).padStart(2, "0")}</span>
+                          )}
+                          <span>
+                            <span className="group-hover/link:underline">{l.label}</span>
+                            {l.hint && <span className="block text-xs text-slate-500">{l.hint}</span>}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  {section.more && (
+                    <Link href={section.href} className="mt-4 inline-block text-xs font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
+                      {section.more}
                     </Link>
-                  </li>
-                ))}
-              </ul>
-              {section.more && (
-                <Link href={section.href} className="mt-4 inline-block text-xs font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
-                  {section.more}
-                </Link>
-              )}
+                  )}
+                </div>
+              ))}
             </div>
           ))}
         </div>
