@@ -8,6 +8,7 @@ import { Resend } from "resend";
 import { EMAIL_FROM, escapeHtml, getSupportEmail } from "@/lib/mail";
 import { AnalyticsEventType } from "@prisma/client";
 import { hasNoExpiryPlan } from "@/lib/subscriptions";
+import { coordinatesFor } from "@/lib/geocode";
 import {
   listingSchema,
   toFieldErrors,
@@ -233,6 +234,8 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
   // acepta listingExpiresAt null).
   const expiresAt: Date | null = (await hasNoExpiryPlan(user.id)) ? null : new Date(now);
   expiresAt?.setDate(now.getDate() + 45);
+  // VA-83: coordenadas de la localidad para el mapa del detalle (si Georef falla, sin mapa).
+  const coords = await coordinatesFor(data.city, data.province);
 
   try {
     let id: string;
@@ -247,6 +250,7 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
         data: {
           sellerId: user.id,
           ...aircraftFields(data, categoryId),
+          ...coords,
           status: "ACTIVE",
           listingStartsAt: now,
           listingExpiresAt: expiresAt,
@@ -268,6 +272,7 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
         data: {
           sellerId: user.id,
           ...sparePartFields(data),
+          ...coords,
           status: "ACTIVE",
           listingStartsAt: now,
           listingExpiresAt: expiresAt,
@@ -324,24 +329,34 @@ export async function updateListing(id: string, input: ListingInput): Promise<Li
   }
 
   let sellerId: string;
+  let currentLocation: { city: string | null; province: string | null; latitude: number | null };
   let imageUrls: string[];
   let docUrls: string[] = [];
   if (listingType === "aircraft") {
     const aircraft = await prisma.aircraft.findUnique({
       where: { id },
-      select: { sellerId: true, images: { select: { url: true } }, documents: { select: { url: true } } },
+      select: {
+        sellerId: true,
+        city: true,
+        province: true,
+        latitude: true,
+        images: { select: { url: true } },
+        documents: { select: { url: true } },
+      },
     });
     if (!aircraft) return { ok: false, error: "La publicación no existe." };
     sellerId = aircraft.sellerId;
+    currentLocation = aircraft;
     imageUrls = aircraft.images.map((i) => i.url);
     docUrls = aircraft.documents.map((d) => d.url);
   } else {
     const sparePart = await prisma.sparePart.findUnique({
       where: { id },
-      select: { sellerId: true, images: { select: { url: true } } },
+      select: { sellerId: true, city: true, province: true, latitude: true, images: { select: { url: true } } },
     });
     if (!sparePart) return { ok: false, error: "La publicación no existe." };
     sellerId = sparePart.sellerId;
+    currentLocation = sparePart;
     imageUrls = sparePart.images.map((i) => i.url);
   }
 
@@ -375,6 +390,12 @@ export async function updateListing(id: string, input: ListingInput): Promise<Li
   const finalImages = data.images.map((entry) => (currentImages.has(entry) ? entry : newUrlByPath.get(entry)!));
   const removedImages = [...currentImages].filter((url) => !finalImages.includes(url));
 
+  // VA-83: se vuelve a geocodificar solo si cambió la ciudad o la provincia (o si todavía no tenía
+  // coordenadas); si no, quedan las que estaban.
+  const locationChanged =
+    data.city !== currentLocation.city || data.province !== currentLocation.province || currentLocation.latitude === null;
+  const coords = locationChanged ? await coordinatesFor(data.city, data.province) : {};
+
   try {
     if (data.listingType === "aircraft") {
       const categoryId = await resolveAircraftCategory(data);
@@ -393,6 +414,7 @@ export async function updateListing(id: string, input: ListingInput): Promise<Li
           where: { id },
           data: {
             ...aircraftFields(data, categoryId),
+            ...coords,
             images: { create: finalImages.map((url, order) => ({ url, order })) },
             documents: { create: uploads.documents },
             engines: { create: engineRows(data) },
@@ -422,6 +444,7 @@ export async function updateListing(id: string, input: ListingInput): Promise<Li
           where: { id },
           data: {
             ...sparePartFields(data),
+            ...coords,
             images: { create: finalImages.map((url, order) => ({ url, order })) },
           },
         }),

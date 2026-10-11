@@ -20,6 +20,7 @@ import { sparePartConditionLabel, sparePartFeatures, sparePartSections } from "@
 import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
 import { DescriptionBody, ListingDescription } from "@/components/ui/listing/ListingDescription";
 import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
+import { ListingLocationMap } from "@/components/ui/ListingLocationMap";
 import { sparePartJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
@@ -263,6 +264,15 @@ export default async function SparePartDetailsPage({
               emailUrl={emailUrl}
               entityId={sparePart.id}
               entityType="SPARE_PART"
+            />
+
+            {/* VA-83: zona aproximada (centroide de la localidad, círculo de ~5 km) */}
+            <ListingLocationMap
+              className="order-3 lg:order-none"
+              latitude={sparePart.latitude}
+              longitude={sparePart.longitude}
+              city={sparePart.city}
+              province={sparePart.province}
             />
           </div>
         </section>

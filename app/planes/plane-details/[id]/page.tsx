@@ -21,6 +21,7 @@ import { aircraftFeatures, aircraftSections, showsEngineSummary } from "@/lib/li
 import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
 import { DescriptionBody, ListingDescription } from "@/components/ui/listing/ListingDescription";
 import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
+import { ListingLocationMap } from "@/components/ui/ListingLocationMap";
 import { AIRCRAFT_CONDITION_LABELS } from "@/lib/constants";
 import { aircraftJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
@@ -279,6 +280,15 @@ export default async function PlaneDetailsPage({
                 Leé el checklist de pre-compra
               </Link>
             </p>
+
+            {/* VA-83: zona aproximada (centroide de la localidad, círculo de ~5 km) */}
+            <ListingLocationMap
+              className="order-3 lg:order-none"
+              latitude={aircraft.latitude}
+              longitude={aircraft.longitude}
+              city={aircraft.city}
+              province={aircraft.province}
+            />
 
             {aircraft.documents.length > 0 && (
               <div className="order-6 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-3">
