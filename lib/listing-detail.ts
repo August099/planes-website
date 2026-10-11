@@ -1,5 +1,6 @@
 import type { AircraftDetail, SparePartDetail } from "@/lib/listing-data";
-import { AIRCRAFT_CONDITION_LABELS, SPARE_PART_CONDITION_LABELS } from "@/lib/constants";
+import { SPARE_PART_CONDITION_LABELS } from "@/lib/constants";
+import { AIRCRAFT_FIELDS, AIRCRAFT_SECTIONS, ENGINE_FIELDS, PROPELLER_FIELDS, formatDate, text } from "@/lib/aircraft-fields";
 import { categoryDef } from "@/lib/aircraft-categories";
 
 // Contenido del detalle de un aviso (VA-57): características con íconos y tablas de
@@ -40,18 +41,7 @@ export interface DetailSection {
   rows: DetailRowData[];
 }
 
-const AIRCRAFT_CONDITION = AIRCRAFT_CONDITION_LABELS;
 const SPARE_PART_CONDITION = SPARE_PART_CONDITION_LABELS;
-
-// certDate se guarda como fecha (medianoche UTC): se formatea en UTC para no correr el día.
-const formatDate = (d: Date) => d.toLocaleDateString("es-AR", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
-const hours = (n: number | null | undefined) => (n != null ? `${n.toLocaleString("es-AR")} hs` : undefined);
-const text = (s: string | null | undefined) => (s && s.trim() ? s.trim() : undefined);
-const lines = (s: string | null | undefined) =>
-  (s ?? "")
-    .split(/\r?\n/)
-    .map((l) => l.replace(/^[-•*]\s*/, "").trim())
-    .filter(Boolean);
 
 function section(title: string, rows: (DetailRowData | false | null | undefined)[]): DetailSection | null {
   const kept = rows.filter(
@@ -61,26 +51,48 @@ function section(title: string, rows: (DetailRowData | false | null | undefined)
 }
 
 // --------------------------------------------------------------------------- Aeronave
+// VA-83: los campos, etiquetas y secciones salen de lib/aircraft-fields.ts (los comparte el
+// comparador). Acá solo se decide cómo se muestran en el detalle.
+
+const FEATURE_ICONS: Record<string, FeatureIcon> = {
+  trade: "trade",
+  financing: "financing",
+  negotiable: "negotiable",
+  rent: "rent",
+  passengers: "passengers",
+  certified: "certified",
+  avAaptoifr: "ifr",
+  avAutopilot: "autopilot",
+  airconditioner: "aircon",
+  oxygen: "oxygen",
+};
+// Orden de los íconos en "Características" (condiciones de venta primero, como antes).
+const FEATURE_ORDER = ["trade", "financing", "negotiable", "rent", "passengers", "certified", "avAaptoifr", "avAutopilot", "airconditioner", "oxygen"];
+// Estos se leen mejor con "Sí" después de la etiqueta; el resto, solo la etiqueta.
+const FEATURE_WITH_YES = new Set(["trade", "financing", "negotiable"]);
+
+const fieldByKey = new Map(AIRCRAFT_FIELDS.map((f) => [f.key, f]));
 
 export function aircraftFeatures(a: AircraftDetail): Feature[] {
-  const f: (Feature | false)[] = [
-    a.trade && { icon: "trade", label: "Acepta permuta", value: "Sí" },
-    a.financing && { icon: "financing", label: "Financiación", value: "Sí" },
-    a.negotiable && { icon: "negotiable", label: "Precio negociable", value: "Sí" },
-    a.rent && { icon: "rent", label: "Posible alquiler" },
-    a.passengers != null && a.passengers > 0 && { icon: "passengers", label: "Cant. pasajeros", value: String(a.passengers) },
-    a.certified &&
-      (a.certDate
-        ? { icon: "certified", label: "Habilitado hasta", value: formatDate(a.certDate) }
-        : { icon: "certified", label: "Habilitado", value: "Sí" }),
-    // No habilitado pero con fecha cargada: se informa la fecha para no ocultar el dato.
-    !a.certified && !!a.certDate && { icon: "certified", label: "Habilitación vencida el", value: formatDate(a.certDate) },
-    a.avAaptoifr && { icon: "ifr", label: "Apto IFR" },
-    a.avAutopilot && { icon: "autopilot", label: "Autopilot" },
-    a.airconditioner && { icon: "aircon", label: "Aire acondicionado" },
-    a.oxygen && { icon: "oxygen", label: "Sist. oxígeno en cabina" },
-  ];
-  return f.filter((x): x is Feature => !!x);
+  const out: Feature[] = [];
+  for (const key of FEATURE_ORDER) {
+    const icon = FEATURE_ICONS[key];
+    if (key === "passengers") {
+      const v = fieldByKey.get("passengers")!.value!(a);
+      if (v) out.push({ icon, label: "Cant. pasajeros", value: v });
+      continue;
+    }
+    if (key === "certified") {
+      // Habilitado (con o sin fecha) o, si no, la fecha vencida para no ocultar el dato.
+      if (a.certified) out.push(a.certDate ? { icon, label: "Habilitado hasta", value: formatDate(a.certDate) } : { icon, label: "Habilitado", value: "Sí" });
+      else if (a.certDate) out.push({ icon, label: "Habilitación vencida el", value: formatDate(a.certDate) });
+      continue;
+    }
+    const field = fieldByKey.get(key)!;
+    if (field.value!(a) !== "Sí") continue;
+    out.push(FEATURE_WITH_YES.has(key) ? { icon, label: field.label, value: "Sí" } : { icon, label: field.label });
+  }
+  return out;
 }
 
 // Recuadro "Motor" junto a las fotos (VA-41 / composición): solo con un motor y nunca en
@@ -94,49 +106,30 @@ export function showsEngineSummary(a: AircraftDetail): boolean {
 // la ficha completa.
 export function aircraftSections(a: AircraftDetail, { omitSummary = false }: { omitSummary?: boolean } = {}): DetailSection[] {
   const multipleEngines = a.engines.length > 1;
-  const brand = a.brand?.name || a.customBrand;
-  const model = a.model?.name || a.customModel;
-
-  const sections: (DetailSection | null)[] = [
-    omitSummary ? null : section("General", [
-      { label: "Marca", value: text(brand) },
-      { label: "Modelo", value: text(model) },
-      { label: "Variante", value: text(a.subModel?.name) },
-      { label: "Año", value: String(a.year) },
-      // VA-44: las horas se informan siempre (pueden faltar en Agrícola/Experimental/Proyecto).
-      { label: "Horas totales", value: hours(a.totalTimeHours) ?? "No informadas" },
-      { label: "Categoría", value: text(a.category?.name) },
-      { label: "Estado", value: AIRCRAFT_CONDITION[a.condition] ?? a.condition },
-    ]),
-    ...a.engines.map((e, i) =>
-      section(multipleEngines ? `Motor ${i + 1}` : "Motor", [
-        { label: "Marca", value: text(e.brand) },
-        { label: "Modelo", value: text(e.model) },
-        { label: "Potencia", value: e.horsepower != null ? `${e.horsepower} HP` : undefined },
-        { label: "Horas totales", value: hours(e.engineHours) },
-        { label: "TBO", value: hours(e.TBO) },
-        { label: "DURG / SMOH", value: hours(e.DURG), helpHref: "/services/guides/aviation-glossary#smoh" },
-        { label: "Descripción", value: text(e.description) },
-      ])
-    ),
-    ...a.propeller.map((p, i) =>
-      section(multipleEngines ? `Hélice ${i + 1}` : "Hélice", [
-        { label: "Marca", value: text(p.brand) },
-        { label: "Modelo", value: text(p.model) },
-        { label: "Horas totales", value: hours(p.propellerHours) },
-        { label: "Descripción", value: text(p.description) },
-      ])
-    ),
-    section("Aviónica / Equipamiento / Radio", [{ label: "Descripción", value: text(a.avDescription) }]),
-    section("Equipamiento adicional", [{ label: "Descripción", list: lines(a.extraEquipment) }]),
-    a.categoryId === "A" ? section("Implementos agrícolas", [{ label: "Descripción", value: text(a.agEquipment) }]) : null,
-    section("Exterior", [{ label: "Descripción", value: text(a.extDescription) }]),
-    section("Interior", [
-      { label: "Cant. pasajeros", value: a.passengers != null && a.passengers > 0 ? String(a.passengers) : undefined },
-      { label: "Descripción", value: text(a.intDescription) },
-    ]),
-  ];
-  return sections.filter((s): s is DetailSection => !!s);
+  const out: (DetailSection | null)[] = [];
+  for (const { key, title } of AIRCRAFT_SECTIONS) {
+    if (key === "motor") {
+      a.engines.forEach((e, i) =>
+        out.push(section(multipleEngines ? `Motor ${i + 1}` : title, ENGINE_FIELDS.map((f) => ({ label: f.label, value: f.value(e), helpHref: f.helpHref }))))
+      );
+      continue;
+    }
+    if (key === "helice") {
+      a.propeller.forEach((pr, i) =>
+        out.push(section(multipleEngines ? `Hélice ${i + 1}` : title, PROPELLER_FIELDS.map((f) => ({ label: f.label, value: f.value(pr) }))))
+      );
+      continue;
+    }
+    const fields = AIRCRAFT_FIELDS.filter(
+      (f) =>
+        f.section === key &&
+        (f.inDetail === "row" || (f.inDetail === "summary" && !omitSummary)) &&
+        (!f.when || f.when(a))
+    );
+    if (!fields.length) continue;
+    out.push(section(title, fields.map((f) => ({ label: f.label, value: f.value?.(a), list: f.list?.(a), helpHref: f.helpHref }))));
+  }
+  return out.filter((x): x is DetailSection => !!x);
 }
 
 // --------------------------------------------------------------------------- Repuesto

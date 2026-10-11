@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Heart, Share2, Printer, TriangleAlert } from "lucide-react";
 import { ShareDialog } from "@/components/ui/ShareDialog";
+import { CompareButton } from "@/components/ui/compare/CompareButton";
 import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
 import { errorMessage } from "@/lib/errors";
 
@@ -13,9 +14,11 @@ interface Props {
   isFavoriteInitial?: boolean;
   // El mismo encabezado se usa en el detalle de repuesto: favorito, PDF y reporte dependen del tipo.
   type?: "AIRCRAFT" | "SPARE_PART";
+  // VA-83: foto para la bandeja de comparación (solo aeronaves).
+  compareImage?: string | null;
 }
 
-export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = false, type = "AIRCRAFT" }: Props) {
+export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = false, type = "AIRCRAFT", compareImage = null }: Props) {
   const [isFavorite, setIsFavorite] = useState(isFavoriteInitial);
   const [isPending, setIsPending] = useState(false);
   
@@ -92,6 +95,8 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
               Compartir
             </span>
           </button>
+
+          {type === "AIRCRAFT" && <CompareButton variant="detail" item={{ id: aircraftId, title, image: compareImage }} />}
 
           {/* Descargar PDF (Mantiene el icono Printer) */}
           <button

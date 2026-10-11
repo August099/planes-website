@@ -18,11 +18,13 @@ import { FeaturesCard } from "@/components/ui/listing/FeaturesCard";
 import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSections";
 import { PublishedLine } from "@/components/ui/listing/PublishedLine";
 import { aircraftFeatures, aircraftSections, showsEngineSummary } from "@/lib/listing-detail";
+import { AIRCRAFT_FIELDS } from "@/lib/aircraft-fields";
 import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
 import { DescriptionBody, ListingDescription } from "@/components/ui/listing/ListingDescription";
 import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
 import { ListingLocationMap } from "@/components/ui/ListingLocationMap";
-import { AIRCRAFT_CONDITION_LABELS } from "@/lib/constants";
+import { SimilarCompare } from "@/components/ui/compare/SimilarCompare";
+import { getSimilarAircraft } from "@/lib/similar-aircraft";
 import { aircraftJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
@@ -105,27 +107,18 @@ export default async function PlaneDetailsPage({
 
   // VA-44: las horas son opcionales en Agrícola, Experimental y Proyecto.
   const tboText = (tbo: number | null) => (tbo != null ? `${tbo} hs` : "No informado");
-  const hoursText = aircraft.totalTimeHours != null ? `${aircraft.totalTimeHours.toLocaleString("es-AR")} hs` : "No informadas";
 
   // VA-57: características e "Información adicional", ya sin vacíos.
   const features = aircraftFeatures(aircraft);
+  // VA-83: atajo "Comparar con similares" (misma categoría y precio parecido).
+  const similar = await getSimilarAircraft(aircraft);
   // Web: la ficha no repite lo del resumen. Impresión: ficha completa.
   const sections = aircraftSections(aircraft, { omitSummary: true });
   const printSections = aircraftSections(aircraft);
   const listingLocation = [aircraft.city, aircraft.province].filter(Boolean).join(", ");
 
-  const displayBrand = aircraft.brand?.name || aircraft.customBrand;
-  const displayModel = aircraft.model?.name || aircraft.customModel;
-  const displaySubModel = aircraft.subModel?.name;
-  const keyFacts: KeyFact[] = [
-    { label: "Marca", value: displayBrand },
-    { label: "Modelo", value: displayModel },
-    { label: "Variante", value: displaySubModel },
-    { label: "Año", value: String(aircraft.year) },
-    { label: "Horas totales", value: hoursText },
-    { label: "Categoría", value: aircraft.category?.name },
-    { label: "Estado", value: AIRCRAFT_CONDITION_LABELS[aircraft.condition] ?? aircraft.condition },
-  ];
+  // VA-83: los datos del resumen salen de la misma lista que la ficha y el comparador.
+  const keyFacts: KeyFact[] = AIRCRAFT_FIELDS.filter((f) => f.inDetail === "summary").map((f) => ({ label: f.label, value: f.value?.(aircraft) }));
   // Recuadro "Motor" junto a las fotos: marca, modelo y TBO, en ese orden (pedido del socio, 9/10).
   // Todos los datos del motor siguen en la ficha de abajo.
   const engineSummary: KeyFact[] | null = singleEngine
@@ -242,6 +235,7 @@ export default async function PlaneDetailsPage({
             <div className="order-5 lg:order-none flex flex-col gap-5 lg:gap-8">
               <FeaturesCard title="Características de la aeronave" features={features} />
               <DetailSections sections={sections} />
+              <SimilarCompare currentId={aircraft.id} items={similar} />
             </div>
           </div>
 
@@ -249,7 +243,7 @@ export default async function PlaneDetailsPage({
             {/* Resumen: título, precio, acciones y datos clave */}
             <div className="order-2 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
               <PublishedLine createdAt={aircraft.createdAt} location={listingLocation} />
-              <PlaneActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} />
+              <PlaneActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url} />
               <Separator />
               <div>
                 <h1 className="text-xl font-bold text-[#001F58]">{aircraft.title}</h1>

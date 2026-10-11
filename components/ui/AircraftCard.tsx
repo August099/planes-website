@@ -16,6 +16,7 @@ import { ImageCarousel } from "./CardImageCarousel";
 import { formatPrice } from "@/lib/format";
 import { errorMessage } from "@/lib/errors";
 import { useFavoriteIds } from "@/components/ui/FavoriteIdsProvider";
+import { CompareButton } from "@/components/ui/compare/CompareButton";
 
 
 
@@ -133,6 +134,11 @@ export function AircraftCard({
               fallbackImage={imageUrl}
               alt={title}
             />
+
+            {/* VA-83: agregar a la comparación (no compite con favoritos, que va arriba). */}
+            <div className="absolute bottom-2.5 left-2.5 z-30">
+              <CompareButton item={{ id, title, image: images[0]?.url ?? imageUrl ?? null }} />
+            </div>
 
             <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
               <button

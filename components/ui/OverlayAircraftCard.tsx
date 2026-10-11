@@ -1,6 +1,7 @@
 "use client";
 
 import { AppImage } from "@/components/ui/AppImage";
+import { CompareButton } from "@/components/ui/compare/CompareButton";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { formatPrice } from "@/lib/format";
@@ -52,6 +53,9 @@ export function OverlayAircraftCard({
     <Link href={`/planes/plane-details/${id}`} className="group block h-full">
       <Card className="relative w-full aspect-[4/3] sm:aspect-[16/11] overflow-hidden rounded-2xl border-0 shadow-lg group-hover:shadow-2xl transition-all duration-300 bg-slate-900">
         {/* BADGE DESTACADO */}
+        <div className="absolute top-3 right-3 z-10">
+          <CompareButton variant="overlay" item={{ id, title: displayTitle, image: imageUrl ?? null }} />
+        </div>
         {featuredBadge && (
           <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-red-600 text-white text-[11px] font-bold rounded-lg shadow-md uppercase tracking-wide">
             {featuredBadge}
