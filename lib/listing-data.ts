@@ -63,5 +63,17 @@ export const getSparePartDetail = cache(async (id: string) => {
   });
 });
 
+// VA-84: detalle de hangar. Preguntas y favoritos se suman con la integración (pendiente).
+export const getHangarDetail = cache(async (id: string) => {
+  return prisma.hangar.findUnique({
+    where: { id },
+    include: {
+      images: { orderBy: { order: "asc" } },
+      seller: { select: SELLER_PUBLIC_SELECT },
+    },
+  });
+});
+
 export type AircraftDetail = NonNullable<Awaited<ReturnType<typeof getAircraftDetail>>>;
 export type SparePartDetail = NonNullable<Awaited<ReturnType<typeof getSparePartDetail>>>;
+export type HangarDetail = NonNullable<Awaited<ReturnType<typeof getHangarDetail>>>;

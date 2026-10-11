@@ -18,11 +18,11 @@ const validId = (id: unknown): id is string => typeof id === "string" && id.leng
 // registrar cualquier evento desde el navegador) y guarda visitante y origen (VA-15).
 export async function logContactClick(
   entityId: string,
-  entityType: "AIRCRAFT" | "SPARE_PART",
+  entityType: "AIRCRAFT" | "SPARE_PART" | "HANGAR",
   eventType: AnalyticsEventType
 ) {
   if (!validId(entityId) || !CONTACT_EVENTS.has(eventType)) return;
-  if (entityType !== "AIRCRAFT" && entityType !== "SPARE_PART") return;
+  if (entityType !== "AIRCRAFT" && entityType !== "SPARE_PART" && entityType !== "HANGAR") return;
 
   try {
     const [session, context] = await Promise.all([auth(), getAnalyticsContext()]);
@@ -33,6 +33,7 @@ export async function logContactClick(
         ...context,
         aircraftId: entityType === "AIRCRAFT" ? entityId : null,
         sparePartId: entityType === "SPARE_PART" ? entityId : null,
+        hangarId: entityType === "HANGAR" ? entityId : null, // VA-84
       },
     });
   } catch (error) {

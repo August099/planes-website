@@ -10,7 +10,7 @@ interface ContactButtonsProps {
   whatsappUrl?: string | null;
   emailUrl?: string | null;
   entityId: string;
-  entityType: "AIRCRAFT" | "SPARE_PART";
+  entityType: "AIRCRAFT" | "SPARE_PART" | "HANGAR";
 }
 
 export function ContactButtons({

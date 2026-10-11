@@ -14,7 +14,7 @@ export function SellerContactCard({
   whatsappUrl: string | null;
   emailUrl: string | null;
   entityId: string;
-  entityType: "AIRCRAFT" | "SPARE_PART";
+  entityType: "AIRCRAFT" | "SPARE_PART" | "HANGAR";
   className?: string;
 }) {
   const sellerLocation = [seller.city, seller.province].filter(Boolean).join(", ");
