@@ -64,6 +64,8 @@ No sumar verdes, violetas ni otros colores de relleno: el verde quedó solo para
 - **Diálogos:** `components/ui/ConfirmDialog.tsx` (`<dialog>` nativo: foco atrapado, Escape, fondo `#001331/60`). Para acciones grandes o irreversibles, pedir escribir una palabra (`requireText="CONFIRMAR"` / `"ELIMINAR"`). Antes → después → variación en una placa de 3 columnas (ver `/admin/prices` y `/admin/plans/[id]`).
 - **Avisos dentro de un texto:** borde izquierdo de 2 px (`border-l-2 border-[#E70F1F] pl-3`) en vez de una caja de color.
 - **Estados:** etiqueta chica `rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em]` (activo en azul lleno, inactivo con borde, archivado gris).
+- **Tablas comparativas** (comparador): etiquetas en una columna fija a la izquierda, encabezado fijo arriba, "—" gris en vacíos, el mejor valor en negrita con un punto rojo (nunca con fondo de color) y solo en filas objetivas.
+- **Menú desplegable del header:** panel blanco a todo el ancho, columnas con su título en azul, ítems numerados en rojo cuando son una serie, sin íconos decorativos, y un link "Ver todas …" al pie de cada columna.
 - **Tablas del admin:** contenedor `overflow-x-auto rounded-lg border bg-white`, encabezado con el rótulo técnico, filas `divide-y divide-slate-100`, números a la derecha con `tabular-nums`.
 - **Formularios:** etiqueta `text-xs font-semibold text-slate-600` arriba del campo, campo `rounded-md border-slate-300 px-3 py-2 text-sm`, error `text-xs text-red-700` debajo. Las reglas en un esquema `zod` compartido entre el formulario y la action (ver `lib/plan-rules.ts`, `lib/listing-schema.ts`). Agrupar en bloques con su rótulo ("Lo que usa el sistema" / "Lo que se ve en /plans").
 - **Layout de página de contenido:** título alineado a la izquierda; asimétrico en escritorio (`md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]`: contenido + placa lateral) y una sola columna en celular. Ver `/checkout`, `/services`, perfil con página personalizada.
@@ -81,6 +83,10 @@ No sumar verdes, violetas ni otros colores de relleno: el verde quedó solo para
 | Confirmar una acción | `components/ui/ConfirmDialog.tsx` |
 | Compartir | `components/ui/ShareDialog.tsx` |
 | Provincia | `components/ui/ProvinceSelect.tsx` (las 24 de `lib/provinces.ts`) |
+| Mapa de zona aproximada | `components/ui/ListingLocationMap.tsx` (Leaflet al entrar en pantalla, círculo de ~5 km) |
+| Datos de una aeronave (etiquetas y secciones) | `lib/aircraft-fields.ts` (la misma lista en detalle, comparador y PDF) |
+| Comparar aeronaves | `components/ui/compare/CompareButton.tsx` y la bandeja `CompareTray` |
+| Menú de Servicios (sumar una sección) | `SERVICE_SECTIONS` en `components/ui/ServicesMenu.tsx` |
 
 ### Rendimiento (para que una página nueva no lo empeore)
 - Páginas públicas **estáticas** siempre que se pueda: no leer la sesión en el servidor; lo del usuario se pide desde el navegador (ver `FavoriteIdsProvider` y `HeaderUser`). Datos de la base con `unstable_cache` + tag y `updateTag`/`revalidatePath` en la action que los cambia.
