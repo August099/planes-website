@@ -38,9 +38,15 @@ export async function POST(req: NextRequest) {
     dataId: url.searchParams.get("data.id") ?? dataId,
   });
 
+  // Headers útiles para diagnosticar una firma rechazada (x-signature es el HMAC, no la clave).
   const payload = {
     query: Object.fromEntries(url.searchParams),
     body,
+    headers: {
+      "x-signature": req.headers.get("x-signature"),
+      "x-request-id": requestId,
+      "user-agent": req.headers.get("user-agent"),
+    },
   } as Prisma.InputJsonValue;
 
   const event = await prisma.webhookEvent.create({
