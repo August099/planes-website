@@ -6,6 +6,7 @@ import PublishForm from "@/components/ui/PublishForm";
 import { loadListingForEdit } from "@/lib/listing-edit";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { getListingPrices } from "@/lib/listing-prices";
+import { secondListingHint } from "@/lib/plan-offers";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,10 @@ export default async function PublishPage({ searchParams }: Props) {
   }
 
   const listingPrices = await getListingPrices();
+  // VA-94: CTA del 2.º aviso sin plan (solo al crear).
+  const packHints = edit
+    ? undefined
+    : { aircraft: await secondListingHint(user.id, "AIRCRAFT"), parts: await secondListingHint(user.id, "SPARE_PART") };
 
   // VA-46: sin teléfono el formulario pide cargarlo antes de publicar.
   const sellerPhone = await prisma.user.findUnique({
@@ -103,6 +108,7 @@ export default async function PublishPage({ searchParams }: Props) {
         editListing={editListing ?? undefined}
         needsPhone={!sellerPhone?.phone?.trim()}
         listingPrices={{ aircraft: listingPrices.AIRCRAFT.label, sparePart: listingPrices.SPARE_PART.label }}
+        packHints={packHints}
       />
     </main>
   );

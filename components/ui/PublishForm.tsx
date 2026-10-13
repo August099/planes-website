@@ -61,7 +61,11 @@ interface PublishFormProps {
     needsPhone?: boolean;
     // VA-59: precio vigente por aviso (texto ya formateado), editable desde /admin/prices.
     listingPrices?: { aircraft: string; sparePart: string };
+    // VA-94: CTA al publicar el 2.º aviso sin plan (ahorro de un pack frente a la publicación suelta).
+    packHints?: { aircraft: PackHint | null; parts: PackHint | null };
 }
+
+type PackHint = { planId: string; name: string; count: number; perListing: number; single: number; savingPercent: number };
 
 interface EngineInput {
     brand: string;
@@ -101,7 +105,8 @@ export default function PublishForm({
     spareCategoriesData = [],
     editListing,
     needsPhone = false,
-    listingPrices
+    listingPrices,
+    packHints
 }: PublishFormProps) {
     const errorRef = useRef<HTMLDivElement>(null);
     const isEditing = !!editListing;
@@ -743,6 +748,23 @@ export default function PublishForm({
                 esta publicación.
               </p>
             )}
+
+            {/* VA-94: sin plan ni saldo, al publicar el 2.º aviso de ese tipo: cuánto ahorra con un pack. */}
+            {!isEditing && (() => {
+              const hint = activeTab === "aircraft" ? packHints?.aircraft : packHints?.parts;
+              if (!hint) return null;
+              const ars = (n: number) => `AR$ ${Math.round(n).toLocaleString("es-AR")}`;
+              return (
+                <p className="max-w-2xl mx-auto -mt-3 mb-6 pl-3 text-sm text-slate-600">
+                  ¿Vas a publicar más de uno? Con el <strong className="text-[#001F58]">{hint.name}</strong> cada aviso sale{" "}
+                  <span className="tabular-nums">{ars(hint.perListing)}</span> en vez de <span className="tabular-nums">{ars(hint.single)}</span> (ahorrás{" "}
+                  {hint.savingPercent}%).{" "}
+                  <Link href={`/checkout?planId=${hint.planId}`} className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+                    Ver el plan
+                  </Link>
+                </p>
+              );
+            })()}
 
             {phoneMissing && <PhoneRequiredCard onSaved={() => { setPhoneMissing(false); setFormError(null); }} />}
 

@@ -79,6 +79,12 @@ export function Footer() {
                   Repuestos en venta
                 </Link>
               </li>
+              {/* VA-94 */}
+              <li>
+                <Link href="/plans" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  Planes y precios
+                </Link>
+              </li>
               {/*<li>
                 <Link href="/plans" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Planes para publicar
