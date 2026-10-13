@@ -30,6 +30,7 @@ migraciones); en Vercel, Settings › Environment Variables, con el ambiente que
 | `APP_URL` | `http://localhost:3000` | URL del preview | URL de producción | `back_urls` de Mercado Pago. |
 | `MP_NOTIFICATION_URL` | opcional | opcional | no | `notification_url` de las preferencias. Si falta: `APP_URL` + `/api/webhooks/mercadopago`. |
 | `BILLING_ENABLED` | `false` | `false` | `true` | En `false` los pagos funcionan y la factura queda pendiente. |
+| `CRON_SECRET` | opcional | sí | sí | Cron diario de suscripciones (`vercel.json` → `/api/cron/subscriptions`). Vercel la manda como `Authorization: Bearer …`. Sin ella, el cron responde 401 y no cierra nada. |
 | `TUSFACTURAS_APIKEY`, `TUSFACTURAS_APITOKEN`, `TUSFACTURAS_USERTOKEN`, `TUSFACTURAS_PUNTO_VENTA` | — | desarrollo | producción | Etapa 4. |
 
 ## Base del Preview
@@ -69,6 +70,13 @@ planes, precios por aviso, guías): ver el checklist de la etapa en `docs/PLAN_F
 - Eventos: **Pagos** y **Planes y suscripciones** (opcional: Reclamos y Contracargos).
 - La clave secreta que muestra el panel va en `MP_WEBHOOK_SECRET` del ambiente Preview.
 - Después de cambiar una variable en Vercel hay que **volver a desplegar** para que la tome.
+
+## Suscripciones
+
+- Se crean por API (preapproval), sin "Planes de suscripción" del panel: el precio sale de `/admin/plans`.
+- En el checkout se pide el **email de la cuenta de Mercado Pago** que autoriza el débito. **En pruebas tiene que ser el de la cuenta compradora de prueba**; si no, Mercado Pago responde "Both payer and collector must be real or test users" (el usuario ve "Mercado Pago no aceptó ese email").
+- Cada cobro llega por el webhook (`subscription_authorized_payment`): aprobado extiende el período y deja la factura pendiente; rechazado abre la gracia (días en la configuración de facturación) y manda un mail.
+- "Cancelar suscripción" pausa el débito en Mercado Pago; el cron diario la cancela al terminar el período.
 
 ## Tarjetas de prueba (Argentina)
 
