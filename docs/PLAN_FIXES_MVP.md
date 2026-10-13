@@ -1187,3 +1187,28 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - **Verificado** (build de producción, va_dev) con un script que lee los bloques y los cruza con la base: en 7 detalles, ningún bloque incluye el aviso actual ni avisos no visibles y nunca hay más de 2 por vendedor; sin scroll horizontal a 375 px. Casos: Cessna C-150 (similares de su categoría + categorías vecinas; repuestos Cessna), Pilatus PC-12 turbohélice (sin otras de su categoría: cascada a vecinas y recientes), Cirrus Vision Jet (categoría Otros, sin vecinas: similares + recientes), repuesto con modelos asociados (AB-115, C-150), repuesto sin aeronave (bloque B oculto) y un repuesto con "Cessna" en la descripción (inferido; la descripción se cambió para la prueba y se restauró).
 - **En los datos de prueba:** el "Cilindro Lycoming Superior con Válvulas" está cargado en la categoría "Llantas", así que sus similares son llantas y frenos. Es un dato mal cargado, no un problema de la lógica.
 - **Falta (hangares):** sección 3 de la spec (haversine con caja de lat/long, cascada por radio 50 → 150 → 400 km → provincia → país, distancia en la tarjeta) y "Hangares disponibles cerca" en aeronaves y repuestos.
+
+---
+
+### VA-92 (spec) · Pagos con Mercado Pago + facturación automática con TusFacturasAPP (pedido del socio, 12/10)
+> Especificación: `docs/specs/VA-92-pagos-y-facturacion.md`. Guía operativa: `docs/PAGOS.md`.
+
+**Estado (12/10/2026):** 🟡 **etapa 0 hecha en local** (commit `d77d181`); la migración espera el OK del SQL.
+
+**Decisiones del socio (12/10):**
+- **Activación:** con pack o suscripción, publicar descuenta 1 del saldo; sin saldo, el aviso queda "pendiente de pago" y va a `/checkout` de ese aviso; lo activa el webhook. La promo de lanzamiento pasa a ser un cupón del 100% administrable.
+- **Sin túnel:** los webhooks se prueban en el Preview de `pre-production` (Deployment Protection desactivada). El desarrollo sigue en local y cada etapa se despliega a `pre-production` al cerrarla.
+- **`MP_NOTIFICATION_URL`** opcional para el `notification_url` de las preferencias; `APP_URL` = localhost en local y la URL del preview en Preview.
+- Solo los nombres de variables de la spec (`MP_*`); los viejos `MERCADOPAGO_*` los borra el socio de su `.env`.
+
+**Etapas:**
+0. ✅ Configuración: `.env.example`, `lib/mercadopago.ts` (cliente que falla si falta el token, clave del webhook con fail closed, `APP_URL`, `MP_NOTIFICATION_URL`, `BILLING_ENABLED`), `docs/PAGOS.md`.
+1. ⏳ Migración: `Purchase` (plan opcional para avisos sueltos, `listingKind`, concepto, moneda, `approvedAt`, `activatedAt`, datos de facturación usados), `PaymentStatus` (+ IN_PROCESS, CANCELLED, REFUNDED, PARTIALLY_REFUNDED), `Subscription` (+ PENDING, PAST_DUE, `graceUntil`, `mpStatus`), tablas `Payment` (`mpPaymentId` único), `WebhookEvent`, `Invoice` (una factura por pago; nota de crédito única por reembolso), `BillingProfile` y `BillingSettings`.
+2. Webhook (fuente de verdad): firma, registro de cada evento, consulta a la API de MP, procesamiento idempotente. **Al desplegarlo a pre-production, frenar**: el socio configura la URL en Mercado Pago y carga `MP_WEBHOOK_SECRET` en Preview.
+3. Checkout Pro (avisos sueltos, packs y banners), cupones (incluido el 100%), página de estado del pago.
+4. Suscripciones (preapproval), gracia y cancelación.
+5. Facturación con TusFacturas (`BILLING_ENABLED=false` hasta tener credenciales).
+6. Paneles "Mis compras" y admin "Pagos y facturas".
+7. Pruebas y pase a producción (`docs/PAGOS.md`).
+
+**Pendiente antes del primer despliegue a pre-production:** variables del ambiente Preview, base aparte para pre-production con las 27 migraciones y datos base, y qué hacer con la página "Próximamente" que tiene `pre-production` (commit `94c4486`, choca con `app/page.tsx`).
