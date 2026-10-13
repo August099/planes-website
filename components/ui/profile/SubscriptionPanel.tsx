@@ -48,6 +48,24 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
   const end = DATE.format(new Date(subscription.currentPeriodEnd));
   const per = subscription.interval === "YEARLY" ? "año" : "mes";
 
+  // VA-92: cortesía (asignada por el admin): sin precio, sin cobros y sin cancelar.
+  if (subscription.courtesy) {
+    return (
+      <section className="rounded-lg border border-[#001F58]/12 bg-white">
+        <div className="p-5">
+          <p className={LABEL}>Tu plan</p>
+          <p className="mt-1 text-lg font-bold text-[#001F58]">{subscription.planName}</p>
+          <p className="text-sm text-slate-600">
+            Plan de cortesía, sin cargo{subscription.noExpiry && " · tus avisos no vencen"}
+          </p>
+        </div>
+        <p className="border-t border-[#001F58]/10 px-5 py-3 text-sm text-slate-600">
+          Vigente hasta el <strong>{end}</strong>. No se cobra ni se renueva solo.
+        </p>
+      </section>
+    );
+  }
+
   return (
     <section className="rounded-lg border border-[#001F58]/12 bg-white">
       <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">

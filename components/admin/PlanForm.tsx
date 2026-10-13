@@ -199,6 +199,20 @@ export function PlanForm({ planId, initial }: { planId?: string; initial: PlanFo
             disabled={!isSubscription}
             onChange={(c) => set("includesCustomPage", c)}
           />
+          {isSubscription && (
+            <div>
+              <label htmlFor="plan-featured" className={LABEL}>Destacados incluidos por mes</label>
+              <input
+                id="plan-featured"
+                inputMode="numeric"
+                value={String(v.featuredPerMonth ?? 0)}
+                onChange={(e) => set("featuredPerMonth", Number(e.target.value.replace(/\D/g, "") || 0))}
+                className={`${INPUT} tabular-nums sm:max-w-32`}
+              />
+              <p className="mt-1 text-xs text-slate-500">Se reponen en cada período pago y no se acumulan.</p>
+              {err("featuredPerMonth")}
+            </div>
+          )}
         </div>
       </section>
 

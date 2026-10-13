@@ -15,9 +15,11 @@ export async function cancelSubscriptionAction(): Promise<{ ok: true } | { ok: f
 
   const sub = await prisma.subscription.findUnique({
     where: { userId: user.id },
-    select: { status: true, cancelAtPeriodEnd: true },
+    select: { status: true, cancelAtPeriodEnd: true, source: true },
   });
   if (!sub || sub.status !== "ACTIVE") return { ok: false, error: "No tenés una suscripción activa." };
+  // VA-92: la cortesía no se cobra: no hay nada que cancelar (la quita un admin).
+  if (sub.source === "MANUAL") return { ok: false, error: "Es un plan de cortesía: no tiene cobros que cancelar." };
   if (sub.cancelAtPeriodEnd) return { ok: true };
 
   await prisma.subscription.update({ where: { userId: user.id }, data: { cancelAtPeriodEnd: true } });

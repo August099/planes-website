@@ -40,6 +40,7 @@ export async function getSubscriptionSummary(userId: string) {
       status: true,
       currentPeriodEnd: true,
       cancelAtPeriodEnd: true,
+      source: true,
       plan: { select: { name: true, price: true, billingInterval: true, noExpiry: true } },
     },
   });
@@ -53,6 +54,8 @@ export async function getSubscriptionSummary(userId: string) {
     active: sub.status === "ACTIVE" && sub.currentPeriodEnd > new Date(),
     currentPeriodEnd: sub.currentPeriodEnd.toISOString(),
     cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
+    // VA-92: plan de cortesía asignado por un admin (no se cobra, no se renueva ni se cancela).
+    courtesy: sub.source === "MANUAL",
   };
 }
 export type SubscriptionSummary = NonNullable<Awaited<ReturnType<typeof getSubscriptionSummary>>>;

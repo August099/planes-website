@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { FOUNDING_MEMBER_LIMIT } from "@/lib/constants";
 import { parseAnyUserType } from "@/lib/user-types";
+import { grantCourtesyPlan, revokeCourtesyPlan } from "@/lib/courtesy-plans";
 
 // Miembro fundador asignado a mano por un admin (VA-58). Antes se marcaba solo en el
 // registro si había menos de 50 usuarios, y las cuentas de prueba ocupaban lugares.
@@ -55,4 +56,34 @@ export async function setUserTypeAction(
     console.error("Error al cambiar el tipo de cuenta:", error);
     return { ok: false, error: "No se pudo guardar el cambio." };
   }
+}
+
+// VA-92: plan de cortesía (suscripción MANUAL hasta una fecha). Ver lib/courtesy-plans.ts.
+export async function grantCourtesyPlanAction(input: {
+  userId: string;
+  planId: string;
+  until: string;
+  note?: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const admin = await getCurrentUser();
+  if (!admin?.isAdmin) return { ok: false, error: "No autorizado." };
+  // La fecha llega como AAAA-MM-DD: vence al final de ese día (hora de Argentina).
+  const until = /^\d{4}-\d{2}-\d{2}$/.test(input.until) ? new Date(`${input.until}T23:59:59-03:00`) : new Date(NaN);
+  const res = await grantCourtesyPlan({ adminId: admin.id, userId: input.userId, planId: input.planId, until, note: input.note });
+  if (res.ok) {
+    revalidatePath("/admin/users");
+    revalidatePath(`/profile/${input.userId}`);
+  }
+  return res;
+}
+
+export async function revokeCourtesyPlanAction(userId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const admin = await getCurrentUser();
+  if (!admin?.isAdmin) return { ok: false, error: "No autorizado." };
+  const res = await revokeCourtesyPlan(userId);
+  if (res.ok) {
+    revalidatePath("/admin/users");
+    revalidatePath(`/profile/${userId}`);
+  }
+  return res;
 }

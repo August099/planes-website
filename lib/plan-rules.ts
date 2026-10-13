@@ -37,6 +37,8 @@ export const planInputSchema = z
     noExpiry: z.boolean(),
     includesVerifiedBadge: z.boolean(),
     includesCustomPage: z.boolean(),
+    // VA-95: destacados incluidos por mes (solo suscripciones).
+    featuredPerMonth: z.coerce.number().int("Tiene que ser un número entero.").min(0).max(100, "Hasta 100.").default(0),
     usageDescription: z.string().trim().max(60, "Hasta 60 caracteres.").optional().default(""),
     description: z.string().trim().max(300, "Hasta 300 caracteres.").optional().default(""),
     features: z.array(z.string().trim().min(1).max(120, "Cada ítem, hasta 120 caracteres.")).max(10, "Hasta 10 ítems."),
@@ -72,6 +74,35 @@ export const planInputSchema = z
 
 export type PlanInput = z.input<typeof planInputSchema>;
 export type PlanData = z.output<typeof planInputSchema>;
+
+/** Registro de Plan a partir de los datos validados (lo usan la action del admin y los scripts). */
+export function planRecordFromInput(p: PlanData) {
+  const isSubscription = p.type === "SUBSCRIPTION";
+  return {
+    name: p.name,
+    type: p.type,
+    price: p.price,
+    billingType: isSubscription ? ("SUBSCRIPTION" as const) : ("ONE_TIME" as const),
+    billingInterval: isSubscription ? p.billingInterval : null,
+    aircraftListingsCount: p.isUnlimitedAircraft ? 0 : p.aircraftListingsCount,
+    sparePartsListingsCount: p.isUnlimitedSpareParts ? 0 : p.sparePartsListingsCount,
+    isUnlimitedAircraft: isSubscription && p.isUnlimitedAircraft,
+    isUnlimitedSpareParts: isSubscription && p.isUnlimitedSpareParts,
+    noExpiry: p.noExpiry,
+    includesVerifiedBadge: p.includesVerifiedBadge,
+    includesCustomPage: p.includesCustomPage,
+    featuredPerMonth: isSubscription ? p.featuredPerMonth : 0,
+    usageDescription: p.usageDescription || null,
+    description: p.description || null,
+    features: p.features,
+    badge: p.badge || null,
+    isPopular: p.isPopular,
+    showInAircraftTab: p.showInAircraftTab,
+    showInPartsTab: p.showInPartsTab,
+    sortOrder: p.sortOrder,
+    isActive: p.isActive,
+  };
+}
 
 /** Texto de "qué incluye" cuando el admin no escribe uno propio. */
 export function defaultUsageText(p: Pick<PlanData, "aircraftListingsCount" | "sparePartsListingsCount" | "isUnlimitedAircraft" | "isUnlimitedSpareParts">) {

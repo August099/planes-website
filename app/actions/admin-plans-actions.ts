@@ -5,7 +5,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { PLANS_TAG } from "@/lib/plans";
-import { planInputSchema, type PlanInput } from "@/lib/plan-rules";
+import { planInputSchema, planRecordFromInput, type PlanInput } from "@/lib/plan-rules";
 import { isLargePriceChange } from "@/lib/listing-price-format";
 
 type Result = { ok: true; id: string } | { ok: false; error: string; fieldErrors?: Record<string, string> };
@@ -37,30 +37,7 @@ export async function savePlanAction(input: PlanInput & { id?: string; confirmTe
     return { ok: false, error: "Revisá los campos marcados.", fieldErrors };
   }
   const p = parsed.data;
-  const isSubscription = p.type === "SUBSCRIPTION";
-  const data = {
-    name: p.name,
-    type: p.type,
-    price: p.price,
-    billingType: isSubscription ? ("SUBSCRIPTION" as const) : ("ONE_TIME" as const),
-    billingInterval: isSubscription ? p.billingInterval : null,
-    aircraftListingsCount: p.isUnlimitedAircraft ? 0 : p.aircraftListingsCount,
-    sparePartsListingsCount: p.isUnlimitedSpareParts ? 0 : p.sparePartsListingsCount,
-    isUnlimitedAircraft: isSubscription && p.isUnlimitedAircraft,
-    isUnlimitedSpareParts: isSubscription && p.isUnlimitedSpareParts,
-    noExpiry: p.noExpiry,
-    includesVerifiedBadge: p.includesVerifiedBadge,
-    includesCustomPage: p.includesCustomPage,
-    usageDescription: p.usageDescription || null,
-    description: p.description || null,
-    features: p.features,
-    badge: p.badge || null,
-    isPopular: p.isPopular,
-    showInAircraftTab: p.showInAircraftTab,
-    showInPartsTab: p.showInPartsTab,
-    sortOrder: p.sortOrder,
-    isActive: p.isActive,
-  };
+  const data = planRecordFromInput(p);
 
   try {
     if (input.id) {
