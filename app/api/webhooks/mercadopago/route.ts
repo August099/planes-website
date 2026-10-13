@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Firma inválida" }, { status: 401 });
   }
 
-  const payment = await new Payment(mpClient).get({ id: dataId! });
+  const payment = await new Payment(mpClient()).get({ id: dataId! });
 
   if (payment.status === "approved" && payment.external_reference) {
     const purchase = await prisma.purchase.findUnique({
