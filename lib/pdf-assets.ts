@@ -79,16 +79,12 @@ export async function pdfQr(url: string) {
 
 /** Vendedor con los mismos datos que se ven en la web (nada que no sea público). */
 export async function pdfSeller(sellerId: string) {
-  const [user, custom, verified] = await Promise.all([
+  const [user, custom] = await Promise.all([
     prisma.user.findUnique({
       where: { id: sellerId },
       select: { name: true, phone: true, email: true, city: true, province: true, userType: true, businessName: true, website: true, whatsapp: true },
     }),
     hasCustomPage(sellerId),
-    prisma.subscription.findFirst({
-      where: { userId: sellerId, status: "ACTIVE", currentPeriodEnd: { gt: new Date() }, plan: { includesVerifiedBadge: true } },
-      select: { id: true },
-    }),
   ]);
   if (!user) return null;
   const contacts: { label: string; value: string }[] = [];
@@ -100,7 +96,8 @@ export async function pdfSeller(sellerId: string) {
   return {
     name: (custom && user.businessName) || user.name || "Vendedor",
     typeLabel: USER_TYPE_LABELS[user.userType],
-    badges: [verified && "Vendedor verificado", custom && "Página personalizada"].filter((b): b is string => !!b),
+    // "Cuenta verificada": solo cuentas Pro (plan con página personalizada), igual que en la web.
+    badges: custom ? ["Cuenta verificada"] : [],
     location: [user.city, user.province].filter(Boolean).join(", "),
     contacts,
   };

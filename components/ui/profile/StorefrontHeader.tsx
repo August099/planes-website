@@ -74,7 +74,8 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
             <h1 className="text-2xl font-bold text-[#001F58] sm:text-3xl">{name}</h1>
             <span className="inline-flex items-center gap-1 rounded-sm bg-[#001F58] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
               <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
-              Tienda oficial
+              {/* Solo la tienen las cuentas Pro (plan con página personalizada; decisión del socio, 13/10). */}
+              Cuenta verificada
             </span>
           </div>
           <p className={`mt-2 ${LABEL}`}>
