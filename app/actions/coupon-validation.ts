@@ -4,76 +4,25 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
+import { evaluateCoupon } from "@/lib/coupons";
 
 export interface ValidateCouponParams {
   code: string;
-  scope?: "AIRCRAFT" | "SPARE_PART" | "AD_BANNER";
+  scope?: "AIRCRAFT" | "SPARE_PART" | "HANGAR" | "AD_BANNER";
   originalPrice?: number;
 }
 
-// 1. Validar un cupón sin registrar uso (para simular el precio en el checkout)
+// 1. Validar un cupón sin registrar uso. VA-92: misma lógica que el checkout (lib/coupons.ts);
+// un cupón reclamado desde el perfil ya no cuenta como usado hasta que se paga con él.
 export async function validateCoupon({ code, scope, originalPrice = 0 }: ValidateCouponParams) {
   try {
     const user = await getCurrentUser();
     if (!user) {
       return { success: false, error: "Tenés que iniciar sesión para usar un cupón." };
     }
-
-    const cleanCode = code.trim().toUpperCase();
-
-    const coupon = await prisma.coupon.findUnique({
-      where: { code: cleanCode },
-    });
-
-    if (!coupon || !coupon.isActive) {
-      return { success: false, error: "El cupón ingresado no existe o no está activo." };
-    }
-
-    // Validar vigencia de fechas
-    const now = new Date();
-    if (coupon.startsAt && coupon.startsAt > now) {
-      return { success: false, error: "Este cupón aún no está vigente." };
-    }
-    if (coupon.expiresAt && coupon.expiresAt < now) {
-      return { success: false, error: "Este cupón ha expirado." };
-    }
-
-    // Validar scope (alcance)
-    if (coupon.scope !== "ALL" && scope && coupon.scope !== scope) {
-      return { success: false, error: `Este cupón solo es válido para publicaciones de ${coupon.scope}.` };
-    }
-
-    // Validar usos globales acumulados
-    if (coupon.maxUses !== null && coupon.currentUses >= coupon.maxUses) {
-      return { success: false, error: "Este cupón ha alcanzado su límite máximo de usos globales." };
-    }
-
-    // Validar usos del usuario actual
-    const userUsagesCount = await prisma.couponUsage.count({
-      where: {
-        couponId: coupon.id,
-        userId: user.id,
-      },
-    });
-
-    if (userUsagesCount >= coupon.maxUsesPerUser) {
-      return { success: false, error: "Ya has alcanzado el límite de usos permitidos para este cupón." };
-    }
-
-    // Calcular monto final de descuento
-    let discountAmount = 0;
-    const numericValue = Number(coupon.discountValue);
-
-    if (coupon.discountType === "FULL_DISCOUNT" || coupon.type === "RENEWAL") {
-      discountAmount = originalPrice;
-    } else if (coupon.discountType === "PERCENTAGE") {
-      discountAmount = (originalPrice * numericValue) / 100;
-    } else if (coupon.discountType === "FIXED_AMOUNT") {
-      discountAmount = Math.min(originalPrice, numericValue);
-    }
-
-    const finalPrice = Math.max(0, originalPrice - discountAmount);
-
+    const result = await evaluateCoupon({ code, userId: user.id, scope, price: originalPrice });
+    if (!result.ok) return { success: false, error: result.error };
+    const coupon = await prisma.coupon.findUniqueOrThrow({ where: { id: result.coupon.id } });
     return {
       success: true,
       coupon: {
@@ -81,11 +30,11 @@ export async function validateCoupon({ code, scope, originalPrice = 0 }: Validat
         code: coupon.code,
         type: coupon.type,
         discountType: coupon.discountType,
-        discountValue: numericValue,
+        discountValue: Number(coupon.discountValue),
         scope: coupon.scope,
       },
-      discountAmount,
-      finalPrice,
+      discountAmount: result.discountAmount,
+      finalPrice: result.finalPrice,
     };
   } catch (error) {
     console.error("Error al validar cupón:", error);

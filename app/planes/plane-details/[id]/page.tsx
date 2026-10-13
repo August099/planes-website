@@ -151,12 +151,24 @@ export default async function PlaneDetailsPage({
       {isInactive && isOwner && (
         <div className="bg-amber-500 text-white text-xs font-semibold py-3 px-4 text-center flex items-center justify-center gap-2 print:hidden">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>
-            Tu publicación está pausada/vencida y no es visible para el público. Ve a tu perfil para renovarla por 45 días más.
-          </span>
-          <Link href="/profile" className="underline font-bold hover:text-amber-100 ml-2">
-            Ir a mi perfil
-          </Link>
+          {aircraft.status === "PENDING_PAYMENT" ? (
+            <>
+              {/* VA-92: aviso guardado sin saldo ni suscripción: se publica al acreditarse el pago. */}
+              <span>Tu aviso está guardado pero no se publica hasta que se acredite el pago.</span>
+              <Link href={`/checkout?listing=aircraft:${aircraft.id}`} className="underline font-bold hover:text-amber-100 ml-2">
+                Pagar y publicar
+              </Link>
+            </>
+          ) : (
+            <>
+              <span>
+                Tu publicación está pausada/vencida y no es visible para el público. Ve a tu perfil para renovarla por 45 días más.
+              </span>
+              <Link href={`/profile/${aircraft.sellerId}`} className="underline font-bold hover:text-amber-100 ml-2">
+                Ir a mi perfil
+              </Link>
+            </>
+          )}
         </div>
       )}
 

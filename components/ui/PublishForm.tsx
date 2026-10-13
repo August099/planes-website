@@ -651,6 +651,12 @@ export default function PublishForm({
           return;
         }
 
+        // VA-92: sin saldo ni suscripción, el aviso quedó "pendiente de pago": se sigue al checkout.
+        if ("checkoutUrl" in res && res.checkoutUrl) {
+          setPublishStatus("¡Aviso guardado! Ahora falta el pago para publicarlo...");
+          router.push(res.checkoutUrl);
+          return;
+        }
         setPublishStatus(isEditing ? "¡Guardado! Abriendo tu aviso..." : "¡Publicado! Abriendo tu aviso...");
         router.push(res.url);
       } catch (error) {
@@ -713,25 +719,28 @@ export default function PublishForm({
               </h1>
             </div>
 
-            {/* VA-47: aviso de la promoción de lanzamiento al publicar un avión; VA-59: con el precio
-                vigente tachado. */}
+            {/* VA-47: aviso de la promoción de lanzamiento al publicar un avión. VA-92: la promoción
+                es un cupón del 100% que se aplica en el pago (el código está en lib/promo.ts). */}
             {LAUNCH_PROMO.enabled && !isEditing && activeTab === "aircraft" && (
               <div className="max-w-2xl mx-auto mb-6 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
                 <Sparkles className="h-5 w-5 shrink-0 text-emerald-600" />
                 <p>
-                  <span className="font-bold">{LAUNCH_PROMO.title}:</span> {LAUNCH_PROMO.text.toLowerCase()}.
-                  {listingPrices && listingPrices.aircraft !== "Gratis" && (
-                    <> Precio por aviso: <s className="tabular-nums">{listingPrices.aircraft}</s>.</>
-                  )}
+                  <span className="font-bold">{LAUNCH_PROMO.title}:</span> {LAUNCH_PROMO.text.toLowerCase()}. Al pagar, usá el
+                  cupón <span className="font-bold tracking-wide">{LAUNCH_PROMO.couponCode}</span>.
                 </p>
               </div>
             )}
 
-            {/* VA-59: precio por aviso de un repuesto. Hasta la Fase 6 (Mercado Pago) no se cobra. */}
-            {listingPrices && !isEditing && activeTab === "parts" && (
+            {/* VA-92: con un pack o una suscripción vigente se publica directo; si no, el aviso se
+                guarda y se paga en el checkout. */}
+            {listingPrices && !isEditing && (
               <p className="max-w-2xl mx-auto mb-6 border-l-2 border-[#001F58]/30 pl-3 text-sm text-slate-600">
-                Precio por aviso de repuesto: <span className="font-semibold tabular-nums text-[#001F58]">{listingPrices.sparePart}</span>
-                {listingPrices.sparePart !== "Gratis" && " · por ahora no se cobra; el pago se habilita más adelante."}
+                Precio por aviso de {activeTab === "aircraft" ? "avión" : "repuesto"}:{" "}
+                <span className="font-semibold tabular-nums text-[#001F58]">
+                  {activeTab === "aircraft" ? listingPrices.aircraft : listingPrices.sparePart}
+                </span>
+                . Si tenés un pack o una suscripción vigente, se publica sin pagar; si no, al publicar pasás al pago con
+                Mercado Pago.
               </p>
             )}
 

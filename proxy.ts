@@ -28,5 +28,8 @@ export const config = {
     "/ads/:path*",
     "/banners/:path*",
     "/admin/:path*",
+    // VA-92: pago y estado del pago
+    "/checkout",
+    "/payment/:path*",
   ],
 };

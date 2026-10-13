@@ -205,7 +205,8 @@ export function toFieldErrors(error: z.ZodError): FieldErrors {
 }
 
 export type ListingResult =
-  | { ok: true; id: string; url: string }
+  // VA-92: checkoutUrl si el aviso quedó "pendiente de pago" (sin saldo ni suscripción).
+  | { ok: true; id: string; url: string; checkoutUrl?: string }
   | { ok: false; error: string; fieldErrors?: FieldErrors };
 
 // Publicación existente cargada en el formulario para editarla (/publish?edit=<id>).

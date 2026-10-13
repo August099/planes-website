@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { AircraftGallery } from "@/components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
@@ -228,6 +230,28 @@ export default async function SparePartDetailsPage({
           <p>Documento generado desde Ventas Aeronáuticas - Marketplace de Aviones y Repuestos</p>
         </div>
       </div>
+
+      {/* VA-92: aviso para el dueño cuando su repuesto no está visible (pendiente de pago o vencido). */}
+      {!isListingActive(sparePart) && (
+        <div className="bg-amber-500 text-white text-xs font-semibold py-3 px-4 text-center flex items-center justify-center gap-2 print:hidden">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          {sparePart.status === "PENDING_PAYMENT" ? (
+            <>
+              <span>Tu aviso está guardado pero no se publica hasta que se acredite el pago.</span>
+              <Link href={`/checkout?listing=parts:${sparePart.id}`} className="underline font-bold hover:text-amber-100 ml-2">
+                Pagar y publicar
+              </Link>
+            </>
+          ) : (
+            <>
+              <span>Tu publicación venció y no es visible para el público. Renovala desde tu perfil.</span>
+              <Link href={`/profile/${sparePart.sellerId}`} className="underline font-bold hover:text-amber-100 ml-2">
+                Ir a mi perfil
+              </Link>
+            </>
+          )}
+        </div>
+      )}
 
       {/* VISTA WEB — VA-41: un solo árbol, mismo orden que el detalle de avión. En celular:
           fotos → título y precio → vendedor → descripción → ficha. Desde lg: dos columnas. */}
