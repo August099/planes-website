@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { BadgeCheck, Edit, Globe, MapPin, MessageCircle } from "lucide-react";
+import { BadgeCheck, Edit, Globe, MapPin, MessageCircle, Star } from "lucide-react";
 import { SiFacebook, SiInstagram } from "@icons-pack/react-simple-icons";
 
 // Encabezado de la "página personalizada" (VA-87): como la tienda oficial de una marca frente al
@@ -23,12 +23,13 @@ type Props = {
   instagram: string | null;
   facebook: string | null;
   isOwner: boolean;
+  isFoundingMember?: boolean;
   onEdit?: () => void;
 };
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 
-export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, location, memberSince, instagram, facebook, isOwner, onEdit }: Props) {
+export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, location, memberSince, instagram, facebook, isOwner, isFoundingMember = false, onEdit }: Props) {
   const name = storefront.businessName || fallbackName;
   const websiteLabel = storefront.website?.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
   const contacts = [
@@ -77,6 +78,12 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
               {/* Solo la tienen las cuentas Pro (plan con página personalizada; decisión del socio, 13/10). */}
               Cuenta verificada
             </span>
+            {isFoundingMember && (
+              <span className="inline-flex items-center gap-1 rounded-sm border border-amber-300 bg-amber-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-900">
+                <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-600" aria-hidden />
+                Miembro fundador
+              </span>
+            )}
           </div>
           <p className={`mt-2 ${LABEL}`}>
             {userTypeLabel} · Miembro desde {memberSince}

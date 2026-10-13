@@ -31,6 +31,7 @@ import {
   Camera,
   Trash2,
   Ticket,
+  Receipt,
   Plus,
   Star,
   Clock,
@@ -42,6 +43,9 @@ import { StorefrontHeader, type StorefrontData } from "@/components/ui/profile/S
 import { StorefrontEditor } from "@/components/ui/profile/StorefrontEditor";
 import { SubscriptionPanel } from "@/components/ui/profile/SubscriptionPanel";
 import type { SubscriptionSummary } from "@/lib/subscriptions";
+import type { PurchaseRow } from "@/lib/purchases";
+import { PurchasesPanel } from "@/components/ui/profile/PurchasesPanel";
+import { BillingProfilePanel, type BillingProfileValues } from "@/components/ui/profile/BillingProfilePanel";
 
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
@@ -114,6 +118,9 @@ interface Props {
   storefront?: StorefrontData | null;
   // VA-80: plan del dueño del perfil (solo se pasa cuando lo mira el dueño).
   subscription?: SubscriptionSummary | null;
+  // VA-92: "Mis compras" y datos de facturación guardados (solo el dueño).
+  purchases?: PurchaseRow[];
+  billingProfile?: { values: BillingProfileValues; saved: boolean } | null;
 }
 
 /** Helper para calcular los días restantes de una publicación */
@@ -146,13 +153,15 @@ export function ProfileView({
   missingProfileFields = [],
   storefront = null,
   subscription = null,
+  purchases = [],
+  billingProfile = null,
 }: Props) {
   const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
   const missingDot = (field: ProfileField) =>
     isMissing(field) ? (
       <span className="ml-1 inline-block w-2 h-2 rounded-full bg-red-600 align-middle" aria-label="Falta completar" />
     ) : null;
-  const [activeTab, setActiveTab] = useState<"aircrafts" | "spareparts" | "coupons" | "edit">("aircrafts");
+  const [activeTab, setActiveTab] = useState<"aircrafts" | "spareparts" | "coupons" | "purchases" | "edit">("aircrafts");
   const [loadingSave, setLoadingSave] = useState(false);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -330,6 +339,7 @@ export function ProfileView({
           instagram={profileUser.instagram}
           facebook={profileUser.facebook}
           isOwner={isOwner}
+          isFoundingMember={profileUser.isFoundingMember}
           onEdit={() => setActiveTab("edit")}
         />
       ) : (
@@ -539,6 +549,20 @@ export function ProfileView({
           >
             <Ticket className="w-4 h-4" />
             Mis Cupones ({userCoupons.length})
+          </button>
+        )}
+
+        {isOwner && (
+          <button
+            onClick={() => setActiveTab("purchases")}
+            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+              activeTab === "purchases"
+                ? "border-[#001F58] text-[#001F58]"
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <Receipt className="w-4 h-4" />
+            Mis compras ({purchases.length})
           </button>
         )}
 
@@ -871,10 +895,14 @@ export function ProfileView({
         </div>
       )}
 
+      {/* VA-92: Pestaña Mis compras */}
+      {isOwner && activeTab === "purchases" && <PurchasesPanel rows={purchases} />}
+
       {/* Pestaña Ajustes */}
       {isOwner && activeTab === "edit" && (
         <div className="space-y-6 max-w-2xl mx-auto md:mx-0">
           <SubscriptionPanel subscription={subscription} />
+          {billingProfile && <BillingProfilePanel initial={billingProfile.values} saved={billingProfile.saved} />}
 
           {/* Formulario de información de la cuenta */}
           <form onSubmit={handleUpdate} className="p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 space-y-4">

@@ -74,12 +74,22 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
       ? { kind, name, docNumber, ivaCondition, address, email }
       : { kind, name, docNumber, email };
 
-  const validate = () => {
+  const billingErrors = (b: typeof billing, needsDni: boolean) => {
     const next: Record<string, string> = {};
-    const parsed = billingSchema.safeParse(billing);
+    const parsed = billingSchema.safeParse(b);
     if (!parsed.success) for (const i of parsed.error.issues) next[String(i.path[0])] ??= i.message;
-    if (dniRequired && !docNumber.replace(/\D/g, "")) next.docNumber = "Para este monto ARCA pide el DNI.";
+    if (needsDni && !String(b.docNumber ?? "").replace(/\D/g, "")) next.docNumber = "Para este monto ARCA pide el DNI.";
+    return next;
+  };
+
+  // Formulario abierto solo si faltan datos (o si el usuario toca "Cambiar"); si no, un resumen.
+  const [editing, setEditing] = useState(() => Object.keys(billingErrors(billing, dniRequired)).length > 0);
+
+  const validate = () => {
+    const next = billingErrors(billing, dniRequired);
     setErrors(next);
+    const billingKeys = ["name", "docNumber", "ivaCondition", "email", "address"];
+    if (Object.keys(next).some((k) => billingKeys.includes(k))) setEditing(true);
     return Object.keys(next).length === 0;
   };
 
@@ -98,6 +108,7 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
     setFormError(res.error);
     if (res.fieldErrors) {
       setErrors(res.fieldErrors);
+      if (Object.keys(res.fieldErrors).some((k) => ["name", "docNumber", "ivaCondition", "email", "address"].includes(k))) setEditing(true);
       if (res.fieldErrors.coupon) {
         setCoupon(null);
         setCouponError(res.fieldErrors.coupon);
@@ -110,10 +121,29 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
   return (
     <form onSubmit={submit} noValidate className="grid gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
       <section className="rounded-lg border border-[#001F58]/12 bg-white p-5 sm:p-8">
-        <p className={LABEL}>Datos de facturación</p>
-        <h1 className="mt-1 text-2xl font-bold text-[#001F58]">¿A nombre de quién va la factura?</h1>
-        <p className="mt-2 text-sm text-slate-600">Te enviamos la factura C por email. Guardamos estos datos para tu próxima compra.</p>
+        <p className={LABEL}>{editing ? "Datos de facturación" : "Confirmá tu compra"}</p>
+        <h1 className="mt-1 text-2xl font-bold text-[#001F58]">{editing ? "¿A nombre de quién va la factura?" : product.name}</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          {editing ? "Te enviamos la factura C por email. Guardamos estos datos para tu próxima compra." : product.includes}
+        </p>
 
+        {/* VA-92 (pedido del socio, 13/10): facturar sin formulario cuando se puede. Con nombre y email
+            (del perfil o de la compra anterior) se muestra un resumen y solo se edita con "Cambiar". */}
+        {!editing && (
+          <div className="mt-6 flex flex-wrap items-start justify-between gap-3 rounded-md border border-[#001F58]/12 bg-slate-50 px-4 py-3 text-sm">
+            <p className="min-w-0 text-slate-700">
+              <span className="font-semibold text-[#001F58]">Factura C</span> a nombre de <strong>{name}</strong>
+              {kind === "EMPRESA" && docNumber ? ` (CUIT ${docNumber})` : ""}
+              <span className="block break-all text-slate-500">Se envía a {email}</span>
+            </p>
+            <button type="button" onClick={() => setEditing(true)} className="text-sm font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F] cursor-pointer">
+              Cambiar
+            </button>
+          </div>
+        )}
+
+        {editing && (
+        <>
         <div role="radiogroup" aria-label="Tipo de factura" className="mt-6 grid grid-cols-2 gap-1 rounded-md bg-slate-100 p-1">
           {(
             [
@@ -207,6 +237,8 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
             {err("email")}
           </div>
         </div>
+        </>
+        )}
 
         {recurring && (
           <div className="mt-6 border-t border-[#001F58]/10 pt-6">

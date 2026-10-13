@@ -6,6 +6,7 @@ import { ProfileView, type ProfileCoupon } from "@/components/ui/ProfileView";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { getMissingProfileFieldsCached } from "@/lib/cached-data";
 import { getSubscriptionSummary, hasCustomPage } from "@/lib/subscriptions";
+import { getUserPurchases } from "@/lib/purchases";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
@@ -165,7 +166,28 @@ export default async function ProfilePage({ params }: Props) {
         missingProfileFields={isOwner ? await getMissingProfileFieldsCached(id) : []}
         storefront={storefront}
         subscription={isOwner ? await getSubscriptionSummary(id) : null}
+        purchases={isOwner ? await getUserPurchases(id) : []}
+        billingProfile={isOwner ? await ownerBillingProfile(id, rawProfileUser.name, rawProfileUser.email) : null}
       />
     </main>
   );
+}
+
+// VA-92: datos de facturación del dueño (o los del perfil, para precargar si todavía no guardó nada).
+async function ownerBillingProfile(userId: string, name: string | null, email: string | null) {
+  const p = await prisma.billingProfile.findUnique({ where: { userId } });
+  if (!p) {
+    return { saved: false, values: { kind: "CONSUMIDOR_FINAL" as const, name: name ?? "", docNumber: "", ivaCondition: "" as const, address: "", email: email ?? "" } };
+  }
+  return {
+    saved: true,
+    values: {
+      kind: p.kind,
+      name: p.name,
+      docNumber: p.docNumber ?? "",
+      ivaCondition: (["RI", "M", "E"].includes(p.ivaCondition) ? p.ivaCondition : "") as "RI" | "M" | "E" | "",
+      address: p.address ?? "",
+      email: p.email,
+    },
+  };
 }

@@ -11,7 +11,7 @@ const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-
 const NUMBER = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
 
 // VA-80: planes y suscripciones que se ofrecen en /plans. El precio por aviso suelto está en
-// /admin/prices (VA-59). El cobro con Mercado Pago es de la Fase 6.
+// /admin/prices (VA-59). Los cobros, en /admin/payments (VA-92).
 export default async function AdminPlansPage() {
   const admin = await getCurrentUser();
   if (!admin?.isAdmin) redirect("/");
@@ -25,7 +25,8 @@ export default async function AdminPlansPage() {
   });
   const activeSubs = await prisma.subscription.groupBy({
     by: ["planId"],
-    where: { status: "ACTIVE", currentPeriodEnd: { gt: new Date() } },
+    // Vigentes: con el período pago o en gracia (VA-92).
+    where: { OR: [{ status: "ACTIVE", currentPeriodEnd: { gt: new Date() } }, { status: "PAST_DUE", graceUntil: { gt: new Date() } }] },
     _count: { _all: true },
   });
   const subsByPlan = Object.fromEntries(activeSubs.map((s) => [s.planId, s._count._all]));
@@ -37,8 +38,8 @@ export default async function AdminPlansPage() {
           <h1 className="text-2xl font-bold text-[#001F58]">Planes y suscripciones</h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-600">
             Lo que se ofrece en <Link href="/plans" className="underline">/plans</Link>. El aviso suelto se cobra con el precio
-            de <Link href="/admin/prices" className="underline">Precios</Link>. Mientras no esté el pago online, los planes solo
-            se muestran.
+            de <Link href="/admin/prices" className="underline">Precios</Link>; los pagos y cobros están en{" "}
+            <Link href="/admin/payments" className="underline">Pagos y facturas</Link>.
           </p>
         </div>
         <Link

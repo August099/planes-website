@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Banknote,
+  CreditCard,
   BookOpen,
   Layers,
   BarChart3,
@@ -32,6 +33,7 @@ export const NAV_ITEMS = [
   { label: "Añadir taxonomía", href: "/admin/taxonomy", icon: Tag },
   { label: "Cupones", href: "/admin/coupons", icon: Receipt },
   { label: "Precios", href: "/admin/prices", icon: Banknote },
+  { label: "Pagos y facturas", href: "/admin/payments", icon: CreditCard },
   { label: "Planes", href: "/admin/plans", icon: Layers },
   { label: "Guías", href: "/admin/guides", icon: BookOpen },
 ];
