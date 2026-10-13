@@ -1193,7 +1193,7 @@ Notas para cuando se encare, a partir de lo que ya existe:
 ### VA-92 (spec) · Pagos con Mercado Pago + facturación automática con TusFacturasAPP (pedido del socio, 12/10)
 > Especificación: `docs/specs/VA-92-pagos-y-facturacion.md`. Guía operativa: `docs/PAGOS.md`.
 
-**Estado (12/10/2026):** 🟡 **etapas 0, 1 y 2 hechas en local** (commits `d77d181`, `a9a1265`, `f6888d6`). `pre-production` preparada con el merge (sin "Próximamente"), sin pushear hasta migrar la base.
+**Estado (13/10/2026):** 🟡 **en curso.** Hechas en local: configuración, migraciones, webhook, checkout de pago único, conexión publicar → pagar, plan de cortesía (commits `d77d181`, `a9a1265`, `f6888d6`, `e4cdd76`, `741b744`, `731b617`, `3af5f85`). `pre-production` tiene hasta el webhook (`5063cf4`). **Pendiente del socio:** corregir `MP_WEBHOOK_SECRET` en Preview (las notificaciones reales llegan con la firma de la app de la cuenta vendedora de prueba y hoy se rechazan) y volver a desplegar. Faltan: suscripciones (preapproval) con gracia y cancelación, facturación con TusFacturas, "Mis compras" y admin "Pagos y facturas".
 
 **Decisiones del socio (12/10):**
 - **Activación:** con pack o suscripción, publicar descuenta 1 del saldo; sin saldo, el aviso queda "pendiente de pago" y va a `/checkout` de ese aviso; lo activa el webhook. La promo de lanzamiento pasa a ser un cupón del 100% administrable.
@@ -1202,6 +1202,11 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - Solo los nombres de variables de la spec (`MP_*`); los viejos `MERCADOPAGO_*` los borra el socio de su `.env`.
 - **El Preview usa la base de Supabase** (la misma de producción; decisión del socio, 12/10). Las migraciones las corre el socio con `migrate deploy` antes de cada despliegue a `pre-production`. Las compras y eventos de prueba quedan en esa base: limpiarlos antes de abrir producción.
 - **`pre-production` sin la página "Próximamente"** (queda solo en `main`).
+- **Sin planes de 1 publicación (13/10):** quien publica una sola cosa la paga al terminar el formulario, al precio individual de `/admin/prices` (ListingPrice). Al apretar "Publicar": con saldo de un pack o una suscripción se descuenta 1 y se publica; sin saldo, el aviso queda "pendiente de pago" y va al pago de esa publicación (con cupón); un cupón del 100% publica sin pasar por Mercado Pago. En `va_dev` no había filas "Plan 1" (las armaba `lib/plans.ts`); en producción hay que revisarlo con la consulta del registro.
+- **Botones de pago: solo "Pagar"** (el medio se elige dentro de Mercado Pago).
+- **Cuenta Pro = plan con página personalizada.** Plan de cortesía (suscripción `MANUAL`) asignable desde `/admin/users`, con vencimiento y nota: no se cobra ni se renueva, y no cuenta en ingresos ni en los KPIs (VA-102). En `va_dev`: plan "Profesional" (inactivo hasta revisar precio y beneficios) y cortesía por un año para atilasilvero@gmail.com.
+- **Destacados (VA-95):** opción de 7 días (precio a cargar en `/admin/prices`).
+- **Banners (VA-103):** pago después de que el admin apruebe la solicitud. Secciones: Home (arriba), Home (entre secciones), listado de aeronaves, listado de repuestos, detalle de aviso y guías. **De momento no se muestran en la web:** la página pública va a `app/_proximamente/` y solo se gestionan desde el admin.
 
 **Etapas:**
 0. ✅ Configuración: `.env.example`, `lib/mercadopago.ts` (cliente que falla si falta el token, clave del webhook con fail closed, `APP_URL`, `MP_NOTIFICATION_URL`, `BILLING_ENABLED`), `docs/PAGOS.md`.
@@ -1214,3 +1219,37 @@ Notas para cuando se encare, a partir de lo que ya existe:
 7. Pruebas y pase a producción (`docs/PAGOS.md`).
 
 **Pendiente antes del primer despliegue a pre-production:** variables del ambiente Preview, base aparte para pre-production con las 27 migraciones y datos base, y qué hacer con la página "Próximamente" que tiene `pre-production` (commit `94c4486`, choca con `app/page.tsx`).
+
+---
+
+## Lote 12/10/2026 · VA-93 a VA-102
+
+Detalle completo y decisiones confirmadas en **`docs/specs/VA-93-a-VA-102-lote-12-10.md`**. Resumen:
+
+| Tarea | Qué |
+|---|---|
+| VA-93 | Servicios: solo Guías y Comparador visibles. Hangares, herramientas, foro y demás se mueven a una carpeta privada que no se publica (`app/_proximamente/`), sin accesos públicos. Documentar en `docs/FUNCIONES_OCULTAS.md` |
+| VA-94 | `/plans` con los planes reales del admin + link "Planes y precios" en Explorar (footer) + CTAs en 4 lugares |
+| VA-95 | Destacados pagos: primero en búsquedas; en la Home, si hay más de 2, 2 destacados al azar; días y precio junto a los precios individuales; destacados incluidos por mes en las suscripciones |
+| VA-96 | Unificar a `aircraft` en código, base y carpetas (rutas con redirects 308; RENAME en la base). Mostrar la lista de renombres antes de hacerlo |
+| VA-97 | Perfil: una sola grilla con interruptores por tipo + filtros por estado en el panel propio |
+| VA-98 | Métricas: básicas para todos; avanzadas (7/30/90 días, gráficos, favoritos, comparador, visitas del perfil) para Pro. Corregir el conteo de "Vistas" |
+| VA-99 | Carga masiva de repuestos (Pro): plantilla xlsx/csv, zip de fotos por P/N (o carga manual), borradores, "Publicar todos" |
+| VA-100 | Footer: color actual en la Home; color de la barra lateral del admin en el resto |
+| VA-101 | Bug: `/onboarding/account-type?from=publish` compila sin parar desde el 2.º acceso |
+| VA-102 | Admin: pestaña "Gastos fijos" (ARS/USD, tipo de cambio manual con fecha) + KPI de cobertura en rojo/verde en el dashboard |
+
+Beneficios Pro como toggles del plan en el admin: "Métricas avanzadas", "Carga masiva" y "Destacados incluidos por mes". El PDF de hangares ya está en VA-87.
+
+### VA-103 · Página de banners (detalle en `docs/specs/VA-93-a-VA-102-lote-12-10.md`)
+Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se muestran en su propia página `/banners`, que reemplaza la actual, rota. Cada plan tiene un formulario de solicitud (contacto, descripción, fotos) que se guarda y le avisa al admin. En el admin se elige la sección donde se muestra: es solo informativa, porque los banners se colocan a mano. ⚠️ **Consultar antes de codear** qué secciones entran en la lista y si el pago es online al solicitar o después de aprobar.
+
+### Regla general para todo lo pendiente
+**Antes de empezar cualquier funcionalidad que falte, preguntar si se muestra en la web o si se arma y queda oculta** en la carpeta privada que no se publica (`app/_proximamente/`, VA-93), con sus accesos quitados y anotada en `docs/FUNCIONES_OCULTAS.md`. Si no hay respuesta, queda oculta.
+
+### VA-104 · Rama `milton/actus` con todas las funciones ocultas visibles (importante) — detalle en `docs/specs/VA-93-a-VA-102-lote-12-10.md`
+- Crear la rama **`milton/actus`** desde `milton/auth-roles`. En ella, todo lo que está en `app/_proximamente/` se muestra en la web, con sus accesos restaurados, siguiendo `docs/FUNCIONES_OCULTAS.md`.
+- ⚠️ **Antes de proceder, preguntar todas las dudas sobre dónde ubicar las secciones nuevas** (header, menú mobile, orden en `/services`, Home, footer). No ubicar nada por cuenta propia.
+- Es una rama de vista previa: **nunca se mergea** a `milton/auth-roles`, `pre-production` ni `main` sin OK explícito.
+- Se actualiza periódicamente desde `milton/auth-roles`. Comparte schema y migraciones con la rama principal: no se crean migraciones solo ahí.
+- Su preview en Vercel nunca usa la base de producción.
