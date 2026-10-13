@@ -13,17 +13,13 @@ import {
   Plus, 
   Copy, 
   Check, 
-  RefreshCw, 
   Sparkles, 
   CheckCircle2, 
-  XCircle, 
-  Clock,
-  Layers,
-  Calendar
+  XCircle
 } from "lucide-react";
 
 export default function AdminCouponsPage() {
-  const [coupons, setCoupons] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<Awaited<ReturnType<typeof getAdminCoupons>>>([]);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
@@ -45,7 +41,6 @@ export default function AdminCouponsPage() {
   });
 
   const fetchCoupons = async () => {
-    setLoading(true);
     try {
       const data = await getAdminCoupons();
       setCoupons(data);
@@ -57,7 +52,10 @@ export default function AdminCouponsPage() {
   };
 
   useEffect(() => {
-    fetchCoupons();
+    getAdminCoupons()
+      .then(setCoupons)
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleCopy = (code: string) => {
@@ -110,7 +108,7 @@ export default function AdminCouponsPage() {
         <div>
           <h1 className="text-2xl font-bold text-[#001F58]">Gestión de Cupones</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Crea y administra los códigos promocionales para publicaciones y renovaciones.
+            Creá y administrá los códigos promocionales para publicaciones y renovaciones.
           </p>
         </div>
 
@@ -346,7 +344,7 @@ export default function AdminCouponsPage() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        scope: e.target.value as any,
+                        scope: e.target.value as CreateCouponInput["scope"],
                       })
                     }
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-[#001F58]"
@@ -370,7 +368,7 @@ export default function AdminCouponsPage() {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          discountType: e.target.value as any,
+                          discountType: e.target.value as CreateCouponInput["discountType"],
                         })
                       }
                       className="w-full px-3 py-1.5 border border-slate-200 rounded-lg bg-white focus:outline-none"

@@ -1,137 +1,47 @@
-"use client";
 
-import Image from "next/image";
-import { Plane, Clock, ShieldCheck, Wrench } from "lucide-react";
-
-export default function ComingSoonPage() {
-return ( <main className="fixed inset-0 z-50 min-h-screen overflow-y-auto bg-slate-50 isolate flex items-center justify-center px-4 py-12">
-{/* Fondo */} <div className="absolute inset-0 -z-20 overflow-hidden"> <Image
-       src="/bkg-forms.png"
-       alt="Fondo de Ventas Aeronáuticas"
-       fill
-       priority
-       sizes="100vw"
-       className="object-cover"
-     /> </div>
-
-```
-  {/* Capa translúcida */}
-  <div className="absolute inset-0 -z-10 bg-slate-50/80 backdrop-blur-md" />
-
-  <div className="container relative z-10 mx-auto max-w-3xl text-center">
-    {/* Estado del lanzamiento */}
-    <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-xs font-semibold text-[#001F58] shadow-sm sm:text-sm">
-      <Clock className="h-4 w-4 animate-pulse text-red-600" />
-      <span>Lanzamiento Oficial: Próximo Mes</span>
-    </div>
-
-    {/* Tarjeta principal */}
-    <section className="rounded-3xl border border-[#001F58]/10 bg-white/90 p-8 shadow-2xl backdrop-blur-sm sm:p-12">
-      {/* Icono central */}
-      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-white/20 bg-[#001F58] text-white shadow-md">
-        <Plane className="h-10 w-10 -rotate-12" />
-      </div>
-
-      <h1 className="mb-4 font-heading text-3xl font-bold tracking-tight text-[#001F58] sm:text-5xl">
-        Estamos preparando algo grande
-      </h1>
-
-      <p className="mx-auto mb-10 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-        Nuestra plataforma especializada en la compra, venta y publicación
-        de <strong>aeronaves y repuestos</strong> está en sus últimos
-        detalles de desarrollo.
-      </p>
-
-      {/* Características */}
-      <div className="grid grid-cols-1 gap-4 border-t border-slate-200/80 pt-8 text-left sm:grid-cols-3">
-        <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
-          <Plane className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-          <div>
-            <h2 className="text-xs font-bold uppercase text-[#001F58]">
-              Aeronaves
-            </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Publicaciones con ficha técnica detallada.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
-          <Wrench className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-          <div>
-            <h2 className="text-xs font-bold uppercase text-[#001F58]">
-              Repuestos
-            </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Categorización precisa hasta el último nivel técnico.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
-          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-          <div>
-            <h2 className="text-xs font-bold uppercase text-[#001F58]">
-              Trato Directo
-            </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Conexión directa entre compradores y vendedores.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    {/* Pie de página */}
-    <footer className="mt-8 text-xs font-medium text-slate-500">
-      © {new Date().getFullYear()} Ventas Aeronáuticas. Todos los derechos
-      reservados.
-    </footer>
-  </div>
-</main>
-
-);
-}
-
-
-
-
-
-{/*
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
-import { getCurrentUser } from "@/lib/auth-helpers";
 import { getAircraftTaxonomy, getSparePartCategories } from "@/lib/cached-data";
 import { HowItWorks } from "@/components/ui/HowItWorks";
+import { GuidesSection } from "@/components/ui/GuidesSection";
 import { SellerCta } from "@/components/ui/SellerCta";
-import { TrustBlock } from "@/components/ui/TrustBlock";
 import { SparePartCategoriesCarousel } from "@/components/ui/SparePartCategoriesCarousel";
 import { FeaturedAircraftCarousel } from "@/components/ui/FeaturedAircraftCarousel";
 import { LatestAircraft, ListingItem } from "@/components/ui/LatestListings";
 import { HeroBanner } from "@/components/ui/hero-banner";
+import { LaunchPromoBanner } from "@/components/ui/LaunchPromoBanner";
+import { FavoriteIdsProvider } from "@/components/ui/FavoriteIdsProvider";
 import HomeServicesCards from "@/components/ui/HomeServiceCards";
 import { FeaturedBrands } from "@/components/ui/FeaturedBrands";
+import { AircraftTypesSection } from "@/components/ui/AircraftTypesSection";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationAndWebsiteJsonLd } from "@/lib/structured-data";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { ProvinceExplorer, type ProvinceCounts } from "@/components/ui/ProvinceExplorer";
+import { provinceByName } from "@/lib/provinces";
+import { BrandSlashes } from "@/components/ui/BrandSlashes";
 
 // Título y descripción salen del layout; acá solo el canonical.
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export default async function HomePage() {
-  // 1. Obtener usuario actual
-  const user = await getCurrentUser();
+// VA-76: la Home es estática y se regenera cada 5 minutos (y al publicar, editar, renovar o borrar
+// un aviso, con revalidatePath("/")). Antes leía la sesión para marcar favoritos y se renderizaba
+// en cada visita sin caché; ahora los favoritos los pide el navegador (FavoriteIdsProvider).
+export const revalidate = 300;
 
-  // 2. Traer datos y favoritos en paralelo
+export default async function HomePage() {
+  // Datos en paralelo
   const [
     featuredAircraftsFromDb,
     latestSparePartsFromDb,
     sparePartCategories,
     featuredBrandsFromDb,
-    userFavorites,
+    aircraftByProvince,
+    sparePartsByProvince,
+    aircraftByCategory,
   ] = await Promise.all([
     prisma.aircraft.findMany({
       where: activeListingWhere(),
@@ -161,22 +71,28 @@ export default async function HomePage() {
     getAircraftTaxonomy().then(({ brands }) =>
       brands.filter((b) => b.logoUrl !== null).map(({ id, name, logoUrl }) => ({ id, name, logoUrl }))
     ),
-    // Favoritos del usuario logueado
-    user
-      ? prisma.favorite.findMany({
-          where: { userId: user.id },
-          select: { aircraftId: true, sparePartId: true },
-        })
-      : Promise.resolve([]),
+    // VA-77: avisos visibles por provincia (mismo criterio que /planes y /spareparts). Dinámico,
+    // como el resto de la Home, para que coincida siempre con los listados.
+    prisma.aircraft.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
+    prisma.sparePart.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
+    // VA-86: avisos visibles por categoría de aeronave (mismo criterio que /planes).
+    prisma.aircraft.groupBy({ by: ["categoryId"], where: activeListingWhere(), _count: { _all: true } }),
   ]);
+  const categoryCounts: Record<string, number> = Object.fromEntries(
+    aircraftByCategory.filter((g) => g.categoryId).map((g) => [g.categoryId as string, g._count._all])
+  );
 
-  // Sets de búsqueda rápida para los IDs favoritos
-  const userFavAircraftIds = new Set(
-    userFavorites.filter((f) => f.aircraftId).map((f) => f.aircraftId)
-  );
-  const userFavSparePartIds = new Set(
-    userFavorites.filter((f) => f.sparePartId).map((f) => f.sparePartId)
-  );
+  // { slug: { aircraft, parts } }. Las provincias que no son una de las 24 canónicas no cuentan
+  // (los listados filtran por igualdad exacta); ver scripts/normalize-provinces.ts.
+  const provinceCounts: ProvinceCounts = {};
+  const addCount = (province: string | null, field: "aircraft" | "parts", n: number) => {
+    const slug = provinceByName(province)?.slug;
+    if (!slug) return;
+    provinceCounts[slug] ??= { aircraft: 0, parts: 0 };
+    provinceCounts[slug][field] += n;
+  };
+  aircraftByProvince.forEach((g) => addCount(g.province, "aircraft", g._count._all));
+  sparePartsByProvince.forEach((g) => addCount(g.province, "parts", g._count._all));
 
   // Formateo para Aeronaves Destacadas (OverlayCard)
   const formattedFeaturedAircrafts = featuredAircraftsFromDb.map((aircraft) => ({
@@ -193,7 +109,6 @@ export default async function HomePage() {
     city: aircraft.city,
     province: aircraft.province,
     imageUrl: aircraft.images[0]?.url ?? PLACEHOLDER_IMAGE,
-    isFavoriteInitial: userFavAircraftIds.has(aircraft.id),
   }));
 
   // Mapear aeronaves a ListingItem. "Últimas aeronaves" son las 6 primeras de la misma
@@ -213,7 +128,6 @@ export default async function HomePage() {
       province: aircraft.province,
       imageUrl: aircraft.images[0]?.url ?? PLACEHOLDER_IMAGE,
       createdAt: aircraft.createdAt,
-      isFavoriteInitial: userFavAircraftIds.has(aircraft.id),
     })
   );
 
@@ -232,7 +146,6 @@ export default async function HomePage() {
       inPesos: part.inPesos,
       imageUrl: part.images[0]?.url ?? PLACEHOLDER_IMAGE,
       createdAt: part.createdAt,
-      isFavoriteInitial: userFavSparePartIds.has(part.id),
     })
   );
 
@@ -247,25 +160,53 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={organizationAndWebsiteJsonLd()} />
-      <div className="bg-[#FAF5F5] min-h-screen">
+      {/* VA-79: la Home es una sola pieza. Cuatro zonas con degradés que se continúan (el color con
+          que termina una es el color con que empieza la siguiente); estilos en app/globals.css. */}
+      <FavoriteIdsProvider>
+      <main className="home-theme relative isolate overflow-x-clip">
+        {/* Zona 1 · Cielo: hero + marcas + destacadas */}
         <HeroBanner />
+        <div className="home-zone home-zone-1">
+          <div aria-hidden className="home-zone-bg" />
+          {/* VA-47: invitación a registrarse, solo para visitantes sin cuenta (se decide en el navegador) */}
+          <LaunchPromoBanner />
+          <FeaturedBrands brands={featuredBrandsFromDb} />
+          <AircraftTypesSection counts={categoryCounts} />
+          <div className="container mx-auto px-4 pb-12">
+            <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
+          </div>
+        </div>
 
-        <FeaturedBrands brands={featuredBrandsFromDb} />
+        {/* Zona 2 · Altura: últimas publicaciones + provincias + categorías */}
+        <div className="home-zone home-zone-2">
+          <div aria-hidden className="home-zone-bg" />
+          <div className="container mx-auto px-4 py-8 space-y-16">
+            <LatestAircraft items={combinedLatestListings} />
+            <ProvinceExplorer counts={provinceCounts} />
+            <SparePartCategoriesCarousel categories={sparePartCategories} />
+          </div>
+        </div>
 
-        <main className="container mx-auto px-4 py-8 space-y-12">
-          <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
+        {/* Zona 3 · Puente: SellerCta flota mientras el fondo pasa de claro a oscuro */}
+        <div className="home-zone home-zone-3 pt-8 pb-20">
+          <div aria-hidden className="home-zone-bg" />
+          <SellerCta />
+        </div>
 
-          <LatestAircraft items={combinedLatestListings} />
-
-          <SparePartCategoriesCarousel categories={sparePartCategories} />
-        </main>
-
-        <SellerCta />
-        <HowItWorks />
-        <HomeServicesCards />
-      </div>
+        {/* Zona 4 · Estratósfera: cómo funciona + guías + servicios; el footer sigue el mismo color */}
+        <div className="home-zone home-zone-4 pb-8">
+          <div aria-hidden className="home-zone-bg" />
+          <BrandSlashes className="-top-6 right-[-4rem] w-72 sm:w-[28rem]" />
+          <BrandSlashes className="bottom-24 -left-24 w-64 sm:w-96" />
+          <HowItWorks />
+          <GuidesSection />
+          <HomeServicesCards />
+        </div>
+      </main>
+      </FavoriteIdsProvider>
     </>
   );
 } 
-  */}
+
+
 

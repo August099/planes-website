@@ -7,24 +7,32 @@ datasource db {
 }
 
 model User {
-  id                        String           @id @default(cuid())
+  id                        String               @id @default(cuid())
   name                      String?
-  email                     String           @unique
+  email                     String               @unique
   emailVerified             DateTime?
   passwordHash              String?
   image                     String?
   phone                     String?
   bio                       String?
-  isAdmin                   Boolean          @default(false)
-  isFoundingMember          Boolean          @default(false)
-  createdAt                 DateTime         @default(now())
-  aircraftListingsBalance   Int              @default(0)
-  sparePartsListingsBalance Int              @default(0)
+  isAdmin                   Boolean              @default(false)
+  isFoundingMember          Boolean              @default(false)
+  createdAt                 DateTime             @default(now())
+  aircraftListingsBalance   Int                  @default(0)
+  sparePartsListingsBalance Int                  @default(0)
   facebook                  String?
   instagram                 String?
   city                      String?
   province                  String?
-  userType                  UserType         @default(PARTICULAR)
+  userType                  UserType             @default(PARTICULAR)
+  // VA-87: el usuario ya eligió su tipo de cuenta (en /register o en /onboarding/account-type).
+  userTypeConfirmed         Boolean              @default(false)
+  // VA-87: página personalizada (solo con un plan que la incluya, lib/subscriptions.ts).
+  businessName              String?
+  coverUrl                  String?
+  logoUrl                   String?
+  website                   String?
+  whatsapp                  String?
   accounts                  Account[]
   adBanners                 AdBanner[]
   aircrafts                 Aircraft[]
@@ -36,7 +44,13 @@ model User {
   reports                   Report[]
   sessions                  Session[]
   spareParts                SparePart[]
+  hangars                   Hangar[]
+  // VA-84: créditos de publicación de hangares (los suma el webhook de Mercado Pago, Fase 6).
+  hangarListingsBalance     Int                  @default(0)
+  // VA-92: datos de facturación guardados para la próxima compra.
+  billingProfile            BillingProfile?
   Subscription              Subscription?
+  listingPriceChanges       ListingPriceChange[]
 }
 
 model Account {
@@ -55,6 +69,7 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -63,6 +78,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -81,6 +98,8 @@ model Plan {
   savingsPercent          Int?
   usageDescription        String?
   includesVerifiedBadge   Boolean          @default(false)
+  // VA-87: el plan da "Página personalizada" en /profile/[id].
+  includesCustomPage      Boolean          @default(false)
   isActive                Boolean          @default(true)
   aircraftListingsCount   Int              @default(0)
   sparePartsListingsCount Int              @default(0)
@@ -88,28 +107,190 @@ model Plan {
   billingType             PlanBillingType  @default(ONE_TIME)
   isUnlimitedAircraft     Boolean          @default(false)
   isUnlimitedSpareParts   Boolean          @default(false)
+  // VA-84: hangares, con el mismo patrón que aeronaves y repuestos.
+  hangarListingsCount     Int              @default(0)
+  isUnlimitedHangars      Boolean          @default(false)
+  showInHangarsTab        Boolean          @default(false)
+  // VA-80: las publicaciones del suscriptor no vencen mientras la suscripción esté vigente.
+  noExpiry                Boolean          @default(false)
+  // VA-80: lo que se muestra en /plans (la lógica usa los campos de arriba).
+  currency                String           @default("ARS")
+  description             String?
+  features                String[]         @default([])
+  badge                   String?
+  isPopular               Boolean          @default(false)
+  showInAircraftTab       Boolean          @default(false)
+  showInPartsTab          Boolean          @default(false)
+  sortOrder               Int              @default(0)
+  // VA-80: archivado = fuera de /plans y del alta, pero conserva compras y suscripciones.
+  archivedAt              DateTime?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @default(now()) @updatedAt
   purchases               Purchase[]
   subscriptions           Subscription[]
 }
 
+// VA-59: precio por menor de publicar un avión o un repuesto, editable desde /admin/prices.
+// Una fila por tipo. Lo que se cobre se lee siempre de acá en el servidor (Fase 6).
+model ListingPrice {
+  kind      ListingKind @id
+  amount    Decimal     @db.Decimal(12, 2)
+  currency  String      @default("ARS")
+  updatedAt DateTime    @updatedAt
+}
+
+// VA-59: historial de cambios de precio (quién, cuándo, de cuánto a cuánto).
+model ListingPriceChange {
+  id             String      @id @default(cuid())
+  kind           ListingKind
+  previousAmount Decimal     @db.Decimal(12, 2)
+  newAmount      Decimal     @db.Decimal(12, 2)
+  currency       String      @default("ARS")
+  adminId        String?
+  admin          User?       @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  createdAt      DateTime    @default(now())
+
+  @@index([kind, createdAt])
+}
+
+// VA-85: guías de /services/guides, editables desde /admin/guides. Solo las PUBLISHED se ven en
+// el sitio, el sitemap y el JSON-LD; las DRAFT dan 404 al público y el admin las ve en la vista previa.
+model Guide {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  excerpt         String
+  audience        GuideAudience
+  // Nombre de un ícono de lucide (de la lista de lib/guide-icons.ts).
+  icon            String
+  metaDescription String
+  // [{ heading, id?, paragraphs[], bullets[], links[{ label, href }] }]
+  sections        Json
+  // Fuente oficial con link visible ({ label, href }) y botones al pie ([{ label, href }]).
+  source          Json?
+  cta             Json          @default("[]")
+  // El glosario se muestra como lista de definiciones y publica DefinedTermSet.
+  isGlossary      Boolean       @default(false)
+  status          GuideStatus   @default(DRAFT)
+  order           Int           @default(0)
+  reviewedBy      String?
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status, order])
+}
+
+// VA-84: hangares (alquiler de espacio, de hangar completo y venta). Mismos estados y vencimiento que
+// las aeronaves. Puede ofrecerse en venta, en alquiler o las dos cosas (al menos una): cada una con
+// su precio y moneda; el alquiler, además, con su período. Precio vacío con la opción marcada =
+// "a convenir".
+model Hangar {
+  id               String               @id @default(cuid())
+  sellerId         String
+  title            String
+  description      String
+  // Ubicación
+  airfieldName     String
+  icaoCode         String?
+  city             String
+  province         String
+  latitude         Float?
+  longitude        Float?
+  // Para asociarlo al futuro directorio de pistas (nulo por ahora).
+  airfieldId       String?
+  // Medidas en metros (puerta obligatoria) y superficie en m²
+  doorWidth        Float
+  doorHeight       Float
+  interiorWidth    Float?
+  interiorDepth    Float?
+  area             Float?
+  // Capacidad y servicios
+  spaceType        HangarSpaceType?
+  spots            Int?
+  aircraftTypes    HangarAircraftType[]
+  services         HangarService[]
+  // Venta
+  offersSale       Boolean              @default(false)
+  salePrice        Decimal?             @db.Decimal(14, 2)
+  saleCurrency     ListingCurrency      @default(USD)
+  // Alquiler
+  offersRent       Boolean              @default(false)
+  rentalType       HangarRentalType?
+  rentPrice        Decimal?             @db.Decimal(12, 2)
+  rentCurrency     ListingCurrency      @default(ARS)
+  rentPeriod       HangarRentPeriod?
+  negotiable       Boolean              @default(false)
+  // Disponibilidad: null = disponible ahora
+  availableFrom    DateTime?
+  // Estado y vencimiento (igual que Aircraft)
+  status           AircraftStatus       @default(PENDING_PAYMENT)
+  listingStartsAt  DateTime?
+  listingExpiresAt DateTime?
+  purchaseId       String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  seller           User                 @relation(fields: [sellerId], references: [id])
+  purchase         Purchase?            @relation(fields: [purchaseId], references: [id])
+  images           HangarImage[]
+  favorites        Favorite[]
+  questions        Question[]
+  reports          Report[]
+  analyticsEvents  AnalyticsEvent[]
+
+  @@index([status, listingExpiresAt, createdAt])
+  @@index([province, city])
+  @@index([doorWidth])
+  @@index([salePrice])
+  @@index([rentPrice])
+  @@index([sellerId])
+}
+
+model HangarImage {
+  id       String @id @default(cuid())
+  hangarId String
+  url      String
+  order    Int    @default(0)
+  hangar   Hangar @relation(fields: [hangarId], references: [id], onDelete: Cascade)
+
+  @@index([hangarId, order])
+}
+
 model Purchase {
-  id             String        @id @default(cuid())
-  userId         String
-  planId         String
-  mpPreferenceId String?
-  paymentStatus  PaymentStatus @default(PENDING)
-  createdAt      DateTime      @default(now())
-  couponId       String?
-  discountAmount Decimal       @default(0) @db.Decimal(12, 2)
-  finalPrice     Decimal       @default(0) @db.Decimal(12, 2)
-  originalPrice  Decimal       @default(0) @db.Decimal(12, 2)
-  adBanners      AdBanner[]
-  aircrafts      Aircraft[]
-  couponUsage    CouponUsage?
-  coupon         Coupon?       @relation(fields: [couponId], references: [id])
-  plan           Plan          @relation(fields: [planId], references: [id])
-  user           User          @relation(fields: [userId], references: [id])
-  spareParts     SparePart[]
+  id              String        @id @default(cuid())
+  userId          String
+  // VA-92: opcional. Un aviso suelto se cobra al precio de ListingPrice (listingKind), sin Plan.
+  planId          String?
+  listingKind     ListingKind?
+  // Concepto que se cobra y se factura ("Publicación de aeronave – Plan 1 Avión").
+  description     String        @default("")
+  currency        String        @default("ARS")
+  mpPreferenceId  String?
+  paymentStatus   PaymentStatus @default(PENDING)
+  // VA-92: cuándo se aprobó el pago y cuándo se entregó lo comprado. activatedAt hace idempotente
+  // la activación: se marca en la misma transacción que acredita el saldo o activa el aviso.
+  approvedAt      DateTime?
+  activatedAt     DateTime?
+  // Datos de facturación usados en esta compra (copia del BillingProfile en ese momento).
+  billingSnapshot Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @default(now()) @updatedAt
+  couponId        String?
+  discountAmount  Decimal       @default(0) @db.Decimal(12, 2)
+  finalPrice      Decimal       @default(0) @db.Decimal(12, 2)
+  originalPrice   Decimal       @default(0) @db.Decimal(12, 2)
+  adBanners       AdBanner[]
+  aircrafts       Aircraft[]
+  couponUsage     CouponUsage?
+  coupon          Coupon?       @relation(fields: [couponId], references: [id])
+  plan            Plan?         @relation(fields: [planId], references: [id], onDelete: Restrict)
+  user            User          @relation(fields: [userId], references: [id])
+  spareParts      SparePart[]
+  hangars         Hangar[]
+  payments        Payment[]
+
+  @@index([userId, createdAt])
+  @@index([paymentStatus, createdAt])
 }
 
 model Subscription {
@@ -122,10 +303,16 @@ model Subscription {
   currentPeriodStart   DateTime
   currentPeriodEnd     DateTime
   cancelAtPeriodEnd    Boolean            @default(false)
+  // VA-92: estado del preapproval en Mercado Pago (pending, authorized, paused, cancelled) y
+  // gracia tras un cobro rechazado: vencida graceUntil, pierde los beneficios.
+  mpStatus             String?
+  graceUntil           DateTime?
+  lastPaymentAt        DateTime?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
   plan                 Plan               @relation(fields: [planId], references: [id])
   user                 User               @relation(fields: [userId], references: [id])
+  payments             Payment[]
 }
 
 model AdBanner {
@@ -192,7 +379,7 @@ model Aircraft {
   title            String
   customBrand      String?
   year             Int
-  totalTimeHours   Int
+  totalTimeHours   Int?
   price            Decimal?            @db.Decimal(12, 2)
   city             String
   province         String
@@ -216,7 +403,10 @@ model Aircraft {
   financing        Boolean             @default(false)
   trade            Boolean             @default(false)
   rent             Boolean             @default(false)
-  avDescription    String
+  negotiable       Boolean             @default(false)
+  extraEquipment   String?
+  agEquipment      String?
+  avDescription    String?
   avAaptoifr       Boolean             @default(false)
   avAutopilot      Boolean             @default(false)
   brandId          String?
@@ -240,12 +430,17 @@ model Aircraft {
   questions        Question[]
   reports          Report[]
   tags             Tag[]               @relation("AircraftToTag")
+  // VA-83: centroide de la localidad (API Georef), para el mapa de zona aproximada.
+  latitude         Float?
+  longitude        Float?
 
   @@index([price])
-  @@index([status])
+  @@index([status, listingExpiresAt, createdAt])
   @@index([brandId, modelId])
   @@index([province, city])
   @@index([year])
+  @@index([sellerId])
+  @@index([categoryId])
 }
 
 model AircraftImage {
@@ -254,6 +449,8 @@ model AircraftImage {
   url        String
   order      Int      @default(0)
   aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId, order])
 }
 
 model AircraftDocument {
@@ -263,27 +460,35 @@ model AircraftDocument {
   name       String
   uploadedAt DateTime @default(now())
   aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId])
 }
 
 model AircraftEngine {
   id          String   @id @default(cuid())
   aircraftId  String
   engineHours Int?
-  TBO         Int
+  TBO         Int?
   DURG        Int?
+  horsepower  Int?
   brand       String?
   model       String?
   description String?
   aircraft    Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId])
 }
 
 model AircraftPropeller {
   id             String   @id @default(cuid())
   aircraftId     String
   propellerHours Int?
+  brand          String?
   model          String?
   description    String?
   aircraft       Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId])
 }
 
 model Category {
@@ -394,10 +599,15 @@ model SparePart {
   seller           User                @relation(fields: [sellerId], references: [id])
   images           SparePartImage[]
   leads            SparePartLead[]
+  // VA-83: centroide de la localidad (API Georef), para el mapa de zona aproximada.
+  latitude         Float?
+  longitude        Float?
 
   @@index([price])
-  @@index([status])
+  @@index([status, inPesos, createdAt])
   @@index([province, city])
+  @@index([sellerId])
+  @@index([categoryId])
 }
 
 model SparePartImage {
@@ -406,6 +616,8 @@ model SparePartImage {
   url         String
   order       Int       @default(0)
   sparePart   SparePart @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+
+  @@index([sparePartId, order])
 }
 
 model Lead {
@@ -417,6 +629,8 @@ model Lead {
   message    String
   createdAt  DateTime @default(now())
   aircraft   Aircraft @relation(fields: [aircraftId], references: [id])
+
+  @@index([aircraftId])
 }
 
 model SparePartLead {
@@ -428,6 +642,8 @@ model SparePartLead {
   message     String
   createdAt   DateTime  @default(now())
   sparePart   SparePart @relation(fields: [sparePartId], references: [id])
+
+  @@index([sparePartId])
 }
 
 model Favorite {
@@ -437,9 +653,17 @@ model Favorite {
   sparePartId String?
   aircraft    Aircraft?  @relation(fields: [aircraftId], references: [id])
   sparePart   SparePart? @relation(fields: [sparePartId], references: [id])
+  // VA-84
+  hangarId    String?
+  hangar      Hangar?    @relation(fields: [hangarId], references: [id], onDelete: Cascade)
   user        User       @relation(fields: [userId], references: [id])
 
-  @@unique([userId, aircraftId, sparePartId])
+  // VA-16: el unique de 3 columnas no evitaba duplicados (en Postgres NULL <> NULL, y siempre
+  // una de las dos columnas es NULL). Con dos índices de 2 columnas, los NULL no chocan entre sí
+  // pero dos favoritos del mismo avión (o repuesto) para el mismo usuario sí.
+  @@unique([userId, aircraftId])
+  @@unique([userId, sparePartId])
+  @@unique([userId, hangarId])
 }
 
 model Report {
@@ -454,7 +678,10 @@ model Report {
   userId        String?
   aircraft      Aircraft?    @relation(fields: [aircraftId], references: [id])
   sparePart     SparePart?   @relation(fields: [sparePartId], references: [id])
-  user          User?         @relation(fields: [userId], references: [id])
+  // VA-84
+  hangarId      String?
+  hangar        Hangar?      @relation(fields: [hangarId], references: [id], onDelete: Cascade)
+  user          User?        @relation(fields: [userId], references: [id])
 }
 
 model Tag {
@@ -475,10 +702,14 @@ model Question {
   createdAt   DateTime   @default(now())
   aircraft    Aircraft?  @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
   sparePart   SparePart? @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+  // VA-84
+  hangarId    String?
+  hangar      Hangar?    @relation(fields: [hangarId], references: [id], onDelete: Cascade)
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([aircraftId])
   @@index([sparePartId])
+  @@index([hangarId])
   @@index([userId])
 }
 
@@ -497,13 +728,18 @@ model AnalyticsEvent {
   createdAt   DateTime           @default(now())
   aircraft    Aircraft?          @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
   sparePart   SparePart?         @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+  // VA-84
+  hangarId    String?
+  hangar      Hangar?            @relation(fields: [hangarId], references: [id], onDelete: Cascade)
   user        User?              @relation(fields: [userId], references: [id])
 
   @@index([eventType, createdAt])
   @@index([aircraftId, eventType])
   @@index([sparePartId, eventType])
+  @@index([hangarId, eventType])
   @@index([userId])
   @@index([anonymousId])
+  @@index([createdAt])
 }
 
 model Coupon {
@@ -538,6 +774,7 @@ model CouponUsage {
   User        User      @relation(fields: [userId], references: [id])
 
   @@index([couponId, userId])
+  @@index([userId])
 }
 
 enum CouponType {
@@ -555,7 +792,70 @@ enum CouponScope {
   ALL
   AIRCRAFT
   SPARE_PART
+  HANGAR
   AD_BANNER
+}
+
+enum GuideAudience {
+  comprador
+  vendedor
+  todos
+}
+
+enum GuideStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum HangarRentalType {
+  SHARED_SPACE
+  WHOLE_HANGAR
+}
+
+enum HangarSpaceType {
+  INDIVIDUAL
+  SHARED
+  PLATFORM
+}
+
+enum HangarRentPeriod {
+  NIGHT
+  DAY
+  MONTH
+  YEAR
+}
+
+enum HangarAircraftType {
+  SINGLE_ENGINE
+  TWIN_ENGINE
+  HELICOPTER
+  LIGHT_JET
+  GLIDER
+  ULTRALIGHT
+}
+
+enum HangarService {
+  ELECTRICITY
+  WATER
+  BATHROOM
+  OFFICE_STORAGE
+  SECURITY
+  ACCESS_24H
+  FUEL
+  WORKSHOP
+  FLIGHT_SCHOOL
+  LIGHTED_RUNWAY
+}
+
+enum ListingCurrency {
+  ARS
+  USD
+}
+
+enum ListingKind {
+  AIRCRAFT
+  SPARE_PART
+  HANGAR
 }
 
 enum UserType {
@@ -567,6 +867,7 @@ enum UserType {
 enum PlanType {
   AIRCRAFT_PACK
   SPARE_PART_PACK
+  HANGAR_PACK
   AD_BANNER
   SUBSCRIPTION
 }
@@ -585,6 +886,11 @@ enum PaymentStatus {
   PENDING
   APPROVED
   REJECTED
+  // VA-92
+  IN_PROCESS
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
 }
 
 enum SubscriptionStatus {
@@ -592,6 +898,10 @@ enum SubscriptionStatus {
   PAUSED
   CANCELLED
   EXPIRED
+  // VA-92: alta iniciada, esperando que el usuario autorice el débito en Mercado Pago.
+  PENDING
+  // VA-92: cobro rechazado, en período de gracia (Subscription.graceUntil).
+  PAST_DUE
 }
 
 enum AdBannerStatus {
@@ -685,3 +995,157 @@ enum AnalyticsEventType {
   USER_REGISTERED
 }
 
+// --------------------------------------------------------------------------- VA-92 · Pagos y facturación
+
+// Un pago de Mercado Pago (único o cobro de una suscripción). Se crea o actualiza siempre con lo que
+// devuelve la API de MP (nunca con el payload del webhook). mpPaymentId único: el mismo pago no se
+// registra ni se procesa dos veces.
+model Payment {
+  id             String        @id @default(cuid())
+  provider       String        @default("MERCADOPAGO")
+  mpPaymentId    String        @unique
+  // Estado tal como lo informa MP: pending, approved, authorized, in_process, in_mediation,
+  // rejected, cancelled, refunded, charged_back.
+  status         String
+  statusDetail   String?
+  amount         Decimal       @db.Decimal(12, 2)
+  refundedAmount Decimal       @default(0) @db.Decimal(12, 2)
+  currency       String        @default("ARS")
+  method         String?
+  paymentType    String?
+  approvedAt     DateTime?
+  purchaseId     String?
+  subscriptionId String?
+  raw            Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  purchase       Purchase?     @relation(fields: [purchaseId], references: [id])
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  invoices       Invoice[]
+
+  @@index([purchaseId])
+  @@index([subscriptionId])
+  @@index([status, createdAt])
+}
+
+// Cada notificación recibida, con firma válida o no. Se guarda antes de procesar y se responde 200
+// rápido; el procesamiento deja el resultado acá (status, error, attempts).
+model WebhookEvent {
+  id             String        @id @default(cuid())
+  provider       String        @default("MERCADOPAGO")
+  topic          String
+  action         String?
+  externalId     String?
+  requestId      String?
+  signatureValid Boolean
+  payload        Json
+  status         WebhookStatus @default(RECEIVED)
+  error          String?       @db.Text
+  attempts       Int           @default(0)
+  receivedAt     DateTime      @default(now())
+  processedAt    DateTime?
+
+  @@index([provider, externalId])
+  @@index([status, receivedAt])
+}
+
+// Factura C o nota de crédito C emitida con TusFacturasAPP. TusFacturas no controla el
+// external_reference repetido: la unicidad la garantiza la base.
+model Invoice {
+  id                String        @id @default(cuid())
+  kind              InvoiceKind
+  status            InvoiceStatus @default(PENDING)
+  paymentId         String
+  // = paymentId solo en las facturas (null en las notas de crédito): una factura por pago.
+  invoicedPaymentId String?       @unique
+  // Notas de crédito: el reembolso de MP que la originó (una por reembolso, también los parciales)
+  // o el id de la anulación manual.
+  refundRef         String?       @unique
+  originalInvoiceId String?
+  pointOfSale       Int?
+  number            Int?
+  cae               String?
+  caeExpiresAt      DateTime?
+  total             Decimal       @db.Decimal(12, 2)
+  periodFrom        DateTime
+  periodTo          DateTime
+  description       String
+  // Datos del receptor con los que se emitió (copia de los datos de facturación de la compra).
+  receiver          Json
+  arcaObservations  String?       @db.Text
+  errors            String?       @db.Text
+  attempts          Int           @default(0)
+  nextAttemptAt     DateTime?
+  issuedAt          DateTime?
+  // Ruta en el bucket privado de Supabase (el PDF de TusFacturas es temporal).
+  pdfPath           String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  payment           Payment       @relation(fields: [paymentId], references: [id])
+  originalInvoice   Invoice?      @relation("CreditNotes", fields: [originalInvoiceId], references: [id])
+  creditNotes       Invoice[]     @relation("CreditNotes")
+
+  @@unique([kind, pointOfSale, number])
+  @@index([status, nextAttemptAt])
+  @@index([issuedAt])
+  @@index([paymentId])
+}
+
+// Datos de facturación del usuario (se completan al comprar y se reutilizan).
+model BillingProfile {
+  id           String           @id @default(cuid())
+  userId       String           @unique
+  kind         BillingPartyKind
+  // DNI (consumidor final, obligatorio desde BillingSettings.dniRequiredFrom) o CUIT (empresa).
+  docType      String?
+  docNumber    String?
+  name         String
+  // Condición frente al IVA con los códigos de TusFacturas: CF, M (monotributo), RI, E (exento).
+  ivaCondition String           @default("CF")
+  email        String
+  address      String?
+  province     String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Configuración de facturación editable desde el admin (una sola fila, id "default").
+model BillingSettings {
+  id                    String    @id @default("default")
+  // Tope anual de la categoría del monotributo (solo indicador, no bloquea) y umbral de alerta.
+  monotributoAnnualCap  Decimal?  @db.Decimal(14, 2)
+  alertThresholdPercent Int       @default(80)
+  lastCapAlertAt        DateTime?
+  // Desde qué monto el consumidor final tiene que informar DNI (regla de ARCA, configurable).
+  dniRequiredFrom       Decimal   @default(10000000) @db.Decimal(14, 2)
+  // Días de gracia de una suscripción con un cobro rechazado.
+  graceDays             Int       @default(7)
+  // Reintentos de una factura con error antes de avisar al admin.
+  maxInvoiceAttempts    Int       @default(5)
+  updatedAt             DateTime  @default(now()) @updatedAt
+}
+
+enum WebhookStatus {
+  RECEIVED
+  PROCESSED
+  IGNORED
+  REJECTED
+  ERROR
+}
+
+enum InvoiceKind {
+  FACTURA_C
+  NOTA_CREDITO_C
+}
+
+enum InvoiceStatus {
+  PENDING
+  ISSUED
+  ERROR
+}
+
+enum BillingPartyKind {
+  CONSUMIDOR_FINAL
+  EMPRESA
+}

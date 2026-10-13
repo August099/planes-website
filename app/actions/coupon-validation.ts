@@ -16,7 +16,7 @@ export async function validateCoupon({ code, scope, originalPrice = 0 }: Validat
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return { success: false, error: "Debes iniciar sesión para usar un cupón." };
+      return { success: false, error: "Tenés que iniciar sesión para usar un cupón." };
     }
 
     const cleanCode = code.trim().toUpperCase();
@@ -98,7 +98,7 @@ export async function claimCouponToProfile(code: string) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return { success: false, error: "Debes iniciar sesión para guardar un cupón." };
+      return { success: false, error: "Tenés que iniciar sesión para guardar un cupón." };
     }
 
     const validation = await validateCoupon({ code });
@@ -115,7 +115,7 @@ export async function claimCouponToProfile(code: string) {
     });
 
     if (existingUsage) {
-      return { success: false, error: "Ya tienes este cupón guardado o utilizado en tu cuenta." };
+      return { success: false, error: "Ya tenés este cupón guardado o usado en tu cuenta." };
     }
 
     // Registrar intención/reserva en CouponUsage
@@ -128,7 +128,7 @@ export async function claimCouponToProfile(code: string) {
 
     revalidatePath(`/profile/${user.id}`);
     return { success: true, message: "¡Cupón guardado con éxito en tu perfil!" };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error al guardar cupón:", error);
     return { success: false, error: "No se pudo guardar el cupón." };
   }

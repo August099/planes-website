@@ -1,25 +1,45 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { resendVerificationEmailAction } from "@/app/actions/verification-actions";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { PageBackground } from "@/components/ui/PageBackground";
 
-export default function LoginForm() {
-  const searchParams = useSearchParams();
-  const errorParam = searchParams.get("error");
-  const successParam = searchParams.get("success");
+interface LoginFormProps {
+  // Vienen de la página (searchParams del servidor). Antes se leían con useSearchParams dentro
+  // de un <Suspense>, y ese bloque nunca hidrataba: el formulario se enviaba nativo (VA-20).
+  errorParam?: string | null;
+  successParam?: string | null;
+  callbackParam?: string | null;
+}
+
+export default function LoginForm({ errorParam = null, successParam = null, callbackParam = null }: LoginFormProps) {
+  // Solo rutas internas, para no redirigir a otro sitio.
+  const callbackUrl =
+    callbackParam && /^\/(?![/\\])/.test(callbackParam)
+      ? callbackParam
+      : "/";
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Email del último intento, para "Reenviar mail de verificación".
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [resendStatus, setResendStatus] = useState<{ ok: boolean; message: string } | null>(null);
+  const [resending, setResending] = useState(false);
+
+  const handleResend = async () => {
+    setResending(true);
+    setResendStatus(await resendVerificationEmailAction(pendingEmail));
+    setResending(false);
+  };
 
   const handleCredentialsLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,26 +59,22 @@ export default function LoginForm() {
     setLoading(false);
 
     if (res?.error) {
-      if (res.error.includes("EmailNotVerified")) {
+      // Auth.js v5 manda el motivo en res.code (CredentialsSignin con code, ver lib/auth.ts).
+      if (res.code === "EmailNotVerified") {
+        setPendingEmail(email);
+        setResendStatus(null);
         setErrorMessage("EmailNotVerified");
       } else {
         setErrorMessage("CredentialsSignin");
       }
     } else {
-      window.location.href = "/";
+      window.location.href = callbackUrl;
     }
   };
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16 flex items-center justify-center py-16">
-      <Image
-        src="/bkg-login.jpg"
-        alt="Fondo Iniciar Sesión"
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
+      <PageBackground page="login" />
 
       <div className="container mx-auto px-4 max-w-md">
         <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-8 backdrop-blur-sm shadow-xl space-y-6">
@@ -77,7 +93,7 @@ export default function LoginForm() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => signIn("google", { callbackUrl: "/" })}
+              onClick={() => signIn("google", { callbackUrl })}
               className="w-full gap-2 bg-white/80 border-[#001F58]/20 hover:bg-white text-[#001F58] font-medium rounded-xl shadow-sm cursor-pointer"
             >
               <svg width="18" height="18" viewBox="0 0 48 48">
@@ -103,7 +119,7 @@ export default function LoginForm() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => signIn("facebook", { callbackUrl: "/" })}
+              onClick={() => signIn("facebook", { callbackUrl })}
               className="w-full gap-2 bg-white/80 border-[#001F58]/20 hover:bg-white text-[#001F58] font-medium rounded-xl shadow-sm cursor-pointer"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
@@ -135,12 +151,24 @@ export default function LoginForm() {
 
           {errorMessage === "EmailNotVerified" && (
             <div className="rounded-xl bg-amber-50 p-3 text-xs sm:text-sm text-amber-700 border border-amber-200">
-              Debés activar tu cuenta desde el link enviado a tu casilla de correo antes de ingresar.
+              <p>Debés activar tu cuenta desde el link enviado a tu casilla de correo antes de ingresar.</p>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="mt-2 font-semibold underline hover:text-amber-900 disabled:opacity-50 cursor-pointer"
+              >
+                {resending ? "Enviando..." : "Reenviar mail de verificación"}
+              </button>
+              {resendStatus && (
+                <p className={`mt-1 ${resendStatus.ok ? "text-green-700" : "text-red-600"}`}>{resendStatus.message}</p>
+              )}
             </div>
           )}
 
           {/* Formulario de Credentials */}
-          <form onSubmit={handleCredentialsLogin} className="space-y-4">
+          {/* method="post": si se envía antes de que cargue React, la contraseña no queda en la URL */}
+          <form method="post" onSubmit={handleCredentialsLogin} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-xs font-semibold text-[#001F58]">
                 Email

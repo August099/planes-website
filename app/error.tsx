@@ -1,26 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Repeat, Plane } from "lucide-react";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 export default function Error({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
-    <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center -mb-16 px-4">
-      <Image
-        src="/bkg-plans.jpg"
-        alt="Fondo Error 500"
-        fill
-        priority
-        className="-z-20 object-cover opacity-60"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/80 backdrop-blur-md" />
+    <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center px-4">
+      <PageBackground page="plans" />
 
       <div className="max-w-xl w-full text-center bg-white/70 backdrop-blur-md border border-[#001F58]/15 rounded-3xl p-8 sm:p-12 shadow-xl my-12">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E70F1F]/10 border border-[#E70F1F]/20 text-[#E70F1F] text-xs font-semibold tracking-wider uppercase mb-6 animate-pulse">

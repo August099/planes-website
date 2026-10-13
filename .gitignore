@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# VA-92: solo nombres de variables, sin valores
+!.env.example
 
 # vercel
 .vercel
@@ -41,3 +43,9 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+
+# Configuración local del editor (VA-61: tenía credenciales de Postgres local)
+.vscode/
+
+# Capturas de verificación (pesadas; se mandan por chat, no van al repo)
+docs/capturas/

@@ -1,7 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { AnalyticsEventType } from "@prisma/client";
+import { activeListingWhere } from "@/lib/listing-filters";
+import { formatPrice } from "@/lib/format";
 
 export interface SearchResultItem {
   id: string;
@@ -13,9 +14,10 @@ export interface SearchResultItem {
 
 export type SearchType = "Aeronave" | "Repuesto";
 
+// Sugerencias del buscador del header (se llama mientras se escribe). No registra analytics: la
+// búsqueda se registra recién cuando la persona la envía o elige un resultado (logSearch, VA-15).
 export async function searchGlobal(
   query: string,
-  anonymousId?: string,
   searchType: SearchType = "Aeronave"
 ): Promise<SearchResultItem[]> {
   const cleanQuery = query.trim().toLowerCase();
@@ -37,7 +39,7 @@ export async function searchGlobal(
   if (searchType === "Aeronave") {
     const aircrafts = await prisma.aircraft.findMany({
       where: {
-        status: "ACTIVE",
+        ...activeListingWhere(),
         AND: tokens.map((token) => ({
           OR: [
             { title: { contains: token, mode: "insensitive" } },
@@ -84,9 +86,7 @@ export async function searchGlobal(
       subtitle: `${a.city ?? "Ubicación no especificada"}${
         a.province ? `, ${a.province}` : ""
       } • ${
-        a.price
-          ? `USD $${Number(a.price).toLocaleString()}`
-          : "A Consultar"
+        formatPrice(a.price)
       }`,
       url: `/planes/plane-details/${a.id}`,
     }));
@@ -98,7 +98,7 @@ export async function searchGlobal(
   if (searchType === "Repuesto") {
     const spareParts = await prisma.sparePart.findMany({
       where: {
-        status: "ACTIVE",
+        ...activeListingWhere(),
         AND: tokens.map((token) => ({
           OR: [
             { title: { contains: token, mode: "insensitive" } },
@@ -121,6 +121,7 @@ export async function searchGlobal(
         id: true,
         title: true,
         price: true,
+        inPesos: true,
         city: true,
       },
       take: 5,
@@ -131,35 +132,10 @@ export async function searchGlobal(
       title: s.title,
       type: "Repuesto",
       subtitle: `${s.city ?? "Ubicación no especificada"} • ${
-        s.price
-          ? `USD $${Number(s.price).toLocaleString()}`
-          : "A Consultar"
+        formatPrice(s.price, { inPesos: s.inPesos })
       }`,
       url: `/spareparts/sparepart-details/${s.id}`,
     }));
-  }
-
-  // ============================================================
-  // ANALYTICS
-  // ============================================================
-  try {
-    await prisma.analyticsEvent.create({
-      data: {
-        eventType: AnalyticsEventType.SEARCH,
-        anonymousId: anonymousId || null,
-        metadata: {
-          query: cleanQuery,
-          resultsCount: results.length,
-          searchType,
-          origin: "HEADER_NAVBAR",
-        },
-      },
-    });
-  } catch (err) {
-    console.error(
-      "Error al registrar AnalyticsEvent de búsqueda:",
-      err
-    );
   }
 
   return results;

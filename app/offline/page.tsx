@@ -1,17 +1,10 @@
 import Link from "next/link";
-import Image from "next/image";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 export default function OfflinePage() {
   return (
-    <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center -mb-16 px-4">
-      <Image
-        src="/bkg-plans.jpg"
-        alt="Fondo Sin Conexión"
-        fill
-        priority
-        className="-z-20 object-cover opacity-60"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/80 backdrop-blur-md" />
+    <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center px-4">
+      <PageBackground page="plans" />
 
       <div className="max-w-xl w-full text-center bg-white/70 backdrop-blur-md border border-[#001F58]/15 rounded-3xl p-8 sm:p-12 shadow-xl my-12">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E70F1F]/10 border border-[#E70F1F]/20 text-[#E70F1F] text-xs font-semibold tracking-wider uppercase mb-6 animate-pulse">
@@ -28,7 +21,7 @@ export default function OfflinePage() {
         </h2>
 
         <p className="text-sm sm:text-base text-[#001F58]/70 leading-relaxed mb-8">
-          Parece que perdiste enlace con la red. Revisa tus conexiones de Wi-Fi o datos móviles para continuar navegando.
+          Parece que perdiste enlace con la red. Revisá tu conexión Wi-Fi o datos móviles para continuar navegando.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

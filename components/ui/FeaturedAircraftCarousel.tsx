@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useSyncExternalStore } from "react";
 import {
   OverlayAircraftCard,
   AircraftCardProps,
@@ -14,6 +13,8 @@ import { Navigation } from "swiper/modules";
 // Estilos Swiper
 import "swiper/css";
 import "swiper/css/navigation";
+import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { CarouselArrow } from "@/components/ui/home/CarouselArrow";
 
 export interface FeaturedAircraftProps extends AircraftCardProps {
   viewsCount?: number;
@@ -23,48 +24,44 @@ interface Props {
   aircrafts: FeaturedAircraftProps[];
 }
 
+function pickFeatured(aircrafts: FeaturedAircraftProps[]) {
+  let pool = [...aircrafts];
+
+  if (pool.length >= 20) {
+    // Si hay 20 o más, tomamos las 10 con más vistas
+    pool.sort((a, b) => (b.viewsCount || 0) - (a.viewsCount || 0));
+    pool = pool.slice(0, 10);
+  }
+
+  // Mezclamos aleatoriamente y tomamos 2
+  return pool.sort(() => 0.5 - Math.random()).slice(0, 2);
+}
+
+const subscribeNothing = () => () => {};
+
+// Aeronaves Destacadas: diseño original (tarjetas de foto con marca, modelo, precio y año encima),
+// restaurado el 10/10 a pedido del socio; las flechas son las unificadas de VA-82.
 export function FeaturedAircraftCarousel({ aircrafts }: Props) {
-  const [selectedAircrafts, setSelectedAircrafts] = useState<FeaturedAircraftProps[]>([]);
+  // La elección es al azar, así que se hace solo en el navegador: en el servidor y durante la
+  // hidratación no se renderiza nada, para evitar descalces (VA-63, antes con setState en un efecto).
+  const isClient = useSyncExternalStore(subscribeNothing, () => true, () => false);
+  if (!isClient || !aircrafts || aircrafts.length === 0) return null;
+  return <FeaturedCarousel aircrafts={aircrafts} />;
+}
 
-  useEffect(() => {
-    if (!aircrafts || aircrafts.length === 0) return;
-
-    let pool = [...aircrafts];
-
-    if (pool.length >= 20) {
-      // Si hay 20 o más, tomamos las 10 con más vistas
-      pool.sort((a, b) => (b.viewsCount || 0) - (a.viewsCount || 0));
-      pool = pool.slice(0, 10);
-    }
-
-    // Mezclamos aleatoriamente en el cliente y tomamos 2
-    const shuffled = pool.sort(() => 0.5 - Math.random());
-    setSelectedAircrafts(shuffled.slice(0, 2));
-  }, [aircrafts]);
-
-  // Si no se han seleccionado aún en el cliente, no renderizamos nada para evitar parpadeos/descalces
-  if (selectedAircrafts.length === 0) return null;
+function FeaturedCarousel({ aircrafts }: Props) {
+  const [selectedAircrafts] = useState(() => pickFeatured(aircrafts));
 
   return (
     <section className="py-8 relative">
       {/* ENCABEZADO */}
       <div className="text-center mb-8">
-        <h2 className="text-3xl sm:text-4xl font-bold text-[#001F58] tracking-tight inline-block relative pb-2">
-          Aeronaves Destacadas
-          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-[#001F58] rounded-full" />
-        </h2>
+        <SectionTitle>Aeronaves Destacadas</SectionTitle>
       </div>
 
       {/* CONTENEDOR CON NAVEGACIÓN LATERAL */}
       <div className="relative px-6 sm:px-10">
-        {/* FLECHA IZQUIERDA */}
-        <button
-          id="swiper-aircraft-prev"
-          className="absolute -left-2 sm:left-0 top-1/2 -translate-y-1/2 z-20 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-          aria-label="Anterior"
-        >
-          <ChevronLeft className="w-10 h-10 sm:w-12 sm:h-12 stroke-[2.5]" />
-        </button>
+        <CarouselArrow id="swiper-aircraft-prev" direction="prev" />
 
         {/* SWIPER */}
         <Swiper
@@ -93,14 +90,7 @@ export function FeaturedAircraftCarousel({ aircrafts }: Props) {
           ))}
         </Swiper>
 
-        {/* FLECHA DERECHA */}
-        <button
-          id="swiper-aircraft-next"
-          className="absolute -right-2 sm:right-0 top-1/2 -translate-y-1/2 z-20 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-          aria-label="Siguiente"
-        >
-          <ChevronRight className="w-10 h-10 sm:w-12 sm:h-12 stroke-[2.5]" />
-        </button>
+        <CarouselArrow id="swiper-aircraft-next" direction="next" />
       </div>
     </section>
   );

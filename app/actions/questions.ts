@@ -2,7 +2,15 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { unansweredQuestionsTag } from "@/lib/cached-data";
+
+const MAX_TEXT_LENGTH = 1000;
+
+// Solo rutas internas del sitio (el path lo manda el cliente).
+function safeRevalidate(path: string) {
+  if (typeof path === "string" && /^\/(?![/\\])/.test(path)) revalidatePath(path);
+}
 
 interface AnswerQuestionInput {
   questionId: string;
@@ -18,7 +26,15 @@ export async function answerQuestionAction({
   const session = await auth();
 
   if (!session?.user?.id) {
-    throw new Error("Debes iniciar sesión.");
+    return { success: false, error: "Tenés que iniciar sesión." };
+  }
+
+  const answer = String(answerText ?? "").trim();
+  if (!answer) {
+    return { success: false, error: "La respuesta no puede estar vacía." };
+  }
+  if (answer.length > MAX_TEXT_LENGTH) {
+    return { success: false, error: `La respuesta no puede superar los ${MAX_TEXT_LENGTH} caracteres.` };
   }
 
   const question = await prisma.question.findUnique({
@@ -30,25 +46,27 @@ export async function answerQuestionAction({
   });
 
   if (!question) {
-    throw new Error("La pregunta no existe.");
+    return { success: false, error: "La pregunta no existe." };
   }
 
   const sellerId = question.aircraft?.sellerId || question.sparePart?.sellerId;
 
   if (sellerId !== session.user.id) {
-    throw new Error("No tienes permiso para responder esta pregunta.");
+    return { success: false, error: "No tenés permiso para responder esta pregunta." };
   }
 
-  const updatedQuestion = await prisma.question.update({
+  await prisma.question.update({
     where: { id: questionId },
     data: {
-      answer: answerText,
+      answer,
+      answeredAt: new Date(),
     },
   });
 
-  revalidatePath(path);
+  updateTag(unansweredQuestionsTag(sellerId));
+  safeRevalidate(path);
 
-  return { success: true, data: updatedQuestion };
+  return { success: true };
 }
 
 
@@ -68,21 +86,45 @@ export async function createQuestionAction({
   const session = await auth();
 
   if (!session?.user?.id) {
-    throw new Error("Debes iniciar sesión para hacer una pregunta.");
+    return { success: false, error: "Tenés que iniciar sesión para hacer una pregunta." };
   }
 
-  const newQuestion = await prisma.question.create({
+  const text = String(questionText ?? "").trim();
+  if (!text) {
+    return { success: false, error: "La pregunta no puede estar vacía." };
+  }
+  if (text.length > MAX_TEXT_LENGTH) {
+    return { success: false, error: `La pregunta no puede superar los ${MAX_TEXT_LENGTH} caracteres.` };
+  }
+  if (entityType !== "AIRCRAFT" && entityType !== "SPARE_PART") {
+    return { success: false, error: "Publicación inválida." };
+  }
+
+  const listing =
+    entityType === "AIRCRAFT"
+      ? await prisma.aircraft.findUnique({ where: { id: entityId }, select: { sellerId: true } })
+      : await prisma.sparePart.findUnique({ where: { id: entityId }, select: { sellerId: true } });
+
+  if (!listing) {
+    return { success: false, error: "La publicación no existe." };
+  }
+  if (listing.sellerId === session.user.id) {
+    return { success: false, error: "No podés hacer preguntas en tu propia publicación." };
+  }
+
+  await prisma.question.create({
     data: {
       userId: session.user.id,
-      question: questionText,
+      question: text,
       aircraftId: entityType === "AIRCRAFT" ? entityId : null,
       sparePartId: entityType === "SPARE_PART" ? entityId : null,
     },
   });
 
-  revalidatePath(path);
+  updateTag(unansweredQuestionsTag(listing.sellerId));
+  safeRevalidate(path);
 
-  return { success: true, data: newQuestion };
+  return { success: true };
 }
 
 export async function getUserQuestionsAction() {

@@ -107,7 +107,7 @@ export default async function AdminTaxonomyPage() {
       <div>
         <h1 className="text-2xl font-bold text-[#001F58]">Gestor de Categorías y Marcas</h1>
         <p className="text-xs text-slate-500">
-          Añade, edita y elimina opciones para los desplegables de publicación y filtros.
+          Agregá, editá y eliminá opciones para los desplegables de publicación y filtros.
         </p>
       </div>
 

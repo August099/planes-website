@@ -4,12 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import { Search, Loader2, Plane, Wrench, ArrowLeft, X } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation"; // Importamos usePathname
 import { searchGlobal, SearchResultItem } from "@/app/actions/search-actions";
+import { logSearch } from "@/app/actions/analytics-actions";
+import { ensureAnalyticsCookies } from "@/lib/analytics-client";
 
 export default function MobileHeaderSearchBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResultItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [fetched, setFetched] = useState<{ query: string; items: SearchResultItem[] }>({ query: "", items: [] });
 
   const router = useRouter();
   const pathname = usePathname(); // Detectamos la ruta actual
@@ -31,29 +32,26 @@ export default function MobileHeaderSearchBar() {
     };
   }, [isOpen]);
 
+  // Los resultados se guardan con la búsqueda que los trajo; "cargando" se deriva (VA-63).
+  const hasQuery = query.trim().length >= 2;
+  const results = hasQuery ? fetched.items : [];
+  const loading = hasQuery && fetched.query !== query;
+
   useEffect(() => {
-    if (query.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+    if (!hasQuery) return;
 
-    setLoading(true);
     const timer = setTimeout(async () => {
-      let anonymousId = localStorage.getItem("anon_id");
-      if (!anonymousId) {
-        anonymousId = `anon_${Math.random().toString(36).substring(2, 9)}`;
-        localStorage.setItem("anon_id", anonymousId);
-      }
-
-      const res = await searchGlobal(query, anonymousId);
-      setResults(res);
-      setLoading(false);
+      const res = await searchGlobal(query);
+      setFetched({ query, items: res });
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, hasQuery]);
 
   const handleSelect = (url: string) => {
+    // VA-15: la búsqueda se registra al elegir un resultado (no en cada tecla).
+    ensureAnalyticsCookies();
+    void logSearch(query, results.length, "HEADER_RESULT_CLICK");
     setIsOpen(false);
     setQuery("");
     router.push(url);
@@ -143,7 +141,7 @@ export default function MobileHeaderSearchBar() {
           <div className="flex-1 overflow-y-auto bg-white p-2">
             {query.trim().length >= 2 && results.length === 0 && !loading && (
               <div className="p-8 text-center text-xs text-slate-400">
-                No se encontraron resultados para "{query}"
+                No se encontraron resultados para “{query}”
               </div>
             )}
 

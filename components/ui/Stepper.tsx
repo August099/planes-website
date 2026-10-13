@@ -79,7 +79,7 @@ export default function Stepper({
               className={`flex items-center gap-2 ${!disableStepIndicators ? "cursor-pointer" : ""}`}
             >
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                className={`w-10 h-10 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                   isActive
                     ? "bg-[#001F58] text-white ring-4 ring-[#001F58]/20"
                     : isCompleted
@@ -111,7 +111,7 @@ export default function Stepper({
           {...backButtonProps}
           onClick={handleBack}
           disabled={currentStep === 1 || backButtonProps.disabled}
-          className={`px-5 py-2.5 rounded-xl text-xs font-bold border border-[#001F58]/20 text-[#001F58] hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors ${
+          className={`min-h-11 px-5 py-2.5 rounded-xl text-sm sm:text-xs font-bold border border-[#001F58]/20 text-[#001F58] hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors ${
             backButtonProps.className || ""
           }`}
         >
@@ -123,7 +123,7 @@ export default function Stepper({
             type="button"
             {...nextButtonProps}
             onClick={handleNext}
-            className={`px-6 py-2.5 rounded-xl text-xs font-bold bg-[#001F58] text-white hover:bg-[#001740] shadow-md transition-colors ${
+            className={`min-h-11 px-6 py-2.5 rounded-xl text-sm sm:text-xs font-bold bg-[#001F58] text-white hover:bg-[#001740] shadow-md transition-colors ${
               nextButtonProps.className || ""
             }`}
           >

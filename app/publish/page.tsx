@@ -1,15 +1,50 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 import PublishForm from "@/components/ui/PublishForm";
+import { loadListingForEdit } from "@/lib/listing-edit";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { getListingPrices } from "@/lib/listing-prices";
 
 export const dynamic = "force-dynamic";
 
-export default async function PublishPage() {
+type Props = { searchParams: Promise<{ edit?: string; type?: string }> };
+
+export default async function PublishPage({ searchParams }: Props) {
   const user = await getCurrentUser();
+  const { edit, type } = await searchParams;
 
   if (!user) {
     redirect("/login?callbackUrl=/publish");
+  }
+
+  // Modo edición: /publish?edit=<id>&type=aircraft|parts (solo el dueño o un admin).
+  const editListing = edit ? await loadListingForEdit(edit, type === "parts" ? "parts" : "aircraft") : null;
+  if (edit && !editListing) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center gap-4 text-center p-6">
+        <h1 className="text-2xl font-bold text-[#001F58]">No podés editar esta publicación</h1>
+        <p className="text-sm text-slate-600 max-w-md">No existe o no es tuya.</p>
+        <Link href={`/profile/${user.id}`} className="px-6 py-2.5 bg-[#001F58] text-white rounded-xl font-semibold">
+          Ir a mi perfil
+        </Link>
+      </main>
+    );
+  }
+
+  const listingPrices = await getListingPrices();
+
+  // VA-46: sin teléfono el formulario pide cargarlo antes de publicar.
+  const sellerPhone = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { phone: true, userTypeConfirmed: true },
+  });
+
+  // VA-33: el filtro "Publica" depende del tipo de cuenta; si nunca se confirmó (cuentas de Google
+  // anteriores a VA-87), se pregunta antes de una publicación nueva.
+  if (!edit && sellerPhone && !sellerPhone.userTypeConfirmed) {
+    redirect("/onboarding/account-type?from=publish");
   }
 
   const rawBrands = await prisma.aircraftBrand.findMany({
@@ -17,18 +52,16 @@ export default async function PublishPage() {
       id: true,
       name: true,
       models: {
+        // defaultCategoryId y las variantes permiten sugerir el tipo de aeronave al elegir el modelo.
         select: {
           id: true,
           name: true,
+          defaultCategoryId: true,
+          variants: { select: { id: true, name: true, categoryOverride: true }, orderBy: { name: "asc" } },
         },
         orderBy: { name: "asc" },
       },
     },
-    orderBy: { name: "asc" },
-  });
-
-  const rawCategories = await prisma.aircraftCategory.findMany({
-    select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
 
@@ -62,11 +95,14 @@ export default async function PublishPage() {
 
   return (
     <main className="min-h-screen">
+      <Breadcrumbs items={[{ label: "Publicar" }]} className="container mx-auto px-4 pt-4" />
       <PublishForm
         userId={user.id}
         brandsData={JSON.parse(JSON.stringify(rawBrands))}
-        categoriesData={JSON.parse(JSON.stringify(rawCategories))}
         spareCategoriesData={JSON.parse(JSON.stringify(rawSpareCategories))}
+        editListing={editListing ?? undefined}
+        needsPhone={!sellerPhone?.phone?.trim()}
+        listingPrices={{ aircraft: listingPrices.AIRCRAFT.label, sparePart: listingPrices.SPARE_PART.label }}
       />
     </main>
   );

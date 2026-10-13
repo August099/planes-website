@@ -1,4 +1,6 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 const policySections = [
   { id: "recoleccion", title: "1. Datos que recolectamos" },
@@ -9,20 +11,19 @@ const policySections = [
   { id: "derechos", title: "6. Derechos del titular" },
 ];
 
+export const metadata: Metadata = {
+  title: "Política de privacidad",
+  description: "Cómo Ventas Aeronáuticas recopila, usa y protege los datos personales de sus usuarios.",
+  alternates: { canonical: "/privacy" },
+};
+
 export default function PrivacidadPage() {
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16">
-      {/* Fondo optimizado con la imagen solicitada */}
-      <Image
-        src="/bkg-privacidad.jpg"
-        alt=""
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen">
+      <PageBackground page="legal" />
 
-      <div className="container mx-auto px-4 pt-20 pb-36 max-w-6xl">
+      <div className="container mx-auto px-4 pt-6 pb-20 max-w-6xl">
+        <Breadcrumbs items={[{ label: "Privacidad" }]} className="mb-8 sm:mb-12" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           
           {/* MENÚ LATERAL: Índices del documento legal */}
@@ -134,10 +135,10 @@ export default function PrivacidadPage() {
               {/* Marco Legal Oficial Destacado */}
               <div className="bg-[#001F58]/5 border-l-4 border-[#001F58] p-5 mt-4 rounded-r-xl italic text-xs text-[#001F58]/90 space-y-3">
                 <p>
-                  "El titular de los datos personales tiene la facultad de ejercer el derecho de acceso a los mismos en forma gratuita a intervalos no inferiores a seis meses, salvo que se acredite un interés legítimo al efecto conforme lo establecido en el artículo 14, inciso 3 de la Ley Nº 25.326."
+                  “El titular de los datos personales tiene la facultad de ejercer el derecho de acceso a los mismos en forma gratuita a intervalos no inferiores a seis meses, salvo que se acredite un interés legítimo al efecto conforme lo establecido en el artículo 14, inciso 3 de la Ley Nº 25.326.”
                 </p>
                 <p className="mb-0">
-                  "La AGENCIA DE ACCESO A LA INFORMACIÓN PÚBLICA, en su carácter de Órgano de Control de la Ley N° 25.326, tiene la atribución de atender las denuncias y reclamos que se interpongan con relación al incumplimiento de las normas sobre protección de datos personales."
+                  “La AGENCIA DE ACCESO A LA INFORMACIÓN PÚBLICA, en su carácter de Órgano de Control de la Ley N° 25.326, tiene la atribución de atender las denuncias y reclamos que se interpongan con relación al incumplimiento de las normas sobre protección de datos personales.”
                 </p>
               </div>
 

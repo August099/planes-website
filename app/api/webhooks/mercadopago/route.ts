@@ -1,75 +1,67 @@
-import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
-import { Payment } from "mercadopago";
-import { mpClient } from "@/lib/mercadopago";
+import { NextRequest, NextResponse, after } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { mpWebhookSecret } from "@/lib/mercadopago";
+import { verifyMercadoPagoSignature } from "@/lib/payments/signature";
+import { processWebhookEvent } from "@/lib/payments/process";
 
-function verifySignature(
-  xSignature: string | null,
-  xRequestId: string | null,
-  dataId: string | null
-): boolean {
-  if (!xSignature || !xRequestId || !dataId) return false;
+// VA-92 · Etapa 3: webhook de Mercado Pago (pagos y suscripciones). Es la fuente de verdad: la
+// compra se activa acá, nunca en la página de retorno.
+// 1. Valida la firma (x-signature). Sin MP_WEBHOOK_SECRET rechaza todo (fail closed).
+// 2. Guarda cada notificación en WebhookEvent, válida o no.
+// 3. Responde 200 rápido y procesa después (after): consulta el recurso a la API de MP.
 
-  const parts = xSignature.split(",");
-  const ts = parts.find((p) => p.startsWith("ts="))?.split("=")[1];
-  const hash = parts.find((p) => p.startsWith("v1="))?.split("=")[1];
-  if (!ts || !hash) return false;
-
-  const template = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
-  const expectedHash = crypto
-    .createHmac("sha256", process.env.MP_WEBHOOK_SECRET!)
-    .update(template)
-    .digest("hex");
-
-  try {
-    return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(expectedHash));
-  } catch {
-    return false;
-  }
-}
+export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
   const url = new URL(req.url);
-  const dataId = url.searchParams.get("data.id");
-  const xSignature = req.headers.get("x-signature");
-  const xRequestId = req.headers.get("x-request-id");
+  const rawBody = await req.text();
+  let body: Record<string, unknown> = {};
+  try {
+    body = rawBody ? (JSON.parse(rawBody) as Record<string, unknown>) : {};
+  } catch {
+    body = { unparsed: rawBody.slice(0, 2000) };
+  }
+  const bodyData = (body.data ?? {}) as { id?: unknown };
 
-  if (!verifySignature(xSignature, xRequestId, dataId)) {
+  // Webhooks: ?data.id=…&type=…; el formato viejo (IPN) manda ?id=…&topic=….
+  const dataId = url.searchParams.get("data.id") ?? (bodyData.id != null ? String(bodyData.id) : null) ?? url.searchParams.get("id");
+  const topic = url.searchParams.get("type") ?? (typeof body.type === "string" ? body.type : null) ?? url.searchParams.get("topic") ?? "desconocido";
+  const action = typeof body.action === "string" ? body.action : null;
+  const requestId = req.headers.get("x-request-id");
+
+  const check = verifyMercadoPagoSignature({
+    secret: mpWebhookSecret(),
+    signature: req.headers.get("x-signature"),
+    requestId,
+    dataId: url.searchParams.get("data.id") ?? dataId,
+  });
+
+  const payload = {
+    query: Object.fromEntries(url.searchParams),
+    body,
+  } as Prisma.InputJsonValue;
+
+  const event = await prisma.webhookEvent.create({
+    data: {
+      topic,
+      action,
+      externalId: dataId,
+      requestId,
+      signatureValid: check.valid,
+      payload,
+      status: check.valid ? "RECEIVED" : "REJECTED",
+      error: check.valid ? null : check.reason,
+    },
+    select: { id: true },
+  });
+
+  if (!check.valid) {
+    console.warn(`[webhook MP] rechazado (${check.reason}) · evento ${event.id} · ${topic} ${dataId ?? ""}`);
     return NextResponse.json({ error: "Firma inválida" }, { status: 401 });
   }
 
-  const payment = await new Payment(mpClient).get({ id: dataId! });
-
-  if (payment.status === "approved" && payment.external_reference) {
-    const purchase = await prisma.purchase.findUnique({
-      where: { id: payment.external_reference },
-      include: { plan: true },
-    });
-
-    if (purchase && purchase.paymentStatus === "PENDING") {
-      // 1. Marcar la compra como APROBADA
-      await prisma.purchase.update({
-        where: { id: purchase.id },
-        data: { paymentStatus: "APPROVED" },
-      });
-
-      // 2. Aumentar el balance del usuario según las publicaciones del plan
-      if (purchase.plan) {
-        await prisma.user.update({
-          where: { id: purchase.userId },
-          data: {
-            aircraftListingsBalance: {
-              increment: purchase.plan.aircraftListingsCount,
-            },
-            sparePartsListingsBalance: {
-              increment: purchase.plan.sparePartsListingsCount,
-            },
-          },
-        });
-      }
-    }
-  }
-
+  after(() => processWebhookEvent(event.id));
   return NextResponse.json({ received: true });
 }

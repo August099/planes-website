@@ -1,10 +1,11 @@
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { MercadoPagoConfig, Preference } from "mercadopago";
+import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 
 const PLAN_PRICES: Record<string, { title: string; price: number }> = {
@@ -99,17 +100,11 @@ export default async function BannerRequestPage({
   }
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16">
-        <Image
-            src="/bkg-ads.jpg"
-            alt="Fondo Publicidad"
-            fill
-            priority
-            className="-z-20 object-cover object-center"
-        />
-        <div className="absolute inset-0 -z-10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm" />
+    <main className="relative isolate overflow-hidden min-h-screen">
+        <PageBackground page="banners" />
 
-      <div className="container mx-auto px-4 pt-16 pb-36 max-w-2xl">
+      <div className="container mx-auto px-4 pt-6 pb-20 max-w-2xl">
+        <Breadcrumbs items={[{ label: "Espacios publicitarios", href: "/ads" }, { label: "Configurá tu banner" }]} className="mb-8 sm:mb-12" />
         <div className="mb-8 text-center">
           <Link
             href="/ads"
@@ -132,7 +127,7 @@ export default async function BannerRequestPage({
               <p className="text-sm font-bold text-[#001F58]">{planInfo.title}</p>
             </div>
             <p className="text-base font-extrabold text-red-600">
-              ${planInfo.price.toLocaleString("es-AR")} ARS
+              AR$ {planInfo.price.toLocaleString("es-AR")}
             </p>
           </div>
 
@@ -190,9 +185,9 @@ export default async function BannerRequestPage({
 
             <Button
               type="submit"
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-md mt-2 flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-[#E70F1F] hover:bg-[#C20D1A] text-white font-bold text-xs rounded-md transition-colors mt-2 flex items-center justify-center gap-2"
             >
-              💳 Ir a Pagar
+              Ir a pagar
             </Button>
           </form>
         </div>

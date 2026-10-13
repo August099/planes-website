@@ -1,8 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import { activeListingWhere } from "@/lib/listing-filters";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { notFound } from "next/navigation";
-import { ProfileView } from "@/components/ui/ProfileView";
-import Image from "next/image";
+import { ProfileView, type ProfileCoupon } from "@/components/ui/ProfileView";
+import { PageBackground } from "@/components/ui/PageBackground";
+import { getMissingProfileFieldsCached } from "@/lib/cached-data";
+import { getSubscriptionSummary, hasCustomPage } from "@/lib/subscriptions";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -28,8 +32,15 @@ export default async function ProfilePage({ params }: Props) {
       facebook: true,
       instagram: true,
       createdAt: true,
+      // VA-87: página personalizada
+      businessName: true,
+      bio: true,
+      coverUrl: true,
+      logoUrl: true,
+      website: true,
+      whatsapp: true,
       aircrafts: {
-        where: isOwner ? undefined : { status: "ACTIVE" },
+        where: isOwner ? undefined : activeListingWhere(),
         include: {
           category: { select: { id: true, name: true } },
           images: { orderBy: { order: "asc" }, take: 1 },
@@ -46,7 +57,7 @@ export default async function ProfilePage({ params }: Props) {
         orderBy: { createdAt: "desc" },
       },
       spareParts: {
-        where: isOwner ? undefined : { status: "ACTIVE" },
+        where: isOwner ? undefined : activeListingWhere(),
         include: {
           category: { select: { id: true, name: true } },
           images: { orderBy: { order: "asc" }, take: 1 },
@@ -69,8 +80,20 @@ export default async function ProfilePage({ params }: Props) {
     notFound();
   }
 
+  // VA-87: con el beneficio del plan, el perfil se muestra como página personalizada.
+  const storefront = (await hasCustomPage(id))
+    ? {
+        businessName: rawProfileUser.businessName,
+        bio: rawProfileUser.bio,
+        coverUrl: rawProfileUser.coverUrl,
+        logoUrl: rawProfileUser.logoUrl,
+        website: rawProfileUser.website,
+        whatsapp: rawProfileUser.whatsapp,
+      }
+    : null;
+
   // Obtener los cupones guardados/utilizados por el usuario si es el propietario
-  let userCoupons: any[] = [];
+  let userCoupons: ProfileCoupon[] = [];
   if (isOwner) {
     const usages = await prisma.couponUsage.findMany({
       where: { userId: id },
@@ -131,22 +154,17 @@ export default async function ProfilePage({ params }: Props) {
 
   return (
     <main className="relative min-h-[calc(100vh-80px)] container mx-auto px-4 py-8 pb-16">
-      <div className="fixed inset-0 -z-10 pointer-events-none">
-        <Image
-          src="/bkg-forms.png"
-          alt="Fondo Perfil"
-          fill
-          priority
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-background/85" />
-      </div>
+      <PageBackground page="profile" />
+      <Breadcrumbs items={[{ label: "Perfil" }, { label: rawProfileUser.name ?? "Usuario" }]} className="-mt-4 mb-2" />
 
       <ProfileView
         profileUser={profileUser}
         isOwner={isOwner}
         currentUserFavIds={currentUserFavIds}
         userCoupons={userCoupons}
+        missingProfileFields={isOwner ? await getMissingProfileFieldsCached(id) : []}
+        storefront={storefront}
+        subscription={isOwner ? await getSubscriptionSummary(id) : null}
       />
     </main>
   );

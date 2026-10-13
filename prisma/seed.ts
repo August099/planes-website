@@ -49,7 +49,7 @@ async function main() {
   }
 
   // Helpers para elementos random
-  const getRandom = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
+  const getRandom = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
   const getRandomPrice = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min);
   const randomBoolean = () => Math.random() < 0.5;
 
