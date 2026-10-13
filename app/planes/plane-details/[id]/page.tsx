@@ -156,7 +156,7 @@ export default async function PlaneDetailsPage({
               {/* VA-92: aviso guardado sin saldo ni suscripción: se publica al acreditarse el pago. */}
               <span>Tu aviso está guardado pero no se publica hasta que se acredite el pago.</span>
               <Link href={`/checkout?listing=aircraft:${aircraft.id}`} className="underline font-bold hover:text-amber-100 ml-2">
-                Pagar y publicar
+                Pagar
               </Link>
             </>
           ) : (

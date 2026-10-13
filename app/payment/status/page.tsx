@@ -47,9 +47,7 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
     ? `/checkout?listing=${listing.type}:${listing.id}`
     : purchase.plan
       ? `/checkout?planId=${purchase.plan.id}`
-      : purchase.listingKind
-        ? `/checkout?planId=${purchase.listingKind === "AIRCRAFT" ? "listing-aircraft" : "listing-parts"}`
-        : "/plans";
+      : "/plans";
 
   const mpStatus = params.status ?? params.collection_status ?? null;
   const total = Number(purchase.finalPrice);

@@ -187,7 +187,7 @@ export default async function BannerRequestPage({
               type="submit"
               className="w-full py-3.5 bg-[#E70F1F] hover:bg-[#C20D1A] text-white font-bold text-xs rounded-md transition-colors mt-2 flex items-center justify-center gap-2"
             >
-              Ir a pagar
+              Pagar
             </Button>
           </form>
         </div>

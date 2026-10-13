@@ -21,7 +21,7 @@ interface Props {
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 const NUMBER = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
 
-// VA-92 · Etapa 1: checkout de pago único (packs, aviso suelto y "Plan 1" de /plans). El producto
+// VA-92 · Etapa 1: checkout de pago único (packs y la publicación suelta de un aviso pendiente). El producto
 // y el precio los resuelve el servidor; el pago se hace en Mercado Pago (Checkout Pro) y la compra
 // se activa con el webhook. Las suscripciones mensuales llegan en la etapa 4.
 export default async function CheckoutPage({ searchParams }: Props) {

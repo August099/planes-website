@@ -9,7 +9,8 @@ import { billingSnapshot, parseBilling, type BillingData } from "@/lib/billing-r
 import { appUrl, mpClient, notificationUrl } from "@/lib/mercadopago";
 import { activatePurchase } from "@/lib/payments/activation";
 
-// VA-92 · Etapa 1: compra de pago único con Checkout Pro. El producto y el precio se resuelven
+// VA-92 · Etapa 1: compra de pago único con Checkout Pro. No hay planes de 1 publicación: una
+// publicación suelta se paga desde su aviso "pendiente de pago" al precio de ListingPrice. El producto y el precio se resuelven
 // siempre en el servidor a partir de un "producto" que viaja en la URL (?planId=… o ?listing=…).
 // La compra queda PENDING y la activa el webhook; con un cupón del 100% se activa acá, sin pasar
 // por Mercado Pago ni facturar.
@@ -17,10 +18,10 @@ import { activatePurchase } from "@/lib/payments/activation";
 export type ListingType = "aircraft" | "parts" | "hangar";
 
 const LISTING_KIND: Record<ListingType, ListingKind> = { aircraft: "AIRCRAFT", parts: "SPARE_PART", hangar: "HANGAR" };
-const KIND_TEXT: Record<ListingKind, { one: string; plan: string; detail: (id: string) => string }> = {
-  AIRCRAFT: { one: "Publicación de aeronave", plan: "Plan 1 Avión", detail: (id) => `/planes/plane-details/${id}` },
-  SPARE_PART: { one: "Publicación de repuesto", plan: "Plan 1 Repuesto", detail: (id) => `/spareparts/sparepart-details/${id}` },
-  HANGAR: { one: "Publicación de hangar", plan: "Plan 1 Hangar", detail: (id) => `/services/hangars/hangar-details/${id}` },
+const KIND_TEXT: Record<ListingKind, { one: string; detail: (id: string) => string }> = {
+  AIRCRAFT: { one: "Publicación de aeronave", detail: (id) => `/planes/plane-details/${id}` },
+  SPARE_PART: { one: "Publicación de repuesto", detail: (id) => `/spareparts/sparepart-details/${id}` },
+  HANGAR: { one: "Publicación de hangar", detail: (id) => `/services/hangars/hangar-details/${id}` },
 };
 const PACK_TEXT: Record<string, string> = {
   AIRCRAFT_PACK: "Publicación de aeronaves",
@@ -41,7 +42,7 @@ export type CheckoutProduct = {
   /** Lo que viaja en el formulario para volver a resolverlo en la action ("plan:<id>", "listing:aircraft:<id>"…). */
   key: string;
   name: string;
-  /** Concepto de la compra y de la factura ("Publicación de aeronave – Plan 1 Avión"). */
+  /** Concepto de la compra y de la factura ("Publicación de aeronave – Cessna 182 2015"). */
   description: string;
   includes: string;
   price: number;
@@ -75,8 +76,8 @@ export async function resolveProduct(userId: string, q: ProductQuery): Promise<C
     const text = KIND_TEXT[kind];
     return {
       key: `listing:${type}:${id}`,
-      name: text.plan,
-      description: `${text.one} – ${text.plan}`,
+      name: "Publicación individual",
+      description: `${text.one} – ${listing.title}`.slice(0, 250),
       includes: `Tu aviso “${listing.title}”, visible 45 días`,
       price: prices[kind].amount,
       currency: "ARS",
@@ -89,25 +90,6 @@ export async function resolveProduct(userId: string, q: ProductQuery): Promise<C
   }
 
   const planId = q.planId ?? "";
-  // "Plan 1 Avión" / "Plan 1 Repuesto" de /plans: un crédito para publicar (sin aviso asociado).
-  if (planId === "listing-aircraft" || planId === "listing-parts") {
-    const kind: ListingKind = planId === "listing-aircraft" ? "AIRCRAFT" : "SPARE_PART";
-    const text = KIND_TEXT[kind];
-    return {
-      key: `plan:${planId}`,
-      name: text.plan,
-      description: `${text.one} – ${text.plan}`,
-      includes: kind === "AIRCRAFT" ? "1 aviso de avión" : "1 aviso de repuesto",
-      price: prices[kind].amount,
-      currency: "ARS",
-      scope: kind,
-      recurring: false,
-      planId: null,
-      listingKind: kind,
-      listing: null,
-    };
-  }
-
   if (!planId) return { error: "Elegí un plan para continuar." };
   const plan = await prisma.plan.findFirst({ where: { id: planId, isActive: true, archivedAt: null } });
   if (!plan) return { error: "Ese plan no está disponible." };

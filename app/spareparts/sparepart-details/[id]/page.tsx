@@ -239,7 +239,7 @@ export default async function SparePartDetailsPage({
             <>
               <span>Tu aviso está guardado pero no se publica hasta que se acredite el pago.</span>
               <Link href={`/checkout?listing=parts:${sparePart.id}`} className="underline font-bold hover:text-amber-100 ml-2">
-                Pagar y publicar
+                Pagar
               </Link>
             </>
           ) : (

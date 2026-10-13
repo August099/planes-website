@@ -5,11 +5,11 @@ import Link from "next/link";
 import { Check, Plane, Wrench, Zap, ArrowRight, ShieldCheck, Repeat } from "lucide-react";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import type { PlanCard } from "@/lib/plans";
+import type { PlanCard, SinglePrices } from "@/lib/plans";
 
-// VA-80: las tarjetas vienen armadas del servidor (lib/plans.ts): la primera de cada pestaña es el
-// precio por aviso (VA-59) y el resto, los planes activos que se editan en /admin/plans.
-export function PlansClient({ aircraftPlans, partsPlans }: { aircraftPlans: PlanCard[]; partsPlans: PlanCard[] }) {
+// VA-80: las tarjetas vienen armadas del servidor (lib/plans.ts): los planes activos que se editan
+// en /admin/plans. VA-92: el precio de una publicación suelta va como referencia, no como plan.
+export function PlansClient({ aircraftPlans, partsPlans, single }: { aircraftPlans: PlanCard[]; partsPlans: PlanCard[]; single: SinglePrices }) {
   const [activeTab, setActiveTab] = useState<"aircraft" | "parts">("aircraft");
 
   const currentPlans = activeTab === "aircraft" ? aircraftPlans : partsPlans;
@@ -59,6 +59,17 @@ export function PlansClient({ aircraftPlans, partsPlans }: { aircraftPlans: Plan
             </button>
           </div>
         </div>
+
+        {/* VA-92: sin planes de 1 publicación. La suelta se paga al terminar el formulario. */}
+        <p className="mx-auto -mt-6 mb-10 max-w-2xl border-l-2 border-[#001F58]/30 bg-white/80 px-4 py-3 text-sm text-slate-700 backdrop-blur-sm">
+          ¿Querés publicar {activeTab === "aircraft" ? "un solo avión" : "un solo repuesto"}? No hace falta un plan: lo pagás al
+          terminar de cargar el aviso, a{" "}
+          <span className="font-semibold tabular-nums text-[#001F58]">{activeTab === "aircraft" ? single.aircraft : single.parts}</span> por
+          publicación.{" "}
+          <Link href="/publish" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+            Publicar
+          </Link>
+        </p>
 
         <div
           className={`grid grid-cols-1 md:grid-cols-3 ${

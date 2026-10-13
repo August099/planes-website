@@ -45,12 +45,8 @@ export async function activatePurchase(purchaseId: string, approvedAt = new Date
       });
     }
 
-    // 2) Avisos pagados con esta compra (aviso suelto "pendiente de pago"): se activan. Un aviso
-    //    suelto comprado sin aviso asociado (por ejemplo "Plan 1 Avión" desde /plans) acredita 1.
-    const activatedListings = await activateListings(tx, purchaseId, noExpiry);
-    if (!p.plan && p.listingKind && activatedListings === 0) {
-      await tx.user.update({ where: { id: p.userId }, data: { [BALANCE_FIELD[p.listingKind]]: { increment: 1 } } });
-    }
+    // 2) Publicación suelta: el aviso "pendiente de pago" de esta compra se activa.
+    await activateListings(tx, purchaseId, noExpiry);
 
     // 3) Banners: pasan a revisión del admin.
     await tx.adBanner.updateMany({
@@ -123,18 +119,11 @@ export async function revokePurchase(purchaseId: string): Promise<boolean> {
     // Avisos pagados con esta compra: vuelven a "pendiente de pago" (no se ven en el sitio).
     const where = { purchaseId, status: "ACTIVE" as const };
     const data = { status: "PENDING_PAYMENT" as const };
-    const counts = await Promise.all([
+    await Promise.all([
       tx.aircraft.updateMany({ where, data }),
       tx.sparePart.updateMany({ where, data }),
       tx.hangar.updateMany({ where, data }),
     ]);
-    // Aviso suelto comprado como crédito (sin aviso asociado): se descuenta ese crédito si queda.
-    if (!p.plan && p.listingKind && counts.every((c) => c.count === 0)) {
-      await tx.user.updateMany({
-        where: { id: p.userId, [BALANCE_FIELD[p.listingKind]]: { gt: 0 } },
-        data: { [BALANCE_FIELD[p.listingKind]]: { decrement: 1 } },
-      });
-    }
     await tx.adBanner.updateMany({
       where: { purchaseId, status: { in: ["PENDING_REVIEW", "ACTIVE"] } },
       data: { status: "REJECTED" },

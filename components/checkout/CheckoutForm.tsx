@@ -216,11 +216,11 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
           className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-[#E70F1F] px-5 text-sm font-bold text-white hover:bg-[#C20D1A] disabled:opacity-60 sm:w-auto cursor-pointer"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-          {total === 0 ? "Confirmar sin cargo" : "Pagar con Mercado Pago"}
+          {total === 0 ? "Confirmar sin cargo" : "Pagar"}
         </button>
         {total > 0 && (
           <p className="mt-3 text-xs text-slate-500">
-            Te llevamos a Mercado Pago para pagar. Cuando el pago se acredite, activamos tu compra.
+            Te llevamos a Mercado Pago, donde elegís el medio de pago. Cuando el pago se acredite, activamos tu compra.
           </p>
         )}
       </section>

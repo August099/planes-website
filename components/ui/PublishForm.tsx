@@ -739,8 +739,8 @@ export default function PublishForm({
                 <span className="font-semibold tabular-nums text-[#001F58]">
                   {activeTab === "aircraft" ? listingPrices.aircraft : listingPrices.sparePart}
                 </span>
-                . Si tenés un pack o una suscripción vigente, se publica sin pagar; si no, al publicar pasás al pago con
-                Mercado Pago.
+                . Si tenés un pack o una suscripción con saldo, se publica sin pagar; si no, al publicar pasás al pago de
+                esta publicación.
               </p>
             )}
 
