@@ -22,6 +22,10 @@ _Última actualización: 13/10/2026._
 | **Destacado** (VA-95, en construcción) | Pago único por 7 días | `/admin/prices` |
 | **Banner** (VA-103, oculto por ahora) | Se cobra después de que el admin aprueba la solicitud | `/admin/plans` (tipo banner) |
 
+**Dónde se ofrecen los planes:** `/plans` (link "Planes y precios" en el footer) y avisos discretos para
+quien no tiene plan: en "Mis publicaciones", en su perfil (beneficios de la cuenta Pro) y al publicar el
+2.º aviso sin plan, con el ahorro del pack más conveniente frente a la publicación suelta.
+
 **No existen planes de 1 publicación.** Quien quiere publicar una sola cosa la paga al terminar el
 formulario, al precio individual. En `/plans` ese precio aparece como referencia.
 
