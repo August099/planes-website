@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Builds locales de verificación en otra carpeta (NEXT_DIST_DIR=.next-local), así no pisan la de
+  // `next dev` (.next/dev): correr un build con el dev abierto dejaba las rutas /api en 404 y Auth.js
+  // daba ClientFetchError. Sin la variable (Vercel y `npm run dev`), queda .next como siempre.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
     remotePatterns: [
       {
