@@ -111,6 +111,9 @@ model Plan {
   hangarListingsCount     Int              @default(0)
   isUnlimitedHangars      Boolean          @default(false)
   showInHangarsTab        Boolean          @default(false)
+  // VA-95: destacados incluidos por mes en las suscripciones (el saldo se repone cada período y no
+  // se acumula).
+  featuredPerMonth        Int              @default(0)
   // VA-80: las publicaciones del suscriptor no vencen mientras la suscripción esté vigente.
   noExpiry                Boolean          @default(false)
   // VA-80: lo que se muestra en /plans (la lógica usa los campos de arriba).
@@ -227,6 +230,8 @@ model Hangar {
   status           AircraftStatus       @default(PENDING_PAYMENT)
   listingStartsAt  DateTime?
   listingExpiresAt DateTime?
+  // VA-95: destacado pago o incluido en el plan, vigente hasta esta fecha.
+  featuredUntil    DateTime?
   purchaseId       String?
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
@@ -244,6 +249,7 @@ model Hangar {
   @@index([salePrice])
   @@index([rentPrice])
   @@index([sellerId])
+  @@index([featuredUntil])
 }
 
 model HangarImage {
@@ -257,37 +263,42 @@ model HangarImage {
 }
 
 model Purchase {
-  id              String        @id @default(cuid())
-  userId          String
+  id                String        @id @default(cuid())
+  userId            String
   // VA-92: opcional. Un aviso suelto se cobra al precio de ListingPrice (listingKind), sin Plan.
-  planId          String?
-  listingKind     ListingKind?
+  planId            String?
+  listingKind       ListingKind?
   // Concepto que se cobra y se factura ("Publicación de aeronave – Plan 1 Avión").
-  description     String        @default("")
-  currency        String        @default("ARS")
-  mpPreferenceId  String?
-  paymentStatus   PaymentStatus @default(PENDING)
+  description       String        @default("")
+  currency          String        @default("ARS")
+  mpPreferenceId    String?
+  paymentStatus     PaymentStatus @default(PENDING)
   // VA-92: cuándo se aprobó el pago y cuándo se entregó lo comprado. activatedAt hace idempotente
   // la activación: se marca en la misma transacción que acredita el saldo o activa el aviso.
-  approvedAt      DateTime?
-  activatedAt     DateTime?
+  approvedAt        DateTime?
+  activatedAt       DateTime?
   // Datos de facturación usados en esta compra (copia del BillingProfile en ese momento).
-  billingSnapshot Json?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @default(now()) @updatedAt
-  couponId        String?
-  discountAmount  Decimal       @default(0) @db.Decimal(12, 2)
-  finalPrice      Decimal       @default(0) @db.Decimal(12, 2)
-  originalPrice   Decimal       @default(0) @db.Decimal(12, 2)
-  adBanners       AdBanner[]
-  aircrafts       Aircraft[]
-  couponUsage     CouponUsage?
-  coupon          Coupon?       @relation(fields: [couponId], references: [id])
-  plan            Plan?         @relation(fields: [planId], references: [id], onDelete: Restrict)
-  user            User          @relation(fields: [userId], references: [id])
-  spareParts      SparePart[]
-  hangars         Hangar[]
-  payments        Payment[]
+  billingSnapshot   Json?
+  // VA-95: compra de un destacado: cuántos días y para qué aviso (tipo + id, sin FK para no duplicar
+  // la relación de la publicación).
+  featuredDays      Int?
+  featuredKind      ListingKind?
+  featuredListingId String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @default(now()) @updatedAt
+  couponId          String?
+  discountAmount    Decimal       @default(0) @db.Decimal(12, 2)
+  finalPrice        Decimal       @default(0) @db.Decimal(12, 2)
+  originalPrice     Decimal       @default(0) @db.Decimal(12, 2)
+  adBanners         AdBanner[]
+  aircrafts         Aircraft[]
+  couponUsage       CouponUsage?
+  coupon            Coupon?       @relation(fields: [couponId], references: [id])
+  plan              Plan?         @relation(fields: [planId], references: [id], onDelete: Restrict)
+  user              User          @relation(fields: [userId], references: [id])
+  spareParts        SparePart[]
+  hangars           Hangar[]
+  payments          Payment[]
 
   @@index([userId, createdAt])
   @@index([paymentStatus, createdAt])
@@ -303,6 +314,13 @@ model Subscription {
   currentPeriodStart   DateTime
   currentPeriodEnd     DateTime
   cancelAtPeriodEnd    Boolean            @default(false)
+  // VA-92: MANUAL = cortesía asignada desde el admin: sin Mercado Pago, no se cobra ni se renueva y no
+  // cuenta en ingresos ni en los KPIs (VA-102).
+  source               SubscriptionSource @default(MERCADOPAGO)
+  grantedById          String?
+  note                 String?
+  // VA-95: destacados incluidos que quedan en el período actual.
+  featuredCredits      Int                @default(0)
   // VA-92: estado del preapproval en Mercado Pago (pending, authorized, paused, cancelled) y
   // gracia tras un cobro rechazado: vencida graceUntil, pierde los beneficios.
   mpStatus             String?
@@ -386,6 +404,8 @@ model Aircraft {
   status           AircraftStatus      @default(PENDING_PAYMENT)
   listingStartsAt  DateTime?
   listingExpiresAt DateTime?
+  // VA-95: destacado pago o incluido en el plan, vigente hasta esta fecha.
+  featuredUntil    DateTime?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   purchaseId       String?
@@ -440,6 +460,7 @@ model Aircraft {
   @@index([province, city])
   @@index([year])
   @@index([sellerId])
+  @@index([featuredUntil])
   @@index([categoryId])
 }
 
@@ -579,6 +600,8 @@ model SparePart {
   condition        SparepartCondition  @default(USADO)
   listingStartsAt  DateTime?
   listingExpiresAt DateTime?
+  // VA-95: destacado pago o incluido en el plan, vigente hasta esta fecha.
+  featuredUntil    DateTime?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   purchaseId       String?
@@ -607,6 +630,7 @@ model SparePart {
   @@index([status, inPesos, createdAt])
   @@index([province, city])
   @@index([sellerId])
+  @@index([featuredUntil])
   @@index([categoryId])
 }
 
@@ -790,6 +814,8 @@ enum DiscountType {
 
 enum CouponScope {
   ALL
+  // VA-95
+  FEATURED
   AIRCRAFT
   SPARE_PART
   HANGAR
@@ -1148,4 +1174,19 @@ enum InvoiceStatus {
 enum BillingPartyKind {
   CONSUMIDOR_FINAL
   EMPRESA
+}
+
+enum SubscriptionSource {
+  MERCADOPAGO
+  MANUAL
+}
+
+// VA-95: opciones de destacado (días y precio), en /admin/prices junto a las publicaciones individuales.
+model FeaturedPrice {
+  id        String   @id @default(cuid())
+  days      Int      @unique
+  amount    Decimal  @db.Decimal(12, 2)
+  currency  String   @default("ARS")
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
 }

@@ -25,6 +25,7 @@ const SCOPE_LABELS: Record<CouponScope, string> = {
   SPARE_PART: "publicaciones de repuestos",
   HANGAR: "publicaciones de hangares",
   AD_BANNER: "espacios publicitarios",
+  FEATURED: "destacados",
 };
 
 const round2 = (n: number) => Math.round(n * 100) / 100;

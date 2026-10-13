@@ -213,6 +213,7 @@ export default function AdminCouponsPage() {
                           {coupon.scope === "AIRCRAFT" && "Aeronaves"}
                           {coupon.scope === "SPARE_PART" && "Repuestos"}
                           {coupon.scope === "AD_BANNER" && "Banners"}
+                          {coupon.scope === "FEATURED" && "Destacados"}
                         </td>
 
                         {/* Usos Restantes */}
@@ -352,6 +353,7 @@ export default function AdminCouponsPage() {
                     <option value="ALL">Todos los Avisos</option>
                     <option value="AIRCRAFT">Solo Aeronaves</option>
                     <option value="SPARE_PART">Solo Repuestos</option>
+                    <option value="FEATURED">Solo Destacados</option>
                   </select>
                 </div>
               </div>

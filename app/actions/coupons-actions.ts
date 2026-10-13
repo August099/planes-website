@@ -18,7 +18,7 @@ export interface CreateCouponInput {
   type: "DISCOUNT" | "RENEWAL";
   discountType?: "FULL_DISCOUNT" | "PERCENTAGE" | "FIXED_AMOUNT";
   discountValue?: number;
-  scope: "ALL" | "AIRCRAFT" | "SPARE_PART" | "AD_BANNER";
+  scope: "ALL" | "AIRCRAFT" | "SPARE_PART" | "AD_BANNER" | "FEATURED";
   maxUses?: number | null;
   maxUsesPerUser: number;
   isActive: boolean;
