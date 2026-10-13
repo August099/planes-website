@@ -26,6 +26,7 @@ export async function startCheckoutAction(input: {
   productKey: string;
   couponCode?: string;
   billing: unknown;
+  payerEmail?: string;
 }): Promise<CheckoutResult> {
   const user = await getCurrentUser();
   if (!user?.id) return { ok: false, error: "Tenés que iniciar sesión." };
@@ -36,10 +37,16 @@ export async function startCheckoutAction(input: {
       productKey: String(input.productKey ?? ""),
       couponCode: typeof input.couponCode === "string" ? input.couponCode : undefined,
       billing: input.billing,
+      payerEmail: typeof input.payerEmail === "string" ? input.payerEmail : undefined,
     });
   } catch (error) {
     console.error("[checkout] no se pudo iniciar el pago:", error);
     if (error instanceof PaymentsConfigError) return { ok: false, error: "El pago online no está configurado. Escribinos y lo resolvemos." };
+    // Mercado Pago rechaza el alta de una suscripción si el email no es de una cuenta válida.
+    const mp = error as { status?: number; message?: string };
+    if (mp?.status === 400 && /payer|email/i.test(mp.message ?? "")) {
+      return { ok: false, error: "Mercado Pago no aceptó ese email: tiene que ser el de tu cuenta de Mercado Pago.", fieldErrors: { payerEmail: "Revisá este email." } };
+    }
     return { ok: false, error: "No pudimos conectar con Mercado Pago. Probá de nuevo en unos minutos." };
   }
 }

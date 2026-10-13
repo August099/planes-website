@@ -8,6 +8,8 @@ import { evaluateCoupon } from "@/lib/coupons";
 import { billingSnapshot, parseBilling, type BillingData } from "@/lib/billing-rules";
 import { appUrl, mpClient, notificationUrl } from "@/lib/mercadopago";
 import { activatePurchase } from "@/lib/payments/activation";
+import { getBillingSettings } from "@/lib/billing-settings";
+import { startSubscription } from "@/lib/payments/subscriptions";
 
 // VA-92 · Etapa 1: compra de pago único con Checkout Pro. No hay planes de 1 publicación: una
 // publicación suelta se paga desde su aviso "pendiente de pago" al precio de ListingPrice. El producto y el precio se resuelven
@@ -49,6 +51,7 @@ export type CheckoutProduct = {
   currency: string;
   scope: CouponScope;
   recurring: boolean;
+  billingPer: "mes" | "año";
   planId: string | null;
   listingKind: ListingKind | null;
   listing: { type: ListingType; id: string; title: string; href: string } | null;
@@ -83,6 +86,7 @@ export async function resolveProduct(userId: string, q: ProductQuery): Promise<C
       currency: "ARS",
       scope: kind,
       recurring: false,
+      billingPer: "mes",
       planId: null,
       listingKind: kind,
       listing: { type, id, title: listing.title, href: text.detail(id) },
@@ -102,6 +106,7 @@ export async function resolveProduct(userId: string, q: ProductQuery): Promise<C
     currency: plan.currency,
     scope: PLAN_SCOPE[plan.type] ?? "ALL",
     recurring: plan.billingType === "SUBSCRIPTION",
+    billingPer: plan.billingInterval === "YEARLY" ? "año" : "mes",
     planId: plan.id,
     listingKind: null,
     listing: null,
@@ -114,14 +119,7 @@ export function productQueryFromKey(key: string): ProductQuery {
   return {};
 }
 
-export async function getBillingSettings() {
-  const s = await prisma.billingSettings.findUnique({ where: { id: "default" } });
-  return {
-    dniRequiredFrom: s ? Number(s.dniRequiredFrom) : 10_000_000,
-    graceDays: s?.graceDays ?? 7,
-    maxInvoiceAttempts: s?.maxInvoiceAttempts ?? 5,
-  };
-}
+export { getBillingSettings };
 
 export type CheckoutResult =
   | { ok: true; redirectTo: string }
@@ -134,10 +132,15 @@ export async function startCheckout(input: {
   productKey: string;
   couponCode?: string;
   billing: unknown;
+  /** Suscripciones: email de la cuenta de Mercado Pago que autoriza el débito. */
+  payerEmail?: string;
 }): Promise<CheckoutResult> {
   const product = await resolveProduct(input.userId, productQueryFromKey(input.productKey));
   if ("error" in product) return { ok: false, error: product.error };
-  if (product.recurring) return { ok: false, error: "Las suscripciones mensuales se habilitan en la próxima etapa." };
+  if (product.recurring) {
+    // VA-92 · Etapa 2: suscripción con débito automático (preapproval). Sin cupón.
+    return startSubscription({ userId: input.userId, planId: product.planId!, billing: input.billing, payerEmail: input.payerEmail });
+  }
   if (product.currency !== "ARS") return { ok: false, error: "Por ahora solo se cobra en pesos." };
 
   let couponId: string | null = null;

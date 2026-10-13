@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Estado del pago", robots: { index: f
 export const dynamic = "force-dynamic";
 
 interface Props {
-  searchParams: Promise<{ purchase?: string; status?: string; collection_status?: string }>;
+  searchParams: Promise<{ purchase?: string; subscription?: string; status?: string; collection_status?: string }>;
 }
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
@@ -24,7 +24,11 @@ const NUMBER = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 2 });
 export default async function PaymentStatusPage({ searchParams }: Props) {
   const params = await searchParams;
   const user = await getCurrentUser();
-  if (!user?.id) redirect(`/login?callbackUrl=${encodeURIComponent(`/payment/status?purchase=${params.purchase ?? ""}`)}`);
+  if (!user?.id) {
+    const q = params.subscription ? `subscription=${params.subscription}` : `purchase=${params.purchase ?? ""}`;
+    redirect(`/login?callbackUrl=${encodeURIComponent(`/payment/status?${q}`)}`);
+  }
+  if (params.subscription) return <SubscriptionStatus id={params.subscription} userId={user.id} isAdmin={!!user.isAdmin} />;
   if (!params.purchase) notFound();
 
   const purchase = await prisma.purchase.findUnique({
@@ -165,6 +169,75 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
             <dt className="text-slate-500">Referencia</dt>
             <dd className="text-right font-mono text-xs text-slate-600">{purchase.id.slice(-8).toUpperCase()}</dd>
           </dl>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+const DATE = new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Argentina/Buenos_Aires" });
+
+// VA-92: vuelta de Mercado Pago al autorizar una suscripción (back_url del preapproval). Igual que en
+// los pagos únicos, la activa el webhook del primer cobro: acá solo se muestra el estado.
+async function SubscriptionStatus({ id, userId, isAdmin }: { id: string; userId: string; isAdmin: boolean }) {
+  const sub = await prisma.subscription.findUnique({ where: { id }, include: { plan: { select: { name: true, id: true } } } });
+  if (!sub || (sub.userId !== userId && !isAdmin)) notFound();
+  const now = new Date();
+  const active = (sub.status === "ACTIVE" && sub.currentPeriodEnd > now) || (sub.status === "PAST_DUE" && !!sub.graceUntil && sub.graceUntil > now);
+  const box = "rounded-lg border border-[#001F58]/12 bg-white p-6 sm:p-8";
+  const primary = "inline-flex min-h-11 items-center rounded-md bg-[#001F58] px-5 text-sm font-bold text-white hover:bg-[#00133A]";
+  const secondary = "inline-flex min-h-11 items-center rounded-md border border-[#001F58]/20 px-5 text-sm font-semibold text-[#001F58] hover:bg-slate-50";
+
+  return (
+    <main className="relative isolate min-h-[calc(100vh-80px)] px-4 pb-20 pt-6">
+      <PageBackground page="plans" />
+      <div className="container mx-auto max-w-2xl">
+        <Breadcrumbs items={[{ label: "Suscripción" }]} className="mb-8" />
+        <section className={box} aria-live="polite">
+          <p className={LABEL}>Plan {sub.plan.name}</p>
+          {active ? (
+            <>
+              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#001F58]">
+                <CheckCircle2 className="h-7 w-7 shrink-0 text-emerald-600" aria-hidden />
+                ¡Tu suscripción está activa!
+              </h1>
+              <p className="mt-3 text-sm text-slate-600">
+                Vigente hasta el {DATE.format(sub.currentPeriodEnd)}. El débito se renueva solo; lo podés cancelar desde tu perfil.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link href="/publish" className={primary}>
+                  Publicar
+                </Link>
+                <Link href={`/profile/${sub.userId}`} className={secondary}>
+                  Ir a mi perfil
+                </Link>
+              </div>
+            </>
+          ) : sub.status === "PENDING" ? (
+            <>
+              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#001F58]">
+                <Clock className="h-7 w-7 shrink-0 text-[#001F58]" aria-hidden />
+                Estamos confirmando tu suscripción…
+              </h1>
+              <p className="mt-3 text-sm text-slate-600">
+                Cuando Mercado Pago acredite el primer cobro, activamos tu plan. Esta página se actualiza sola.
+              </p>
+              <AutoRefresh everyMs={5000} maxMs={5 * 60_000} />
+            </>
+          ) : (
+            <>
+              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#001F58]">
+                <XCircle className="h-7 w-7 shrink-0 text-[#E70F1F]" aria-hidden />
+                La suscripción no está activa
+              </h1>
+              <p className="mt-3 text-sm text-slate-600">Podés volver a suscribirte cuando quieras.</p>
+              <div className="mt-6">
+                <Link href={`/checkout?planId=${sub.plan.id}`} className={primary}>
+                  Suscribirme de nuevo
+                </Link>
+              </div>
+            </>
+          )}
         </section>
       </div>
     </main>

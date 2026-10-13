@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
-import { CONTACT_PHONE } from "@/lib/site";
 import { getBillingSettings, resolveProduct } from "@/lib/payments/checkout";
 import { CheckoutForm, type BillingDefaults } from "@/components/checkout/CheckoutForm";
 import { PageBackground } from "@/components/ui/PageBackground";
@@ -19,11 +18,10 @@ interface Props {
 }
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
-const NUMBER = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
 
 // VA-92 · Etapa 1: checkout de pago único (packs y la publicación suelta de un aviso pendiente). El producto
 // y el precio los resuelve el servidor; el pago se hace en Mercado Pago (Checkout Pro) y la compra
-// se activa con el webhook. Las suscripciones mensuales llegan en la etapa 4.
+// se activa con el webhook. Los planes mensuales se cobran con débito automático (preapproval).
 export default async function CheckoutPage({ searchParams }: Props) {
   const params = await searchParams;
   const user = await getCurrentUser();
@@ -49,30 +47,6 @@ export default async function CheckoutPage({ searchParams }: Props) {
               Ir a mis publicaciones
             </Link>
           </div>
-        </section>
-      </Shell>
-    );
-  }
-
-  if (product.recurring) {
-    const whatsapp = `https://wa.me/${CONTACT_PHONE.e164.replace("+", "")}?text=${encodeURIComponent(`Hola, quiero contratar "${product.name}" en Ventas Aeronáuticas.`)}`;
-    return (
-      <Shell crumbs={crumbs}>
-        <section className="rounded-lg border border-[#001F58]/12 bg-white p-6 sm:p-8">
-          <p className={LABEL}>Suscripción mensual</p>
-          <h1 className="mt-1 text-2xl font-bold text-[#001F58]">{product.name}</h1>
-          <p className="mt-2 text-sm text-slate-600">
-            AR$ {NUMBER.format(product.price)} por mes · {product.includes}. El débito automático con Mercado Pago se habilita muy
-            pronto; mientras tanto, escribinos y la activamos a mano.
-          </p>
-          <a
-            href={whatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-6 inline-flex min-h-11 items-center rounded-md bg-[#E70F1F] px-5 text-sm font-bold text-white hover:bg-[#C20D1A]"
-          >
-            Escribir por WhatsApp
-          </a>
         </section>
       </Shell>
     );
@@ -106,6 +80,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
         defaults={defaults}
         dniRequiredFrom={settings.dniRequiredFrom}
         initialCoupon={params.coupon ?? ""}
+        recurring={product.recurring ? { per: product.billingPer } : undefined}
       />
     </Shell>
   );

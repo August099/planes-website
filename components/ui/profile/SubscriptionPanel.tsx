@@ -96,6 +96,13 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
           </button>
         )}
       </div>
+      {/* VA-92: cobro rechazado: sigue con los beneficios hasta graceUntil. */}
+      {subscription.graceUntil && (
+        <p className="border-t border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-900">
+          No pudimos cobrar tu plan. Revisá el medio de pago en tu cuenta de Mercado Pago: el cobro se reintenta solo. Si no se
+          acredita, el plan se da de baja el <strong>{DATE.format(new Date(subscription.graceUntil))}</strong>.
+        </p>
+      )}
       <p className="border-t border-[#001F58]/10 px-5 py-3 text-sm text-slate-600">
         {subscription.cancelAtPeriodEnd ? (
           <>Cancelada: la podés usar hasta el <strong>{end}</strong> y después no se cobra más.</>

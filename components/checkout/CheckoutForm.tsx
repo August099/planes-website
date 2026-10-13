@@ -24,6 +24,8 @@ type Props = {
   defaults: BillingDefaults;
   dniRequiredFrom: number;
   initialCoupon?: string;
+  /** VA-92: suscripción con débito automático (sin cupón; el precio es por período). */
+  recurring?: { per: "mes" | "año" };
 };
 
 const NUMBER = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 2 });
@@ -32,13 +34,15 @@ const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-
 const FIELD_LABEL = "block text-xs font-semibold text-slate-600 mb-1";
 const INPUT = "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#001F58] focus:outline-none focus:ring-2 focus:ring-[#001F58]/15";
 
-export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, initialCoupon = "" }: Props) {
+export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, initialCoupon = "", recurring }: Props) {
   const [kind, setKind] = useState<Kind>(defaults.kind);
   const [name, setName] = useState(defaults.name);
   const [docNumber, setDocNumber] = useState(defaults.docNumber);
   const [ivaCondition, setIvaCondition] = useState(defaults.ivaCondition);
   const [address, setAddress] = useState(defaults.address);
   const [email, setEmail] = useState(defaults.email);
+  // VA-92: suscripciones: la cuenta de Mercado Pago que autoriza el débito.
+  const [payerEmail, setPayerEmail] = useState(defaults.email);
 
   const [couponInput, setCouponInput] = useState(initialCoupon);
   const [coupon, setCoupon] = useState<{ code: string; discountAmount: number; finalPrice: number } | null>(null);
@@ -84,7 +88,7 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
     setFormError(null);
     if (!validate()) return;
     setSubmitting(true);
-    const res = await startCheckoutAction({ productKey, couponCode: coupon?.code, billing });
+    const res = await startCheckoutAction({ productKey, couponCode: coupon?.code, billing, payerEmail: recurring ? payerEmail : undefined });
     if (res.ok) {
       // A Mercado Pago (otro dominio) o a la página de estado (cupón del 100%).
       window.location.assign(res.redirectTo);
@@ -204,6 +208,17 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
           </div>
         </div>
 
+        {recurring && (
+          <div className="mt-6 border-t border-[#001F58]/10 pt-6">
+            <label htmlFor="mp-email" className={FIELD_LABEL}>
+              Email de tu cuenta de Mercado Pago
+            </label>
+            <input id="mp-email" type="email" className={INPUT} value={payerEmail} onChange={(e) => setPayerEmail(e.target.value)} autoComplete="email" />
+            <p className="mt-1 text-xs text-slate-500">El débito automático se autoriza con esa cuenta.</p>
+            {err("payerEmail")}
+          </div>
+        )}
+
         {formError && (
           <p role="alert" className="mt-6 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {formError}
@@ -220,7 +235,9 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
         </button>
         {total > 0 && (
           <p className="mt-3 text-xs text-slate-500">
-            Te llevamos a Mercado Pago, donde elegís el medio de pago. Cuando el pago se acredite, activamos tu compra.
+            {recurring
+              ? `Te llevamos a Mercado Pago para autorizar el débito automático. Se cobra cada ${recurring.per} y podés cancelarlo cuando quieras desde tu perfil.`
+              : "Te llevamos a Mercado Pago, donde elegís el medio de pago. Cuando el pago se acredite, activamos tu compra."}
           </p>
         )}
       </section>
@@ -238,7 +255,10 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
           </div>
           <div className="flex items-baseline justify-between gap-3 px-5 py-3">
             <dt className="text-slate-500">Precio</dt>
-            <dd className="tabular-nums text-slate-800">{money(product.price)}</dd>
+            <dd className="tabular-nums text-slate-800">
+              {money(product.price)}
+              {recurring && <span className="text-xs text-slate-500"> por {recurring.per}</span>}
+            </dd>
           </div>
           {coupon && (
             <div className="flex items-baseline justify-between gap-3 px-5 py-3">
@@ -250,9 +270,13 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
           )}
           <div className="flex items-baseline justify-between gap-3 px-5 py-3">
             <dt className="font-semibold text-[#001F58]">Total</dt>
-            <dd className="text-lg font-bold tabular-nums text-[#001F58]">{money(total)}</dd>
+            <dd className="text-lg font-bold tabular-nums text-[#001F58]">
+              {money(total)}
+              {recurring && <span className="text-xs font-normal text-slate-500"> por {recurring.per}</span>}
+            </dd>
           </div>
         </dl>
+        {!recurring && (
         <div className="border-t border-[#001F58]/10 px-5 py-4">
           <label htmlFor="coupon" className={FIELD_LABEL}>
             Cupón de descuento
@@ -293,6 +317,7 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
             </button>
           )}
         </div>
+        )}
       </aside>
     </form>
   );

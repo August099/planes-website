@@ -1,26 +1,37 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 
-// Beneficios de suscripción (VA-87). Regla única para "Página personalizada": suscripción ACTIVE,
-// período vigente (currentPeriodEnd en el futuro) y un plan con includesCustomPage. Si vence, el
+// Regla única de "suscripción vigente" (VA-80 / VA-92): ACTIVE con el período pagado sin terminar
+// (si se pidió cancelar, sigue vigente hasta currentPeriodEnd), o PAST_DUE (cobro rechazado) mientras
+// dure la gracia. La usan los beneficios (página personalizada, avisos sin vencimiento, saldo de
+// publicaciones) y la cortesía.
+export function currentSubscriptionWhere(userId: string, now = new Date()) {
+  return {
+    userId,
+    OR: [
+      { status: "ACTIVE" as const, currentPeriodEnd: { gt: now } },
+      { status: "PAST_DUE" as const, graceUntil: { gt: now } },
+    ],
+  };
+}
+
+export function isSubscriptionCurrent(
+  s: { status: string; currentPeriodEnd: Date; graceUntil: Date | null },
+  now = new Date()
+): boolean {
+  if (s.status === "ACTIVE") return s.currentPeriodEnd > now;
+  if (s.status === "PAST_DUE") return !!s.graceUntil && s.graceUntil > now;
+  return false;
+}
+
+// Beneficios de suscripción (VA-87): "Página personalizada" con un plan que la incluye. Si vence, el
 // perfil vuelve al diseño común sin borrar los datos cargados.
 export async function hasCustomPage(userId: string): Promise<boolean> {
   const sub = await prisma.subscription.findFirst({
-    where: {
-      userId,
-      status: "ACTIVE",
-      currentPeriodEnd: { gt: new Date() },
-      plan: { includesCustomPage: true },
-    },
+    where: { ...currentSubscriptionWhere(userId), plan: { includesCustomPage: true } },
     select: { id: true },
   });
   return !!sub;
-}
-
-// VA-80: suscripción vigente = ACTIVE y período pagado sin terminar. Si se pidió cancelar
-// (cancelAtPeriodEnd), sigue vigente hasta currentPeriodEnd.
-function currentSubscriptionWhere(userId: string) {
-  return { userId, status: "ACTIVE" as const, currentPeriodEnd: { gt: new Date() } };
 }
 
 /** VA-80: el plan vigente del usuario hace que sus publicaciones no venzan. */
@@ -41,6 +52,9 @@ export async function getSubscriptionSummary(userId: string) {
       currentPeriodEnd: true,
       cancelAtPeriodEnd: true,
       source: true,
+      graceUntil: true,
+      mpSubscriptionId: true,
+      planId: true,
       plan: { select: { name: true, price: true, billingInterval: true, noExpiry: true } },
     },
   });
@@ -51,7 +65,11 @@ export async function getSubscriptionSummary(userId: string) {
     interval: sub.plan.billingInterval,
     noExpiry: sub.plan.noExpiry,
     status: sub.status,
-    active: sub.status === "ACTIVE" && sub.currentPeriodEnd > new Date(),
+    active: isSubscriptionCurrent(sub),
+    // VA-92: cobro rechazado, en gracia hasta esta fecha (sigue con los beneficios).
+    graceUntil: sub.status === "PAST_DUE" && sub.graceUntil ? sub.graceUntil.toISOString() : null,
+    planId: sub.planId,
+    hasMercadoPago: !!sub.mpSubscriptionId,
     currentPeriodEnd: sub.currentPeriodEnd.toISOString(),
     cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
     // VA-92: plan de cortesía asignado por un admin (no se cobra, no se renueva ni se cancela).

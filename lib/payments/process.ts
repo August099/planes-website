@@ -4,6 +4,8 @@ import { Prisma, type PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { mpClient } from "@/lib/mercadopago";
 import { activatePurchase, revokePurchase } from "@/lib/payments/activation";
+import { queueInvoice } from "@/lib/payments/invoices";
+import { handleSubscriptionTopic } from "@/lib/payments/subscriptions";
 
 // VA-92 · Etapa 3: procesamiento de un WebhookEvent ya guardado. Nunca se confía en el payload:
 // con el id recibido se consulta el pago a la API de Mercado Pago y se actúa según lo que devuelve.
@@ -39,8 +41,7 @@ async function handle(topic: string, externalId: string | null): Promise<Outcome
     case "subscription_preapproval":
     case "subscription_authorized_payment":
     case "subscription_preapproval_plan":
-      // Etapa 4 (suscripciones): se registran y se procesan cuando esté implementada.
-      return { status: "IGNORED", note: "Suscripciones: pendiente (etapa 4)" };
+      return handleSubscriptionTopic(topic, externalId);
     default:
       return { status: "IGNORED", note: `Tópico no manejado: ${topic}` };
   }
@@ -112,7 +113,8 @@ async function handlePayment(mpPaymentId: string): Promise<Outcome> {
     if (purchaseStatus === "PARTIALLY_REFUNDED") {
       await prisma.purchase.update({ where: { id: purchase.id }, data: { paymentStatus: "PARTIALLY_REFUNDED" } });
     }
-    await queueInvoice(payment.id, purchase, approvedAt ?? new Date(), amount);
+    const paidAt = approvedAt ?? new Date();
+    await queueInvoice({ paymentId: payment.id, amount, description: purchase.description, receiver: purchase.billingSnapshot, periodFrom: paidAt, periodTo: paidAt });
   } else if (purchaseStatus === "REFUNDED") {
     const revoked = await revokePurchase(purchase.id);
     notes.push(revoked ? "compra revertida" : "la compra ya estaba revertida o no se había activado");
@@ -139,34 +141,6 @@ async function upsertPayment(mpPaymentId: string, data: Omit<Prisma.PaymentUnche
     }
     throw error;
   }
-}
-
-/**
- * Deja la factura C en PENDING (una por pago: índice único invoicedPaymentId). La emite la etapa 4
- * (TusFacturas) cuando BILLING_ENABLED=true; mientras tanto queda pendiente.
- */
-async function queueInvoice(
-  paymentId: string,
-  purchase: { description: string; billingSnapshot: Prisma.JsonValue },
-  paidAt: Date,
-  amount: number
-) {
-  if (amount <= 0) return;
-  await prisma.invoice.createMany({
-    data: [
-      {
-        kind: "FACTURA_C",
-        paymentId,
-        invoicedPaymentId: paymentId,
-        total: new Prisma.Decimal(amount),
-        periodFrom: paidAt,
-        periodTo: paidAt,
-        description: purchase.description || "Servicio de publicación en Ventas Aeronáuticas",
-        receiver: (purchase.billingSnapshot ?? {}) as Prisma.InputJsonValue,
-      },
-    ],
-    skipDuplicates: true,
-  });
 }
 
 function errorText(error: unknown): string {

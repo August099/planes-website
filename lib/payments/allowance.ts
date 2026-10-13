@@ -2,6 +2,7 @@ import "server-only";
 import type { ListingKind } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { BALANCE_FIELD } from "@/lib/payments/activation";
+import { currentSubscriptionWhere } from "@/lib/subscriptions";
 
 // VA-92 (decisión del socio, 12/10): al publicar, primero cubre la suscripción vigente; si no, se
 // descuenta 1 del saldo (packs); sin ninguna de las dos, el aviso queda "pendiente de pago" y va a
@@ -14,10 +15,7 @@ const INCLUDED = { AIRCRAFT: "aircraftListingsCount", SPARE_PART: "sparePartsLis
 
 /** ¿La suscripción vigente cubre un aviso más de este tipo? */
 async function subscriptionCovers(userId: string, kind: ListingKind): Promise<boolean> {
-  const sub = await prisma.subscription.findFirst({
-    where: { userId, status: "ACTIVE", currentPeriodEnd: { gt: new Date() } },
-    select: { plan: true },
-  });
+  const sub = await prisma.subscription.findFirst({ where: currentSubscriptionWhere(userId), select: { plan: true } });
   if (!sub) return false;
   if (sub.plan[UNLIMITED[kind]]) return true;
   const included = sub.plan[INCLUDED[kind]];

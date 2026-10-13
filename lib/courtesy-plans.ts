@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { isSubscriptionCurrent } from "@/lib/subscriptions";
 
 // VA-92: plan de cortesía (suscripción MANUAL). Lo asigna un admin a un usuario hasta una fecha:
 // sin Mercado Pago (mpSubscriptionId vacío), no se cobra ni se renueva, y no cuenta en ingresos ni
@@ -28,14 +29,14 @@ export async function grantCourtesyPlan(input: {
   const [plan, user, current] = await Promise.all([
     prisma.plan.findUnique({ where: { id: input.planId }, select: { billingType: true, archivedAt: true, featuredPerMonth: true } }),
     prisma.user.findUnique({ where: { id: input.userId }, select: { id: true } }),
-    prisma.subscription.findUnique({ where: { userId: input.userId }, select: { source: true, status: true, currentPeriodEnd: true } }),
+    prisma.subscription.findUnique({ where: { userId: input.userId }, select: { source: true, status: true, currentPeriodEnd: true, graceUntil: true } }),
   ]);
   if (!user) return { ok: false, error: "El usuario no existe." };
   if (!plan || plan.archivedAt || plan.billingType !== "SUBSCRIPTION") {
     return { ok: false, error: "Elegí un plan de suscripción vigente." };
   }
   // Una suscripción paga vigente no se pisa: primero hay que cancelarla.
-  if (current && current.source === "MERCADOPAGO" && current.status === "ACTIVE" && current.currentPeriodEnd > now) {
+  if (current && current.source === "MERCADOPAGO" && (isSubscriptionCurrent(current, now) || current.status === "PENDING")) {
     return { ok: false, error: "El usuario tiene una suscripción paga vigente." };
   }
 
