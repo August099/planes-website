@@ -1193,18 +1193,20 @@ Notas para cuando se encare, a partir de lo que ya existe:
 ### VA-92 (spec) · Pagos con Mercado Pago + facturación automática con TusFacturasAPP (pedido del socio, 12/10)
 > Especificación: `docs/specs/VA-92-pagos-y-facturacion.md`. Guía operativa: `docs/PAGOS.md`.
 
-**Estado (12/10/2026):** 🟡 **etapa 0 hecha en local** (commit `d77d181`); la migración espera el OK del SQL.
+**Estado (12/10/2026):** 🟡 **etapas 0, 1 y 2 hechas en local** (commits `d77d181`, `a9a1265`, `f6888d6`). `pre-production` preparada con el merge (sin "Próximamente"), sin pushear hasta migrar la base.
 
 **Decisiones del socio (12/10):**
 - **Activación:** con pack o suscripción, publicar descuenta 1 del saldo; sin saldo, el aviso queda "pendiente de pago" y va a `/checkout` de ese aviso; lo activa el webhook. La promo de lanzamiento pasa a ser un cupón del 100% administrable.
 - **Sin túnel:** los webhooks se prueban en el Preview de `pre-production` (Deployment Protection desactivada). El desarrollo sigue en local y cada etapa se despliega a `pre-production` al cerrarla.
 - **`MP_NOTIFICATION_URL`** opcional para el `notification_url` de las preferencias; `APP_URL` = localhost en local y la URL del preview en Preview.
 - Solo los nombres de variables de la spec (`MP_*`); los viejos `MERCADOPAGO_*` los borra el socio de su `.env`.
+- **El Preview usa la base de Supabase** (la misma de producción; decisión del socio, 12/10). Las migraciones las corre el socio con `migrate deploy` antes de cada despliegue a `pre-production`. Las compras y eventos de prueba quedan en esa base: limpiarlos antes de abrir producción.
+- **`pre-production` sin la página "Próximamente"** (queda solo en `main`).
 
 **Etapas:**
 0. ✅ Configuración: `.env.example`, `lib/mercadopago.ts` (cliente que falla si falta el token, clave del webhook con fail closed, `APP_URL`, `MP_NOTIFICATION_URL`, `BILLING_ENABLED`), `docs/PAGOS.md`.
-1. ⏳ Migración: `Purchase` (plan opcional para avisos sueltos, `listingKind`, concepto, moneda, `approvedAt`, `activatedAt`, datos de facturación usados), `PaymentStatus` (+ IN_PROCESS, CANCELLED, REFUNDED, PARTIALLY_REFUNDED), `Subscription` (+ PENDING, PAST_DUE, `graceUntil`, `mpStatus`), tablas `Payment` (`mpPaymentId` único), `WebhookEvent`, `Invoice` (una factura por pago; nota de crédito única por reembolso), `BillingProfile` y `BillingSettings`.
-2. Webhook (fuente de verdad): firma, registro de cada evento, consulta a la API de MP, procesamiento idempotente. **Al desplegarlo a pre-production, frenar**: el socio configura la URL en Mercado Pago y carga `MP_WEBHOOK_SECRET` en Preview.
+1. ✅ Migración `20261012230000_va92_pagos` (aplicada en `va_dev`): `Purchase` (plan opcional para avisos sueltos, `listingKind`, concepto, moneda, `approvedAt`, `activatedAt`, datos de facturación usados), `PaymentStatus` (+ IN_PROCESS, CANCELLED, REFUNDED, PARTIALLY_REFUNDED), `Subscription` (+ PENDING, PAST_DUE, `graceUntil`, `mpStatus`), tablas `Payment` (`mpPaymentId` único), `WebhookEvent`, `Invoice` (una factura por pago; nota de crédito única por reembolso), `BillingProfile` y `BillingSettings`.
+2. ✅ Webhook (fuente de verdad, etapa 3 de la spec): `POST /api/webhooks/mercadopago` valida `x-signature` (sin clave rechaza todo), guarda cada notificación en `WebhookEvent` (también las rechazadas, con el motivo), responde 200 y procesa con `after()`. El pago se consulta a la API de MP; `Payment` por `mpPaymentId` único; monto y moneda tienen que coincidir con la compra. Activación idempotente (`activatedAt`): saldo de packs, avisos pendientes de pago, banners a revisión y uso del cupón. Reembolso total o contracargo: revierte una vez. Factura C en `PENDING` por pago aprobado. Suscripciones: `IGNORED` hasta la etapa 4. **Probado en local** (build de producción con una clave de prueba solo en el proceso): sin firma, firma con otra clave y firma de otro id → 401 y `REJECTED`; firma válida → 200; pago inexistente → `ERROR` con el detalle de MP; 6 activaciones simultáneas de 2 compras → ganan 2, el reenvío no hace nada, 4 reembolsos → revierten 2, saldo sin negativos; datos restaurados. **Falta probarlo con pagos reales en el Preview.**
 3. Checkout Pro (avisos sueltos, packs y banners), cupones (incluido el 100%), página de estado del pago.
 4. Suscripciones (preapproval), gracia y cancelación.
 5. Facturación con TusFacturas (`BILLING_ENABLED=false` hasta tener credenciales).
