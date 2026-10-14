@@ -50,7 +50,8 @@ export default async function ProfilePage({ params }: Props) {
               select: {
                 favorites: true,
                 questions: true,
-                analyticsEvents: true,
+                // VA-105 · 5.1: solo vistas (ya deduplicadas al registrarlas, VA-17), no clics de contacto.
+                analyticsEvents: { where: { eventType: "AIRCRAFT_VIEW" } },
               },
             },
           }),
@@ -67,7 +68,8 @@ export default async function ProfilePage({ params }: Props) {
               select: {
                 favorites: true,
                 questions: true,
-                analyticsEvents: true,
+                // VA-105 · 5.1: solo vistas (ya deduplicadas al registrarlas, VA-17), no clics de contacto.
+                analyticsEvents: { where: { eventType: "SPARE_PART_VIEW" } },
               },
             },
           }),
