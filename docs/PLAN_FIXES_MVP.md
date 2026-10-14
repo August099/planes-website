@@ -1360,3 +1360,51 @@ Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se 
 - **`/publish`:** "te queda 1 publicación de avión gratis. Se usa sola al publicar" con el saldo real (antes pedía el cupón).
 - **Verificado** (dev, base local): visitante ve los 4 avisos y no la ventana; usuario con saldo ve la ventana, la cierra y al recargar no vuelve; `/publish` muestra el saldo. **Falta:** probarlo con un registro y un login de Google reales en el Preview.
 - **En producción:** `npm run migrate:deploy` (VA-89 y VA-111).
+
+---
+
+## Pedidos del socio del 14/10 (segunda tanda) — de la más sencilla a la más compleja
+
+> Se trabaja en `milton/auth-roles` (el socio sigue sumando commits ahí). Orden = de la más sencilla a la más compleja, como pidió el socio. Decisiones tomadas el 14/10: D19 (motor) y D13 (matrícula), y las respuestas a las preguntas de VA-119, VA-121, VA-124 y VA-125, anotadas en cada tarea.
+
+### VA-112 · Motor: opcional en Proyecto y dos obligatorios en Bimotor (D19)
+- `lib/aircraft-rules.ts`: `engines` opcional en `PR`; en `BP`/`BT` hacen falta 2 motores (cliente y servidor). El alta de un Bimotor arranca con dos motores vacíos.
+
+### VA-113 · Detalle del avión: sin matrícula ni estado en "Datos de la aeronave" (D13)
+- Sacar "Matrícula" y "Estado" del resumen "Datos de la aeronave". La matrícula se muestra (si se cargó) en la ficha de abajo (General).
+
+### VA-114 · Lint en cero
+- `scripts/stub-server-only.cjs` usa `require()` (regla `no-require-imports`). Arreglarlo sin romper los scripts que lo usan, y la advertencia de `app/opengraph-image.tsx`.
+
+### VA-115 · Home sin las barras "//" rojas en los títulos
+- `components/ui/home/SectionTitle.tsx` (y los títulos que lo escriben a mano).
+
+### VA-116 · Sin menú desplegable en "Servicios"
+- "Servicios" vuelve a ser un link simple a `/services` (escritorio y celular).
+
+### VA-117 · Detalle del repuesto: solo el link a la categoría padre
+- Ajusta VA-108: debajo del título, solo la categoría principal (sin la subcategoría).
+
+### VA-118 · Revisar el contador de vistas de los avisos
+- Antes contaba todos los eventos (VA-105 5.1 lo corrigió en el perfil). Revisar todos los lugares donde se muestran vistas (perfil, admin, métricas) y confirmar con datos.
+
+### VA-119 · Plan de pago único de AR$ 100 para probar pagos reales
+- **Decisión (14/10):** visible en `/plans`. Pack de 1 aviso de avión a AR$ 100, creado con un script idempotente (sirve para el Preview y para producción) y archivable desde `/admin/plans` después de la prueba.
+
+### VA-120 · Menú desplegable de "Repuestos" con sus categorías
+- Como el panel de Servicios (VA-83): al pasar el mouse por "Repuestos", panel a todo el ancho con las categorías principales (cacheadas) que llevan a `/spareparts?category=<id>`; en celular, debajo de "Repuestos".
+
+### VA-121 · `/plans` con suscripción: "Cancelar" en el actual y "Cambiar a este plan" en los otros
+- **Decisión (14/10):** cambio **inmediato, sin prorrateo**: "Cambiar a este plan" lleva al pago del nuevo; cuando se aprueba, la suscripción anterior se cancela en el momento (también en Mercado Pago). "Cancelar" usa la cancelación que ya existe en el perfil.
+
+### VA-122 · Página "Nosotros" con la misión y formulario de sugerencias
+- Plantilla con la misión (textos de ejemplo marcados para completar). Formulario de sugerencias: se guarda en la base, se ve en el admin y avisa por mail a `SUPPORT_EMAIL`; con límite por IP. Link en el footer.
+
+### VA-123 · FAQ completo según cómo funciona la web
+- Preguntas y respuestas reales (publicar, saldo de lanzamiento, planes, pagos, renovación, arrepentimiento, cuenta, contacto, seguridad) con su `FAQPage` en JSON-LD.
+
+### VA-124 · Guía de fotos con plantillas dibujadas
+- **Decisión (14/10):** solo la guía de fotos. La lista de texto pasa a ser una fila de plantillas dibujadas (frente, lateral, cola, cabina, panel, motor…) que **siguen visibles al lado** de las fotos subidas.
+
+### VA-125 · Botón de arrepentimiento (hasta 10 días después de un pago)
+- **Decisión (14/10):** **reembolso automático** por Mercado Pago desde "Mis compras" dentro de los 10 días corridos del pago; el webhook revierte lo comprado (saldo, aviso o suscripción), aunque ya se haya usado. Botón visible también en el footer (como pide la Resolución 424/2020) que lleva a "Mis compras".
