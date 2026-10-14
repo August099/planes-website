@@ -116,5 +116,9 @@ export const FOUNDING_MEMBER_LIMIT = 50;
 // Antes se usaba "/placeholder.png", que no existe en public/.
 export const PLACEHOLDER_IMAGE = "/placeholder.svg";
 
-// VA-110: cantidad de aeronaves del carrusel "Aeronaves destacadas" de la Home (las más recientes activas).
+// VA-110: cantidad de aeronaves del carrusel "Aeronaves destacadas" de la Home. Hasta que existan los
+// destacados pagos (VA-95), son 6 al azar entre las FEATURED_AIRCRAFT_POOL más recientes activas
+// (decisión del socio, 14/10). "Últimas publicaciones" usa las 6 primeras de la misma consulta.
 export const FEATURED_AIRCRAFT_COUNT = 6;
+export const FEATURED_AIRCRAFT_POOL = 30;
+export const LATEST_AIRCRAFT_COUNT = 6;

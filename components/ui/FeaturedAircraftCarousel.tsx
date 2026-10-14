@@ -25,17 +25,14 @@ interface Props {
   aircrafts: FeaturedAircraftProps[];
 }
 
+// VA-110: hasta que existan los destacados pagos (VA-95), 6 al azar entre las recientes activas.
 function pickFeatured(aircrafts: FeaturedAircraftProps[]) {
-  let pool = [...aircrafts];
-
-  if (pool.length >= 20) {
-    // Si hay 20 o más, tomamos las 10 con más vistas
-    pool.sort((a, b) => (b.viewsCount || 0) - (a.viewsCount || 0));
-    pool = pool.slice(0, 10);
+  const pool = [...aircrafts];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-
-  // Mezclamos aleatoriamente y tomamos las del carrusel (VA-110: 6; antes eran 2)
-  return pool.sort(() => 0.5 - Math.random()).slice(0, FEATURED_AIRCRAFT_COUNT);
+  return pool.slice(0, FEATURED_AIRCRAFT_COUNT);
 }
 
 const subscribeNothing = () => () => {};

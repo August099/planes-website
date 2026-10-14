@@ -17,7 +17,7 @@ import { FeaturedBrands } from "@/components/ui/FeaturedBrands";
 import { AircraftTypesSection } from "@/components/ui/AircraftTypesSection";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationAndWebsiteJsonLd } from "@/lib/structured-data";
-import { FEATURED_AIRCRAFT_COUNT, PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { FEATURED_AIRCRAFT_POOL, LATEST_AIRCRAFT_COUNT, PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { ProvinceExplorer, type ProvinceCounts } from "@/components/ui/ProvinceExplorer";
 import { provinceByName } from "@/lib/provinces";
 import { BrandSlashes } from "@/components/ui/BrandSlashes";
@@ -52,7 +52,7 @@ export default async function HomePage() {
         model: true,
       },
       orderBy: { createdAt: "desc" },
-      take: FEATURED_AIRCRAFT_COUNT,
+      take: FEATURED_AIRCRAFT_POOL,
     }),
     // Últimos Repuestos
     prisma.sparePart.findMany({
@@ -113,7 +113,7 @@ export default async function HomePage() {
 
   // Mapear aeronaves a ListingItem. "Últimas aeronaves" salen de la misma consulta de
   // destacadas (antes eran dos queries idénticas, VA-13).
-  const aircraftListings: ListingItem[] = featuredAircraftsFromDb.map(
+  const aircraftListings: ListingItem[] = featuredAircraftsFromDb.slice(0, LATEST_AIRCRAFT_COUNT).map(
     (aircraft) => ({
       type: "AIRCRAFT",
       id: aircraft.id,
