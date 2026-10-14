@@ -74,3 +74,47 @@ export async function evaluateCoupon(
     finalPrice: round2(Math.max(0, price - discountAmount)),
   };
 }
+
+// --------------------------------------------------------------------------- Reserva (VA-105 · 2.4)
+
+/** Minutos que una compra pendiente con cupón "reserva" un uso (= vencimiento del link de pago). */
+export const COUPON_RESERVATION_MINUTES = 30;
+
+export class CouponUnavailableError extends Error {}
+
+/**
+ * Reserva un uso del cupón y guarda la compra en la misma transacción, con la fila del cupón
+ * bloqueada (SELECT … FOR UPDATE): si dos personas van por el último uso a la vez, la segunda espera
+ * y ve la reserva de la primera. Una compra pendiente reserva el uso por COUPON_RESERVATION_MINUTES
+ * (o mientras el pago esté "en proceso"); el uso se consume recién al aprobarse (activatePurchase).
+ */
+export async function withCouponReservation<T>(
+  input: { couponId: string; userId: string; reusePurchaseId?: string | null },
+  save: (tx: Prisma.TransactionClient) => Promise<T>
+): Promise<T> {
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Coupon" WHERE id = ${input.couponId} FOR UPDATE`;
+    const coupon = await tx.coupon.findUniqueOrThrow({ where: { id: input.couponId } });
+    const since = new Date(Date.now() - COUPON_RESERVATION_MINUTES * 60_000);
+    const reserving = {
+      couponId: coupon.id,
+      activatedAt: null,
+      ...(input.reusePurchaseId ? { id: { not: input.reusePurchaseId } } : {}),
+      OR: [{ paymentStatus: "PENDING" as const, updatedAt: { gt: since } }, { paymentStatus: "IN_PROCESS" as const }],
+    };
+    const [reserved, reservedByUser, usedByUser] = await Promise.all([
+      tx.purchase.count({ where: reserving }),
+      tx.purchase.count({ where: { ...reserving, userId: input.userId } }),
+      tx.couponUsage.count({ where: { couponId: coupon.id, userId: input.userId, purchaseId: { not: null } } }),
+    ]);
+    if (coupon.maxUses !== null && coupon.currentUses + reserved >= coupon.maxUses) {
+      throw new CouponUnavailableError("Este cupón ya alcanzó su límite de usos.");
+    }
+    if (usedByUser + reservedByUser >= coupon.maxUsesPerUser) {
+      throw new CouponUnavailableError(
+        reservedByUser > 0 ? "Ya tenés un pago pendiente con este cupón. Terminalo o esperá unos minutos." : "Ya usaste este cupón todas las veces permitidas."
+      );
+    }
+    return save(tx);
+  });
+}

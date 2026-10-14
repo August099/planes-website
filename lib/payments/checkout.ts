@@ -4,7 +4,7 @@ import { Prisma, type CouponScope, type ListingKind } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getListingPrices } from "@/lib/listing-prices";
 import { defaultUsageText } from "@/lib/plan-rules";
-import { evaluateCoupon } from "@/lib/coupons";
+import { COUPON_RESERVATION_MINUTES, CouponUnavailableError, evaluateCoupon, withCouponReservation } from "@/lib/coupons";
 import { billingSnapshot, parseBilling, type BillingData } from "@/lib/billing-rules";
 import { appUrl, mpClient, notificationUrl } from "@/lib/mercadopago";
 import { activatePurchase } from "@/lib/payments/activation";
@@ -159,12 +159,22 @@ export async function startCheckout(input: {
   if (!billing.ok) return { ok: false, error: "Revisá los datos de facturación.", fieldErrors: billing.fieldErrors };
 
   await saveBillingProfile(input.userId, billing.data);
-  const purchaseId = await upsertPurchase(input.userId, product, {
-    couponId,
-    discountAmount,
-    finalPrice,
-    snapshot: billingSnapshot(billing.data),
-  });
+  const money = { couponId, discountAmount, finalPrice, snapshot: billingSnapshot(billing.data) };
+  let purchaseId: string;
+  if (couponId) {
+    // VA-105 · 2.4: con cupón, la compra se guarda reservando un uso (fila del cupón bloqueada).
+    try {
+      purchaseId = await withCouponReservation(
+        { couponId, userId: input.userId, reusePurchaseId: await openPurchaseId(input.userId, product) },
+        (tx) => upsertPurchase(tx, input.userId, product, money)
+      );
+    } catch (error) {
+      if (error instanceof CouponUnavailableError) return { ok: false, error: error.message, fieldErrors: { coupon: error.message } };
+      throw error;
+    }
+  } else {
+    purchaseId = await upsertPurchase(prisma, input.userId, product, money);
+  }
 
   const statusUrl = `/payment/status?purchase=${purchaseId}`;
   // Cupón del 100%: se activa directo, sin Mercado Pago ni factura.
@@ -196,7 +206,8 @@ export async function startCheckout(input: {
       notification_url: withSourceNews(notificationUrl()),
       statement_descriptor: "VENTAS AERO",
       expires: true,
-      expiration_date_to: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      // Con cupón, el link vence junto con la reserva del uso; sin cupón, en 3 días.
+      expiration_date_to: new Date(Date.now() + (couponId ? COUPON_RESERVATION_MINUTES * 60_000 : 3 * 24 * 60 * 60 * 1000)).toISOString(),
       metadata: { purchase_id: purchaseId },
     },
   });
@@ -229,7 +240,22 @@ async function saveBillingProfile(userId: string, data: BillingData) {
  * actualiza esa (precio, cupón, datos) en vez de crear otra. Así, pague la preferencia que pague,
  * el webhook activa el mismo aviso.
  */
+/** Compra abierta (sin activar) del aviso pendiente, si la hay: se reutiliza al reintentar. */
+async function openPurchaseId(userId: string, product: CheckoutProduct): Promise<string | null> {
+  if (!product.listing) return null;
+  const { type, id } = product.listing;
+  const select = { purchase: { select: { id: true, activatedAt: true, userId: true } } };
+  const current =
+    type === "aircraft"
+      ? await prisma.aircraft.findUnique({ where: { id }, select })
+      : type === "parts"
+        ? await prisma.sparePart.findUnique({ where: { id }, select })
+        : await prisma.hangar.findUnique({ where: { id }, select });
+  return current?.purchase && !current.purchase.activatedAt && current.purchase.userId === userId ? current.purchase.id : null;
+}
+
 async function upsertPurchase(
+  db: Prisma.TransactionClient | typeof prisma,
   userId: string,
   product: CheckoutProduct,
   money: { couponId: string | null; discountAmount: number; finalPrice: number; snapshot: object }
@@ -249,24 +275,24 @@ async function upsertPurchase(
     const { type, id } = product.listing;
     const current =
       type === "aircraft"
-        ? await prisma.aircraft.findUnique({ where: { id }, select: { purchase: { select: { id: true, activatedAt: true, userId: true } } } })
+        ? await db.aircraft.findUnique({ where: { id }, select: { purchase: { select: { id: true, activatedAt: true, userId: true } } } })
         : type === "parts"
-          ? await prisma.sparePart.findUnique({ where: { id }, select: { purchase: { select: { id: true, activatedAt: true, userId: true } } } })
-          : await prisma.hangar.findUnique({ where: { id }, select: { purchase: { select: { id: true, activatedAt: true, userId: true } } } });
+          ? await db.sparePart.findUnique({ where: { id }, select: { purchase: { select: { id: true, activatedAt: true, userId: true } } } })
+          : await db.hangar.findUnique({ where: { id }, select: { purchase: { select: { id: true, activatedAt: true, userId: true } } } });
     const open = current?.purchase && !current.purchase.activatedAt && current.purchase.userId === userId ? current.purchase : null;
     if (open) {
-      await prisma.purchase.update({ where: { id: open.id }, data });
+      await db.purchase.update({ where: { id: open.id }, data });
       return open.id;
     }
-    const created = await prisma.purchase.create({ data: { userId, listingKind: product.listingKind, ...data }, select: { id: true } });
+    const created = await db.purchase.create({ data: { userId, listingKind: product.listingKind, ...data }, select: { id: true } });
     const link = { where: { id }, data: { purchaseId: created.id } };
-    if (type === "aircraft") await prisma.aircraft.update(link);
-    else if (type === "parts") await prisma.sparePart.update(link);
-    else await prisma.hangar.update(link);
+    if (type === "aircraft") await db.aircraft.update(link);
+    else if (type === "parts") await db.sparePart.update(link);
+    else await db.hangar.update(link);
     return created.id;
   }
 
-  const created = await prisma.purchase.create({
+  const created = await db.purchase.create({
     data: { userId, planId: product.planId, listingKind: product.listingKind, ...data },
     select: { id: true },
   });

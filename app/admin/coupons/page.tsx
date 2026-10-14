@@ -18,6 +18,8 @@ import {
   XCircle
 } from "lucide-react";
 
+const AR_DATE = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" });
+
 export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState<Awaited<ReturnType<typeof getAdminCoupons>>>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,7 @@ export default function AdminCouponsPage() {
     maxUses: null,
     maxUsesPerUser: 1,
     isActive: true,
+    startsAt: "",
     expiresAt: "",
   });
 
@@ -87,6 +90,7 @@ export default function AdminCouponsPage() {
         maxUses: null,
         maxUsesPerUser: 1,
         isActive: true,
+        startsAt: "",
         expiresAt: "",
       });
       fetchCoupons();
@@ -148,6 +152,7 @@ export default function AdminCouponsPage() {
                   <th className="py-3 px-4">Alcance</th>
                   <th className="py-3 px-4">Usos Restantes</th>
                   <th className="py-3 px-4">Límite p/User</th>
+                  <th className="py-3 px-4">Vigencia</th>
                   <th className="py-3 px-4">Estado</th>
                   <th className="py-3 px-4 text-right">Acciones</th>
                 </tr>
@@ -155,7 +160,7 @@ export default function AdminCouponsPage() {
               <tbody className="divide-y divide-slate-100 text-xs">
                 {coupons.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-slate-400">
+                    <td colSpan={9} className="py-8 text-center text-slate-400">
                       No hay cupones creados todavía.
                     </td>
                   </tr>
@@ -224,11 +229,37 @@ export default function AdminCouponsPage() {
                           <span className="text-[10px] text-slate-400 block">
                             {coupon.currentUses} usado(s)
                           </span>
+                          {/* VA-105 · 2.9: quién lo usó */}
+                          {coupon.usages.length > 0 && (
+                            <details className="mt-1">
+                              <summary className="cursor-pointer text-[10px] font-semibold text-[#001F58]">Ver quién</summary>
+                              <ul className="mt-1 space-y-1 text-[10px] text-slate-600">
+                                {coupon.usages.map((u, i) => (
+                                  <li key={i}>
+                                    <span className="font-semibold">{u.user.name || u.user.email}</span> · {AR_DATE.format(new Date(u.usedAt))}
+                                    {u.description && <span className="block text-slate-400">{u.description}</span>}
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
+                          )}
                         </td>
 
                         {/* Límite por usuario */}
                         <td className="py-3 px-4 text-slate-600">
                           {coupon.maxUsesPerUser} uso(s)
+                        </td>
+
+                        {/* Vigencia (hora argentina) */}
+                        <td className="py-3 px-4 text-[11px] text-slate-600">
+                          {coupon.startsAt && <span className="block">Desde {AR_DATE.format(new Date(coupon.startsAt))}</span>}
+                          {coupon.expiresAt ? (
+                            <span className={`block ${new Date(coupon.expiresAt) < new Date() ? "font-semibold text-red-700" : ""}`}>
+                              {new Date(coupon.expiresAt) < new Date() ? "Venció" : "Vence"} {AR_DATE.format(new Date(coupon.expiresAt))}
+                            </span>
+                          ) : (
+                            !coupon.startsAt && <span className="text-slate-400">Sin límite</span>
+                          )}
                         </td>
 
                         {/* Estado */}
@@ -290,12 +321,12 @@ export default function AdminCouponsPage() {
               {/* Código */}
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  Código de Cupón (6 Caracteres)
+                  Código de cupón (4 a 20 caracteres)
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    maxLength={6}
+                    maxLength={20}
                     required
                     value={formData.code}
                     onChange={(e) =>
@@ -404,6 +435,35 @@ export default function AdminCouponsPage() {
                   )}
                 </div>
               )}
+
+              {/* VA-105: vigencia en hora argentina (opcional) */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="coupon-starts" className="block font-semibold text-slate-700 mb-1">
+                    Válido desde (opcional)
+                  </label>
+                  <input
+                    id="coupon-starts"
+                    type="datetime-local"
+                    value={formData.startsAt ?? ""}
+                    onChange={(e) => setFormData({ ...formData, startsAt: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#001F58]"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="coupon-expires" className="block font-semibold text-slate-700 mb-1">
+                    Vence (opcional)
+                  </label>
+                  <input
+                    id="coupon-expires"
+                    type="datetime-local"
+                    value={formData.expiresAt ?? ""}
+                    onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#001F58]"
+                  />
+                </div>
+                <p className="col-span-2 -mt-1 text-[11px] text-slate-500">Hora de Argentina. Vacío = sin límite.</p>
+              </div>
 
               {/* Límites de uso */}
               <div className="grid grid-cols-2 gap-3">
