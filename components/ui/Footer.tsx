@@ -37,6 +37,11 @@ export function Footer() {
             </h3>
             <ul className="space-y-1 sm:space-y-2 text-sm text-white/90 drop-shadow-sm">
               <li>
+                <Link href="/about" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  Nosotros
+                </Link>
+              </li>
+              <li>
                 <Link href="/faq" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Preguntas frecuentes
                 </Link>

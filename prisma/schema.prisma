@@ -1248,3 +1248,17 @@ model FeaturedPrice {
   isActive  Boolean  @default(true)
   updatedAt DateTime @updatedAt
 }
+
+// VA-122: sugerencias del formulario de /about. Avisa por mail a SUPPORT_EMAIL y se ven en
+// /admin/suggestions. userId solo si la mandó alguien con sesión.
+model Suggestion {
+  id        String    @id @default(cuid())
+  message   String
+  name      String?
+  email     String?
+  userId    String?
+  handledAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([createdAt])
+}

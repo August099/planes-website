@@ -100,3 +100,25 @@ export async function sendPasswordResetEmail(input: { to: string; link: string; 
   });
   if (error) throw new Error(error.message);
 }
+
+// VA-122: aviso interno de una sugerencia del formulario de /about.
+export async function sendSuggestionEmail(input: { message: string; name: string | null; email: string | null; adminUrl: string }) {
+  const to = getSupportEmail();
+  if (!to) return;
+  const from = [input.name, input.email].filter(Boolean).map((v) => escapeHtml(v!)).join(" · ") || "Anónimo";
+  const { error } = await resend.emails.send({
+    from: EMAIL_FROM,
+    to,
+    ...(input.email ? { replyTo: input.email } : {}),
+    subject: "Nueva sugerencia desde la web",
+    html: `
+      <div style="font-family: sans-serif; padding: 20px; color: #001F58;">
+        <h2>Nueva sugerencia</h2>
+        <p style="color: #555;">De: ${from}</p>
+        <p style="white-space: pre-wrap; border-left: 3px solid #E70F1F; padding-left: 12px;">${escapeHtml(input.message)}</p>
+        <p><a href="${input.adminUrl}" style="color: #001F58;">Ver todas las sugerencias</a></p>
+      </div>
+    `,
+  });
+  if (error) throw new Error(error.message);
+}
