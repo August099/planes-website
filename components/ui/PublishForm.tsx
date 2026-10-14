@@ -25,6 +25,7 @@ import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
 import { DescriptionTextarea } from "@/components/ui/DescriptionTextarea";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
 import { LAUNCH_PROMO } from "@/lib/promo";
+import { PhotoGuide } from "@/components/ui/publish/PhotoGuide";
 
 export interface CategoryOption { 
     id: string; 
@@ -1096,15 +1097,6 @@ export default function PublishForm({
                                                 Paso 3: Fotos y Documentos
                                             </h3>
                                             <p className="text-xs text-slate-500 mt-1">Mostrale al comprador el estado real de tu aeronave. La primera foto será la portada.</p>
-                                            <ul className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 list-disc pl-5 text-[11px] text-slate-500">
-                                                <li>Portada: ¾ de frente</li>
-                                                <li>¾ trasero</li>
-                                                <li>Laterales</li>
-                                                <li>Tablero</li>
-                                                <li>Tapizado</li>
-                                                <li>Motor</li>
-                                                <li>Detalles</li>
-                                            </ul>
                                         </div>
                                         
                                         <div>
@@ -1116,6 +1108,11 @@ export default function PublishForm({
                                                 <p className="text-xs font-semibold text-[#001F58] mb-2">Optimizando fotos {compressing.done}/{compressing.total}...</p>
                                             )}
                                             <FieldError message={fieldErrors.images} />
+
+                                            {/* VA-124: plantillas dibujadas de qué fotos sacar; siguen a la vista con las fotos cargadas. */}
+                                            <div className="mb-4">
+                                                <PhotoGuide uploaded={images.length} />
+                                            </div>
                                             
                                             <div className="flex flex-wrap gap-3">
                                                 {images.map((img, idx) => (
