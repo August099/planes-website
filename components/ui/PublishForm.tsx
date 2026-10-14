@@ -13,7 +13,7 @@ import {
     resolveCategoryId,
     type EngineKind,
 } from "@/lib/aircraft-categories";
-import { isRequired, requiredMark } from "@/lib/aircraft-rules";
+import { isRequired, minEngines, requiredMark } from "@/lib/aircraft-rules";
 import { discardUploaded, uploadListingFiles } from "@/lib/listing-upload-client";
 import { listingSchema, toFieldErrors, MAX_LISTING_IMAGES, type EditListingData, type FieldErrors, type ListingInput } from "@/lib/listing-schema";
 import Image from "next/image";
@@ -100,6 +100,8 @@ function FieldError({ message }: { message?: string }) {
     if (!message) return null;
     return <p className="text-[11px] text-red-600 font-semibold mt-1">{message}</p>;
 }
+
+const EMPTY_ENGINE: EngineInput = { brand: "", model: "", engineHours: "", TBO: "", DURG: "", horsepower: "", description: "" };
 
 export default function PublishForm({
     userId,
@@ -285,7 +287,7 @@ export default function PublishForm({
     };
 
     // VA-90: el alta arranca con un motor vacío, así no hay que buscar "Agregar Motor".
-    const [engines, setEngines] = useState<EngineInput[]>(editListing?.engines ?? [{ brand: "", model: "", engineHours: "", TBO: "", DURG: "", horsepower: "", description: "" }]);
+    const [engines, setEngines] = useState<EngineInput[]>(editListing?.engines ?? [{ ...EMPTY_ENGINE }]);
     const [propellers, setPropellers] = useState<PropellerInput[]>(editListing?.propellers ?? []);
 
     // ESTADO: Formulario de repuestos
@@ -360,7 +362,7 @@ export default function PublishForm({
       }));
     };
 
-    const addEngine = () => setEngines([...engines, { brand: "", model: "", engineHours: "", TBO: "", DURG: "", horsepower: "", description: "" }]);
+    const addEngine = () => setEngines([...engines, { ...EMPTY_ENGINE }]);
     const removeEngine = (index: number) => {
         const updatedEngines = engines.filter((_, i) => i !== index);
         setEngines(updatedEngines);
@@ -484,7 +486,8 @@ export default function PublishForm({
             }
             if (step === 2) {
                 if (!aircraftForm.avDescription.trim() && isRequired("avDescription", aircraftForm.categoryId)) return "La descripción de Aviónica es obligatoria.";
-                if (engines.length === 0 && isRequired("engines", aircraftForm.categoryId)) return "Agregá al menos un motor.";
+                const neededEngines = minEngines(aircraftForm.categoryId);
+                if (engines.length < neededEngines) return neededEngines === 2 ? "Un bimotor necesita los dos motores." : "Agregá al menos un motor.";
                 for (let i = 0; i < engines.length; i++) {
                     if (!engines[i].brand.trim() && !engines[i].model.trim()) return `Completá la marca o el modelo del Motor #${i + 1}.`;
                 }
@@ -840,6 +843,13 @@ export default function PublishForm({
                                     style: currentStep === 4 ? { display: 'none' } : {},
                                     onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
                                         const err = validateStep(activeTab, currentStep);
+                                        // VA-112: al pasar al paso de motores de un alta, dejar listos los que pide la categoría (2 en Bimotor).
+                                        if (!err && activeTab === "aircraft" && currentStep === 1 && !isEditing) {
+                                            const needed = minEngines(aircraftForm.categoryId);
+                                            const isBlank = (eng: EngineInput) => Object.values(eng).every((v) => !String(v).trim());
+                                            if (needed === 0) setEngines(engines.filter((eng) => !isBlank(eng)));
+                                            else if (engines.length < needed) setEngines([...engines, ...Array.from({ length: needed - engines.length }, () => ({ ...EMPTY_ENGINE }))]);
+                                        }
                                         if (err) {
                                             e.preventDefault();
                                             setStepAttempted(true);
@@ -1038,7 +1048,7 @@ export default function PublishForm({
                                                     <div className="col-span-2"><label className="text-[10px] font-bold uppercase mb-1 block">Descripción Adicional</label><input type="text" placeholder="Detalles de cilindros, overhaul o accesorios." value={eng.description} onChange={e => updateEngine(idx, "description", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                 </div>
                                             ))}
-                                            {engines.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">{isRequired("engines", aircraftForm.categoryId) ? "Agregá al menos un motor con el botón \u201cAgregar Motor\u201d." : "No hay motores agregados."}</p>}
+                                            {engines.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">{isRequired("engines", aircraftForm.categoryId) ? "Agregá al menos un motor con el botón \u201cAgregar Motor\u201d." : "Sin motor (opcional en Proyecto)."}</p>}
                                             <FieldError message={fieldErrors["engines"]} />
                                         </div>
 

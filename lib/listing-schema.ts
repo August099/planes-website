@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isRequired } from "@/lib/aircraft-rules";
+import { isRequired, minEngines } from "@/lib/aircraft-rules";
 import { normalizeProvince } from "@/lib/provinces";
 
 // Esquema único de una publicación nueva: lo usan el formulario (PublishForm) y el
@@ -148,10 +148,15 @@ export const aircraftListingSchema = z
     if (data.condition === "NUEVO" && data.year !== new Date().getFullYear()) {
       ctx.addIssue({ code: "custom", path: ["condition"], message: "Solo una aeronave del año actual puede ser nueva." });
     }
-    // VA-90: al menos un motor (lib/aircraft-rules.ts), y un motor cargado tiene marca o modelo
+    // VA-90 / VA-112: motores mínimos según la categoría (lib/aircraft-rules.ts), y un motor cargado tiene marca o modelo
     // (si no, una ficha vacía contaría como motor).
-    if (data.engines.length === 0 && isRequired("engines", data.categoryId)) {
-      ctx.addIssue({ code: "custom", path: ["engines"], message: "Agregá al menos un motor." });
+    const neededEngines = minEngines(data.categoryId);
+    if (data.engines.length < neededEngines) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["engines"],
+        message: neededEngines === 2 ? "Un bimotor necesita los dos motores." : "Agregá al menos un motor.",
+      });
     }
     data.engines.forEach((engine, i) => {
       if (!engine.brand && !engine.model) {
