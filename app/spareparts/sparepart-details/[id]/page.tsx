@@ -152,10 +152,8 @@ export default async function SparePartDetailsPage({
   }
   const categoryName = category?.name ?? null;
   const subcategoryName = subcategory?.name ?? null;
-  // VA-108: links al listado filtrado debajo del título.
-  const categoryLinks = [category, subcategory]
-    .filter((c): c is NonNullable<CategoryRef> => c !== null)
-    .map((c) => ({ label: c.name, href: `/spareparts?category=${encodeURIComponent(c.id)}` }));
+  // VA-108 / VA-117: debajo del título, solo el link a la categoría principal (listado filtrado).
+  const categoryLinks = category ? [{ label: category.name, href: `/spareparts?category=${encodeURIComponent(category.id)}` }] : [];
 
   // Datos clave del resumen (VA-41): grilla de 2 columnas.
   const keyFacts: KeyFact[] = [

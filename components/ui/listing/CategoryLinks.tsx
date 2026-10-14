@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 // VA-108: categoría del aviso debajo del título, como link al listado filtrado.
-// Con subcategoría (repuestos), "Categoría › Subcategoría", cada una con su link.
+// Acepta varios niveles ("A › B"); hoy los detalles pasan uno solo (VA-117).
 export function CategoryLinks({ items }: { items: { label: string; href: string }[] }) {
   if (items.length === 0) return null;
   return (
