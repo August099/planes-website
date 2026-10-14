@@ -290,7 +290,7 @@ function FiltersSidebarForm({ categories, brands }: Props) {
   );
 
   return (
-    <FilterShell activeCount={activeFilterCount} onClear={clearFilters} isOpenMobile={isOpenMobile} setIsOpenMobile={setIsOpenMobile}>
+    <FilterShell onApply={applyFilters} activeCount={activeFilterCount} onClear={clearFilters} isOpenMobile={isOpenMobile} setIsOpenMobile={setIsOpenMobile}>
       <AppliedFilterChips chips={appliedChips} onRemove={removeChip} />
 
       <FilterSection title="Precio (USD)" count={counts.price} open={openSections.price} onToggle={() => toggleSection("price")}>
@@ -431,14 +431,6 @@ function FiltersSidebarForm({ categories, brands }: Props) {
           )}
         </div>
       </FilterSection>
-
-      <button
-        type="button"
-        onClick={applyFilters}
-        className="w-full min-h-11 bg-primary text-white py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
-      >
-        Aplicar filtros
-      </button>
     </FilterShell>
   );
 }
