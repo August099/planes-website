@@ -33,6 +33,7 @@
 | 5 | Responsive y limpieza | Sí (responsive), limpieza recomendada |
 | 5b | **Rendimiento y tiempos de carga** | **Sí** (VA-70: la Home baja 6,5 MB de JavaScript) |
 | 6 | Mercado Pago y facturación | No (más adelante) |
+| 14/10 | **Pedidos del socio después de probar (VA-89 a VA-96)**, ordenados por prioridad: P1 saldo de lanzamiento, motor obligatorio y filtros en celular; P2 orden de filtros y detalle; P3 comparador y destacadas | Sí (P1 y P2) |
 
 ---
 
@@ -864,6 +865,7 @@ Notas para cuando se encare, a partir de lo que ya existe:
 6. VA-54 (campos nuevos, en la misma migración que VA-44 si es posible), VA-47 (solo el aviso), VA-52, VA-53
 7. **VA-70 (íconos de la Home) apenas se pueda, porque es un cambio chico con muchísimo impacto**; después VA-71…VA-76
 8. VA-12, VA-15, VA-16 → VA-61…VA-63 → VA-27 (opcional)
+9. **Pedidos del 14/10:** VA-89 (saldo de lanzamiento, después de D17/D18) → VA-90 (motor obligatorio, después de D19) → VA-91 (filtros en celular) → VA-92 → VA-93 → VA-94 → VA-95 → VA-96
 
 ## 8. Decisiones pendientes (para los socios)
 
@@ -885,6 +887,10 @@ Notas para cuando se encare, a partir de lo que ya existe:
 | D15 | `S/C` "Sin categoría asignada" (VA-43 ítem 7) | VA-43 | ✅ 8/10: se renombra a "Otros" |
 | D16 | ¿TBO obligatorio en Proyecto? (VA-44) | VA-44 | ✅ 8/10: opcional en `PR`, obligatorio en el resto |
 | D13 | ¿Se muestra la matrícula públicamente? | VA-54 | Pendiente |
+| D17 | Saldo de lanzamiento: ¿"hasta el 2/12" es el 2 de diciembre de 2026 inclusive (hora Argentina)? Y a las cuentas que ya existen, ¿se les deja **al menos** 1 / 1 o se les **suma** 1 / 1? | VA-89 | Pendiente (sugerido: 2/12/2026 23:59 ART inclusive; "al menos 1") |
+| D18 | ¿Publicar ya descuenta del saldo (y sin saldo no se puede publicar), o por ahora solo se asigna y el consumo va con la Fase 6? | VA-89 | Pendiente (sugerido: solo asignar ahora) |
+| D19 | Motor obligatorio: ¿también en Proyecto (`PR`)? ¿Bimotor exige 2 motores? | VA-90 | Pendiente (sugerido: Proyecto opcional; Bimotor 2) |
+| D20 | "Aeronaves destacadas": ¿se eligen (admin o plan) o siguen siendo las 6 más recientes? | VA-96 | Pendiente (por ahora las 6 más recientes) |
 
 ## 9. Checklist final antes de lanzar
 
@@ -1187,3 +1193,74 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - **Verificado** (build de producción, va_dev) con un script que lee los bloques y los cruza con la base: en 7 detalles, ningún bloque incluye el aviso actual ni avisos no visibles y nunca hay más de 2 por vendedor; sin scroll horizontal a 375 px. Casos: Cessna C-150 (similares de su categoría + categorías vecinas; repuestos Cessna), Pilatus PC-12 turbohélice (sin otras de su categoría: cascada a vecinas y recientes), Cirrus Vision Jet (categoría Otros, sin vecinas: similares + recientes), repuesto con modelos asociados (AB-115, C-150), repuesto sin aeronave (bloque B oculto) y un repuesto con "Cessna" en la descripción (inferido; la descripción se cambió para la prueba y se restauró).
 - **En los datos de prueba:** el "Cilindro Lycoming Superior con Válvulas" está cargado en la categoría "Llantas", así que sus similares son llantas y frenos. Es un dato mal cargado, no un problema de la lógica.
 - **Falta (hangares):** sección 3 de la spec (haversine con caja de lat/long, cascada por radio 50 → 150 → 400 km → provincia → país, distancia en la tarjeta) y "Hangares disponibles cerca" en aeronaves y repuestos.
+
+---
+
+## Pedidos del socio del 14/10 (después de probar) — ordenados por prioridad
+
+> Lo pidió el socio después de probar todo lo anterior. Numeración nueva desde VA-89 (VA-88 fue la última usada). **Orden = prioridad**: P1 toca el flujo de publicar o tiene fecha; P2 es usabilidad de listados y detalle; P3 es ajuste visual chico. Cada tarea es un commit `fix(VA-XX)` / `feat(VA-XX)` y sigue `docs/DESIGN_GUIDELINES.md`. Antes de implementar las marcadas ❓, ver las decisiones D17–D20 en la sección 8.
+
+### P1 — Prioridad alta
+
+### VA-89 · Saldo de lanzamiento: 1 aviso de avión y 1 de repuesto gratis para las cuentas creadas hasta el 2/12
+- **Pedido:** todas las cuentas que se creen **hasta el 2/12** tienen que tener un saldo de **1 publicación de avión y 1 de repuesto gratis**. **Sin avisarle a los usuarios la fecha** (no se muestra en ningún lado por ahora); más adelante se hace la ventana para avisarles. Por ahora, **solo la lógica**.
+- **Hoy:** `User.aircraftListingsBalance` y `User.sparePartsListingsBalance` existen (default 0) y solo los suma el webhook de Mercado Pago (`app/api/webhooks/mercadopago/route.ts`); `lib/balances.ts` → `getUserBalances` los lee. **Publicar no consume saldo** (VA-30 punto 8, D2). Las cuentas se crean en dos lugares: `app/actions/register-action.ts` (email y contraseña) y el adapter de Auth.js en el primer login con Google (`lib/auth.ts`, `events`).
+- **Hacer:**
+  1. `lib/promo.ts` (donde ya está `LAUNCH_PROMO`): constante `LAUNCH_FREE_BALANCE = { aircraft: 1, spareParts: 1, until: <2/12 23:59:59 hora Argentina, en UTC> }` y helper `launchFreeBalanceFor(createdAt: Date)` que devuelve `{ aircraft, spareParts }` (0 y 0 después de la fecha). Un solo lugar para cambiar fecha y cantidades. **No** se usa en ningún texto visible.
+  2. **Cuentas nuevas:** aplicar el saldo al crear el usuario en `register-action.ts` (en el mismo `create`) y en `events.createUser` de Auth.js (cuentas de Google; un `update` con `increment`, o set si está en 0). Con la fecha en el servidor, nunca desde el cliente.
+  3. **Cuentas existentes:** migración de datos (`prisma migrate dev --name va89_saldo_lanzamiento`, mostrar el SQL antes) que deja **al menos 1** en cada saldo a todas las cuentas que ya existen: `UPDATE "User" SET "aircraftListingsBalance" = GREATEST("aircraftListingsBalance", 1), "sparePartsListingsBalance" = GREATEST("sparePartsListingsBalance", 1);` ❓ D17 (sumar o "al menos 1").
+  4. **Idempotencia:** que un usuario no reciba el regalo dos veces (por ejemplo, vincular Google a una cuenta con contraseña no es una cuenta nueva). Opcional: columna `launchBalanceGrantedAt DateTime?` para dejar registro y poder auditar/revertir.
+  5. **Consumir el saldo al publicar:** ❓ D18. Hoy publicar es gratis para todos, así que el saldo no cambia nada. Si los socios dicen que sí, en `createListing` (`app/publish/actions.ts`): descontar 1 dentro de la misma transacción que crea el aviso (`updateMany where balance > 0`, y si `count === 0` → error claro), sin descontar al editar ni al renovar. Si dicen que no (lo más probable por "por el momento solo implementa esa lógica"), queda solo la asignación y el consumo va con la Fase 6.
+  6. Mostrar el saldo en `/admin/users` (columna o detalle) para poder verificarlo; nada en la vista del usuario hasta que se haga la ventana de aviso.
+- **Aceptación:** registrar una cuenta por email y una por Google con la fecha de hoy → ambas con 1 / 1; con `until` en el pasado (cambiar la constante en local) → 0 / 0; las cuentas que ya existían quedan con al menos 1 / 1 después de la migración; vincular Google a una cuenta existente no suma; ningún texto del sitio menciona la fecha. **En producción:** `npm run migrate:deploy`.
+
+### VA-90 · Al menos un motor obligatorio al publicar un avión
+- **Hoy:** `lib/listing-schema.ts` l.134 → `engines: z.array(engine).max(MAX_ENGINES).default([])`: se puede publicar sin motores. El formulario (`PublishForm.tsx` ~l.1002) muestra "No hay motores agregados." y deja seguir.
+- **Hacer:**
+  - Esquema Zod compartido: `engines` con `.min(1, "Agregá al menos un motor.")` (error junto al bloque de motores, como el resto de VA-30).
+  - Formulario: `validateStep` del paso de motores bloquea "Siguiente" sin motor; mensaje junto a "Agregar motor". Opcional: arrancar el formulario de alta con un motor vacío ya agregado (y dos en Bimotor) para que no haya que buscar el botón.
+  - Bimotor (`BP`/`BT`): ❓ D19, ¿exigir 2 motores?
+  - Excepciones: ❓ D19, ¿Proyecto (`PR`) también obligatorio? (puede estar sin motor). Si hay excepción, va en `lib/aircraft-rules.ts` junto a las de VA-44.
+  - Edición: el mismo esquema aplica a `updateListing`. Los avisos viejos sin motor no se rompen al verse, pero al editarlos piden cargar uno.
+- **Aceptación:** publicar sin motor → error junto al bloque, en el cliente y en el servidor (probar la action sin el cliente); con un motor → publica. Repuestos no cambian.
+
+### VA-91 · Filtros en el celular: el header no los tapa y "Aplicar filtros" siempre a mano
+- **Problema (visto por el socio):** en `/planes` y `/spareparts` (y `/services/hangars`, que usa el mismo `FilterShell`), a veces el header queda por encima del panel de filtros, y el botón "Aplicar filtros" queda al final de la lista: con secciones abiertas hay que scrollear todo para encontrarlo.
+- **Hoy:** el panel es `fixed inset-0 z-50` dentro de la página (`components/ui/filters/FilterShell.tsx`); el header es `z-40` (`components/ui/header-wrapper.tsx`) pero puede ganar si el panel queda dentro de un contexto de apilamiento (un padre con `transform`, `filter`, `backdrop-blur` o `z-index`) o si el header es `fixed` y el panel no cubre la zona segura. El botón "Aplicar filtros" está dentro del contenido scrolleable de cada barra (`PlanesFiltersSidebar.tsx` l.440, `SparePartFiltersSidebar.tsx` l.301, `HangarFiltersSidebar.tsx` l.201).
+- **Hacer:**
+  - Renderizar el panel de celular con `createPortal` a `document.body` (sale de cualquier contexto de apilamiento) y con un z-index por encima del header (y de la bandeja del comparador, `z-40`). Bloquear el scroll del body mientras está abierto y cerrarlo con Escape; `role="dialog"` y `aria-modal`.
+  - Estructura del panel: encabezado fijo (título + X), contenido con `overflow-y-auto` y **pie fijo** con "Aplicar filtros" (y "Limpiar" al lado) que siempre se ve, con `padding-bottom: env(safe-area-inset-bottom)`. Alto con `100dvh` para que la barra del navegador del celular no lo esconda.
+  - `FilterShell` recibe el botón de aplicar por prop (`footer`) para que las tres barras lo compartan; en escritorio el botón queda donde está.
+- **Aceptación:** a 375 px (y con un celular real, iOS y Android si se puede), abrir filtros desde arriba de la página y después de scrollear: el header nunca queda encima; con todas las secciones abiertas "Aplicar filtros" se ve sin scrollear; sin scroll horizontal.
+
+### P2 — Prioridad media
+
+### VA-92 · Filtros de repuestos: orden nuevo y "Precio" cerrado por defecto
+- **Orden pedido:** **Categoría → Condición → Precio → Provincia**. Hoy es Precio → Categoría → Provincia → Condición (`components/ui/SparePartFiltersSidebar.tsx` l.226–294).
+- **Bug:** "Precio" está **siempre abierto**: `openSections.price` arranca en `true` (l.117). Pasarlo a `searchParams.has("minPrice") || searchParams.has("maxPrice") || searchParams.has("currency")`, igual que las demás (abierta solo si tiene un filtro aplicado, criterio de VA-45/VA-31). Revisar también que el estado se rearme al cambiar la URL.
+- **Aceptación:** `/spareparts` sin parámetros → todas las secciones cerradas, en el orden pedido; `/spareparts?minPrice=100` → Precio abierta. Escritorio y celular.
+
+### VA-93 · Filtros de aviones en el orden pedido
+- **Orden pedido:** **Categoría → Marca → Año → Precio → Publica → Provincia → Condición → Opciones**. Hoy es Precio → Año → Categoría → Marca → Provincia → Publica → Opciones → Condición (`components/ui/PlanesFiltersSidebar.tsx` l.296–433).
+- Solo reordenar los `FilterSection` (y las etiquetas de filtros aplicados, si siguen el orden de las secciones). Revisar que Precio no arranque abierta sin filtro (mismo criterio que VA-92).
+- **Aceptación:** `/planes` en escritorio y en el panel de celular muestra las secciones en ese orden; los filtros siguen funcionando igual.
+
+### VA-94 · Detalle: título tan grande como el precio y categoría como link al filtro
+- **Hoy** (`app/planes/plane-details/[id]/page.tsx` l.259 y `app/spareparts/sparepart-details/[id]/page.tsx` l.267): `<h1>` en `text-xl font-bold` y el precio en `text-2xl font-black`.
+- **Hacer:**
+  - Título con el **mismo tamaño que el precio** (`text-2xl`, peso según las pautas; el precio sigue diferenciado por color). Revisar a 375 px que títulos largos no rompan la tarjeta (`break-words`, sin cortar el texto).
+  - **Debajo del título, la categoría como link** al listado filtrado: avión → `/planes?category=<id>` con el nombre de la categoría (ej. "Monomotor Pistón"); repuesto → `/spareparts?category=<id>` (en repuestos, ❓ mostrar "Categoría › Subcategoría" con un link cada una; sugerido: sí). Estilo de link discreto de las pautas (texto chico, azul de marca, rojo al pasar).
+  - Mismo cambio en el detalle de hangar si aplica (tipo de publicación); confirmarlo con el socio, no está en el pedido.
+- **Aceptación:** a 375 y 1280 px, título y precio del mismo tamaño; tocar la categoría lleva a `/planes` (o `/spareparts`) con ese filtro aplicado y la sección abierta (VA-31).
+
+### P3 — Prioridad baja
+
+### VA-95 · Comparador: cerrar la bandeja de una con una X a la derecha
+- **Pedido:** poder **quitar todo el comparador de una vez** con una X en el lado derecho de la bandeja (hoy solo se quita aeronave por aeronave).
+- **Hacer:** en `components/ui/compare/CompareTray.tsx`, botón X a la derecha (44 px, `aria-label="Cerrar comparador"`) que vacía la selección. Agregar `clearCompare()` en `lib/compare-store.ts` (borra `localStorage` con try/catch y avisa a los demás componentes y pestañas, como `removeFromCompare`). Al vaciarse, la bandeja y su espaciador desaparecen. Sin confirmación (se vuelve a armar en dos clics); ❓ si el socio prefiere confirmar, usar `ConfirmDialog`.
+- **Aceptación:** con 2 o 3 aeronaves en la bandeja, tocar la X → la bandeja desaparece y los botones "Agregado" de las tarjetas vuelven a "Comparar", también en otra pestaña abierta. A 375 px la X no tapa "Comparar (n)".
+
+### VA-96 · "Aeronaves destacadas": carrusel de 6
+- **Hoy:** `app/page.tsx` trae 8 aeronaves (`take: 8`) y `FeaturedAircraftCarousel` las muestra todas; "Últimas publicaciones" usa `slice(0, 6)` de la misma consulta.
+- **Hacer:** pasarle al carrusel de destacadas solo 6 (`slice(0, 6)`) y bajar el `take` a 6 si ya nada usa las 8. Mantener que sea carrusel (Swiper, flechas de VA-82) en escritorio y celular. Mientras no exista una marca de "destacada" en la base, siguen siendo las 6 más recientes activas (❓ D20: ¿destacadas elegidas a mano desde el admin o por plan? No es parte de este pedido).
+- **Aceptación:** la Home muestra 6 aeronaves en el carrusel de destacadas (contar los puntos/slides), a 375 y 1280 px.
