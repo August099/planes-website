@@ -1214,6 +1214,8 @@ Notas para cuando se encare, a partir de lo que ya existe:
   6. Mostrar el saldo en `/admin/users` (columna o detalle) para poder verificarlo; nada en la vista del usuario hasta que se haga la ventana de aviso.
 - **Aceptación:** registrar una cuenta por email y una por Google con la fecha de hoy → ambas con 1 / 1; con `until` en el pasado (cambiar la constante en local) → 0 / 0; las cuentas que ya existían quedan con al menos 1 / 1 después de la migración; vincular Google a una cuenta existente no suma; ningún texto del sitio menciona la fecha. **En producción:** `npm run migrate:deploy`.
 
+**Estado (14/10/2026):** ✅ hecho en local (commit `f046424`) con las opciones sugeridas de D17/D18, a confirmar: corte el **2/12/2026 23:59:59 hora Argentina** inclusive (`LAUNCH_FREE_BALANCE.until` = 2026-12-03 03:00 UTC, en `lib/promo.ts`), cuentas existentes con **al menos** 1 / 1 (`GREATEST`, no suma) y **publicar todavía no descuenta**. Registro por email: el saldo va en el mismo `create` (`launchBalanceCreateData`, `lib/launch-balance.ts`). Google: `events.createUser` → `grantLaunchBalance` (SQL con `GREATEST`, solo si `launchBalanceGrantedAt` es null y la cuenta se creó antes del corte). Migración `20261014055051_va89_saldo_lanzamiento`: columna `launchBalanceGrantedAt` + el `UPDATE` de las cuentas existentes (solo las creadas antes del corte, por si se despliega después del 2/12). `/admin/users`: columna "Saldo" (avión / repuesto). Ningún texto visible para el usuario. **Verificado** en una base local con datos de prueba: registro por el formulario → 1 / 1; alta tipo Google → 1 / 1 y la segunda llamada no hace nada; un saldo de 5 queda en 5; cuenta creada el 2/12 23:59:59 ART → sí, el 3/12 00:00 ART → no; las 6 cuentas existentes quedaron con 1 / 1. **No probado con un login real de Google.** **En producción:** `npm run migrate:deploy`.
+
 ### VA-90 · Al menos un motor obligatorio al publicar un avión
 - **Hoy:** `lib/listing-schema.ts` l.134 → `engines: z.array(engine).max(MAX_ENGINES).default([])`: se puede publicar sin motores. El formulario (`PublishForm.tsx` ~l.1002) muestra "No hay motores agregados." y deja seguir.
 - **Hacer:**
@@ -1224,6 +1226,8 @@ Notas para cuando se encare, a partir de lo que ya existe:
   - Edición: el mismo esquema aplica a `updateListing`. Los avisos viejos sin motor no se rompen al verse, pero al editarlos piden cargar uno.
 - **Aceptación:** publicar sin motor → error junto al bloque, en el cliente y en el servidor (probar la action sin el cliente); con un motor → publica. Repuestos no cambian.
 
+**Estado (14/10/2026):** ✅ hecho en local (commit `c6c9b16`). Regla `engines` en `lib/aircraft-rules.ts`: por ahora **obligatoria en todas las categorías**, sin exigir 2 en Bimotor (D19 sigue abierta: si Proyecto queda opcional, se agrega `"PR"` a la lista de excepciones y el resto ya lo respeta). Esquema Zod (cliente y servidor): "Agregá al menos un motor." y, además, **un motor cuenta solo si tiene marca o modelo** (una ficha vacía no alcanza). Formulario: el alta arranca con un motor vacío, el bloque dice "Motor *" y el paso 2 no avanza sin motor. **Verificado:** esquema (sin motor, motor vacío, motor OK) y el formulario a 375 px con una sesión de prueba (sin motor → mensaje; con marca y TBO → pasa al paso 3). Los avisos viejos sin motor se siguen viendo; al editarlos piden cargar uno.
+
 ### VA-91 · Filtros en el celular: el header no los tapa y "Aplicar filtros" siempre a mano
 - **Problema (visto por el socio):** en `/planes` y `/spareparts` (y `/services/hangars`, que usa el mismo `FilterShell`), a veces el header queda por encima del panel de filtros, y el botón "Aplicar filtros" queda al final de la lista: con secciones abiertas hay que scrollear todo para encontrarlo.
 - **Hoy:** el panel es `fixed inset-0 z-50` dentro de la página (`components/ui/filters/FilterShell.tsx`); el header es `z-40` (`components/ui/header-wrapper.tsx`) pero puede ganar si el panel queda dentro de un contexto de apilamiento (un padre con `transform`, `filter`, `backdrop-blur` o `z-index`) o si el header es `fixed` y el panel no cubre la zona segura. El botón "Aplicar filtros" está dentro del contenido scrolleable de cada barra (`PlanesFiltersSidebar.tsx` l.440, `SparePartFiltersSidebar.tsx` l.301, `HangarFiltersSidebar.tsx` l.201).
@@ -1233,6 +1237,8 @@ Notas para cuando se encare, a partir de lo que ya existe:
   - `FilterShell` recibe el botón de aplicar por prop (`footer`) para que las tres barras lo compartan; en escritorio el botón queda donde está.
 - **Aceptación:** a 375 px (y con un celular real, iOS y Android si se puede), abrir filtros desde arriba de la página y después de scrollear: el header nunca queda encima; con todas las secciones abiertas "Aplicar filtros" se ve sin scrollear; sin scroll horizontal.
 
+**Estado (14/10/2026):** ✅ hecho en local (commit `ff85bd2`). **Causa:** el `<main>` de los listados tiene `isolate` (contexto de apilamiento propio), así que el panel `z-50` quedaba atrapado debajo del header `z-40`. Ahora el panel de celular va en un **portal a `<body>`** (`z-[70]`, también por encima de la bandeja del comparador), con encabezado fijo, contenido con scroll propio y **pie fijo con "Aplicar filtros"** (alto `100dvh`, zona segura abajo), "Limpiar" junto a la X, Escape cierra, el fondo no scrollea y `role="dialog"`. El botón sale de las tres barras (`onApply` de `FilterShell`): planes, repuestos y hangares. **Verificado** a 375×667 después de scrollear y con todas las secciones abiertas: el header no queda encima, "Aplicar filtros" termina en 655 px de 667 y sin scroll horizontal. **Falta:** probar en un celular real.
+
 ### P2 — Prioridad media
 
 ### VA-92 · Filtros de repuestos: orden nuevo y "Precio" cerrado por defecto
@@ -1240,10 +1246,14 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - **Bug:** "Precio" está **siempre abierto**: `openSections.price` arranca en `true` (l.117). Pasarlo a `searchParams.has("minPrice") || searchParams.has("maxPrice") || searchParams.has("currency")`, igual que las demás (abierta solo si tiene un filtro aplicado, criterio de VA-45/VA-31). Revisar también que el estado se rearme al cambiar la URL.
 - **Aceptación:** `/spareparts` sin parámetros → todas las secciones cerradas, en el orden pedido; `/spareparts?minPrice=100` → Precio abierta. Escritorio y celular.
 
+**Estado (14/10/2026):** ✅ hecho en local (commit `173fc40`). Orden nuevo también en las etiquetas de filtros aplicados. Precio abierta solo con `minPrice`, `maxPrice` o `currency`. Verificado: `/spareparts` todo cerrado; `?minPrice=100&currency=USD` → Precio abierta.
+
 ### VA-93 · Filtros de aviones en el orden pedido
 - **Orden pedido:** **Categoría → Marca → Año → Precio → Publica → Provincia → Condición → Opciones**. Hoy es Precio → Año → Categoría → Marca → Provincia → Publica → Opciones → Condición (`components/ui/PlanesFiltersSidebar.tsx` l.296–433).
 - Solo reordenar los `FilterSection` (y las etiquetas de filtros aplicados, si siguen el orden de las secciones). Revisar que Precio no arranque abierta sin filtro (mismo criterio que VA-92).
 - **Aceptación:** `/planes` en escritorio y en el panel de celular muestra las secciones en ese orden; los filtros siguen funcionando igual.
+
+**Estado (14/10/2026):** ✅ hecho en local (commit `2095602`). También las etiquetas aplicadas. Precio ya arrancaba cerrada sin filtro. Verificado en la barra de escritorio y en el panel de celular.
 
 ### VA-94 · Detalle: título tan grande como el precio y categoría como link al filtro
 - **Hoy** (`app/planes/plane-details/[id]/page.tsx` l.259 y `app/spareparts/sparepart-details/[id]/page.tsx` l.267): `<h1>` en `text-xl font-bold` y el precio en `text-2xl font-black`.
@@ -1253,6 +1263,8 @@ Notas para cuando se encare, a partir de lo que ya existe:
   - Mismo cambio en el detalle de hangar si aplica (tipo de publicación); confirmarlo con el socio, no está en el pedido.
 - **Aceptación:** a 375 y 1280 px, título y precio del mismo tamaño; tocar la categoría lleva a `/planes` (o `/spareparts`) con ese filtro aplicado y la sección abierta (VA-31).
 
+**Estado (14/10/2026):** ✅ hecho en local (commit `f12b03e`). Título `text-2xl` (como el precio) con `break-words`. `components/ui/listing/CategoryLinks.tsx` debajo del título: avión → `/planes?category=<id>` (ej. "Monomotor Turbohélice"); repuesto → "Categoría › Subcategoría", cada una con su link a `/spareparts?category=<id>`. Hangares no se tocó. Verificado a 375 y 1280 px (24 px los dos) y que el link lleva al listado filtrado.
+
 ### P3 — Prioridad baja
 
 ### VA-95 · Comparador: cerrar la bandeja de una con una X a la derecha
@@ -1260,7 +1272,11 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - **Hacer:** en `components/ui/compare/CompareTray.tsx`, botón X a la derecha (44 px, `aria-label="Cerrar comparador"`) que vacía la selección. Agregar `clearCompare()` en `lib/compare-store.ts` (borra `localStorage` con try/catch y avisa a los demás componentes y pestañas, como `removeFromCompare`). Al vaciarse, la bandeja y su espaciador desaparecen. Sin confirmación (se vuelve a armar en dos clics); ❓ si el socio prefiere confirmar, usar `ConfirmDialog`.
 - **Aceptación:** con 2 o 3 aeronaves en la bandeja, tocar la X → la bandeja desaparece y los botones "Agregado" de las tarjetas vuelven a "Comparar", también en otra pestaña abierta. A 375 px la X no tapa "Comparar (n)".
 
+**Estado (14/10/2026):** ✅ hecho en local (commit `e62d505`). X de 44 px a la derecha de "Comparar (n)" en escritorio y celular, con `clearCompare()` (ya existía en `lib/compare-store.ts`), sin confirmación. Verificado a 375 y 1280 px: la bandeja desaparece también en otra pestaña y las tarjetas vuelven a "Comparar".
+
 ### VA-96 · "Aeronaves destacadas": carrusel de 6
 - **Hoy:** `app/page.tsx` trae 8 aeronaves (`take: 8`) y `FeaturedAircraftCarousel` las muestra todas; "Últimas publicaciones" usa `slice(0, 6)` de la misma consulta.
 - **Hacer:** pasarle al carrusel de destacadas solo 6 (`slice(0, 6)`) y bajar el `take` a 6 si ya nada usa las 8. Mantener que sea carrusel (Swiper, flechas de VA-82) en escritorio y celular. Mientras no exista una marca de "destacada" en la base, siguen siendo las 6 más recientes activas (❓ D20: ¿destacadas elegidas a mano desde el admin o por plan? No es parte de este pedido).
 - **Aceptación:** la Home muestra 6 aeronaves en el carrusel de destacadas (contar los puntos/slides), a 375 y 1280 px.
+
+**Estado (14/10/2026):** ✅ hecho en local (commit `886a570`). **Causa real:** `FeaturedAircraftCarousel` elegía **2 al azar** de las 8 más recientes (`pickFeatured` → `slice(0, 2)`), por eso casi no se deslizaba. Ahora muestra las 6 más recientes activas, en orden aleatorio; la cantidad sale de `FEATURED_AIRCRAFT_COUNT` (`lib/constants.ts`) y la consulta de la Home trae 6 (Últimas publicaciones ya usaba 6). Verificado: 6 slides a 375 y 1280 px, sin scroll horizontal.
