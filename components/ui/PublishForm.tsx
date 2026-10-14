@@ -25,7 +25,6 @@ import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
 import { DescriptionTextarea } from "@/components/ui/DescriptionTextarea";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
 import { LAUNCH_PROMO } from "@/lib/promo";
-import { PhotoGuide } from "@/components/ui/publish/PhotoGuide";
 
 export interface CategoryOption { 
     id: string; 
@@ -1097,6 +1096,10 @@ export default function PublishForm({
                                                 Paso 3: Fotos y Documentos
                                             </h3>
                                             <p className="text-xs text-slate-500 mt-1">Mostrale al comprador el estado real de tu aeronave. La primera foto será la portada.</p>
+                                            {/* VA-126 (socio, 14/10): por ahora, sin las plantillas dibujadas de VA-124 (PhotoGuide queda en components/ui/publish). */}
+                                            <p className="mt-2 border-l-2 border-[#E70F1F] pl-3 text-xs text-slate-600">
+                                                Sacá buenas fotos: con luz de día, nítidas y de todos los ángulos (exterior, cabina, tablero y motor). Podés subir hasta {MAX_LISTING_IMAGES}.
+                                            </p>
                                         </div>
                                         
                                         <div>
@@ -1108,11 +1111,6 @@ export default function PublishForm({
                                                 <p className="text-xs font-semibold text-[#001F58] mb-2">Optimizando fotos {compressing.done}/{compressing.total}...</p>
                                             )}
                                             <FieldError message={fieldErrors.images} />
-
-                                            {/* VA-124: plantillas dibujadas de qué fotos sacar; siguen a la vista con las fotos cargadas. */}
-                                            <div className="mb-4">
-                                                <PhotoGuide uploaded={images.length} />
-                                            </div>
                                             
                                             <div className="flex flex-wrap gap-3">
                                                 {images.map((img, idx) => (

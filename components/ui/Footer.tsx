@@ -95,16 +95,6 @@ export function Footer() {
                   Planes y precios
                 </Link>
               </li>
-              {/*<li>
-                <Link href="/plans" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
-                  Planes para publicar
-                </Link>
-              </li>
-              <li>
-                <Link href="/ads" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
-                  Publicite su negocio
-                </Link>
-              </li>*/}
             </ul>
           </div>
 

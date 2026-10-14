@@ -150,7 +150,6 @@ export default async function SparePartDetailsPage({
     // Solo hay categoría raíz
     category = leafCategory;
   }
-  const categoryName = category?.name ?? null;
   const subcategoryName = subcategory?.name ?? null;
   // VA-108 / VA-117: debajo del título, solo el link a la categoría principal (listado filtrado).
   const categoryLinks = category ? [{ label: category.name, href: `/spareparts?category=${encodeURIComponent(category.id)}` }] : [];
@@ -158,10 +157,8 @@ export default async function SparePartDetailsPage({
   // Datos clave del resumen (VA-41): grilla de 2 columnas.
   const keyFacts: KeyFact[] = [
     { label: "Marca", value: sparePart.brand },
-    { label: "Nº de parte", value: sparePart.partNumber },
     { label: "Estado", value: sparePart.condition ? sparePartConditionLabel(sparePart.condition) : null },
     { label: "Stock", value: `${sparePart.stock} ${sparePart.stock === 1 ? "unidad" : "unidades"}` },
-    { label: "Categoría", value: categoryName },
     { label: "Subcategoría", value: subcategoryName },
   ];
 
