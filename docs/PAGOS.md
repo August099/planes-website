@@ -12,7 +12,7 @@ Este documento se completa a medida que se cierra cada etapa.
 | Base | `va_dev` (Postgres local) | **una base aparte** (ver abajo) | Supabase de producción |
 | Credenciales de MP | de prueba | de prueba | de producción |
 | Webhooks | no llegan (sin túnel) | sí: se prueban acá | sí |
-| Facturación | `BILLING_ENABLED=false` | `false` hasta tener TusFacturas de desarrollo | `true` |
+| Facturación | simulada (`BILLING_ENABLED=true` para ver el JSON) | simulada | real solo con `TUSFACTURAS_MODE=production` |
 
 **Los webhooks se prueban en el Preview, no en local** (decisión del 12/10/2026: sin túnel). El
 desarrollo sigue en local y cada etapa se despliega a `pre-production` para probar el flujo completo.
@@ -31,7 +31,11 @@ migraciones); en Vercel, Settings › Environment Variables, con el ambiente que
 | `MP_NOTIFICATION_URL` | opcional | opcional | no | `notification_url` de las preferencias. Si falta: `APP_URL` + `/api/webhooks/mercadopago`. |
 | `BILLING_ENABLED` | `false` | `false` | `true` | En `false` los pagos funcionan y la factura queda pendiente. |
 | `CRON_SECRET` | opcional | sí | sí | Cron diario de suscripciones (`vercel.json` → `/api/cron/subscriptions`). Vercel la manda como `Authorization: Bearer …`. Sin ella, el cron responde 401 y no cierra nada. |
-| `TUSFACTURAS_APIKEY`, `TUSFACTURAS_APITOKEN`, `TUSFACTURAS_USERTOKEN`, `TUSFACTURAS_PUNTO_VENTA` | — | desarrollo | producción | Etapa 4. |
+| `TUSFACTURAS_API_KEY`, `TUSFACTURAS_API_TOKEN`, `TUSFACTURAS_USER_TOKEN` | — | opcional (nunca se usan fuera de Producción) | producción | Credenciales de la cuenta **de producción** de TusFacturas. |
+| `TUSFACTURAS_WEBHOOK` | — | — | opcional | Token del header `TF-WebhookToken` (webhook de TusFacturas: todavía no implementado). |
+| `TUSFACTURAS_PUNTO_VENTA` | `3` | `3` | `3` | Punto de venta de ARCA. |
+| `TUSFACTURAS_MODE` | vacío | vacío | `production` | **VA-105:** solo con `production` (y `BILLING_ENABLED=true`, `VERCEL_ENV=production`, pago real y cuenta de MP real) se emite una factura real. Si no, se simula. |
+| `INVOICES_BUCKET` | opcional | opcional | opcional | Bucket **privado** de Supabase para los PDF. Por defecto `invoices`. |
 
 ## Base del Preview
 

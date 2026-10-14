@@ -130,35 +130,67 @@ avisos sin vencimiento (si el plan lo dice), página personalizada (cuenta Pro) 
 
 ## 7. Cupones
 
-- Se crean en `/admin/coupons` (porcentaje, monto fijo o 100%), con alcance (todo, aeronaves, repuestos,
-  destacados, banners), usos máximos, usos por persona y vigencia.
-- Se aplican en el checkout y el servidor los vuelve a validar al pagar.
+- Se crean en `/admin/coupons`: porcentaje (1 a 100), monto fijo o 100%, con alcance (todo, aeronaves,
+  repuestos, destacados, banners), usos máximos, usos por persona, **"Válido desde"** y **"Vence"** (fecha
+  y hora **de Argentina**). El código tiene de 4 a 20 letras, números o guiones; al tipearlo no importan
+  las mayúsculas ni los espacios.
+- Se aplican en el checkout y el servidor los vuelve a validar al pagar. Mensajes: "venció", "todavía no
+  está vigente", "ya alcanzó su límite de usos", "ya usaste este cupón…", "es solo para publicaciones
+  de aeronaves", "no existe o no está activo".
 - **El uso se cuenta recién cuando la compra se concreta** (pago aprobado o cupón del 100%). Un cupón que
   el usuario "guardó" en su perfil no cuenta como usado hasta que paga con él.
-- **Promoción de lanzamiento:** es el cupón **`LANZAMIENTO`** (100%, a crear en el admin). El formulario
-  de publicación de aviones muestra el código.
+- **Reserva de 30 minutos:** al ir a Mercado Pago con un cupón, ese uso queda reservado 30 minutos (el
+  link de pago vence a los 30 minutos). Si el pago se rechaza o el usuario lo abandona, el uso se libera.
+  Así, si queda **un solo uso** y dos personas pagan a la vez, solo una lo consigue (la otra ve "Este
+  cupón ya alcanzó su límite de usos").
+- **Reembolsos:** un pago reembolsado **no devuelve** el uso del cupón.
+- **Nunca da un total negativo:** si el descuento fijo supera el precio, el total es $0 y se activa sin
+  pagar. Lo que cobra Mercado Pago es exactamente el total que se mostró.
+- En la tabla del admin se ve la **vigencia**, cuántos usos quedan y **"Ver quién"** lo usó (usuario,
+  fecha y compra).
+- **Cupón de fundadores / lanzamiento:** lo crean los socios en el admin (por ejemplo `LANZAMIENTO`,
+  100%). El formulario de publicación de aviones muestra el código.
+- Verificación: `scripts/verify-coupons.ts` corre 23 casos contra la base local y borra todo al final.
 
 ---
 
-## 8. Facturación (Factura C con TusFacturasAPP) — en espera
+## 8. Facturación (Factura C con TusFacturasAPP)
 
-**Estado:** preparada pero **apagada** (`BILLING_ENABLED=false`) hasta tener la API de TusFacturas.
-Mientras tanto los pagos funcionan normal y cada pago aprobado deja su factura **pendiente**; cuando se
-active, se emiten.
+**Estado:** implementada. **Nunca emite facturas reales al probar** y **nunca factura una venta de $0**.
 
-Cómo va a funcionar (y lo que ya está):
+**¿Cuándo se emite una factura real?** Solo si se cumplen las **cinco** condiciones a la vez:
+1. `BILLING_ENABLED=true`;
+2. el sitio corre en **Producción de Vercel** (`VERCEL_ENV=production`; en Preview o local, nunca);
+3. `TUSFACTURAS_MODE=production`;
+4. Mercado Pago informó el pago como real (`live_mode`);
+5. la cuenta de Mercado Pago **no** es de prueba (las cuentas de prueba informan `live_mode` como real).
+
+Si falta cualquiera, la factura queda **"Simulada"**: se arma el JSON exacto que se mandaría a
+TusFacturas, se guarda (se ve en el admin) y **no se llama a TusFacturas**. Con `BILLING_ENABLED=false`
+ni siquiera se simula: la factura queda **pendiente**.
+
+Cómo funciona:
 - **Sin trámites para el usuario:** los datos de facturación se guardan en el perfil (**Ajustes →
-  "Datos de facturación"**) y en el checkout solo se ve el resumen. ✅ hecho.
-- **Una factura por pago**, nunca dos aunque Mercado Pago repita el aviso. ✅ la base lo garantiza.
-- **Emisión automática** apenas se aprueba el pago (también cada cobro de la suscripción). ⏳
-- **Descarga:** en la pantalla de estado del pago y en **"Mis compras"** del perfil (la columna
-  "Factura" ya está; aparece "Descargar" cuando haya PDF). ⏳
-- **PDF guardado** en un bucket privado de Supabase (el de TusFacturas es temporal). ⏳
-- **Errores:** reintento automático; si sigue fallando, mail al admin y botón "Reintentar factura" en el
-  admin. ✅ el botón y el registro de intentos ya están.
-- **Notas de crédito** por reembolsos (también parciales) o anulaciones. ⏳
-- **Tope del monotributo:** indicador en el admin con alerta por mail al llegar al porcentaje elegido. ✅
-  el indicador y la configuración ya están; la alerta por mail se activa con la facturación.
+  "Datos de facturación"**) y en el checkout solo se ve el resumen. Consumidor final sin datos, con DNI,
+  o empresa con CUIT y condición de IVA.
+- **Una factura por pago**, nunca dos aunque Mercado Pago repita el aviso.
+- **$0 no se factura:** un cupón del 100% no genera factura ("No corresponde" en Mis compras).
+- **Se factura lo cobrado:** con un cupón del 50%, la factura es por la mitad.
+- **Emisión automática** apenas se aprueba el pago (también cada cobro de la suscripción). Punto de venta
+  **3** (`TUSFACTURAS_PUNTO_VENTA`).
+- **Descarga:** "Descargar factura" en la pantalla de estado del pago y en **"Mis compras"**.
+- **PDF guardado** en un bucket privado de Supabase (`invoices`; el link de TusFacturas dura un día).
+- **Errores:** reintentos con espera creciente (también si TusFacturas pide esperar); el proceso diario
+  reintenta las pendientes; si sigue fallando, mail al admin. En el detalle del pago: **"Procesar ahora"**
+  / **"Reintentar factura"** y **"Descartar"** (hay que escribir DESCARTAR; para pruebas internas).
+- **Notas de crédito C** por reembolsos, también parciales, asociadas a la factura original. Si la
+  factura todavía no se había emitido: con reembolso total se descarta; con parcial, se ajusta el monto.
+- **Pagos de prueba:** quedan marcados "Prueba" en el admin y **no cuentan** para el tope del
+  monotributo.
+- **Tope del monotributo:** indicador en el admin con alerta por mail al llegar al porcentaje elegido.
+
+Para el **pago real de prueba** en producción: se hace con `BILLING_ENABLED=false` (la factura queda
+pendiente) y después se descarta desde el admin.
 
 ---
 
