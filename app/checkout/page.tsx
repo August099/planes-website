@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: Promise<{ planId?: string; listing?: string; coupon?: string }>;
+  searchParams: Promise<{ planId?: string; listing?: string; renew?: string; coupon?: string }>;
 }
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
@@ -30,7 +30,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
     redirect(`/login?callbackUrl=${encodeURIComponent(`/checkout?${query}`)}`);
   }
 
-  const product = await resolveProduct(user.id, { planId: params.planId, listing: params.listing });
+  const product = await resolveProduct(user.id, { planId: params.planId, listing: params.listing, renew: params.renew });
   const crumbs = [{ label: "Planes", href: "/plans" }, { label: "Pago" }];
 
   if ("error" in product) {
@@ -72,6 +72,12 @@ export default async function CheckoutPage({ searchParams }: Props) {
       {product.listing && (
         <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           Tu aviso <strong>“{product.listing.title}”</strong> quedó guardado y se publica cuando se acredite el pago.
+        </p>
+      )}
+      {/* VA-105: renovación paga de un aviso. */}
+      {product.renewal && (
+        <p className="mb-4 rounded-md border border-[#001F58]/15 bg-white px-4 py-3 text-sm text-slate-700">
+          Renovar tu aviso cuesta un porcentaje del precio de publicar. Cuando se acredite el pago, suma 45 días más.
         </p>
       )}
       <CheckoutForm

@@ -12,5 +12,7 @@ export async function getBillingSettings() {
     monotributoAnnualCap: s?.monotributoAnnualCap != null ? Number(s.monotributoAnnualCap) : null,
     alertThresholdPercent: s?.alertThresholdPercent ?? 80,
     lastCapAlertAt: s?.lastCapAlertAt ?? null,
+    // VA-105: renovar un aviso vencido cuesta este porcentaje del precio suelto.
+    renewalPercent: s?.renewalPercent ?? 70,
   };
 }

@@ -10,6 +10,7 @@ import { appUrl, mpClient, notificationUrl } from "@/lib/mercadopago";
 import { activatePurchase } from "@/lib/payments/activation";
 import { getBillingSettings } from "@/lib/billing-settings";
 import { startSubscription } from "@/lib/payments/subscriptions";
+import { renewalPrice, RENEWAL_DAYS } from "@/lib/renewal";
 
 // VA-92 · Etapa 1: compra de pago único con Checkout Pro. No hay planes de 1 publicación: una
 // publicación suelta se paga desde su aviso "pendiente de pago" al precio de ListingPrice. El producto y el precio se resuelven
@@ -55,13 +56,45 @@ export type CheckoutProduct = {
   planId: string | null;
   listingKind: ListingKind | null;
   listing: { type: ListingType; id: string; title: string; href: string } | null;
+  /** VA-105: renovación paga de un aviso vencido (no es un aviso pendiente de pago). */
+  renewal: { kind: ListingKind; id: string } | null;
 };
 
-export type ProductQuery = { planId?: string; listing?: string };
+export type ProductQuery = { planId?: string; listing?: string; renew?: string };
 
 /** Resuelve el producto a cobrar. Los avisos tienen que ser del usuario y estar pendientes de pago. */
 export async function resolveProduct(userId: string, q: ProductQuery): Promise<CheckoutProduct | { error: string }> {
   const prices = await getListingPrices();
+
+  // VA-105 (14/10): renovar un aviso (45 días más) al porcentaje del precio suelto de /admin/prices.
+  if (q.renew) {
+    const [type, id] = q.renew.split(":") as [ListingType, string];
+    const kind = LISTING_KIND[type];
+    if (!kind || kind === "HANGAR" || !id) return { error: "No encontramos el aviso a renovar." };
+    const where = { id, sellerId: userId };
+    const select = { id: true, title: true, status: true } as const;
+    const listing = kind === "AIRCRAFT" ? await prisma.aircraft.findFirst({ where, select }) : await prisma.sparePart.findFirst({ where, select });
+    if (!listing) return { error: "No encontramos el aviso a renovar." };
+    if (listing.status === "SOLD" || listing.status === "PENDING_PAYMENT") return { error: "Este aviso no se puede renovar." };
+    const price = await renewalPrice(userId, kind);
+    if (price.covered || price.amount <= 0) return { error: "Este aviso se renueva sin cargo desde tu perfil." };
+    const text = KIND_TEXT[kind];
+    return {
+      key: `renew:${type}:${id}`,
+      name: "Renovación de publicación",
+      description: `Renovación – ${text.one} – ${listing.title}`.slice(0, 250),
+      includes: `Tu aviso “${listing.title}”, ${RENEWAL_DAYS} días más`,
+      price: price.amount,
+      currency: "ARS",
+      scope: kind,
+      recurring: false,
+      billingPer: "mes",
+      planId: null,
+      listingKind: kind,
+      listing: null,
+      renewal: { kind, id },
+    };
+  }
 
   if (q.listing) {
     const [type, id] = q.listing.split(":") as [ListingType, string];
@@ -90,6 +123,7 @@ export async function resolveProduct(userId: string, q: ProductQuery): Promise<C
       planId: null,
       listingKind: kind,
       listing: { type, id, title: listing.title, href: text.detail(id) },
+      renewal: null,
     };
   }
 
@@ -110,12 +144,14 @@ export async function resolveProduct(userId: string, q: ProductQuery): Promise<C
     planId: plan.id,
     listingKind: null,
     listing: null,
+    renewal: null,
   };
 }
 
 export function productQueryFromKey(key: string): ProductQuery {
   if (key.startsWith("listing:")) return { listing: key.slice("listing:".length) };
   if (key.startsWith("plan:")) return { planId: key.slice("plan:".length) };
+  if (key.startsWith("renew:")) return { renew: key.slice("renew:".length) };
   return {};
 }
 
@@ -242,6 +278,7 @@ async function saveBillingProfile(userId: string, data: BillingData) {
  */
 /** Compra abierta (sin activar) del aviso pendiente, si la hay: se reutiliza al reintentar. */
 async function openPurchaseId(userId: string, product: CheckoutProduct): Promise<string | null> {
+  if (product.renewal) return (await openRenewalPurchase(prisma, userId, product.renewal.id))?.id ?? null;
   if (!product.listing) return null;
   const { type, id } = product.listing;
   const select = { purchase: { select: { id: true, activatedAt: true, userId: true } } };
@@ -271,6 +308,20 @@ async function upsertPurchase(
     paymentStatus: "PENDING" as const,
   };
 
+  // VA-105: una renovación tiene una sola compra abierta por aviso (se reutiliza al reintentar).
+  if (product.renewal) {
+    const open = await openRenewalPurchase(db, userId, product.renewal.id);
+    if (open) {
+      await db.purchase.update({ where: { id: open.id }, data });
+      return open.id;
+    }
+    const created = await db.purchase.create({
+      data: { userId, listingKind: product.listingKind, renewalKind: product.renewal.kind, renewalListingId: product.renewal.id, ...data },
+      select: { id: true },
+    });
+    return created.id;
+  }
+
   if (product.listing) {
     const { type, id } = product.listing;
     const current =
@@ -297,4 +348,12 @@ async function upsertPurchase(
     select: { id: true },
   });
   return created.id;
+}
+
+function openRenewalPurchase(db: Prisma.TransactionClient | typeof prisma, userId: string, listingId: string) {
+  return db.purchase.findFirst({
+    where: { userId, renewalListingId: listingId, activatedAt: null, paymentStatus: { in: ["PENDING", "REJECTED", "CANCELLED"] } },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
 }

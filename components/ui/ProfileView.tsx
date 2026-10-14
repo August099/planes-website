@@ -192,6 +192,11 @@ export function ProfileView({
     setLoadingRenewId(id);
     try {
       const res = await renewListingAction(id, type);
+      // VA-105: sin un plan que la cubra, la renovación se paga en el checkout.
+      if (!res.success && res.checkoutUrl) {
+        window.location.assign(res.checkoutUrl);
+        return;
+      }
       if (!res.success) {
         alert(res.error || "Ocurrió un error al intentar renovar.");
       }
@@ -656,7 +661,7 @@ export function ProfileView({
                         onClick={() => handleRenew(item.id, "aircraft")}
                         disabled={loadingRenewId === item.id}
                         className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-3 sm:px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-xs sm:text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
-                        title="Extender publicación 45 días más"
+                        title="Renovar 45 días más (sin cargo con un plan que lo incluya)"
                       >
                         {loadingRenewId === item.id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -770,7 +775,7 @@ export function ProfileView({
                         onClick={() => handleRenew(item.id, "sparepart")}
                         disabled={loadingRenewId === item.id}
                         className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-3 sm:px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-xs sm:text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
-                        title="Extender publicación 45 días más"
+                        title="Renovar 45 días más (sin cargo con un plan que lo incluya)"
                       >
                         {loadingRenewId === item.id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />

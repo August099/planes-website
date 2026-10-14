@@ -310,6 +310,9 @@ model Purchase {
   featuredDays      Int?
   featuredKind      ListingKind?
   featuredListingId String?
+  // VA-105 (14/10): renovación paga de un aviso vencido (tipo + id, sin FK, igual que los destacados).
+  renewalKind       ListingKind?
+  renewalListingId  String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @default(now()) @updatedAt
   couponId          String?
@@ -1188,6 +1191,8 @@ model BillingSettings {
   graceDays             Int       @default(7)
   // Reintentos de una factura con error antes de avisar al admin.
   maxInvoiceAttempts    Int       @default(5)
+  // VA-105 (14/10): renovar un aviso vencido cuesta este porcentaje del precio suelto (/admin/prices).
+  renewalPercent        Int       @default(70)
   updatedAt             DateTime  @default(now()) @updatedAt
 }
 

@@ -2,6 +2,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { noExpiryKinds, type ListingKind } from "@/lib/subscriptions";
+import { renewedExpiry } from "@/lib/renewal";
 
 // VA-92: entrega de lo comprado y su reversión. Idempotente: Purchase.activatedAt se marca con un
 // updateMany condicionado (activatedAt IS NULL) dentro de la misma transacción que acredita el
@@ -47,6 +48,19 @@ export async function activatePurchase(purchaseId: string, approvedAt = new Date
 
     // 2) Publicación suelta: el aviso "pendiente de pago" de esta compra se activa.
     await activateListings(tx, purchaseId, noExpiry);
+
+    // 2b) VA-105: renovación paga: el aviso vuelve a estar activo 45 días más (sin fecha si el plan
+    //     vigente deja ese tipo sin vencimiento).
+    if (p.renewalKind && p.renewalListingId) {
+      const model = p.renewalKind === "AIRCRAFT" ? tx.aircraft : tx.sparePart;
+      const current = await (model as typeof tx.aircraft).findFirst({ where: { id: p.renewalListingId, sellerId: p.userId }, select: { listingExpiresAt: true, status: true } });
+      if (current && current.status !== "SOLD") {
+        await (model as typeof tx.aircraft).update({
+          where: { id: p.renewalListingId },
+          data: { status: "ACTIVE", listingExpiresAt: noExpiry.has(p.renewalKind) ? null : renewedExpiry(current.listingExpiresAt) },
+        });
+      }
+    }
 
     // 3) Banners: pasan a revisión del admin.
     await tx.adBanner.updateMany({

@@ -56,3 +56,14 @@ export async function updateListingPriceAction(input: {
   revalidatePath("/admin/prices");
   return { ok: true };
 }
+
+// VA-105 (14/10): porcentaje del precio suelto que cuesta renovar un aviso vencido.
+export async function updateRenewalPercentAction(percent: unknown): Promise<{ ok: true } | { ok: false; error: string }> {
+  const admin = await getCurrentUser();
+  if (!admin?.isAdmin) return { ok: false, error: "No autorizado." };
+  const value = typeof percent === "number" ? percent : Number(percent);
+  if (!Number.isInteger(value) || value < 0 || value > 100) return { ok: false, error: "Tiene que ser un número entero entre 0 y 100." };
+  await prisma.billingSettings.upsert({ where: { id: "default" }, create: { id: "default", renewalPercent: value }, update: { renewalPercent: value } });
+  revalidatePath("/admin/prices");
+  return { ok: true };
+}
