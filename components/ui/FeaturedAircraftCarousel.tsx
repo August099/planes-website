@@ -15,6 +15,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { SectionTitle } from "@/components/ui/home/SectionTitle";
 import { CarouselArrow } from "@/components/ui/home/CarouselArrow";
+import { FEATURED_AIRCRAFT_COUNT } from "@/lib/constants";
 
 export interface FeaturedAircraftProps extends AircraftCardProps {
   viewsCount?: number;
@@ -33,8 +34,8 @@ function pickFeatured(aircrafts: FeaturedAircraftProps[]) {
     pool = pool.slice(0, 10);
   }
 
-  // Mezclamos aleatoriamente y tomamos 2
-  return pool.sort(() => 0.5 - Math.random()).slice(0, 2);
+  // Mezclamos aleatoriamente y tomamos las del carrusel (VA-96: 6; antes eran 2)
+  return pool.sort(() => 0.5 - Math.random()).slice(0, FEATURED_AIRCRAFT_COUNT);
 }
 
 const subscribeNothing = () => () => {};
