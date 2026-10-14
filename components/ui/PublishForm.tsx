@@ -281,7 +281,8 @@ export default function PublishForm({
         setAircraftForm((prev) => withCategory(prev, resolveCategoryId(selectedGroup, engine)));
     };
 
-    const [engines, setEngines] = useState<EngineInput[]>(editListing?.engines ?? []);
+    // VA-90: el alta arranca con un motor vacío, así no hay que buscar "Agregar Motor".
+    const [engines, setEngines] = useState<EngineInput[]>(editListing?.engines ?? [{ brand: "", model: "", engineHours: "", TBO: "", DURG: "", horsepower: "", description: "" }]);
     const [propellers, setPropellers] = useState<PropellerInput[]>(editListing?.propellers ?? []);
 
     // ESTADO: Formulario de repuestos
@@ -480,6 +481,10 @@ export default function PublishForm({
             }
             if (step === 2) {
                 if (!aircraftForm.avDescription.trim() && isRequired("avDescription", aircraftForm.categoryId)) return "La descripción de Aviónica es obligatoria.";
+                if (engines.length === 0 && isRequired("engines", aircraftForm.categoryId)) return "Agregá al menos un motor.";
+                for (let i = 0; i < engines.length; i++) {
+                    if (!engines[i].brand.trim() && !engines[i].model.trim()) return `Completá la marca o el modelo del Motor #${i + 1}.`;
+                }
                 for (let i = 0; i < engines.length; i++) {
                     if (!engines[i].TBO && isRequired("TBO", aircraftForm.categoryId)) return `El TBO del Motor #${i + 1} es obligatorio.`;
                 }
@@ -1011,7 +1016,7 @@ export default function PublishForm({
                                         {/* MOTOR */}
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
                                             <div className="flex justify-between items-center">
-                                                <h4 className="font-bold uppercase text-xs text-[#001F58]">Motor</h4>
+                                                <h4 className="font-bold uppercase text-xs text-[#001F58]">Motor{requiredMark("engines", aircraftForm.categoryId)}</h4>
                                                 <button type="button" onClick={addEngine} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#001F58]/10 text-[#001F58] hover:bg-[#001F58]/20 transition-colors">
                                                     <Plus className="w-4 h-4" /> Agregar Motor
                                                 </button>
@@ -1021,7 +1026,7 @@ export default function PublishForm({
                                                     <span className="absolute top-2 left-3 text-[10px] font-bold text-[#001F58] uppercase bg-blue-50 px-2 py-0.5 rounded">Motor #{idx + 1}</span>
                                                     <button type="button" onClick={() => removeEngine(idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold text-[10px] uppercase flex items-center gap-1"><Trash2 className="w-3 h-3" /> Quitar</button>
                                                     
-                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.brand`]} /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Modelo</label><input type="text" placeholder="Ej: O-320" value={eng.model} onChange={e => updateEngine(idx, "model", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO{requiredMark("TBO", aircraftForm.categoryId)}</label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.TBO`]} /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">DURG / SMOH (hs desde última revisión general)</label><input type="number" min="0" placeholder="Ej: 500" value={eng.DURG} onChange={e => updateEngine(idx, "DURG", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
@@ -1030,7 +1035,8 @@ export default function PublishForm({
                                                     <div className="col-span-2"><label className="text-[10px] font-bold uppercase mb-1 block">Descripción Adicional</label><input type="text" placeholder="Detalles de cilindros, overhaul o accesorios." value={eng.description} onChange={e => updateEngine(idx, "description", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                 </div>
                                             ))}
-                                            {engines.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">No hay motores agregados.</p>}
+                                            {engines.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">{isRequired("engines", aircraftForm.categoryId) ? "Agregá al menos un motor con el botón \u201cAgregar Motor\u201d." : "No hay motores agregados."}</p>}
+                                            <FieldError message={fieldErrors["engines"]} />
                                         </div>
 
                                         {/* HÉLICE */}

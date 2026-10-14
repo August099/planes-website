@@ -50,6 +50,8 @@ export default async function AdminUsersPage({ searchParams }: Props) {
         isFoundingMember: true,
         userType: true,
         userTypeConfirmed: true,
+        aircraftListingsBalance: true,
+        sparePartsListingsBalance: true,
         _count: { select: { aircrafts: true, spareParts: true, accounts: true } },
         Subscription: { select: { source: true, status: true, currentPeriodEnd: true, plan: { select: { name: true } } } },
       },
@@ -122,6 +124,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
               <th className="px-4 py-3">Alta</th>
               <th className="px-4 py-3">Ingreso</th>
               <th className="px-4 py-3 text-center">Avisos</th>
+              <th className="px-4 py-3 text-center" title="Avisos disponibles: avión / repuesto (VA-89)">Saldo</th>
               <th className="px-4 py-3">Tipo de cuenta</th>
               <th className="px-4 py-3">Miembro fundador</th>
               <th className="px-4 py-3">Plan</th>
@@ -158,6 +161,11 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td className="px-4 py-3 text-center text-slate-600">{u._count.aircrafts + u._count.spareParts}</td>
+                  <td className="px-4 py-3 text-center whitespace-nowrap text-slate-600 tabular-nums">
+                    <span title="Avión">{u.aircraftListingsBalance}</span>
+                    <span className="text-slate-400"> / </span>
+                    <span title="Repuesto">{u.sparePartsListingsBalance}</span>
+                  </td>
                   <td className="px-4 py-3">
                     <UserTypeSelect userId={u.id} userType={u.userType} confirmed={u.userTypeConfirmed} />
                   </td>

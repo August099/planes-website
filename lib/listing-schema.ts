@@ -148,6 +148,16 @@ export const aircraftListingSchema = z
     if (data.condition === "NUEVO" && data.year !== new Date().getFullYear()) {
       ctx.addIssue({ code: "custom", path: ["condition"], message: "Solo una aeronave del año actual puede ser nueva." });
     }
+    // VA-90: al menos un motor (lib/aircraft-rules.ts), y un motor cargado tiene marca o modelo
+    // (si no, una ficha vacía contaría como motor).
+    if (data.engines.length === 0 && isRequired("engines", data.categoryId)) {
+      ctx.addIssue({ code: "custom", path: ["engines"], message: "Agregá al menos un motor." });
+    }
+    data.engines.forEach((engine, i) => {
+      if (!engine.brand && !engine.model) {
+        ctx.addIssue({ code: "custom", path: ["engines", i, "brand"], message: "Completá la marca o el modelo del motor." });
+      }
+    });
     if (data.propellers.length > data.engines.length) {
       ctx.addIssue({ code: "custom", path: ["propellers"], message: "No puede haber más hélices que motores." });
     }

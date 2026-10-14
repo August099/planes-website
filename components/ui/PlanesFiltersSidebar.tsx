@@ -198,25 +198,26 @@ function FiltersSidebarForm({ categories, brands }: Props) {
     });
 
     const chips: { key: string; value: string | null; label: string }[] = [];
+    // Mismo orden que las secciones (VA-93): categoría, marca, año, precio, publica, provincia, condición, opciones.
     const usd = (v: string) => `USD ${Number(v).toLocaleString("es-AR")}`;
-    const min = searchParams.get("minPrice");
-    const max = searchParams.get("maxPrice");
-    if (min) chips.push({ key: "minPrice", value: null, label: `Desde ${usd(min)}` });
-    if (max) chips.push({ key: "maxPrice", value: null, label: `Hasta ${usd(max)}` });
-    const yMin = searchParams.get("minYear");
-    const yMax = searchParams.get("maxYear");
-    if (yMin) chips.push({ key: "minYear", value: null, label: `Año desde ${yMin}` });
-    if (yMax) chips.push({ key: "maxYear", value: null, label: `Año hasta ${yMax}` });
     for (const key of ["category", "brand", "model", "subModel"]) {
       for (const value of searchParams.getAll(key)) {
         chips.push({ key, value, label: nameOf.get(`${key}:${value}`) ?? value });
       }
     }
-    const prov = provinceBySlug(searchParams.get("province"));
-    if (prov) chips.push({ key: "province", value: null, label: provinceShortName(prov.name) });
+    const yMin = searchParams.get("minYear");
+    const yMax = searchParams.get("maxYear");
+    if (yMin) chips.push({ key: "minYear", value: null, label: `Año desde ${yMin}` });
+    if (yMax) chips.push({ key: "maxYear", value: null, label: `Año hasta ${yMax}` });
+    const min = searchParams.get("minPrice");
+    const max = searchParams.get("maxPrice");
+    if (min) chips.push({ key: "minPrice", value: null, label: `Desde ${usd(min)}` });
+    if (max) chips.push({ key: "maxPrice", value: null, label: `Hasta ${usd(max)}` });
     for (const value of searchParams.getAll("sellerType")) {
       chips.push({ key: "sellerType", value, label: SELLER_TYPE_LABELS[value] ?? value });
     }
+    const prov = provinceBySlug(searchParams.get("province"));
+    if (prov) chips.push({ key: "province", value: null, label: provinceShortName(prov.name) });
     for (const value of searchParams.getAll("condition")) {
       chips.push({ key: "condition", value, label: value === "NUEVO" ? "Nuevo" : "Usado" });
     }
@@ -290,16 +291,8 @@ function FiltersSidebarForm({ categories, brands }: Props) {
   );
 
   return (
-    <FilterShell activeCount={activeFilterCount} onClear={clearFilters} isOpenMobile={isOpenMobile} setIsOpenMobile={setIsOpenMobile}>
+    <FilterShell onApply={applyFilters} activeCount={activeFilterCount} onClear={clearFilters} isOpenMobile={isOpenMobile} setIsOpenMobile={setIsOpenMobile}>
       <AppliedFilterChips chips={appliedChips} onRemove={removeChip} />
-
-      <FilterSection title="Precio (USD)" count={counts.price} open={openSections.price} onToggle={() => toggleSection("price")}>
-        {rangeInputs(minPrice, setMinPrice, maxPrice, setMaxPrice, ["Mín", "Máx"], "Precio")}
-      </FilterSection>
-
-      <FilterSection title="Año" count={counts.year} open={openSections.year} onToggle={() => toggleSection("year")}>
-        {rangeInputs(minYear, setMinYear, maxYear, setMaxYear, ["Desde", "Hasta"], "Año")}
-      </FilterSection>
 
       <FilterSection title="Categoría" count={counts.category} open={openSections.category} onToggle={() => toggleSection("category")}>
         <div className="flex flex-col gap-0.5">
@@ -404,14 +397,30 @@ function FiltersSidebarForm({ categories, brands }: Props) {
         )}
       </FilterSection>
 
-      <FilterSection title="Provincia" count={counts.province} open={openSections.province} onToggle={() => toggleSection("province")}>
-        <ProvinceFilterSelect value={province} onChange={setProvince} />
+      <FilterSection title="Año" count={counts.year} open={openSections.year} onToggle={() => toggleSection("year")}>
+        {rangeInputs(minYear, setMinYear, maxYear, setMaxYear, ["Desde", "Hasta"], "Año")}
+      </FilterSection>
+
+      <FilterSection title="Precio (USD)" count={counts.price} open={openSections.price} onToggle={() => toggleSection("price")}>
+        {rangeInputs(minPrice, setMinPrice, maxPrice, setMaxPrice, ["Mín", "Máx"], "Precio")}
       </FilterSection>
 
       <FilterSection title="Publica" count={counts.seller} open={openSections.seller} onToggle={() => toggleSection("seller")}>
         <div className="flex flex-col gap-0.5">
           {Object.entries(SELLER_TYPE_LABELS).map(([value, label]) =>
             checkRow(`seller-${value}`, sellerTypes.includes(value), () => toggleValue(sellerTypes, setSellerTypes, value), label)
+          )}
+        </div>
+      </FilterSection>
+
+      <FilterSection title="Provincia" count={counts.province} open={openSections.province} onToggle={() => toggleSection("province")}>
+        <ProvinceFilterSelect value={province} onChange={setProvince} />
+      </FilterSection>
+
+      <FilterSection title="Condición" count={counts.condition} open={openSections.condition} onToggle={() => toggleSection("condition")}>
+        <div className="flex flex-col gap-0.5">
+          {["NUEVO", "USADO"].map((cond) =>
+            checkRow(`cond-${cond}`, condition.includes(cond), () => toggleValue(condition, setCondition, cond), cond === "NUEVO" ? "Nuevo" : "Usado")
           )}
         </div>
       </FilterSection>
@@ -423,22 +432,6 @@ function FiltersSidebarForm({ categories, brands }: Props) {
           {checkRow("rent", rent, () => setRent((v) => !v), OPTION_LABELS.rent)}
         </div>
       </FilterSection>
-
-      <FilterSection title="Condición" count={counts.condition} open={openSections.condition} onToggle={() => toggleSection("condition")}>
-        <div className="flex flex-col gap-0.5">
-          {["NUEVO", "USADO"].map((cond) =>
-            checkRow(`cond-${cond}`, condition.includes(cond), () => toggleValue(condition, setCondition, cond), cond === "NUEVO" ? "Nuevo" : "Usado")
-          )}
-        </div>
-      </FilterSection>
-
-      <button
-        type="button"
-        onClick={applyFilters}
-        className="w-full min-h-11 bg-primary text-white py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
-      >
-        Aplicar filtros
-      </button>
     </FilterShell>
   );
 }

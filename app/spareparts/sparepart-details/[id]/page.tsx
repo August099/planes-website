@@ -19,6 +19,7 @@ import { FeaturesCard } from "@/components/ui/listing/FeaturesCard";
 import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSections";
 import { PublishedLine } from "@/components/ui/listing/PublishedLine";
 import { sparePartConditionLabel, sparePartFeatures, sparePartSections } from "@/lib/listing-detail";
+import { CategoryLinks } from "@/components/ui/listing/CategoryLinks";
 import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
 import { DescriptionBody, ListingDescription } from "@/components/ui/listing/ListingDescription";
 import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
@@ -133,21 +134,28 @@ export default async function SparePartDetailsPage({
   const midCategory = leafCategory?.parent ?? null;
   const rootCategory = midCategory?.parent ?? null;
 
-  let categoryName: string | null = null;
-  let subcategoryName: string | null = null;
+  type CategoryRef = { id: string; name: string } | null;
+  let category: CategoryRef = null;
+  let subcategory: CategoryRef = null;
 
   if (rootCategory) {
     // Categoría (raíz) > Subcategoría (mid) > Sección (leaf)
-    categoryName = rootCategory.name;
-    subcategoryName = midCategory?.name ?? null;
+    category = rootCategory;
+    subcategory = midCategory;
   } else if (midCategory) {
     // Categoría (mid) > Subcategoría (leaf) — no hay Sección
-    categoryName = midCategory.name;
-    subcategoryName = leafCategory?.name ?? null;
+    category = midCategory;
+    subcategory = leafCategory;
   } else if (leafCategory) {
     // Solo hay categoría raíz
-    categoryName = leafCategory.name;
+    category = leafCategory;
   }
+  const categoryName = category?.name ?? null;
+  const subcategoryName = subcategory?.name ?? null;
+  // VA-94: links al listado filtrado debajo del título.
+  const categoryLinks = [category, subcategory]
+    .filter((c): c is NonNullable<CategoryRef> => c !== null)
+    .map((c) => ({ label: c.name, href: `/spareparts?category=${encodeURIComponent(c.id)}` }));
 
   // Datos clave del resumen (VA-41): grilla de 2 columnas.
   const keyFacts: KeyFact[] = [
@@ -288,7 +296,8 @@ export default async function SparePartDetailsPage({
               />
               <Separator />
               <div>
-                <h1 className="text-xl font-bold text-[#001F58]">{sparePart.title}</h1>
+                <h1 className="text-2xl font-bold text-[#001F58] break-words">{sparePart.title}</h1>
+                <CategoryLinks items={categoryLinks} />
                 <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
               </div>
               <Separator />

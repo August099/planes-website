@@ -115,3 +115,6 @@ export const FOUNDING_MEMBER_LIMIT = 50;
 // Imagen de reemplazo cuando una publicación no tiene foto o la foto no carga (VA-25).
 // Antes se usaba "/placeholder.png", que no existe en public/.
 export const PLACEHOLDER_IMAGE = "/placeholder.svg";
+
+// VA-96: cantidad de aeronaves del carrusel "Aeronaves destacadas" de la Home (las más recientes activas).
+export const FEATURED_AIRCRAFT_COUNT = 6;

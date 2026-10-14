@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso:** 73 de 74 tareas cerradas (72 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-63, VA-70 a VA-75 y VA-77 a VA-87 (VA-80 sin Mercado Pago ni facturación, que quedan para la Fase 6). Falta 1: VA-76 (parcial: PageSpeed en pre-production, Speed Insights en Vercel y el TBT de la Home). Nota del 10/10: el conteo anterior tenía un error de uno (la lista sumaba 69, no 68) (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso (14/10):** VA-89 a VA-96 hechas en local (pedidos del 14/10). **Antes:** 73 de 74 tareas cerradas (72 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-63, VA-70 a VA-75 y VA-77 a VA-87 (VA-80 sin Mercado Pago ni facturación, que quedan para la Fase 6). Falta 1: VA-76 (parcial: PageSpeed en pre-production, Speed Insights en Vercel y el TBT de la Home). Nota del 10/10: el conteo anterior tenía un error de uno (la lista sumaba 69, no 68) (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -219,6 +219,23 @@ Revisados a 375 y 1280 px. Los PDF (`/api/aircraft/<id>/pdf` y `/api/spareparts/
 | VA-105 (planes) | `fa5e78b` `3b271ff` `c213f0a` `e7d2de8` | **Planes reales:** Plan Repuestos (AR$ 50.000), Plan Aviones (AR$ 75.000) y Suscripción VA (AR$ 90.000), mensuales. `/plans` los muestra todos juntos. Lo que el plan tiene ilimitado no vence ni hay que renovarlo. "Página personalizada" pasa a llamarse **Página VA**, y "Cuenta verificada" sale del plan (la Suscripción VA no la tiene). Las cortesías pasaron a Suscripción VA. En `va_dev`: cargados y borrados los de prueba. | `/plans` |
 | VA-105 (renovación) | `dc4def6` | **Renovar cuesta el 70% del precio suelto** (editable en `/admin/prices`): "Renovar" lleva al pago y, al acreditarse, suma 45 días. Gratis con un plan que cubre ese tipo de aviso. Migraciones `va105_renewal_percent` y `va105_renewal_purchase`. 14 casos verificados. | Perfil → Renovar · `/admin/prices` |
 | VA-101 | — | **`/onboarding/account-type?from=publish`: no se pudo reproducir.** Probado en desarrollo y en el build de producción, con el tipo de cuenta confirmado y sin confirmar, entrando directo y desde "Vender", varias veces seguidas: cada acceso responde en menos de medio segundo (sin confirmar muestra la pantalla; confirmado redirige una sola vez a `/publish`) y no hay redirecciones en bucle. La causa más probable del "compila sin parar" era la de VA-92: `next build` y `next dev` compartiendo la carpeta `.next` (arreglado en `961f3d7`, los builds van a `.next-local`). Queda sin probar el alta con Google (necesita una cuenta nueva). Si vuelve a pasar, anotar la URL de origen y si había un build corriendo. | — |
+
+## Pedidos del socio del 14/10 (VA-89 a VA-96)
+
+Hechos en una sesión de Claude Code en la nube, contra una base local nueva (migraciones + `prisma/seed-taxonomy.ts`, `prisma/seed.ts` y `scripts/seed-guides.ts`), no contra `va_dev`. **Sin push**: la sesión no tenía permiso de escritura en GitHub; los commits van en un respaldo (`git bundle` + parches + README).
+
+| Tarea | Commit | Qué cambió | Dónde verlo |
+|---|---|---|---|
+| VA-91 | `ff85bd2` | **Filtros en celular**: el panel va en un portal a `<body>` (el `isolate` del `<main>` lo dejaba debajo del header) con "Aplicar filtros" fijo al pie; Escape cierra y el fondo no scrollea. Planes, repuestos y hangares. | `/planes` a 375 px → scrollear → Filtros. `components/ui/filters/FilterShell.tsx` |
+| VA-92 | `173fc40` | Repuestos: Categoría → Condición → Precio → Provincia; Precio ya no arranca abierta. | `/spareparts` |
+| VA-93 | `2095602` | Aviones: Categoría → Marca → Año → Precio → Publica → Provincia → Condición → Opciones. | `/planes` |
+| VA-94 | `f12b03e` | Detalle: título del tamaño del precio y categoría (repuestos: Categoría › Subcategoría) como link al listado filtrado. | Cualquier detalle. `components/ui/listing/CategoryLinks.tsx` |
+| VA-95 | `e62d505` | X a la derecha de la bandeja del comparador que la vacía de una. | `/planes` → Comparar en 2 tarjetas → X |
+| VA-96 | `886a570` | Destacadas: 6 en el carrusel (antes elegía 2 al azar). `FEATURED_AIRCRAFT_COUNT` en `lib/constants.ts`. | `/` |
+| VA-90 | `c6c9b16` | Al menos un motor (con marca o modelo) para publicar un avión, en el formulario y en el servidor; el alta arranca con un motor vacío. Excepciones (D19) pendientes. | `/publish` → paso 2 |
+| VA-89 | `f046424` | **Saldo de lanzamiento**: cuentas creadas hasta el 2/12/2026 (hora Argentina) con al menos 1 aviso de avión y 1 de repuesto; registro por email y Google; migración para las existentes; columna "Saldo" en `/admin/users`. Sin textos para el usuario y sin descontar al publicar (D17/D18 a confirmar). | `/admin/users`. `lib/promo.ts`, `lib/launch-balance.ts`. **Producción:** `npm run migrate:deploy` |
+
+**Error de "doctype" en `npm run dev` (14/10, reportado por el socio):** no se pudo reproducir en un entorno limpio: con dependencias recién instaladas, migraciones aplicadas y semillas, `npm run dev` levanta y `/`, `/planes`, `/spareparts`, `/login`, `/services` y `/api/auth/session` responden bien (los únicos errores de consola son fotos de prueba de loremflickr sin red). Tampoco con la base apagada (da un error de Prisma, no de doctype) ni corriendo `next build` con `next dev` abierto. La causa más probable sigue siendo la del 11/10 (`ClientFetchError: Unexpected token '<', "<!DOCTYPE"…`): caché vieja en `.next/dev`. Pasos en la máquina del socio: cortar `npm run dev`, borrar `.next` (`Remove-Item -Recurse -Force .next`), `npm install`, `npx prisma generate`, `npm run migrate:deploy` contra `va_dev` (hay migraciones nuevas: VA-83, VA-85, VA-80, VA-84 y VA-89; si `va_dev` no las tiene, las páginas que las usan fallan) y volver a levantar. Si sigue, hace falta el texto exacto del error (consola del navegador o terminal). Detalle de paso: `prisma/seed.ts` no carga el `.env` (hay que correrlo con `npx tsx --env-file=.env prisma/seed.ts`).
 
 ## Bugs encontrados en el camino (fuera del plan)
 

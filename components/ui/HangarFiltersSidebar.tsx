@@ -120,7 +120,7 @@ function HangarFiltersForm() {
   const inputClass = "w-full px-2 py-2 border rounded-md text-sm bg-white";
 
   return (
-    <FilterShell activeCount={activeFilterCount} onClear={clearFilters} isOpenMobile={isOpenMobile} setIsOpenMobile={setIsOpenMobile}>
+    <FilterShell onApply={applyFilters} activeCount={activeFilterCount} onClear={clearFilters} isOpenMobile={isOpenMobile} setIsOpenMobile={setIsOpenMobile}>
       <AppliedFilterChips chips={appliedChips} onRemove={removeChip} />
 
       <FilterSection title="Tipo de publicación" count={counts.type} open={openSections.type} onToggle={() => toggleSection("type")}>
@@ -192,14 +192,6 @@ function HangarFiltersForm() {
           )}
         </div>
       </FilterSection>
-
-      <button
-        type="button"
-        onClick={applyFilters}
-        className="w-full min-h-11 bg-primary text-white py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
-      >
-        Aplicar filtros
-      </button>
     </FilterShell>
   );
 }
