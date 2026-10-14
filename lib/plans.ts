@@ -32,7 +32,9 @@ const getActivePlans = unstable_cache(
       where: { isActive: true, archivedAt: null, type: { not: "AD_BANNER" } },
       orderBy: [{ sortOrder: "asc" }, { price: "asc" }],
     }),
-  ["active-plans"],
+  // VA-105: clave nueva para no servir los planes de prueba cacheados (los reales se cargan con un
+  // script, que no puede invalidar el tag). Cambios desde /admin/plans invalidan con PLANS_TAG.
+  ["active-plans", "va105-reales"],
   { tags: [PLANS_TAG], revalidate: 3600 }
 );
 
