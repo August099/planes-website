@@ -41,14 +41,12 @@ export async function startSubscription(input: { userId: string; planId: string;
   if (price <= 0) return { ok: false, error: "Este plan no tiene precio configurado." };
 
   const current = await prisma.subscription.findUnique({ where: { userId: input.userId } });
+  // VA-121: con una suscripción vigente de Mercado Pago, suscribirse a otro plan es un cambio de
+  // plan inmediato (sin prorrateo): el actual sigue hasta que se aprueba el primer cobro del nuevo.
+  const changing = !!current && isSubscriptionCurrent(current) && current.source !== "MANUAL";
   if (current && isSubscriptionCurrent(current)) {
-    return {
-      ok: false,
-      error:
-        current.source === "MANUAL"
-          ? "Ya tenés un plan de cortesía vigente."
-          : "Ya tenés una suscripción vigente. Para cambiar de plan, cancelala y suscribite de nuevo al terminar el período.",
-    };
+    if (current.source === "MANUAL") return { ok: false, error: "Ya tenés un plan de cortesía vigente." };
+    if (current.planId === plan.id) return { ok: false, error: "Ya estás suscripto a este plan." };
   }
 
   const settings = await getBillingSettings();
@@ -89,6 +87,15 @@ export async function startSubscription(input: { userId: string; planId: string;
   });
   if (!preapproval.id || !preapproval.init_point) throw new Error("Mercado Pago no devolvió la suscripción.");
 
+  if (changing) {
+    // El plan actual no se toca: el nuevo queda pendiente hasta su primer cobro aprobado.
+    await prisma.subscription.update({
+      where: { id: subId },
+      data: { pendingPlanId: plan.id, pendingMpSubscriptionId: preapproval.id },
+    });
+    return { ok: true, redirectTo: preapproval.init_point };
+  }
+
   const now = new Date();
   const fields = {
     planId: plan.id,
@@ -103,6 +110,8 @@ export async function startSubscription(input: { userId: string; planId: string;
     grantedById: null,
     note: null,
     featuredCredits: 0,
+    pendingPlanId: null,
+    pendingMpSubscriptionId: null,
   };
   await prisma.subscription.upsert({ where: { userId: input.userId }, create: { id: subId, userId: input.userId, ...fields }, update: fields });
   return { ok: true, redirectTo: preapproval.init_point };
@@ -125,6 +134,19 @@ async function handlePreapproval(preapprovalId: string): Promise<Outcome> {
   if (!sub) return { status: "IGNORED", note: `Suscripción ${preapprovalId} sin registro asociado` };
 
   const status = pre.status ?? "pending";
+  // VA-121: preapproval de un cambio de plan que todavía no se pagó.
+  if (sub.pendingMpSubscriptionId === preapprovalId) {
+    if (status === "cancelled") {
+      await prisma.subscription.update({ where: { id: sub.id }, data: { pendingPlanId: null, pendingMpSubscriptionId: null } });
+      return { status: "PROCESSED", note: `Cambio de plan ${preapprovalId} cancelado: sigue el plan actual` };
+    }
+    return { status: "PROCESSED", note: `Cambio de plan ${preapprovalId}: ${status} (pendiente del primer cobro)` };
+  }
+  // Un preapproval anterior (reemplazado por un cambio de plan): no toca la suscripción vigente.
+  if (sub.mpSubscriptionId && sub.mpSubscriptionId !== preapprovalId) {
+    return { status: "IGNORED", note: `Preapproval anterior ${preapprovalId}: ${status}` };
+  }
+
   const data: Prisma.SubscriptionUpdateInput = { mpStatus: status, mpSubscriptionId: preapprovalId };
   if (status === "cancelled") {
     // Cancelada en MP (desde el perfil al terminar el período, desde la cuenta de MP o por MP):
@@ -160,8 +182,13 @@ async function getAuthorizedPayment(id: string): Promise<AuthorizedPayment> {
 async function handleAuthorizedPayment(authorizedPaymentId: string): Promise<Outcome> {
   const ap = await getAuthorizedPayment(authorizedPaymentId);
   if (!ap.preapproval_id) return { status: "IGNORED", note: `Cobro ${authorizedPaymentId} sin preapproval` };
-  const sub = await prisma.subscription.findUnique({ where: { mpSubscriptionId: ap.preapproval_id }, include: { plan: true, user: { select: { email: true, name: true } } } });
-  if (!sub) return { status: "IGNORED", note: `Cobro ${authorizedPaymentId}: suscripción ${ap.preapproval_id} desconocida` };
+  let sub = await prisma.subscription.findUnique({ where: { mpSubscriptionId: ap.preapproval_id }, include: { plan: true, user: { select: { email: true, name: true } } } });
+  // VA-121: primer cobro de un cambio de plan.
+  const pendingChange = sub
+    ? null
+    : await prisma.subscription.findUnique({ where: { pendingMpSubscriptionId: ap.preapproval_id }, include: { plan: true, user: { select: { email: true, name: true } } } });
+  if (!sub && !pendingChange) return { status: "IGNORED", note: `Cobro ${authorizedPaymentId}: suscripción ${ap.preapproval_id} desconocida` };
+  if (!sub) sub = pendingChange!;
 
   const mpPaymentId = ap.payment?.id != null ? String(ap.payment.id) : null;
   const paymentStatus = ap.payment?.status ?? null;
@@ -192,9 +219,14 @@ async function handleAuthorizedPayment(authorizedPaymentId: string): Promise<Out
     });
     if (!claimed) return { status: "PROCESSED", note: `Cobro ${authorizedPaymentId}: el pago ${mpPaymentId} ya estaba registrado` };
 
+    if (pendingChange) {
+      sub = await switchToPendingPlan(pendingChange.id, ap.preapproval_id);
+    }
+
     // Nuevo período: desde el fin del anterior si todavía no terminó (pago anticipado), si no desde hoy.
+    // VA-121: en un cambio de plan, el período nuevo arranca hoy (sin prorrateo).
     const now = new Date();
-    const start = sub.status === "ACTIVE" && sub.currentPeriodEnd > now ? sub.currentPeriodEnd : now;
+    const start = !pendingChange && sub.status === "ACTIVE" && sub.currentPeriodEnd > now ? sub.currentPeriodEnd : now;
     const end = addPeriod(start, sub.plan.billingInterval);
     await prisma.subscription.update({
       where: { id: sub.id },
@@ -227,9 +259,41 @@ async function handleAuthorizedPayment(authorizedPaymentId: string): Promise<Out
   const rejected = paymentStatus === "rejected" || ap.status === "recycling" || ap.status === "cancelled";
   if (rejected) {
     if (mpPaymentId) await recordPaymentStatus(mpPaymentId, sub.id, paymentStatus ?? ap.status ?? "rejected", ap);
+    // VA-121: si falla el primer cobro de un cambio de plan, el plan actual sigue igual (sin gracia).
+    if (pendingChange) return { status: "PROCESSED", note: `Cobro ${authorizedPaymentId}: rechazado el primer cobro del cambio de plan; sigue el plan actual` };
     return openGrace(sub);
   }
   return { status: "PROCESSED", note: `Cobro ${authorizedPaymentId}: ${ap.status ?? "?"} / pago ${paymentStatus ?? "sin pago"}` };
+}
+
+/**
+ * VA-121: el primer cobro del plan nuevo se aprobó. Se cancela en Mercado Pago el débito del plan
+ * anterior (para que no se cobren los dos) y la suscripción pasa al plan nuevo. Lo que quedaba del
+ * período anterior no se devuelve (decisión del socio, 14/10).
+ */
+async function switchToPendingPlan(subscriptionId: string, newPreapprovalId: string) {
+  const current = await prisma.subscription.findUniqueOrThrow({ where: { id: subscriptionId } });
+  if (current.mpSubscriptionId && current.mpSubscriptionId !== newPreapprovalId && current.mpStatus !== "cancelled") {
+    try {
+      await new PreApproval(mpClient()).update({ id: current.mpSubscriptionId, body: { status: "cancelled" } });
+    } catch (error) {
+      // No frena el cambio: el preapproval viejo queda anotado en el log para cancelarlo a mano.
+      console.error(`[suscripciones] cambio de plan: no se pudo cancelar el débito anterior ${current.mpSubscriptionId} en MP:`, error);
+    }
+  }
+  return prisma.subscription.update({
+    where: { id: subscriptionId },
+    data: {
+      planId: current.pendingPlanId ?? current.planId,
+      mpSubscriptionId: newPreapprovalId,
+      mpStatus: "authorized",
+      pendingPlanId: null,
+      pendingMpSubscriptionId: null,
+      cancelAtPeriodEnd: false,
+      source: "MERCADOPAGO",
+    },
+    include: { plan: true, user: { select: { email: true, name: true } } },
+  });
 }
 
 async function claimApprovedPayment(mpPaymentId: string, data: Omit<Prisma.PaymentUncheckedCreateInput, "mpPaymentId">) {

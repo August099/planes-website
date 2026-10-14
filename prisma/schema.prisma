@@ -361,6 +361,11 @@ model Subscription {
   mpStatus             String?
   graceUntil           DateTime?
   lastPaymentAt        DateTime?
+  // VA-121: cambio de plan inmediato (sin prorrateo). El preapproval del plan nuevo queda acá hasta
+  // que Mercado Pago aprueba su primer cobro; recién ahí reemplaza al actual (que se cancela en MP).
+  // Si el usuario no completa el pago, sigue con su plan de siempre.
+  pendingPlanId           String?
+  pendingMpSubscriptionId String?           @unique
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
   plan                 Plan               @relation(fields: [planId], references: [id])

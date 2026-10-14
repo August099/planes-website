@@ -1,17 +1,29 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Zap, ArrowRight, ShieldCheck, Repeat } from "lucide-react";
+import { Check, Zap, ShieldCheck, Repeat } from "lucide-react";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { LaunchPromoNote } from "@/components/ui/LaunchPromoNote";
 import type { PlanCard, SinglePrices } from "@/lib/plans";
+import { getMyPlanStateAction, type MyPlanState } from "@/app/actions/plan-state-actions";
+import { PlanCardAction } from "./PlanCardAction";
 
 // VA-80: las tarjetas vienen armadas del servidor (lib/plans.ts): los planes activos que se editan
 // en /admin/plans. VA-92: el precio de una publicación suelta va como referencia, no como plan.
 // VA-105 (pedido del socio, 14/10): todos los planes juntos, sin pestañas de aviones y repuestos.
 export function PlansClient({ plans, single }: { plans: PlanCard[]; single: SinglePrices }) {
   const currentPlans = plans;
+  // VA-121: la suscripción del usuario se pide en el navegador (la página es estática).
+  const [myPlan, setMyPlan] = useState<MyPlanState>(null);
+  useEffect(() => {
+    getMyPlanStateAction()
+      .then(setMyPlan)
+      .catch(() => {
+        // Sin datos de la suscripción, quedan los botones de siempre.
+      });
+  }, []);
 
   return (
     <main className="relative isolate overflow-hidden min-h-screen">
@@ -165,17 +177,7 @@ export function PlansClient({ plans, single }: { plans: PlanCard[]; single: Sing
                 ))}
               </ul>
 
-              <Link
-                href={`/checkout?planId=${plan.id}`}
-                className={`w-full py-3 px-4 rounded-xl font-medium text-sm text-center transition-all duration-200 flex items-center justify-center gap-2 ${
-                  plan.popular
-                    ? "bg-red-600 hover:bg-red-700 text-white shadow-md"
-                    : "bg-[#001F58] hover:bg-[#001F58]/90 text-white shadow-sm"
-                }`}
-              >
-                <span>{plan.buttonText}</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              <PlanCardAction plan={plan} state={myPlan} onStateChange={setMyPlan} />
             </div>
           ))}
         </div>

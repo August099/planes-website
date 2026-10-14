@@ -7,6 +7,7 @@ import { getBillingSettings, resolveProduct } from "@/lib/payments/checkout";
 import { CheckoutForm, type BillingDefaults } from "@/components/checkout/CheckoutForm";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { getSubscriptionSummary } from "@/lib/subscriptions";
 
 export const metadata: Metadata = {
   title: "Pago",
@@ -52,10 +53,14 @@ export default async function CheckoutPage({ searchParams }: Props) {
     );
   }
 
-  const [profile, settings] = await Promise.all([
+  const [profile, settings, subscription] = await Promise.all([
     prisma.billingProfile.findUnique({ where: { userId: user.id } }),
     getBillingSettings(),
+    product.recurring ? getSubscriptionSummary(user.id) : null,
   ]);
+  // VA-121: con una suscripción vigente, pagar otro plan es un cambio de plan inmediato.
+  const changingFrom =
+    subscription?.active && !subscription.courtesy && subscription.planId !== product.planId ? subscription.planName : null;
   const defaults: BillingDefaults = profile
     ? {
         kind: profile.kind,
@@ -72,6 +77,13 @@ export default async function CheckoutPage({ searchParams }: Props) {
       {product.listing && (
         <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           Tu aviso <strong>“{product.listing.title}”</strong> quedó guardado y se publica cuando se acredite el pago.
+        </p>
+      )}
+      {changingFrom && (
+        <p className="mb-4 border-l-2 border-[#E70F1F] bg-white px-4 py-3 text-sm text-slate-700">
+          <strong className="text-[#001F58]">Cambio de plan:</strong> este plan reemplaza a <strong>{changingFrom}</strong> apenas se
+          apruebe el primer pago, y se deja de cobrar el anterior. Lo que queda del período actual no se devuelve. Si no completás el
+          pago, seguís con tu plan de siempre.
         </p>
       )}
       {/* VA-105: renovación paga de un aviso. */}

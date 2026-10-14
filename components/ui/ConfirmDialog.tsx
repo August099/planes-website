@@ -10,6 +10,7 @@ export function ConfirmDialog({
   eyebrow = "Confirmar",
   children,
   confirmLabel,
+  cancelLabel = "Cancelar",
   requireText,
   pending = false,
   error,
@@ -22,6 +23,7 @@ export function ConfirmDialog({
   eyebrow?: string;
   children?: React.ReactNode;
   confirmLabel: string;
+  cancelLabel?: string;
   requireText?: string;
   pending?: boolean;
   error?: string | null;
@@ -79,7 +81,7 @@ export function ConfirmDialog({
             disabled={pending}
             className="rounded-md px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
           >
-            Cancelar
+            {cancelLabel}
           </button>
           <button
             type="button"
