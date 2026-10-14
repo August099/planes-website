@@ -111,7 +111,8 @@ export const AIRCRAFT_FIELDS: AircraftField[] = [
   },
   { key: "category", section: "general", label: "Categoría", inDetail: "summary", value: (a) => text(a.category?.name) },
   { key: "condition", section: "general", label: "Estado", inDetail: "summary", value: (a) => AIRCRAFT_CONDITION_LABELS[a.condition] ?? a.condition },
-  { key: "plate", section: "general", label: "Matrícula", inDetail: "summary", value: (a) => text(a.plate)?.toUpperCase(), compareEmpty: "No informada" },
+  // VA-113 (D13): la matrícula va en la ficha de abajo (si se cargó), no en "Datos de la aeronave".
+  { key: "plate", section: "general", label: "Matrícula", inDetail: "row", value: (a) => text(a.plate)?.toUpperCase(), compareEmpty: "No informada" },
   { key: "description", section: "general", label: "Descripción", inDetail: "none", value: (a) => text(a.description) },
 
   // Aviónica, equipamiento, exterior, interior, implementos

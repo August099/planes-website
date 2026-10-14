@@ -130,7 +130,8 @@ export default async function PlaneDetailsPage({
   const listingLocation = [aircraft.city, aircraft.province].filter(Boolean).join(", ");
 
   // VA-83: los datos del resumen salen de la misma lista que la ficha y el comparador.
-  const keyFacts: KeyFact[] = AIRCRAFT_FIELDS.filter((f) => f.inDetail === "summary").map((f) => ({ label: f.label, value: f.value?.(aircraft) }));
+  // VA-113: "Estado" no va en "Datos de la aeronave" (sigue en la vista de impresión y el comparador).
+  const keyFacts: KeyFact[] = AIRCRAFT_FIELDS.filter((f) => f.inDetail === "summary" && f.key !== "condition").map((f) => ({ label: f.label, value: f.value?.(aircraft) }));
   // Recuadro "Motor" junto a las fotos: marca, modelo y TBO, en ese orden (pedido del socio, 9/10).
   // Todos los datos del motor siguen en la ficha de abajo.
   const engineSummary: KeyFact[] | null = singleEngine
