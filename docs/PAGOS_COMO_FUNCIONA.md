@@ -17,14 +17,27 @@ _Última actualización: 13/10/2026._
 | Qué | Cómo se paga | Dónde se configura el precio |
 |---|---|---|
 | **Publicación suelta** (un avión, un repuesto) | Pago único, al terminar el formulario de publicación | `/admin/prices` (precio individual) |
-| **Pack** (por ejemplo "Plan 3 Aviones") | Pago único; suma saldo de publicaciones | `/admin/plans` |
-| **Suscripción** (por ejemplo "Profesional") | Débito automático mensual o anual | `/admin/plans` |
+| **Suscripción** | Débito automático mensual | `/admin/plans` |
+| **Renovación** de un aviso (45 días más) | Pago único, desde "Renovar" en el perfil | `/admin/prices` (porcentaje, 70%) |
+| **Pack** (hoy no hay ninguno a la venta) | Pago único; suma saldo de publicaciones | `/admin/plans` |
 | **Destacado** (VA-95, en construcción) | Pago único por 7 días | `/admin/prices` |
 | **Banner** (VA-103, oculto por ahora) | Se cobra después de que el admin aprueba la solicitud | `/admin/plans` (tipo banner) |
 
-**Dónde se ofrecen los planes:** `/plans` (link "Planes y precios" en el footer) y avisos discretos para
-quien no tiene plan: en "Mis publicaciones", en su perfil (beneficios de la cuenta Pro) y al publicar el
-2.º aviso sin plan, con el ahorro del pack más conveniente frente a la publicación suelta.
+**Los planes reales (socio, 14/10)**, todos mensuales:
+
+| Plan | Precio | Incluye | No vence ni se renueva | Página VA | "Cuenta verificada" |
+|---|---|---|---|---|---|
+| Plan Repuestos | AR$ 50.000 | repuestos ilimitados | los repuestos | no | no |
+| Plan Aviones | AR$ 75.000 | aviones ilimitados | los aviones | no | no |
+| Suscripción VA | AR$ 90.000 | todo ilimitado | todo | sí | no |
+
+Se cargan con `scripts/seed-real-plans.ts` (sin `--apply` solo informa). **"Sin vencimiento" vale solo
+para lo que el plan tiene ilimitado:** con el Plan Repuestos, los aviones siguen venciendo y su
+renovación se cobra. Al empezar, cambiar o terminar un plan, las fechas de los avisos se ajustan solas.
+
+**Dónde se ofrecen los planes:** `/plans` (todos juntos, sin pestañas; link "Planes y precios" en el
+footer) y avisos discretos para quien no tiene plan: en "Mis publicaciones" y en su perfil (beneficios de
+la Página VA).
 
 **No existen planes de 1 publicación.** Quien quiere publicar una sola cosa la paga al terminar el
 formulario, al precio individual. En `/plans` ese precio aparece como referencia.
@@ -116,11 +129,16 @@ avisos sin vencimiento (si el plan lo dice), página personalizada (cuenta Pro) 
 
 ---
 
-## 6. Cuenta Pro y planes de cortesía
+## 6. Página VA, insignia y planes de cortesía
 
-- **Cuenta Pro** = suscripción vigente a un plan con **página personalizada**. Tiene portada, logo,
-  nombre comercial y contacto propios en el perfil, y la insignia **"Cuenta verificada"** (solo la tienen
-  las cuentas Pro). Si además es miembro fundador, se ve **"Miembro fundador"** al lado.
+- **Página VA** (antes "página personalizada" o "cuenta Pro") = suscripción vigente a un plan que la
+  incluye (hoy, Suscripción VA). Tiene portada, logo, nombre comercial y contacto propios en el perfil.
+  Si además es miembro fundador, se ve **"Miembro fundador"** al lado.
+- **"Cuenta verificada"** ya no viene con la Página VA: la da el interruptor "Insignia de vendedor
+  verificado" del plan. Hoy ningún plan la incluye.
+- **Renovar un aviso:** cuesta el **70%** del precio suelto (editable en `/admin/prices`): se paga en el
+  checkout y, cuando se acredita, el aviso suma 45 días. Es gratis si el plan vigente deja ese tipo de
+  aviso sin vencimiento. Los cupones de renovación (100%) sirven para esto.
 - **Plan de cortesía:** el admin lo asigna en `/admin/users` → columna "Plan" → **"Asignar plan de
   cortesía"** (plan, vencimiento y nota). No se cobra ni se renueva, no cuenta en ingresos ni en los
   KPIs, y al vencer el usuario pierde los beneficios. Se puede **"Quitar"**. No pisa una suscripción paga
