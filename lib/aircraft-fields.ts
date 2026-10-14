@@ -52,6 +52,8 @@ export interface AircraftField<T = AircraftDetail> {
   best?: Best;
   inDetail: "row" | "feature" | "summary" | "none";
   helpHref?: string;
+  /** Texto del comparador cuando no hay dato (si no, "—"). VA-105 · 5.8: la matrícula es opcional. */
+  compareEmpty?: string;
   /** Solo se muestra si la condición se cumple (por ejemplo, implementos solo en Agrícola). */
   when?: (a: T) => boolean;
 }
@@ -109,7 +111,7 @@ export const AIRCRAFT_FIELDS: AircraftField[] = [
   },
   { key: "category", section: "general", label: "Categoría", inDetail: "summary", value: (a) => text(a.category?.name) },
   { key: "condition", section: "general", label: "Estado", inDetail: "summary", value: (a) => AIRCRAFT_CONDITION_LABELS[a.condition] ?? a.condition },
-  { key: "plate", section: "general", label: "Matrícula", inDetail: "summary", value: (a) => text(a.plate)?.toUpperCase() },
+  { key: "plate", section: "general", label: "Matrícula", inDetail: "summary", value: (a) => text(a.plate)?.toUpperCase(), compareEmpty: "No informada" },
   { key: "description", section: "general", label: "Descripción", inDetail: "none", value: (a) => text(a.description) },
 
   // Aviónica, equipamiento, exterior, interior, implementos

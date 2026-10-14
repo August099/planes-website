@@ -1149,9 +1149,9 @@ export default function PublishForm({
                                                     <FieldError message={fieldErrors.certDate} />
                                                 </div>
                                                 <div className="sm:col-span-2">
-                                                    <label className="block text-[10px] font-bold uppercase mb-1">Matrícula</label>
+                                                    <label className="block text-[10px] font-bold uppercase mb-1">Matrícula <span className="font-normal normal-case text-slate-500">(opcional)</span></label>
                                                     <input type="text" placeholder="Ej: LV-XXX" value={aircraftForm.plate} onChange={e => setAircraftForm({...aircraftForm, plate: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 uppercase bg-white" />
-                                                    <p className="text-[10px] text-slate-500 mt-1">La matrícula es únicamente para control interno administrativo, NO será pública.</p>
+                                                    <p className="text-[10px] text-slate-500 mt-1">Opcional. Si la cargás, se muestra en el aviso, en el PDF y en el comparador.</p>
                                                 </div>
                                             </div>
 
