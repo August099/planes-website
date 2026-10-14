@@ -7,6 +7,16 @@ import { Heart } from "lucide-react";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { UnavailableFavoriteCard } from "@/components/ui/UnavailableFavoriteCard";
+import { isListingActive } from "@/lib/listing-filters";
+
+// VA-105 · 5.3: por qué un favorito ya no está disponible.
+function unavailableReason(listing: { status: string; listingExpiresAt: Date | null }) {
+  if (listing.status === "SOLD") return "Se vendió.";
+  if (listing.status === "PAUSED") return "El vendedor la pausó.";
+  if (listing.status === "PENDING_PAYMENT") return "La publicación no está activa.";
+  return "La publicación venció.";
+}
 
 export default async function FavoritesPage() {
   const user = await getCurrentUser();
@@ -32,6 +42,14 @@ export default async function FavoritesPage() {
       },
     },
   });
+
+  // VA-105 · 5.3: los que ya no están disponibles van al final, grisados (no se borran solos).
+  const now = new Date();
+  const isAvailable = (f: (typeof favorites)[number]) => {
+    const listing = f.aircraft ?? f.sparePart;
+    return listing ? isListingActive(listing, now) : false;
+  };
+  const sorted = [...favorites.filter(isAvailable), ...favorites.filter((f) => !isAvailable(f))];
 
   return (
     <main className="relative isolate min-h-[calc(100vh-80px)] container mx-auto px-4 py-8 pb-16">
@@ -59,7 +77,20 @@ export default async function FavoritesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-          {favorites.map((fav) => {
+          {sorted.map((fav) => {
+            const listing = fav.aircraft ?? fav.sparePart;
+            if (listing && !isAvailable(fav)) {
+              return (
+                <UnavailableFavoriteCard
+                  key={`fav-unavailable-${listing.id}`}
+                  id={listing.id}
+                  type={fav.aircraft ? "AIRCRAFT" : "SPARE_PART"}
+                  title={listing.title}
+                  imageUrl={listing.images[0]?.url ?? PLACEHOLDER_IMAGE}
+                  reason={unavailableReason(listing)}
+                />
+              );
+            }
             if (fav.aircraft) {
               return (
                 <AircraftCard
