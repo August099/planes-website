@@ -19,6 +19,7 @@ import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSec
 import { PublishedLine } from "@/components/ui/listing/PublishedLine";
 import { aircraftFeatures, aircraftSections, showsEngineSummary } from "@/lib/listing-detail";
 import { AIRCRAFT_FIELDS } from "@/lib/aircraft-fields";
+import { CategoryLinks } from "@/components/ui/listing/CategoryLinks";
 import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
 import { DescriptionBody, ListingDescription } from "@/components/ui/listing/ListingDescription";
 import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
@@ -256,7 +257,10 @@ export default async function PlaneDetailsPage({
               <PlaneActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url} />
               <Separator />
               <div>
-                <h1 className="text-xl font-bold text-[#001F58]">{aircraft.title}</h1>
+                <h1 className="text-2xl font-bold text-[#001F58] break-words">{aircraft.title}</h1>
+                {aircraft.category && (
+                  <CategoryLinks items={[{ label: aircraft.category.name, href: `/planes?category=${encodeURIComponent(aircraft.category.id)}` }]} />
+                )}
                 <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
               </div>
               <Separator />
