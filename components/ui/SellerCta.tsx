@@ -29,9 +29,6 @@ export function SellerCta() {
 
         <div className="flex max-w-xl flex-col items-start space-y-3 px-6 py-8 sm:space-y-4 sm:px-10 md:py-12">
           <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            <span aria-hidden className="mr-2 inline-block font-black tracking-tighter text-[#FF5A64]">
-              {"//"}
-            </span>
             ¿Querés vender tu aeronave?
           </h2>
 
