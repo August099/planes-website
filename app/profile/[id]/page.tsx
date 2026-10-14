@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ProfileView, type ProfileCoupon } from "@/components/ui/ProfileView";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { getMissingProfileFieldsCached } from "@/lib/cached-data";
-import { getSubscriptionSummary, hasCustomPage } from "@/lib/subscriptions";
+import { getSubscriptionSummary, hasCustomPage, hasVerifiedBadge } from "@/lib/subscriptions";
 import { getUserPurchases } from "@/lib/purchases";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
@@ -92,6 +92,7 @@ export default async function ProfilePage({ params }: Props) {
         logoUrl: rawProfileUser.logoUrl,
         website: rawProfileUser.website,
         whatsapp: rawProfileUser.whatsapp,
+        verified: await hasVerifiedBadge(id),
       }
     : null;
 

@@ -514,12 +514,12 @@ export function ProfileView({
         </div>
       )}
 
-      {/* VA-94: CTA para el dueño sin plan Pro: beneficios de la página personalizada (discreto, sin pop-up). */}
+      {/* VA-94: CTA para el dueño sin plan: beneficios de la Página VA (discreto, sin pop-up). VA-105: "Pro" pasó a "Página VA". */}
       {isOwner && !storefront && !subscription?.active && (
         <aside className="flex flex-col gap-3 rounded-lg border border-[#001F58]/12 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-slate-700">
-            <span className="font-semibold text-[#001F58]">Con una cuenta Pro</span> tu perfil pasa a ser tu página: portada, logo, nombre
-            comercial, WhatsApp y la insignia “Cuenta verificada”.
+            <span className="font-semibold text-[#001F58]">Con la Página VA</span> tu perfil pasa a ser tu página: portada, logo, nombre
+            comercial y WhatsApp.
           </p>
           <Link href="/plans" className="shrink-0 text-sm font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
             Ver planes

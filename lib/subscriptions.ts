@@ -34,6 +34,15 @@ export async function hasCustomPage(userId: string): Promise<boolean> {
   return !!sub;
 }
 
+/** VA-105 (14/10): "Cuenta verificada" sale del plan (includesVerifiedBadge), no de la Página VA. */
+export async function hasVerifiedBadge(userId: string): Promise<boolean> {
+  const sub = await prisma.subscription.findFirst({
+    where: { ...currentSubscriptionWhere(userId), plan: { includesVerifiedBadge: true } },
+    select: { id: true },
+  });
+  return !!sub;
+}
+
 /** VA-80: el plan vigente del usuario hace que sus publicaciones no venzan. */
 export async function hasNoExpiryPlan(userId: string): Promise<boolean> {
   const sub = await prisma.subscription.findFirst({

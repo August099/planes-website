@@ -44,7 +44,7 @@ export async function updateProfileAction(formData: FormData) {
   // VA-87: datos de la página personalizada, solo con el beneficio del plan.
   const storefrontFields = ["businessName", "bio", "website", "whatsapp"].filter((f) => formData.has(f));
   if (storefrontFields.length > 0) {
-    if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye página personalizada.");
+    if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye la Página VA.");
     for (const field of storefrontFields) {
       const value = String(formData.get(field) ?? "").trim();
       dataToUpdate[field] = value === "" ? null : value.slice(0, field === "bio" ? 1500 : 200);
@@ -209,7 +209,7 @@ export async function changePasswordAction({ currentPassword, newPassword }: Cha
 export async function uploadStorefrontImageAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) throw new Error("UNAUTHENTICATED");
-  if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye página personalizada.");
+  if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye la Página VA.");
 
   const kind = formData.get("kind");
   if (kind !== "cover" && kind !== "logo") throw new Error("Imagen inválida.");

@@ -12,6 +12,8 @@ export type StorefrontData = {
   logoUrl: string | null;
   website: string | null;
   whatsapp: string | null;
+  // VA-105: insignia del plan (includesVerifiedBadge), aparte de la Página VA.
+  verified: boolean;
 };
 
 type Props = {
@@ -73,11 +75,13 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-2xl font-bold text-[#001F58] sm:text-3xl">{name}</h1>
-            <span className="inline-flex items-center gap-1 rounded-sm bg-[#001F58] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
-              <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
-              {/* Solo la tienen las cuentas Pro (plan con página personalizada; decisión del socio, 13/10). */}
-              Cuenta verificada
-            </span>
+            {storefront.verified && (
+              <span className="inline-flex items-center gap-1 rounded-sm bg-[#001F58] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
+                <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
+                {/* VA-105 (14/10): solo con un plan que incluye la insignia (la Suscripción VA no la tiene). */}
+                Cuenta verificada
+              </span>
+            )}
             {isFoundingMember && (
               <span className="inline-flex items-center gap-1 rounded-sm border border-amber-300 bg-amber-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-900">
                 <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-600" aria-hidden />
