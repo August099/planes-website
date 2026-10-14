@@ -71,7 +71,8 @@ export function purchaseStatusFor(mpStatus: string, refunded: number, amount: nu
   }
 }
 
-async function handlePayment(mpPaymentId: string): Promise<Outcome> {
+/** VA-125: también se usa al pedir el arrepentimiento, para reflejar el reembolso sin esperar al webhook. */
+export async function handlePayment(mpPaymentId: string): Promise<Outcome> {
   const mp = await new MpPayment(mpClient()).get({ id: mpPaymentId });
   const amount = Number(mp.transaction_amount ?? 0);
   const refunded = Number(mp.transaction_amount_refunded ?? 0);
@@ -151,7 +152,7 @@ async function invoiceNote(paymentId: string): Promise<string> {
  * factura todavía no se emitió (BILLING_ENABLED=false o en error), no hace falta nota de crédito:
  * total → la factura se descarta; parcial → se factura solo lo que quedó cobrado.
  */
-async function handleRefunds(paymentId: string, refunds: Array<{ id?: number | string; amount?: number }>, amount: number, refundedTotal: number): Promise<string> {
+export async function handleRefunds(paymentId: string, refunds: Array<{ id?: number | string; amount?: number }>, amount: number, refundedTotal: number): Promise<string> {
   const original = await prisma.invoice.findUnique({ where: { invoicedPaymentId: paymentId } });
   if (!original) return "reembolso sin factura";
   if (original.status === "PENDING" || original.status === "ERROR") {

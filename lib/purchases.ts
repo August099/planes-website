@@ -1,6 +1,7 @@
 import "server-only";
 import type { InvoiceStatus, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { withdrawalUntil } from "@/lib/payments/withdrawal";
 
 // VA-92 · Etapa 5: "Mis compras" del perfil. Une las compras de pago único (Purchase) y los cobros de
 // la suscripción (Payment con subscriptionId), con el estado del pago y de la factura.
@@ -13,6 +14,8 @@ export type PurchaseRow = {
   payment: { key: string; label: string; tone: "ok" | "wait" | "bad" | "muted" };
   invoice: { label: string; downloadHref: string | null } | null;
   href: string | null;
+  // VA-125: botón de arrepentimiento (pago aprobado, dentro de los 10 días y sin devolución pedida).
+  withdrawal: { paymentId: string; until: string } | null;
 };
 
 const PAYMENT: Record<PaymentStatus, PurchaseRow["payment"]> = {
@@ -53,7 +56,15 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
         activatedAt: true,
         payments: {
           where: { status: "approved" },
-          select: { invoices: { where: { kind: "FACTURA_C" }, select: { id: true, status: true, pdfPath: true } } },
+          select: {
+            id: true,
+            status: true,
+            amount: true,
+            refundedAmount: true,
+            approvedAt: true,
+            withdrawalRequestedAt: true,
+            invoices: { where: { kind: "FACTURA_C" }, select: { id: true, status: true, pdfPath: true } },
+          },
         },
       },
     }),
@@ -67,6 +78,8 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
         approvedAt: true,
         status: true,
         amount: true,
+        refundedAmount: true,
+        withdrawalRequestedAt: true,
         subscription: { select: { id: true, plan: { select: { name: true, billingInterval: true } } } },
         invoices: { where: { kind: "FACTURA_C" }, select: { id: true, status: true, pdfPath: true } },
       },
@@ -91,6 +104,7 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
             ? invoiceCell(invoice) ?? { label: "En preparación", downloadHref: null }
             : null,
       href: `/payment/status?purchase=${p.id}`,
+      withdrawal: withdrawalFor(p.payments[0]),
     };
   });
 
@@ -102,11 +116,26 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
       date: (pay.approvedAt ?? pay.createdAt).toISOString(),
       description: `Suscripción ${sub.plan.billingInterval === "YEARLY" ? "anual" : "mensual"} – Plan ${sub.plan.name}`,
       amount: Number(pay.amount),
-      payment: approved ? PAYMENT.APPROVED : pay.status === "rejected" ? PAYMENT.REJECTED : PAYMENT.IN_PROCESS,
+      payment: approved
+        ? PAYMENT.APPROVED
+        : pay.status === "refunded" || pay.status === "charged_back"
+          ? PAYMENT.REFUNDED
+          : pay.status === "rejected"
+            ? PAYMENT.REJECTED
+            : PAYMENT.IN_PROCESS,
       invoice: approved ? invoiceCell(pay.invoices[0]) ?? { label: "En preparación", downloadHref: null } : null,
       href: null,
+      withdrawal: withdrawalFor(pay),
     });
   }
 
   return rows.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function withdrawalFor(
+  pay: { id: string; status: string; amount: unknown; refundedAmount: unknown; approvedAt: Date | null; withdrawalRequestedAt: Date | null } | undefined
+): PurchaseRow["withdrawal"] {
+  if (!pay) return null;
+  const until = withdrawalUntil(pay);
+  return until ? { paymentId: pay.id, until: until.toISOString() } : null;
 }

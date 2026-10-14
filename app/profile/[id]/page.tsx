@@ -11,10 +11,13 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }
 
-export default async function ProfilePage({ params }: Props) {
+export default async function ProfilePage({ params, searchParams }: Props) {
   const { id } = await params;
+  // VA-125: /profile/<id>?tab=compras abre "Mis compras" (lo usa el botón de arrepentimiento).
+  const { tab } = await searchParams;
   const currentUser = await getCurrentUser();
   const isOwner = currentUser?.id === id;
 
@@ -162,6 +165,7 @@ export default async function ProfilePage({ params }: Props) {
       <Breadcrumbs items={[{ label: "Perfil" }, { label: rawProfileUser.name ?? "Usuario" }]} className="-mt-4 mb-2" />
 
       <ProfileView
+        initialTab={tab === "compras" && isOwner ? "purchases" : undefined}
         profileUser={profileUser}
         isOwner={isOwner}
         currentUserFavIds={currentUserFavIds}

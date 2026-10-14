@@ -66,6 +66,11 @@ export function Footer() {
                   Privacidad
                 </Link>
               </li>
+              <li>
+                <Link href="/arrepentimiento" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  Botón de arrepentimiento
+                </Link>
+              </li>
             </ul>
           </div>
 

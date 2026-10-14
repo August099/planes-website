@@ -119,6 +119,7 @@ interface Props {
   subscription?: SubscriptionSummary | null;
   // VA-92: "Mis compras" y datos de facturación guardados (solo el dueño).
   purchases?: PurchaseRow[];
+  initialTab?: "purchases";
   billingProfile?: { values: BillingProfileValues; saved: boolean } | null;
   // VA-105 · 3: "Cambiar contraseña" solo para cuentas con contraseña (las de Google la crean con
   // "Olvidé mi contraseña").
@@ -158,13 +159,14 @@ export function ProfileView({
   purchases = [],
   billingProfile = null,
   hasPassword = false,
+  initialTab,
 }: Props) {
   const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
   const missingDot = (field: ProfileField) =>
     isMissing(field) ? (
       <span className="ml-1 inline-block w-2 h-2 rounded-full bg-red-600 align-middle" aria-label="Falta completar" />
     ) : null;
-  const [activeTab, setActiveTab] = useState<"aircrafts" | "spareparts" | "coupons" | "purchases" | "edit">("aircrafts");
+  const [activeTab, setActiveTab] = useState<"aircrafts" | "spareparts" | "coupons" | "purchases" | "edit">(initialTab ?? "aircrafts");
   const [loadingSave, setLoadingSave] = useState(false);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);

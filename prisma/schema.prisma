@@ -1086,6 +1086,8 @@ model Payment {
   // prueba). Un pago de prueba nunca genera una factura real ni cuenta en el tope ni en los KPIs.
   liveMode       Boolean?
   isTest         Boolean       @default(false)
+  // VA-125: botón de arrepentimiento (hasta 10 días del pago): cuándo lo pidió el usuario.
+  withdrawalRequestedAt DateTime?
   raw            Json?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
