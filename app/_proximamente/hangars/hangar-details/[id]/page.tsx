@@ -136,7 +136,7 @@ export default async function HangarDetailPage({ params }: Props) {
         <div className="bg-amber-500 text-white text-xs font-semibold py-3 px-4 text-center flex items-center justify-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>Tu publicación está pausada o vencida y no es visible para el público.</span>
-          <Link href="/profile" className="underline font-bold hover:text-amber-100 ml-2">
+          <Link href={`/profile/${hangar.sellerId}`} className="underline font-bold hover:text-amber-100 ml-2">
             Ir a mi perfil
           </Link>
         </div>

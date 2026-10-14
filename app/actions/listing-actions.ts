@@ -82,7 +82,7 @@ export async function renewListingAction(id: string, type: "aircraft" | "sparepa
       revalidatePath(`/spareparts/sparepart-details/${id}`);
     }
 
-    revalidatePath("/profile");
+    revalidatePath("/profile/[id]", "page"); // "/profile" no existe: se revalidan los perfiles
     revalidatePath("/"); // VA-76: la Home es estática
     updateTag(RECOMMENDATIONS_TAG); // VA-88
     return { success: true };
@@ -131,7 +131,7 @@ export async function deleteListingAction(id: string, type: "AIRCRAFT" | "SPARE_
       documentUrls.map((url) => pathFromPublicUrl("document", url)).filter((p): p is string => !!p)
     );
 
-    revalidatePath("/profile");
+    revalidatePath("/profile/[id]", "page"); // "/profile" no existe: se revalidan los perfiles
     revalidatePath("/planes");
     revalidatePath("/spareparts");
     revalidatePath("/"); // VA-76: la Home es estática

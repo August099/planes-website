@@ -478,7 +478,7 @@ export async function updateListing(id: string, input: ListingInput): Promise<Li
     }
 
     revalidatePath("/");
-    revalidatePath("/profile");
+    revalidatePath("/profile/[id]", "page"); // "/profile" no existe: se revalidan los perfiles
     updateTag(RECOMMENDATIONS_TAG); // VA-88
     return { ok: true, id, url: listingUrl(listingType, id) };
   } catch (error) {
