@@ -198,25 +198,26 @@ function FiltersSidebarForm({ categories, brands }: Props) {
     });
 
     const chips: { key: string; value: string | null; label: string }[] = [];
+    // Mismo orden que las secciones (VA-93): categoría, marca, año, precio, publica, provincia, condición, opciones.
     const usd = (v: string) => `USD ${Number(v).toLocaleString("es-AR")}`;
-    const min = searchParams.get("minPrice");
-    const max = searchParams.get("maxPrice");
-    if (min) chips.push({ key: "minPrice", value: null, label: `Desde ${usd(min)}` });
-    if (max) chips.push({ key: "maxPrice", value: null, label: `Hasta ${usd(max)}` });
-    const yMin = searchParams.get("minYear");
-    const yMax = searchParams.get("maxYear");
-    if (yMin) chips.push({ key: "minYear", value: null, label: `Año desde ${yMin}` });
-    if (yMax) chips.push({ key: "maxYear", value: null, label: `Año hasta ${yMax}` });
     for (const key of ["category", "brand", "model", "subModel"]) {
       for (const value of searchParams.getAll(key)) {
         chips.push({ key, value, label: nameOf.get(`${key}:${value}`) ?? value });
       }
     }
-    const prov = provinceBySlug(searchParams.get("province"));
-    if (prov) chips.push({ key: "province", value: null, label: provinceShortName(prov.name) });
+    const yMin = searchParams.get("minYear");
+    const yMax = searchParams.get("maxYear");
+    if (yMin) chips.push({ key: "minYear", value: null, label: `Año desde ${yMin}` });
+    if (yMax) chips.push({ key: "maxYear", value: null, label: `Año hasta ${yMax}` });
+    const min = searchParams.get("minPrice");
+    const max = searchParams.get("maxPrice");
+    if (min) chips.push({ key: "minPrice", value: null, label: `Desde ${usd(min)}` });
+    if (max) chips.push({ key: "maxPrice", value: null, label: `Hasta ${usd(max)}` });
     for (const value of searchParams.getAll("sellerType")) {
       chips.push({ key: "sellerType", value, label: SELLER_TYPE_LABELS[value] ?? value });
     }
+    const prov = provinceBySlug(searchParams.get("province"));
+    if (prov) chips.push({ key: "province", value: null, label: provinceShortName(prov.name) });
     for (const value of searchParams.getAll("condition")) {
       chips.push({ key: "condition", value, label: value === "NUEVO" ? "Nuevo" : "Usado" });
     }
@@ -292,14 +293,6 @@ function FiltersSidebarForm({ categories, brands }: Props) {
   return (
     <FilterShell onApply={applyFilters} activeCount={activeFilterCount} onClear={clearFilters} isOpenMobile={isOpenMobile} setIsOpenMobile={setIsOpenMobile}>
       <AppliedFilterChips chips={appliedChips} onRemove={removeChip} />
-
-      <FilterSection title="Precio (USD)" count={counts.price} open={openSections.price} onToggle={() => toggleSection("price")}>
-        {rangeInputs(minPrice, setMinPrice, maxPrice, setMaxPrice, ["Mín", "Máx"], "Precio")}
-      </FilterSection>
-
-      <FilterSection title="Año" count={counts.year} open={openSections.year} onToggle={() => toggleSection("year")}>
-        {rangeInputs(minYear, setMinYear, maxYear, setMaxYear, ["Desde", "Hasta"], "Año")}
-      </FilterSection>
 
       <FilterSection title="Categoría" count={counts.category} open={openSections.category} onToggle={() => toggleSection("category")}>
         <div className="flex flex-col gap-0.5">
@@ -404,8 +397,12 @@ function FiltersSidebarForm({ categories, brands }: Props) {
         )}
       </FilterSection>
 
-      <FilterSection title="Provincia" count={counts.province} open={openSections.province} onToggle={() => toggleSection("province")}>
-        <ProvinceFilterSelect value={province} onChange={setProvince} />
+      <FilterSection title="Año" count={counts.year} open={openSections.year} onToggle={() => toggleSection("year")}>
+        {rangeInputs(minYear, setMinYear, maxYear, setMaxYear, ["Desde", "Hasta"], "Año")}
+      </FilterSection>
+
+      <FilterSection title="Precio (USD)" count={counts.price} open={openSections.price} onToggle={() => toggleSection("price")}>
+        {rangeInputs(minPrice, setMinPrice, maxPrice, setMaxPrice, ["Mín", "Máx"], "Precio")}
       </FilterSection>
 
       <FilterSection title="Publica" count={counts.seller} open={openSections.seller} onToggle={() => toggleSection("seller")}>
@@ -416,12 +413,8 @@ function FiltersSidebarForm({ categories, brands }: Props) {
         </div>
       </FilterSection>
 
-      <FilterSection title="Opciones" count={counts.options} open={openSections.options} onToggle={() => toggleSection("options")}>
-        <div className="flex flex-col gap-0.5">
-          {checkRow("financing", financing, () => setFinancing((v) => !v), OPTION_LABELS.financing)}
-          {checkRow("trade", trade, () => setTrade((v) => !v), OPTION_LABELS.trade)}
-          {checkRow("rent", rent, () => setRent((v) => !v), OPTION_LABELS.rent)}
-        </div>
+      <FilterSection title="Provincia" count={counts.province} open={openSections.province} onToggle={() => toggleSection("province")}>
+        <ProvinceFilterSelect value={province} onChange={setProvince} />
       </FilterSection>
 
       <FilterSection title="Condición" count={counts.condition} open={openSections.condition} onToggle={() => toggleSection("condition")}>
@@ -429,6 +422,14 @@ function FiltersSidebarForm({ categories, brands }: Props) {
           {["NUEVO", "USADO"].map((cond) =>
             checkRow(`cond-${cond}`, condition.includes(cond), () => toggleValue(condition, setCondition, cond), cond === "NUEVO" ? "Nuevo" : "Usado")
           )}
+        </div>
+      </FilterSection>
+
+      <FilterSection title="Opciones" count={counts.options} open={openSections.options} onToggle={() => toggleSection("options")}>
+        <div className="flex flex-col gap-0.5">
+          {checkRow("financing", financing, () => setFinancing((v) => !v), OPTION_LABELS.financing)}
+          {checkRow("trade", trade, () => setTrade((v) => !v), OPTION_LABELS.trade)}
+          {checkRow("rent", rent, () => setRent((v) => !v), OPTION_LABELS.rent)}
         </div>
       </FilterSection>
     </FilterShell>
