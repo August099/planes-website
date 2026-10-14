@@ -39,7 +39,7 @@ const getActivePlans = unstable_cache(
 /** Precio de la publicación individual (ListingPrice, VA-59): se muestra como referencia, no es un plan. */
 export type SinglePrices = { aircraft: string; parts: string };
 
-export async function getPlanCards(): Promise<{ aircraft: PlanCard[]; parts: PlanCard[]; single: SinglePrices }> {
+export async function getPlanCards(): Promise<{ plans: PlanCard[]; single: SinglePrices }> {
   const [prices, plans] = await Promise.all([getListingPrices(), getActivePlans()]);
 
   const toCard = (p: (typeof plans)[number]): PlanCard => {
@@ -62,9 +62,10 @@ export async function getPlanCards(): Promise<{ aircraft: PlanCard[]; parts: Pla
     };
   };
 
+  // VA-105 (pedido del socio, 14/10): /plans muestra todos los planes juntos, sin pestañas de
+  // aviones y repuestos (showInAircraftTab/showInPartsTab quedan en la base, sin uso).
   return {
-    aircraft: plans.filter((p) => p.showInAircraftTab).map(toCard),
-    parts: plans.filter((p) => p.showInPartsTab).map(toCard),
+    plans: plans.map(toCard),
     single: { aircraft: formatARS(prices.AIRCRAFT.amount), parts: formatARS(prices.SPARE_PART.amount) },
   };
 }

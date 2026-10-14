@@ -67,9 +67,7 @@ export const planInputSchema = z
     if (p.type === "SPARE_PART_PACK" && p.sparePartsListingsCount === 0) {
       ctx.addIssue({ code: "custom", path: ["sparePartsListingsCount"], message: "Un pack de repuestos necesita publicaciones de repuestos." });
     }
-    if (p.isActive && !p.showInAircraftTab && !p.showInPartsTab) {
-      ctx.addIssue({ code: "custom", path: ["showInAircraftTab"], message: "Un plan activo tiene que mostrarse en alguna pestaña de /plans." });
-    }
+    // VA-105: /plans ya no tiene pestañas; showInAircraftTab/showInPartsTab no se validan.
   });
 
 export type PlanInput = z.input<typeof planInputSchema>;

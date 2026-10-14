@@ -74,14 +74,13 @@ export default async function AdminPlansPage() {
             )}
             {plans.map((p) => {
               const archived = !!p.archivedAt;
-              const tabs = [p.showInAircraftTab && "Aviones", p.showInPartsTab && "Repuestos"].filter(Boolean).join(" · ");
               const users = p._count.purchases + p._count.subscriptions;
               return (
                 <tr key={p.id} className={archived ? "text-slate-400" : ""}>
                   <td className="min-w-[220px] px-4 py-3">
                     <p className={`font-semibold ${archived ? "" : "text-[#001F58]"}`}>{p.name}</p>
                     <p className="text-xs text-slate-500">
-                      {[p.badge, p.isPopular && "Más elegido", p.noExpiry && "Sin vencimiento", p.includesVerifiedBadge && !/verificado/i.test(p.badge ?? "") && "Verificado", p.includesCustomPage && "Página personalizada"]
+                      {[p.badge, p.isPopular && "Más elegido", p.noExpiry && "Sin vencimiento", p.includesVerifiedBadge && !/verificado/i.test(p.badge ?? "") && "Verificado", p.includesCustomPage && "Página VA"]
                         .filter(Boolean)
                         .join(" · ")}
                     </p>
@@ -92,7 +91,7 @@ export default async function AdminPlansPage() {
                     <span className="text-xs text-slate-500">{billingText(p.type, p.billingInterval)}</span>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{p.usageDescription || defaultUsageText(p)}</td>
-                  <td className="px-4 py-3 text-slate-600">{tabs || "—"}</td>
+                  <td className="px-4 py-3 text-slate-600">{p.isActive && !archived ? "Sí" : "No"}</td>
                   <td className="px-4 py-3 text-center tabular-nums text-slate-600">{subsByPlan[p.id] ?? 0}</td>
                   <td className="px-4 py-3">
                     <span

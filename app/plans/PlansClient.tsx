@@ -1,18 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { Check, Plane, Wrench, Zap, ArrowRight, ShieldCheck, Repeat } from "lucide-react";
+import { Check, Zap, ArrowRight, ShieldCheck, Repeat } from "lucide-react";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import type { PlanCard, SinglePrices } from "@/lib/plans";
 
 // VA-80: las tarjetas vienen armadas del servidor (lib/plans.ts): los planes activos que se editan
 // en /admin/plans. VA-92: el precio de una publicación suelta va como referencia, no como plan.
-export function PlansClient({ aircraftPlans, partsPlans, single }: { aircraftPlans: PlanCard[]; partsPlans: PlanCard[]; single: SinglePrices }) {
-  const [activeTab, setActiveTab] = useState<"aircraft" | "parts">("aircraft");
-
-  const currentPlans = activeTab === "aircraft" ? aircraftPlans : partsPlans;
+// VA-105 (pedido del socio, 14/10): todos los planes juntos, sin pestañas de aviones y repuestos.
+export function PlansClient({ plans, single }: { plans: PlanCard[]; single: SinglePrices }) {
+  const currentPlans = plans;
 
   return (
     <main className="relative isolate overflow-hidden min-h-screen">
@@ -29,50 +27,38 @@ export function PlansClient({ aircraftPlans, partsPlans, single }: { aircraftPla
             PLANES Y SUSCRIPCIONES
           </h1>
           <p className="text-sm sm:text-base text-[#001F58]/80 leading-relaxed">
-            Elegí entre <strong>Packs individuales</strong> por pago único o <strong>Suscripciones mensuales ilimitadas</strong> según la necesidad de tu negocio. Precios expresados en Pesos Argentinos (ARS).
+            Con una <strong>suscripción mensual</strong> publicás sin límite y cancelás cuando quieras. Precios expresados en Pesos Argentinos (ARS).
           </p>
         </div>
 
-        <div className="flex justify-center mb-12">
-          <div className="bg-white/80 p-1.5 rounded-2xl border border-[#001F58]/20 flex gap-2 shadow-sm backdrop-blur-sm">
-            <button
-              onClick={() => setActiveTab("aircraft")}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                activeTab === "aircraft"
-                  ? "bg-[#001F58] text-white shadow-md"
-                  : "text-[#001F58]/70 hover:text-[#001F58] hover:bg-[#001F58]/5"
-              }`}
-            >
-              <Plane className="w-4 h-4" />
-              <span>Aviones</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("parts")}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                activeTab === "parts"
-                  ? "bg-[#001F58] text-white shadow-md"
-                  : "text-[#001F58]/70 hover:text-[#001F58] hover:bg-[#001F58]/5"
-              }`}
-            >
-              <Wrench className="w-4 h-4" />
-              <span>Repuestos</span>
-            </button>
-          </div>
-        </div>
-
         {/* VA-92: sin planes de 1 publicación. La suelta se paga al terminar el formulario. */}
-        <p className="mx-auto -mt-6 mb-10 max-w-2xl border-l-2 border-[#001F58]/30 bg-white/80 px-4 py-3 text-sm text-slate-700 backdrop-blur-sm">
-          ¿Querés publicar {activeTab === "aircraft" ? "un solo avión" : "un solo repuesto"}? No hace falta un plan: lo pagás al
-          terminar de cargar el aviso, a{" "}
-          <span className="font-semibold tabular-nums text-[#001F58]">{activeTab === "aircraft" ? single.aircraft : single.parts}</span> por
-          publicación.{" "}
+        <p className="mx-auto mb-10 max-w-2xl border-l-2 border-[#001F58]/30 bg-white/80 px-4 py-3 text-sm text-slate-700 backdrop-blur-sm">
+          ¿Querés publicar una sola cosa? No hace falta un plan: la pagás al terminar de cargar el aviso, a{" "}
+          <span className="font-semibold tabular-nums text-[#001F58]">{single.aircraft}</span> cada avión y{" "}
+          <span className="font-semibold tabular-nums text-[#001F58]">{single.parts}</span> cada repuesto.{" "}
           <Link href="/publish" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
             Publicar
           </Link>
         </p>
 
+        {/* VA-105 · 6: sin planes cargados (o archivados los de prueba), en vez de una grilla vacía. */}
+        {currentPlans.length === 0 && (
+          <div className="mx-auto mb-16 max-w-2xl rounded-lg border border-[#001F58]/12 bg-white px-6 py-8 text-center">
+            <h2 className="text-lg font-bold text-[#001F58]">Estamos terminando de armar los planes</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              Muy pronto vas a poder publicar sin límite con una suscripción. Mientras tanto, publicá de a uno al precio de arriba.
+            </p>
+            <Link
+              href="/publish"
+              className="mt-5 inline-flex min-h-11 items-center justify-center rounded-md bg-[#E70F1F] px-6 text-sm font-bold text-white transition-colors hover:bg-[#C20D1A]"
+            >
+              Publicar
+            </Link>
+          </div>
+        )}
+
         <div
-          className={`grid grid-cols-1 md:grid-cols-3 ${
+          className={`${currentPlans.length === 0 ? "hidden" : ""} grid grid-cols-1 md:grid-cols-3 ${
             currentPlans.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"
           } gap-6 items-stretch mb-16`}
         >
@@ -199,7 +185,7 @@ export function PlansClient({ aircraftPlans, partsPlans, single }: { aircraftPla
               Flexibilidad total para tus publicaciones
             </h4>
             <p className="text-xs sm:text-sm text-[#001F58]/80 leading-relaxed">
-              Los <strong>Packs de Pago Único</strong> te entregan créditos sin vencimiento inmediato. Las <strong>Suscripciones Ilimitadas</strong> te permiten publicar todo tu inventario activo con cancelación en cualquier momento.
+              Las <strong>suscripciones</strong> te permiten publicar todo tu inventario sin límite, con cancelación en cualquier momento: el plan sigue hasta el fin del período pagado.
             </p>
           </div>
         </div>
