@@ -198,7 +198,7 @@ function FiltersSidebarForm({ categories, brands }: Props) {
     });
 
     const chips: { key: string; value: string | null; label: string }[] = [];
-    // Mismo orden que las secciones (VA-93): categoría, marca, año, precio, publica, provincia, condición, opciones.
+    // Mismo orden que las secciones (VA-107): categoría, marca, año, precio, publica, provincia, condición, opciones.
     const usd = (v: string) => `USD ${Number(v).toLocaleString("es-AR")}`;
     for (const key of ["category", "brand", "model", "subModel"]) {
       for (const value of searchParams.getAll(key)) {

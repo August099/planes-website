@@ -34,7 +34,7 @@ function pickFeatured(aircrafts: FeaturedAircraftProps[]) {
     pool = pool.slice(0, 10);
   }
 
-  // Mezclamos aleatoriamente y tomamos las del carrusel (VA-96: 6; antes eran 2)
+  // Mezclamos aleatoriamente y tomamos las del carrusel (VA-110: 6; antes eran 2)
   return pool.sort(() => 0.5 - Math.random()).slice(0, FEATURED_AIRCRAFT_COUNT);
 }
 

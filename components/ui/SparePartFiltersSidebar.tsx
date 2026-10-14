@@ -113,7 +113,7 @@ function SparePartFiltersForm({ categories }: Props) {
   const [condition, setCondition] = useState<string[]>(searchParams.getAll("condition"));
   const [province, setProvince] = useState(searchParams.get("province") ?? "");
 
-  // Las secciones con filtros activos arrancan abiertas (VA-31); Precio ya no está siempre abierta (VA-92).
+  // Las secciones con filtros activos arrancan abiertas (VA-31); Precio ya no está siempre abierta (VA-106).
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>(() => ({
     price: searchParams.has("minPrice") || searchParams.has("maxPrice") || searchParams.has("currency"),
     category: searchParams.has("category"),
@@ -177,7 +177,7 @@ function SparePartFiltersForm({ categories }: Props) {
     const urlCurrency = currencyFromUrl(searchParams.get("currency"));
     const money = (v: string) => `${urlCurrency === "ARS" ? "ARS" : "USD"} ${Number(v).toLocaleString("es-AR")}`;
     const chips: { key: string; value: string | null; label: string }[] = [];
-    // Mismo orden que las secciones (VA-92): categoría, condición, precio, provincia.
+    // Mismo orden que las secciones (VA-106): categoría, condición, precio, provincia.
     for (const value of searchParams.getAll("category")) {
       chips.push({ key: "category", value, label: nameOf.get(value) ?? value });
     }

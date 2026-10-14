@@ -47,7 +47,7 @@ export function CompareTray() {
     </Link>
   );
 
-  // VA-95: cerrar el comparador de una (vacía la selección; se vuelve a armar desde las tarjetas).
+  // VA-109: cerrar el comparador de una (vacía la selección; se vuelve a armar desde las tarjetas).
   const close = (
     <button
       type="button"

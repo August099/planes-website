@@ -152,7 +152,7 @@ export default async function SparePartDetailsPage({
   }
   const categoryName = category?.name ?? null;
   const subcategoryName = subcategory?.name ?? null;
-  // VA-94: links al listado filtrado debajo del título.
+  // VA-108: links al listado filtrado debajo del título.
   const categoryLinks = [category, subcategory]
     .filter((c): c is NonNullable<CategoryRef> => c !== null)
     .map((c) => ({ label: c.name, href: `/spareparts?category=${encodeURIComponent(c.id)}` }));

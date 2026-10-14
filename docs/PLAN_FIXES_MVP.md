@@ -33,7 +33,7 @@
 | 5 | Responsive y limpieza | Sí (responsive), limpieza recomendada |
 | 5b | **Rendimiento y tiempos de carga** | **Sí** (VA-70: la Home baja 6,5 MB de JavaScript) |
 | 6 | Mercado Pago y facturación | No (más adelante) |
-| 14/10 | **Pedidos del socio después de probar (VA-89 a VA-96)**, ordenados por prioridad: P1 saldo de lanzamiento, motor obligatorio y filtros en celular; P2 orden de filtros y detalle; P3 comparador y destacadas | Sí (P1 y P2) |
+| 14/10 | **Pedidos del socio después de probar (VA-89 a VA-91 y VA-106 a VA-110)**, ordenados por prioridad: P1 saldo de lanzamiento, motor obligatorio y filtros en celular; P2 orden de filtros y detalle; P3 comparador y destacadas | Sí (P1 y P2) |
 
 ---
 
@@ -865,7 +865,7 @@ Notas para cuando se encare, a partir de lo que ya existe:
 6. VA-54 (campos nuevos, en la misma migración que VA-44 si es posible), VA-47 (solo el aviso), VA-52, VA-53
 7. **VA-70 (íconos de la Home) apenas se pueda, porque es un cambio chico con muchísimo impacto**; después VA-71…VA-76
 8. VA-12, VA-15, VA-16 → VA-61…VA-63 → VA-27 (opcional)
-9. **Pedidos del 14/10:** VA-89 (saldo de lanzamiento, después de D17/D18) → VA-90 (motor obligatorio, después de D19) → VA-91 (filtros en celular) → VA-92 → VA-93 → VA-94 → VA-95 → VA-96
+9. **Pedidos del 14/10:** VA-89 (saldo de lanzamiento, después de D17/D18) → VA-90 (motor obligatorio, después de D19) → VA-91 (filtros en celular) → VA-106 → VA-107 → VA-108 → VA-109 → VA-110
 
 ## 8. Decisiones pendientes (para los socios)
 
@@ -890,7 +890,7 @@ Notas para cuando se encare, a partir de lo que ya existe:
 | D17 | Saldo de lanzamiento: ¿"hasta el 2/12" es el 2 de diciembre de 2026 inclusive (hora Argentina)? Y a las cuentas que ya existen, ¿se les deja **al menos** 1 / 1 o se les **suma** 1 / 1? | VA-89 | Pendiente (sugerido: 2/12/2026 23:59 ART inclusive; "al menos 1") |
 | D18 | ¿Publicar ya descuenta del saldo (y sin saldo no se puede publicar), o por ahora solo se asigna y el consumo va con la Fase 6? | VA-89 | Pendiente (sugerido: solo asignar ahora) |
 | D19 | Motor obligatorio: ¿también en Proyecto (`PR`)? ¿Bimotor exige 2 motores? | VA-90 | Pendiente (sugerido: Proyecto opcional; Bimotor 2) |
-| D20 | "Aeronaves destacadas": ¿se eligen (admin o plan) o siguen siendo las 6 más recientes? | VA-96 | Pendiente (por ahora las 6 más recientes) |
+| D20 | "Aeronaves destacadas": ¿se eligen (admin o plan) o siguen siendo las 6 más recientes? | VA-110 | Pendiente (por ahora las 6 más recientes) |
 
 ## 9. Checklist final antes de lanzar
 
@@ -1196,7 +1196,6 @@ Notas para cuando se encare, a partir de lo que ya existe:
 
 ---
 
-<<<<<<< HEAD
 ### VA-92 (spec) · Pagos con Mercado Pago + facturación automática con TusFacturasAPP (pedido del socio, 12/10)
 > Especificación: `docs/specs/VA-92-pagos-y-facturacion.md`. Guía operativa: `docs/PAGOS.md`.
 
@@ -1262,10 +1261,12 @@ Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se 
 - Es una rama de vista previa: **nunca se mergea** a `milton/auth-roles`, `pre-production` ni `main` sin OK explícito.
 - Se actualiza periódicamente desde `milton/auth-roles`. Comparte schema y migraciones con la rama principal: no se crean migraciones solo ahí.
 - Su preview en Vercel nunca usa la base de producción.
-=======
+
+---
+
 ## Pedidos del socio del 14/10 (después de probar) — ordenados por prioridad
 
-> Lo pidió el socio después de probar todo lo anterior. Numeración nueva desde VA-89 (VA-88 fue la última usada). **Orden = prioridad**: P1 toca el flujo de publicar o tiene fecha; P2 es usabilidad de listados y detalle; P3 es ajuste visual chico. Cada tarea es un commit `fix(VA-XX)` / `feat(VA-XX)` y sigue `docs/DESIGN_GUIDELINES.md`. Antes de implementar las marcadas ❓, ver las decisiones D17–D20 en la sección 8.
+> Lo pidió el socio después de probar todo lo anterior. Numeración: VA-89 a VA-91 y VA-106 a VA-110. **Ojo:** los commits de VA-106 a VA-110 dicen VA-92 a VA-96 en el mensaje (se escribieron en una copia que no tenía el lote del 12/10, que ya usaba esos números): VA-92→VA-106, VA-93→VA-107, VA-94→VA-108, VA-95→VA-109, VA-96→VA-110. **Orden = prioridad**: P1 toca el flujo de publicar o tiene fecha; P2 es usabilidad de listados y detalle; P3 es ajuste visual chico. Cada tarea es un commit `fix(VA-XX)` / `feat(VA-XX)` y sigue `docs/DESIGN_GUIDELINES.md`. Antes de implementar las marcadas ❓, ver las decisiones D17–D20 en la sección 8.
 
 ### P1 — Prioridad alta
 
@@ -1308,21 +1309,21 @@ Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se 
 
 ### P2 — Prioridad media
 
-### VA-92 · Filtros de repuestos: orden nuevo y "Precio" cerrado por defecto
+### VA-106 · Filtros de repuestos: orden nuevo y "Precio" cerrado por defecto
 - **Orden pedido:** **Categoría → Condición → Precio → Provincia**. Hoy es Precio → Categoría → Provincia → Condición (`components/ui/SparePartFiltersSidebar.tsx` l.226–294).
 - **Bug:** "Precio" está **siempre abierto**: `openSections.price` arranca en `true` (l.117). Pasarlo a `searchParams.has("minPrice") || searchParams.has("maxPrice") || searchParams.has("currency")`, igual que las demás (abierta solo si tiene un filtro aplicado, criterio de VA-45/VA-31). Revisar también que el estado se rearme al cambiar la URL.
 - **Aceptación:** `/spareparts` sin parámetros → todas las secciones cerradas, en el orden pedido; `/spareparts?minPrice=100` → Precio abierta. Escritorio y celular.
 
 **Estado (14/10/2026):** ✅ hecho en local (commit `173fc40`). Orden nuevo también en las etiquetas de filtros aplicados. Precio abierta solo con `minPrice`, `maxPrice` o `currency`. Verificado: `/spareparts` todo cerrado; `?minPrice=100&currency=USD` → Precio abierta.
 
-### VA-93 · Filtros de aviones en el orden pedido
+### VA-107 · Filtros de aviones en el orden pedido
 - **Orden pedido:** **Categoría → Marca → Año → Precio → Publica → Provincia → Condición → Opciones**. Hoy es Precio → Año → Categoría → Marca → Provincia → Publica → Opciones → Condición (`components/ui/PlanesFiltersSidebar.tsx` l.296–433).
-- Solo reordenar los `FilterSection` (y las etiquetas de filtros aplicados, si siguen el orden de las secciones). Revisar que Precio no arranque abierta sin filtro (mismo criterio que VA-92).
+- Solo reordenar los `FilterSection` (y las etiquetas de filtros aplicados, si siguen el orden de las secciones). Revisar que Precio no arranque abierta sin filtro (mismo criterio que VA-106).
 - **Aceptación:** `/planes` en escritorio y en el panel de celular muestra las secciones en ese orden; los filtros siguen funcionando igual.
 
 **Estado (14/10/2026):** ✅ hecho en local (commit `2095602`). También las etiquetas aplicadas. Precio ya arrancaba cerrada sin filtro. Verificado en la barra de escritorio y en el panel de celular.
 
-### VA-94 · Detalle: título tan grande como el precio y categoría como link al filtro
+### VA-108 · Detalle: título tan grande como el precio y categoría como link al filtro
 - **Hoy** (`app/planes/plane-details/[id]/page.tsx` l.259 y `app/spareparts/sparepart-details/[id]/page.tsx` l.267): `<h1>` en `text-xl font-bold` y el precio en `text-2xl font-black`.
 - **Hacer:**
   - Título con el **mismo tamaño que el precio** (`text-2xl`, peso según las pautas; el precio sigue diferenciado por color). Revisar a 375 px que títulos largos no rompan la tarjeta (`break-words`, sin cortar el texto).
@@ -1334,17 +1335,16 @@ Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se 
 
 ### P3 — Prioridad baja
 
-### VA-95 · Comparador: cerrar la bandeja de una con una X a la derecha
+### VA-109 · Comparador: cerrar la bandeja de una con una X a la derecha
 - **Pedido:** poder **quitar todo el comparador de una vez** con una X en el lado derecho de la bandeja (hoy solo se quita aeronave por aeronave).
 - **Hacer:** en `components/ui/compare/CompareTray.tsx`, botón X a la derecha (44 px, `aria-label="Cerrar comparador"`) que vacía la selección. Agregar `clearCompare()` en `lib/compare-store.ts` (borra `localStorage` con try/catch y avisa a los demás componentes y pestañas, como `removeFromCompare`). Al vaciarse, la bandeja y su espaciador desaparecen. Sin confirmación (se vuelve a armar en dos clics); ❓ si el socio prefiere confirmar, usar `ConfirmDialog`.
 - **Aceptación:** con 2 o 3 aeronaves en la bandeja, tocar la X → la bandeja desaparece y los botones "Agregado" de las tarjetas vuelven a "Comparar", también en otra pestaña abierta. A 375 px la X no tapa "Comparar (n)".
 
 **Estado (14/10/2026):** ✅ hecho en local (commit `e62d505`). X de 44 px a la derecha de "Comparar (n)" en escritorio y celular, con `clearCompare()` (ya existía en `lib/compare-store.ts`), sin confirmación. Verificado a 375 y 1280 px: la bandeja desaparece también en otra pestaña y las tarjetas vuelven a "Comparar".
 
-### VA-96 · "Aeronaves destacadas": carrusel de 6
+### VA-110 · "Aeronaves destacadas": carrusel de 6
 - **Hoy:** `app/page.tsx` trae 8 aeronaves (`take: 8`) y `FeaturedAircraftCarousel` las muestra todas; "Últimas publicaciones" usa `slice(0, 6)` de la misma consulta.
 - **Hacer:** pasarle al carrusel de destacadas solo 6 (`slice(0, 6)`) y bajar el `take` a 6 si ya nada usa las 8. Mantener que sea carrusel (Swiper, flechas de VA-82) en escritorio y celular. Mientras no exista una marca de "destacada" en la base, siguen siendo las 6 más recientes activas (❓ D20: ¿destacadas elegidas a mano desde el admin o por plan? No es parte de este pedido).
 - **Aceptación:** la Home muestra 6 aeronaves en el carrusel de destacadas (contar los puntos/slides), a 375 y 1280 px.
 
 **Estado (14/10/2026):** ✅ hecho en local (commit `886a570`). **Causa real:** `FeaturedAircraftCarousel` elegía **2 al azar** de las 8 más recientes (`pickFeatured` → `slice(0, 2)`), por eso casi no se deslizaba. Ahora muestra las 6 más recientes activas, en orden aleatorio; la cantidad sale de `FEATURED_AIRCRAFT_COUNT` (`lib/constants.ts`) y la consulta de la Home trae 6 (Últimas publicaciones ya usaba 6). Verificado: 6 slides a 375 y 1280 px, sin scroll horizontal.
->>>>>>> a7cf408a86f32a8ee33ef79946f585ef5bb3211e

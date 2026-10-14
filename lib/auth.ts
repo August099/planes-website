@@ -8,11 +8,8 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 import { profileCompletenessTag } from "@/lib/cached-data";
-<<<<<<< HEAD
 import { isValidPasswordChangeProof } from "@/lib/password-proof";
-=======
 import { grantLaunchBalance } from "@/lib/launch-balance";
->>>>>>> a7cf408a86f32a8ee33ef79946f585ef5bb3211e
 
 // En Auth.js v5 un throw común en authorize() llega al cliente como "CredentialsSignin".
 // Con CredentialsSignin + code, el login recibe res.code === "EmailNotVerified" (VA-20).
