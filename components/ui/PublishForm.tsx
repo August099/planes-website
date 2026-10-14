@@ -20,7 +20,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Stepper, { Step } from "@/components/ui/Stepper";
 import { PageBackground } from "@/components/ui/PageBackground";
-import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle, Send, AlertCircle, Upload, Paperclip, Search, X, GripHorizontal, Rocket, Sparkles } from "lucide-react";
+import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle, Send, AlertCircle, Upload, Paperclip, Search, X, GripHorizontal, Rocket } from "lucide-react";
 import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
 import { DescriptionTextarea } from "@/components/ui/DescriptionTextarea";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
@@ -61,6 +61,8 @@ interface PublishFormProps {
     needsPhone?: boolean;
     // VA-59: precio vigente por aviso (texto ya formateado), editable desde /admin/prices.
     listingPrices?: { aircraft: string; sparePart: string };
+    // VA-111: publicaciones gratis que le quedan del lanzamiento (solo si recibió ese saldo).
+    freeBalance?: { aircraft: number; parts: number };
     // VA-94: CTA al publicar el 2.º aviso sin plan (ahorro de un pack frente a la publicación suelta).
     packHints?: { aircraft: PackHint | null; parts: PackHint | null };
 }
@@ -106,7 +108,8 @@ export default function PublishForm({
     editListing,
     needsPhone = false,
     listingPrices,
-    packHints
+    packHints,
+    freeBalance
 }: PublishFormProps) {
     const errorRef = useRef<HTMLDivElement>(null);
     const isEditing = !!editListing;
@@ -729,16 +732,16 @@ export default function PublishForm({
               </h1>
             </div>
 
-            {/* VA-47: aviso de la promoción de lanzamiento al publicar un avión. VA-92: la promoción
-                es un cupón del 100% que se aplica en el pago (el código está en lib/promo.ts). */}
-            {LAUNCH_PROMO.enabled && !isEditing && activeTab === "aircraft" && (
-              <div className="max-w-2xl mx-auto mb-6 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-                <Sparkles className="h-5 w-5 shrink-0 text-emerald-600" />
-                <p>
-                  <span className="font-bold">{LAUNCH_PROMO.title}:</span> {LAUNCH_PROMO.text.toLowerCase()}. Al pagar, usá el
-                  cupón <span className="font-bold tracking-wide">{LAUNCH_PROMO.couponCode}</span>.
-                </p>
-              </div>
+            {/* VA-111: saldo gratis del lanzamiento (VA-89). Se descuenta solo al publicar, sin cupón. */}
+            {freeBalance && !isEditing && (activeTab === "aircraft" ? freeBalance.aircraft : freeBalance.parts) > 0 && (
+              <p className="max-w-2xl mx-auto mb-4 border-l-2 border-[#E70F1F] pl-3 text-sm text-slate-700">
+                <span className="font-semibold text-[#001F58]">{LAUNCH_PROMO.title}:</span>{" "}
+                {(() => {
+                  const n = activeTab === "aircraft" ? freeBalance.aircraft : freeBalance.parts;
+                  const what = activeTab === "aircraft" ? "avión" : "repuesto";
+                  return `te ${n === 1 ? "queda" : "quedan"} ${n} ${n === 1 ? "publicación" : "publicaciones"} de ${what} gratis. Se usa sola al publicar: no pagás nada.`;
+                })()}
+              </p>
             )}
 
             {/* VA-92: con un pack o una suscripción vigente se publica directo; si no, el aviso se

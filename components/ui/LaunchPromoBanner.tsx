@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
-import { LAUNCH_PROMO } from "@/lib/promo";
+import { LAUNCH_PROMO, isLaunchPromoActive } from "@/lib/promo";
 import { useViewerStatus } from "@/components/ui/FavoriteIdsProvider";
 
 const STORAGE_KEY = "va_launch_promo";
@@ -40,7 +40,7 @@ export function LaunchPromoBanner() {
   const viewer = useViewerStatus();
 
   useEffect(() => {
-    if (!LAUNCH_PROMO.enabled) return;
+    if (!isLaunchPromoActive()) return;
     if (viewer !== null && viewer !== "anonymous") return;
     const state = readState();
     if (state.dismissed || state.views >= LAUNCH_PROMO.maxViews) return;
@@ -62,6 +62,7 @@ export function LaunchPromoBanner() {
         <div className="flex-1">
           <p className="text-xs font-bold uppercase tracking-wider text-[#FF5A64]">{LAUNCH_PROMO.title}</p>
           <p className="text-lg sm:text-xl font-bold">{LAUNCH_PROMO.text}</p>
+          <p className="mt-1 text-sm text-white/80">{LAUNCH_PROMO.detail}</p>
         </div>
         <Link
           href="/register"

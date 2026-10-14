@@ -12,6 +12,7 @@ import {
     ShieldCheck
 } from "lucide-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { LaunchPromoNote } from "@/components/ui/LaunchPromoNote";
 import { getListingPrices } from "@/lib/listing-prices";
 
 export const metadata: Metadata = {
@@ -39,6 +40,9 @@ export default async function HowToPublishPage() {
                         Vender tu aeronave o repuesto en nuestra plataforma es un proceso seguro y directo. Seguí estos 4 simples pasos para llegar a miles de compradores.
                     </p>
                 </div>
+
+                {/* VA-111: promoción de lanzamiento (se apaga sola en el corte) */}
+                <LaunchPromoNote showLink className="mx-auto -mt-8 mb-12 max-w-2xl bg-white/80 py-3 pr-4" />
 
                 {/* Pasos a seguir (Diseño Lineal para máxima claridad) */}
                 <div className="space-y-6 mb-16">

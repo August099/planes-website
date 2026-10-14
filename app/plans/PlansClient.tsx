@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Check, Zap, ArrowRight, ShieldCheck, Repeat } from "lucide-react";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { LaunchPromoNote } from "@/components/ui/LaunchPromoNote";
 import type { PlanCard, SinglePrices } from "@/lib/plans";
 
 // VA-80: las tarjetas vienen armadas del servidor (lib/plans.ts): los planes activos que se editan
@@ -30,6 +31,9 @@ export function PlansClient({ plans, single }: { plans: PlanCard[]; single: Sing
             Con una <strong>suscripción mensual</strong> publicás sin límite y cancelás cuando quieras. Precios expresados en Pesos Argentinos (ARS).
           </p>
         </div>
+
+        {/* VA-111: promoción de lanzamiento (se apaga sola en el corte) */}
+        <LaunchPromoNote showLink className="mx-auto mb-4 max-w-2xl bg-white/80 py-3 pr-4 backdrop-blur-sm" />
 
         {/* VA-92: sin planes de 1 publicación. La suelta se paga al terminar el formulario. */}
         <p className="mx-auto mb-10 max-w-2xl border-l-2 border-[#001F58]/30 bg-white/80 px-4 py-3 text-sm text-slate-700 backdrop-blur-sm">

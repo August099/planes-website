@@ -22,6 +22,8 @@ model User {
   sparePartsListingsBalance Int                  @default(0)
   // VA-89: cuándo se le dio el saldo de lanzamiento (1 avión + 1 repuesto). null = nunca.
   launchBalanceGrantedAt    DateTime?
+  // VA-111: cuándo vio (y cerró) la ventana de bienvenida del lanzamiento. null = todavía no.
+  launchWelcomeSeenAt       DateTime?
   facebook                  String?
   instagram                 String?
   city                      String?

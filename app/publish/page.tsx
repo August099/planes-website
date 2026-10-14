@@ -43,7 +43,7 @@ export default async function PublishPage({ searchParams }: Props) {
   // VA-46: sin teléfono el formulario pide cargarlo antes de publicar.
   const sellerPhone = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { phone: true, userTypeConfirmed: true },
+    select: { phone: true, userTypeConfirmed: true, aircraftListingsBalance: true, sparePartsListingsBalance: true, launchBalanceGrantedAt: true },
   });
 
   // VA-33: el filtro "Publica" depende del tipo de cuenta; si nunca se confirmó (cuentas de Google
@@ -109,6 +109,12 @@ export default async function PublishPage({ searchParams }: Props) {
         needsPhone={!sellerPhone?.phone?.trim()}
         listingPrices={{ aircraft: listingPrices.AIRCRAFT.label, sparePart: listingPrices.SPARE_PART.label }}
         packHints={packHints}
+        freeBalance={
+          // VA-111: saldo gratis del lanzamiento (VA-89); se descuenta solo al publicar.
+          sellerPhone?.launchBalanceGrantedAt
+            ? { aircraft: sellerPhone.aircraftListingsBalance, parts: sellerPhone.sparePartsListingsBalance }
+            : undefined
+        }
       />
     </main>
   );
