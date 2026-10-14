@@ -117,8 +117,7 @@ async function main() {
     const final = await prisma.plan.findMany({ where: { archivedAt: null }, orderBy: { sortOrder: "asc" }, select: { name: true, price: true, isActive: true, _count: { select: { subscriptions: true } } } });
     console.log("\nPlanes vigentes:");
     console.table(final.map((p) => ({ plan: p.name, precio: Number(p.price), activo: p.isActive, suscripciones: p._count.subscriptions })));
-    console.log("
-/plans tiene caché de 1 hora: para verlo ya, abrí un plan en /admin/plans y tocá Guardar.");
+    console.log("\n/plans tiene caché de 1 hora: para verlo ya, abrí un plan en /admin/plans y tocá Guardar.");
   }
   await prisma.$disconnect();
 }
