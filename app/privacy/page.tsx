@@ -5,10 +5,11 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 const policySections = [
   { id: "recoleccion", title: "1. Datos que recolectamos" },
   { id: "finalidad", title: "2. Finalidad del tratamiento" },
-  { id: "publicidad", title: "3. Publicidad de Documentos" },
+  { id: "publicidad", title: "3. Qué se publica y qué no" },
   { id: "exencion", title: "4. Exención de responsabilidad" },
-  { id: "terceros", title: "5. Compartición de datos" },
-  { id: "derechos", title: "6. Derechos del titular" },
+  { id: "terceros", title: "5. Proveedores y compartición de datos" },
+  { id: "cookies", title: "6. Cookies y medición" },
+  { id: "derechos", title: "7. Derechos del titular" },
 ];
 
 export const metadata: Metadata = {
@@ -48,7 +49,7 @@ export default function PrivacidadPage() {
               POLÍTICA DE PRIVACIDAD
             </h1>
             <p className="text-sm text-[#001F58]/60 mb-12 border-b border-[#001F58]/20 pb-4">
-              <strong>Última actualización:</strong> Julio 2026.
+              <strong>Última actualización:</strong> Octubre 2026.
             </p>
 
             <div className="flex flex-col gap-10 font-sans text-sm text-[#001F58]/80 leading-relaxed max-w-3xl">
@@ -62,14 +63,14 @@ export default function PrivacidadPage() {
                 <h2 className="font-heading text-xl font-semibold text-[#001F58]">
                   1. Datos que recolectamos
                 </h2>
-                <p>Dependiendo de cómo interactúes en nuestra plataforma, recolectamos la siguiente información:</p>
+                <p>Dependiendo de cómo uses la plataforma, recolectamos la siguiente información:</p>
                 <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
-                  <li><strong>Datos de cuenta del Vendedor:</strong> Nombre completo, dirección de correo electrónico, contraseña encriptada, número de teléfono, tipo de vendedor (particular o mayorista), fotografía de perfil y datos básicos de autenticación si decides iniciar sesión a través de redes sociales o cuentas de terceros.</li>
-                  <li><strong>Datos de las Publicaciones y Documentación:</strong> Detalles técnicos de las aeronaves, precio, ubicación, fotografías y los documentos legales de la aeronave que decidas adjuntar de forma voluntaria.</li>
-                  <li><strong>Datos de Alertas y Preferencias:</strong> Categorías y filtros de aeronaves seleccionados explícitamente por el usuario para recibir notificaciones automáticas de nuevos anuncios.</li>
-                  <li><strong>Datos de Interesados (Compradores):</strong> Cuando utilizas el formulario de contacto para consultar por una aeronave, recolectamos tu nombre, correo electrónico, teléfono y el mensaje redactado.</li>
-                  <li><strong>Datos de Reportes y Denuncias:</strong> Correo electrónico, motivos y detalles provistos al informar sobre una publicación potencialmente fraudulenta o errónea.</li>
-                  <li><strong>Datos de Transacciones de Pago:</strong> Información del estado de tu pago e identificadores de transacciones provistos por la pasarela de pagos. <strong>Aclaración importante:</strong> Ventas Aeronáuticas no almacena, procesa ni tiene acceso a tus datos de tarjetas de crédito o cuentas bancarias; la operación financiera se realiza de forma exclusiva y segura dentro de Mercado Pago.</li>
+                  <li><strong>Datos de cuenta:</strong> nombre, correo electrónico, contraseña (guardada cifrada, nunca en texto), teléfono, ciudad y provincia, tipo de cuenta (particular o empresa) y foto de perfil. Si iniciás sesión con <strong>Google</strong>, recibimos de Google tu nombre, tu correo y tu foto de perfil; no accedemos a tu contraseña de Google ni a otros datos de tu cuenta.</li>
+                  <li><strong>Datos de las publicaciones:</strong> detalles técnicos de las aeronaves y repuestos, precio, ubicación, fotografías y los documentos que decidas adjuntar.</li>
+                  <li><strong>Preguntas en los avisos:</strong> el texto de las preguntas y respuestas que dejás en una publicación, que se muestran públicamente junto a tu nombre.</li>
+                  <li><strong>Reportes y sugerencias:</strong> los motivos y detalles que escribís al reportar una publicación, y lo que nos mandás desde el formulario de sugerencias (con tu nombre y correo, si decidís dejarlos).</li>
+                  <li><strong>Pagos y facturación:</strong> el estado de tus pagos e identificadores de las operaciones que nos informa Mercado Pago, y los datos de facturación que cargás (nombre o razón social, DNI o CUIT, condición frente al IVA, domicilio y correo). <strong>Ventas Aeronáuticas no almacena ni tiene acceso a los datos de tus tarjetas o cuentas bancarias:</strong> el pago se hace dentro de Mercado Pago.</li>
+                  <li><strong>Datos de uso:</strong> páginas y publicaciones vistas, búsquedas, clics en los botones de contacto y el sitio desde el que llegaste (por ejemplo, un buscador o un enlace con parámetros de campaña), asociados a un identificador anónimo (ver la sección 6).</li>
                 </ul>
               </div>
 
@@ -78,25 +79,26 @@ export default function PrivacidadPage() {
                 <h2 className="font-heading text-xl font-semibold text-[#001F58]">
                   2. Finalidad del tratamiento de los datos
                 </h2>
-                <p>Utilizamos la información recolectada únicamente para los siguientes fines:</p>
+                <p>Usamos la información únicamente para:</p>
                 <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
-                  <li>Gestionar la creación de tu cuenta, validar tu identidad como usuario y procesar los cobros de los planes de publicación.</li>
-                  <li>Mostrar públicamente los anuncios de las aeronaves, incluyendo sus imágenes y documentación legal adjunta.</li>
-                  <li><strong>Sistema de Alertas Personalizadas:</strong> Enviar correos electrónicos automáticos con avisos de nuevas publicaciones que coincidan con las categorías seleccionadas por el usuario. El usuario puede dar de baja este servicio en cualquier momento desde el propio correo o su perfil.</li>
-                  <li><strong>Conectar a las partes:</strong> Facilitar que los compradores contacten de manera directa a los vendedores mediante el envío de los formularios de consulta.</li>
-                  <li>Garantizar la seguridad y transparencia del marketplace mediante el análisis de reportes y denuncias sobre publicaciones.</li>
+                  <li>Crear y administrar tu cuenta, verificar tu correo y permitirte recuperar el acceso.</li>
+                  <li>Mostrar tus publicaciones y permitir que los interesados te contacten por WhatsApp, teléfono o correo.</li>
+                  <li>Cobrar las publicaciones y los planes, emitir las facturas, gestionar renovaciones, cancelaciones y devoluciones (incluido el derecho de arrepentimiento).</li>
+                  <li>Enviarte correos operativos: verificación de cuenta, cambio de contraseña, estado de pagos y avisos sobre tu suscripción.</li>
+                  <li>Mantener la seguridad del sitio: revisar reportes, evitar abusos y limitar pedidos repetidos.</li>
+                  <li>Medir el uso del sitio de forma agregada para mejorarlo (qué se busca, qué se ve, de dónde llegan las visitas).</li>
                 </ul>
               </div>
 
               {/* SECCIÓN 3 */}
               <div id="publicidad" className="flex flex-col gap-3 scroll-mt-24">
                 <h2 className="font-heading text-xl font-semibold text-[#001F58]">
-                  3. Publicidad de Documentos Legales de las Aeronaves
+                  3. Qué se publica y qué no
                 </h2>
-                <p>La plataforma permite a los vendedores subir, de forma completamente opcional, documentos legales de las aeronaves con el fin de otorgar mayor transparencia y confianza a la publicación.</p>
                 <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
-                  <li><strong>Acceso Público:</strong> Al subir estos documentos, el vendedor acepta y consiente expresamente que <strong>serán visibles, consultables y descargables por cualquier usuario o visitante</strong> que acceda a dicha publicación.</li>
-                  <li><strong>Responsabilidad del Vendedor:</strong> Es responsabilidad exclusiva del vendedor asegurarse de que la difusión de dichos documentos no vulnere derechos de propiedad, confidencialidad o datos personales de terceros (como propietarios anteriores, pilotos o firmas civiles que no correspondan al vendedor actual) sin el debido consentimiento. Ventas Aeronáuticas no pre-modera, edita ni filtra el contenido de estos documentos adjuntos.</li>
+                  <li><strong>Público:</strong> el contenido de tus avisos (título, datos técnicos, precio, fotos, la matrícula si la cargás, ciudad y provincia, y una zona aproximada en un mapa, nunca la dirección exacta), tu nombre de vendedor, tu tipo de cuenta y los medios de contacto que figuran en tu aviso (teléfono, WhatsApp y correo), y las preguntas y respuestas.</li>
+                  <li><strong>Privado:</strong> los documentos que adjuntes a una publicación (por ejemplo, certificados o historiales de mantenimiento) solo los ven vos y el equipo de Ventas Aeronáuticas. También son privados tus datos de facturación y tus pagos.</li>
+                  <li><strong>Responsabilidad del vendedor:</strong> es responsabilidad del vendedor no incluir en fotos, descripciones o documentos datos personales de terceros sin su consentimiento.</li>
                 </ul>
               </div>
 
@@ -106,29 +108,50 @@ export default function PrivacidadPage() {
                   4. Exención de responsabilidad por transacciones entre particulares
                 </h2>
                 <p>
-                  Ventas Aeronáuticas funciona exclusivamente como un espacio publicitario (marketplace) para la exposición de aeronaves. La plataforma <strong>no interviene, no intermedia, ni procesa el pago de los aviones</strong>. El intercambio económico, la verificación física del bien y la transferencia de dominio se realizan de manera externa, privada y directa entre el comprador y el vendedor. Ventas Aeronáuticas no almacena ni solicita datos comerciales ni financieros relacionados con la compraventa final de las aeronaves.
+                  Ventas Aeronáuticas funciona exclusivamente como un espacio de publicación de avisos. La plataforma <strong>no interviene, no intermedia ni procesa el pago de las aeronaves ni de los repuestos</strong>. El intercambio económico, la verificación del bien y la transferencia de dominio se realizan de manera externa y directa entre comprador y vendedor. Solo cobramos por publicar.
                 </p>
               </div>
 
               {/* SECCIÓN 5 */}
               <div id="terceros" className="flex flex-col gap-3 scroll-mt-24">
                 <h2 className="font-heading text-xl font-semibold text-[#001F58]">
-                  5. Compartición de datos con terceros
+                  5. Proveedores y compartición de datos
                 </h2>
-                <p>Tus datos personales no serán vendidos, alquilados ni cedidos a terceras empresas bajo ningún concepto, salvo por las siguientes necesidades operativas del servicio:</p>
+                <p>Tus datos personales no se venden, alquilan ni ceden. Solo se comparten con los proveedores que necesitamos para prestar el servicio, y únicamente lo indispensable para cada función:</p>
                 <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
-                  <li><strong>Entre usuarios del sitio:</strong> Los datos de contacto provistos por un interesado en el formulario de consulta se transmiten directamente al vendedor de la aeronave para posibilitar la comunicación mutua.</li>
-                  <li><strong>Proveedores de infraestructura técnica:</strong> Empresas proveedoras de alojamiento web, bases de datos y la pasarela de pagos integrada (Mercado Pago), indispensables para el correcto funcionamiento del sitio.</li>
+                  <li><strong>Mercado Pago:</strong> procesamiento de pagos, suscripciones y devoluciones.</li>
+                  <li><strong>Google:</strong> inicio de sesión con tu cuenta de Google, si elegís esa opción.</li>
+                  <li><strong>Supabase:</strong> base de datos y almacenamiento de fotos y documentos.</li>
+                  <li><strong>Vercel:</strong> alojamiento del sitio y medición anónima de su rendimiento.</li>
+                  <li><strong>Resend:</strong> envío de los correos del sitio (verificación, contraseña, pagos).</li>
+                  <li><strong>TusFacturas:</strong> emisión de las facturas electrónicas ante ARCA.</li>
+                  <li><strong>Stadia Maps:</strong> imágenes del mapa que muestra la zona aproximada de un aviso (no recibe datos de tu cuenta).</li>
                 </ul>
+                <p>Algunos de estos proveedores pueden almacenar datos fuera de la Argentina; en todos los casos se usan solo para prestar el servicio. También podemos compartir datos cuando lo exija una autoridad competente.</p>
               </div>
 
               {/* SECCIÓN 6 */}
+              <div id="cookies" className="flex flex-col gap-3 scroll-mt-24">
+                <h2 className="font-heading text-xl font-semibold text-[#001F58]">
+                  6. Cookies y medición
+                </h2>
+                <p>Usamos cookies y el almacenamiento del navegador solo para que el sitio funcione y para medir su uso. No usamos cookies de publicidad ni de seguimiento de terceros.</p>
+                <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
+                  <li><strong>Sesión:</strong> mantienen tu sesión iniciada de forma segura.</li>
+                  <li><strong>Medición propia:</strong> un identificador anónimo del navegador (dura un año) y una cookie con el sitio o la campaña desde la que llegaste (se borra al cerrar el navegador). Nos permiten contar visitas sin saber quién sos si no iniciaste sesión.</li>
+                  <li><strong>Preferencias en el navegador:</strong> las aeronaves que elegiste para comparar y si ya cerraste algún aviso del sitio. Quedan solo en tu dispositivo.</li>
+                </ul>
+                <p>Podés borrar o bloquear las cookies desde la configuración de tu navegador; si bloqueás las de sesión, no vas a poder iniciar sesión.</p>
+              </div>
+
+              {/* SECCIÓN 7 */}
               <div id="derechos" className="flex flex-col gap-3 scroll-mt-24">
                 <h2 className="font-heading text-xl font-semibold text-[#001F58]">
-                  6. Derechos del titular de los datos
+                  7. Derechos del titular de los datos
                 </h2>
                 <p>
-                    <a href="mailto:aeronauticasventas@gmail.com" className="font-semibold text-[#001F58] underline hover:text-[#001F58]/80 transition-colors">aeronauticasventas@gmail.com</a> adjuntando una prueba que acredite tu identidad.
+                  Podés acceder a tus datos, actualizarlos, rectificarlos o pedir que los eliminemos (Ley N° 25.326). Buena parte se edita directamente desde tu perfil. Para el resto, o para eliminar tu cuenta, escribinos a{" "}
+                  <a href="mailto:aeronauticasventas@gmail.com" className="font-semibold text-[#001F58] underline hover:text-[#001F58]/80 transition-colors">aeronauticasventas@gmail.com</a> desde el correo de tu cuenta o adjuntando una prueba que acredite tu identidad. Los datos de pagos y facturas se conservan el tiempo que exige la normativa fiscal.
                 </p>
               </div>
 
