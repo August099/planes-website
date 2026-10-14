@@ -7,6 +7,8 @@
 //
 // Sin --apply solo informa. En una base que no sea la local pide además --confirm-production.
 // Uso: npx tsx --require ./scripts/stub-server-only.cjs scripts/seed-real-plans.ts [--apply]
+// Lee el .env solo (las variables ya exportadas en la terminal mandan sobre el .env).
+import "dotenv/config";
 import { prisma } from "@/lib/prisma";
 import { planInputSchema, planRecordFromInput, type PlanInput } from "@/lib/plan-rules";
 import { syncListingExpiry } from "@/lib/subscriptions";
@@ -90,7 +92,9 @@ const PLANS: PlanInput[] = [
 ];
 
 async function main() {
-  const url = new URL(process.env.DATABASE_URL!);
+  if (!process.env.DATABASE_URL) throw new Error("Falta DATABASE_URL: cargala en el .env o exportala en la terminal.");
+  if (!process.env.RUNTIME_DATABASE_URL) throw new Error("Falta RUNTIME_DATABASE_URL (la usa lib/prisma.ts): cargala en el .env o exportala en la terminal.");
+  const url = new URL(process.env.DATABASE_URL);
   const local = url.hostname === "localhost" && url.pathname === "/va_dev";
   if (!local && !process.argv.includes("--confirm-production")) throw new Error(`Base ${url.hostname}${url.pathname}: no es la local. Agregá --confirm-production.`);
   console.log(`Base: ${url.hostname}${url.pathname} · ${APPLY ? "APLICANDO" : "solo informe (sin --apply)"}\n`);
