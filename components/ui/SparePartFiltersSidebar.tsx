@@ -113,8 +113,9 @@ function SparePartFiltersForm({ categories }: Props) {
   const [condition, setCondition] = useState<string[]>(searchParams.getAll("condition"));
   const [province, setProvince] = useState(searchParams.get("province") ?? "");
 
+  // Las secciones con filtros activos arrancan abiertas (VA-31); Precio ya no está siempre abierta (VA-92).
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>(() => ({
-    price: true,
+    price: searchParams.has("minPrice") || searchParams.has("maxPrice") || searchParams.has("currency"),
     category: searchParams.has("category"),
     condition: searchParams.has("condition"),
     province: searchParams.has("province"),
@@ -176,20 +177,21 @@ function SparePartFiltersForm({ categories }: Props) {
     const urlCurrency = currencyFromUrl(searchParams.get("currency"));
     const money = (v: string) => `${urlCurrency === "ARS" ? "ARS" : "USD"} ${Number(v).toLocaleString("es-AR")}`;
     const chips: { key: string; value: string | null; label: string }[] = [];
-    if (urlCurrency === "ARS") chips.push({ key: "currency", value: null, label: "En pesos" });
-    if (urlCurrency === "USD") chips.push({ key: "currency", value: null, label: "En dólares" });
-    const prov = provinceBySlug(searchParams.get("province"));
-    if (prov) chips.push({ key: "province", value: null, label: provinceShortName(prov.name) });
-    const min = searchParams.get("minPrice");
-    const max = searchParams.get("maxPrice");
-    if (min) chips.push({ key: "minPrice", value: null, label: `Desde ${money(min)}` });
-    if (max) chips.push({ key: "maxPrice", value: null, label: `Hasta ${money(max)}` });
+    // Mismo orden que las secciones (VA-92): categoría, condición, precio, provincia.
     for (const value of searchParams.getAll("category")) {
       chips.push({ key: "category", value, label: nameOf.get(value) ?? value });
     }
     for (const value of searchParams.getAll("condition")) {
       chips.push({ key: "condition", value, label: CONDITION_LABELS[value] ?? value });
     }
+    if (urlCurrency === "ARS") chips.push({ key: "currency", value: null, label: "En pesos" });
+    if (urlCurrency === "USD") chips.push({ key: "currency", value: null, label: "En dólares" });
+    const min = searchParams.get("minPrice");
+    const max = searchParams.get("maxPrice");
+    if (min) chips.push({ key: "minPrice", value: null, label: `Desde ${money(min)}` });
+    if (max) chips.push({ key: "maxPrice", value: null, label: `Hasta ${money(max)}` });
+    const prov = provinceBySlug(searchParams.get("province"));
+    if (prov) chips.push({ key: "province", value: null, label: provinceShortName(prov.name) });
     return chips;
   }, [searchParams, categories]);
 
@@ -223,6 +225,41 @@ function SparePartFiltersForm({ categories }: Props) {
     <FilterShell onApply={applyFilters} activeCount={activeFilterCount} onClear={clearFilters} isOpenMobile={isOpenMobile} setIsOpenMobile={setIsOpenMobile}>
       <AppliedFilterChips chips={appliedChips} onRemove={removeChip} />
 
+      {/* Categoría — árbol recursivo, sin límite de profundidad */}
+      <FilterSection title="Categoría" count={counts.category} open={openSections.category} onToggle={() => toggleSection("category")}>
+        <div className="flex flex-col gap-0.5 max-h-[320px] overflow-y-auto pr-1">
+          {categoryTree.map((node) => (
+            <CategoryNode
+              key={node.id}
+              node={node}
+              selected={categoryIds}
+              expandedIds={expandedCategoryIds}
+              onToggle={toggleCategory}
+              onToggleExpand={(id) =>
+                setExpandedCategoryIds((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]))
+              }
+            />
+          ))}
+        </div>
+      </FilterSection>
+
+      <FilterSection title="Condición" count={counts.condition} open={openSections.condition} onToggle={() => toggleSection("condition")}>
+        <div className="flex flex-col gap-0.5">
+          {CONDITIONS.map((cond) => (
+            <div key={cond} className="flex items-center gap-2 min-h-9">
+              <Checkbox
+                id={`cond-${cond}`}
+                checked={condition.includes(cond)}
+                onCheckedChange={() => toggleValue(condition, setCondition, cond)}
+              />
+              <label htmlFor={`cond-${cond}`} className="text-sm cursor-pointer flex-1 select-none py-1">
+                {CONDITION_LABELS[cond]}
+              </label>
+            </div>
+          ))}
+        </div>
+      </FilterSection>
+
       <FilterSection title="Precio" count={counts.price} open={openSections.price} onToggle={() => toggleSection("price")}>
         <div className="flex flex-col gap-2">
           <div className="flex rounded-md border overflow-hidden text-xs">
@@ -254,43 +291,8 @@ function SparePartFiltersForm({ categories }: Props) {
         </div>
       </FilterSection>
 
-      {/* Categoría — árbol recursivo, sin límite de profundidad */}
-      <FilterSection title="Categoría" count={counts.category} open={openSections.category} onToggle={() => toggleSection("category")}>
-        <div className="flex flex-col gap-0.5 max-h-[320px] overflow-y-auto pr-1">
-          {categoryTree.map((node) => (
-            <CategoryNode
-              key={node.id}
-              node={node}
-              selected={categoryIds}
-              expandedIds={expandedCategoryIds}
-              onToggle={toggleCategory}
-              onToggleExpand={(id) =>
-                setExpandedCategoryIds((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]))
-              }
-            />
-          ))}
-        </div>
-      </FilterSection>
-
       <FilterSection title="Provincia" count={counts.province} open={openSections.province} onToggle={() => toggleSection("province")}>
         <ProvinceFilterSelect value={province} onChange={setProvince} />
-      </FilterSection>
-
-      <FilterSection title="Condición" count={counts.condition} open={openSections.condition} onToggle={() => toggleSection("condition")}>
-        <div className="flex flex-col gap-0.5">
-          {CONDITIONS.map((cond) => (
-            <div key={cond} className="flex items-center gap-2 min-h-9">
-              <Checkbox
-                id={`cond-${cond}`}
-                checked={condition.includes(cond)}
-                onCheckedChange={() => toggleValue(condition, setCondition, cond)}
-              />
-              <label htmlFor={`cond-${cond}`} className="text-sm cursor-pointer flex-1 select-none py-1">
-                {CONDITION_LABELS[cond]}
-              </label>
-            </div>
-          ))}
-        </div>
       </FilterSection>
     </FilterShell>
   );
