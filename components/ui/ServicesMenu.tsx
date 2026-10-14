@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { HANGARS_PATH } from "@/lib/hangars";
 import { GUIDES_PATH, guidePath } from "@/lib/guides";
 import { getPublishedGuides } from "@/lib/guides-data";
 
@@ -18,7 +17,7 @@ type MenuSection = { title: string; href: string; links: MenuLink[]; more?: stri
 // VA-85: las guías salen de la base (publicadas, por orden); se muestran hasta 5.
 const MENU_GUIDES = 5;
 
-// Cada columna puede tener más de una sección (Hangares y Herramientas van apiladas en la última).
+// Cada columna puede tener más de una sección (las de SERVICE_TOOLS van apiladas en la última).
 async function serviceColumns(): Promise<MenuSection[][]> {
   const guides = (await getPublishedGuides()).slice(0, MENU_GUIDES);
   return [
@@ -29,13 +28,9 @@ async function serviceColumns(): Promise<MenuSection[][]> {
   ];
 }
 
+// VA-93: Hangares (VA-84) está oculto en app/_proximamente/; para volver a mostrarlo, ver
+// docs/FUNCIONES_OCULTAS.md (sección arriba de "Herramientas", con HANGARS_PATH de lib/hangars).
 const SERVICE_TOOLS: MenuSection[] = [
-  // VA-84: por ahora solo el listado (pedido del socio, 11/10).
-  {
-    title: "Hangares",
-    href: HANGARS_PATH,
-    links: [{ label: "Hangares en alquiler y venta", href: HANGARS_PATH, hint: "Espacios, hangares completos y venta" }],
-  },
   {
     title: "Herramientas",
     href: "/planes/compare",
