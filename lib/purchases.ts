@@ -25,9 +25,14 @@ const PAYMENT: Record<PaymentStatus, PurchaseRow["payment"]> = {
   PARTIALLY_REFUNDED: { key: "PARTIALLY_REFUNDED", label: "Reintegro parcial", tone: "muted" },
 };
 
+const NO_INVOICE: PurchaseRow["invoice"] = { label: "No corresponde", downloadHref: null };
+
 function invoiceCell(invoice: { id: string; status: InvoiceStatus; pdfPath: string | null } | undefined): PurchaseRow["invoice"] {
   if (!invoice) return null;
   if (invoice.status === "ISSUED") return { label: "Emitida", downloadHref: invoice.pdfPath ? `/api/invoices/${invoice.id}/pdf` : null };
+  // VA-105: descartada (prueba interna o reembolsada antes de emitir) o simulada (Preview / pago de prueba).
+  if (invoice.status === "SKIPPED") return NO_INVOICE;
+  if (invoice.status === "ISSUED_SIMULATED") return { label: "Simulada (prueba)", downloadHref: null };
   // Mientras la facturación no esté activa (o falle y se reintente), para el usuario es "en preparación".
   return { label: "En preparación", downloadHref: null };
 }
@@ -78,7 +83,13 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
       amount,
       // Un cupón del 100% no pasa por Mercado Pago: se muestra como "Sin cargo".
       payment: amount === 0 && p.activatedAt ? { key: "FREE", label: "Sin cargo", tone: "ok" } : PAYMENT[p.paymentStatus],
-      invoice: amount > 0 && p.paymentStatus === "APPROVED" ? invoiceCell(invoice) ?? { label: "En preparación", downloadHref: null } : null,
+      // VA-105 1.2: sin cargo (cupón del 100%) → no corresponde factura.
+      invoice:
+        amount === 0 && p.activatedAt
+          ? NO_INVOICE
+          : amount > 0 && ["APPROVED", "PARTIALLY_REFUNDED"].includes(p.paymentStatus)
+            ? invoiceCell(invoice) ?? { label: "En preparación", downloadHref: null }
+            : null,
       href: `/payment/status?purchase=${p.id}`,
     };
   });

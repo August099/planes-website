@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { mpClient } from "@/lib/mercadopago";
 import { activatePurchase, revokePurchase } from "@/lib/payments/activation";
 import { queueInvoice } from "@/lib/payments/invoices";
+import { processInvoice } from "@/lib/billing/issue";
+import { isTestPayment } from "@/lib/billing/guard";
+import { mpAccountIsTest } from "@/lib/payments/mp-account";
 import { handleSubscriptionTopic } from "@/lib/payments/subscriptions";
 
 // VA-92 · Etapa 3: procesamiento de un WebhookEvent ya guardado. Nunca se confía en el payload:
@@ -74,6 +77,9 @@ async function handlePayment(mpPaymentId: string): Promise<Outcome> {
   const refunded = Number(mp.transaction_amount_refunded ?? 0);
   const status = mp.status ?? "pending";
   const approvedAt = mp.date_approved ? new Date(mp.date_approved) : null;
+  // VA-105: live_mode según la API (no el payload) y si es un pago de prueba.
+  const liveMode = typeof mp.live_mode === "boolean" ? mp.live_mode : null;
+  const isTest = isTestPayment({ liveMode, mpAccountIsTest: await mpAccountIsTest() });
 
   // La compra se identifica por external_reference = purchase.id (Checkout Pro).
   const purchase = mp.external_reference
@@ -90,6 +96,8 @@ async function handlePayment(mpPaymentId: string): Promise<Outcome> {
     paymentType: mp.payment_type_id ?? null,
     approvedAt,
     purchaseId: purchase?.id ?? null,
+    liveMode,
+    isTest,
     raw: JSON.parse(JSON.stringify(mp)) as Prisma.InputJsonValue,
   };
   const payment = await upsertPayment(String(mp.id ?? mpPaymentId), data);
@@ -114,16 +122,75 @@ async function handlePayment(mpPaymentId: string): Promise<Outcome> {
       await prisma.purchase.update({ where: { id: purchase.id }, data: { paymentStatus: "PARTIALLY_REFUNDED" } });
     }
     const paidAt = approvedAt ?? new Date();
+    // VA-105 1.2: la factura es por lo efectivamente cobrado; $0 no se factura (queueInvoice lo omite).
     await queueInvoice({ paymentId: payment.id, amount, description: purchase.description, receiver: purchase.billingSnapshot, periodFrom: paidAt, periodTo: paidAt });
+    notes.push(await invoiceNote(payment.id));
+    if (refunded > 0) notes.push(await handleRefunds(payment.id, mp.refunds ?? [], amount, refunded));
   } else if (purchaseStatus === "REFUNDED") {
     const revoked = await revokePurchase(purchase.id);
     notes.push(revoked ? "compra revertida" : "la compra ya estaba revertida o no se había activado");
     if (!revoked) await setStatusIfNotActivated(purchase.id, "REFUNDED");
+    notes.push(await handleRefunds(payment.id, mp.refunds ?? [], amount, refunded || amount));
   } else {
     // Pendiente, en proceso, rechazado o cancelado: solo se informa (permite reintentar el pago).
     await setStatusIfNotActivated(purchase.id, purchaseStatus);
   }
   return { status: "PROCESSED", note: notes.join("; ") };
+}
+
+/** Emite (o simula, o deja pendiente) la factura del pago y devuelve una nota para el evento. */
+async function invoiceNote(paymentId: string): Promise<string> {
+  const invoice = await prisma.invoice.findUnique({ where: { invoicedPaymentId: paymentId }, select: { id: true } });
+  if (!invoice) return "sin factura (monto $0)";
+  const status = await processInvoice(invoice.id);
+  return `factura: ${status ?? "en proceso"}`;
+}
+
+/**
+ * Reembolsos (totales o parciales): una nota de crédito C por reembolso de MP (refundRef único). Si la
+ * factura todavía no se emitió (BILLING_ENABLED=false o en error), no hace falta nota de crédito:
+ * total → la factura se descarta; parcial → se factura solo lo que quedó cobrado.
+ */
+async function handleRefunds(paymentId: string, refunds: Array<{ id?: number | string; amount?: number }>, amount: number, refundedTotal: number): Promise<string> {
+  const original = await prisma.invoice.findUnique({ where: { invoicedPaymentId: paymentId } });
+  if (!original) return "reembolso sin factura";
+  if (original.status === "PENDING" || original.status === "ERROR") {
+    const remaining = Math.max(0, Math.round((amount - refundedTotal) * 100) / 100);
+    await prisma.invoice.update({
+      where: { id: original.id },
+      data:
+        remaining <= 0
+          ? { status: "SKIPPED", skippedAt: new Date(), errors: "Reembolsado antes de facturar: no corresponde factura." }
+          : { total: new Prisma.Decimal(remaining) },
+    });
+    return remaining <= 0 ? "factura descartada (reembolso total antes de emitir)" : `factura ajustada a ${remaining} (reembolso parcial)`;
+  }
+  if (original.status !== "ISSUED" && original.status !== "ISSUED_SIMULATED") return `reembolso: factura ${original.status}`;
+  let created = 0;
+  for (const r of refunds) {
+    const refundAmount = Number(r.amount ?? 0);
+    if (!r.id || refundAmount <= 0) continue;
+    const res = await prisma.invoice.createMany({
+      data: [
+        {
+          kind: "NOTA_CREDITO_C",
+          paymentId,
+          refundRef: `mp-refund-${r.id}`,
+          originalInvoiceId: original.id,
+          total: new Prisma.Decimal(refundAmount),
+          periodFrom: original.periodFrom,
+          periodTo: original.periodTo,
+          description: `Anulación ${refundAmount < amount ? "parcial " : ""}– ${original.description}`.slice(0, 250),
+          receiver: original.receiver as Prisma.InputJsonValue,
+        },
+      ],
+      skipDuplicates: true,
+    });
+    created += res.count;
+  }
+  const notes = await prisma.invoice.findMany({ where: { originalInvoiceId: original.id, status: { in: ["PENDING", "ERROR"] } }, select: { id: true } });
+  for (const n of notes) await processInvoice(n.id);
+  return `notas de crédito nuevas: ${created}`;
 }
 
 /** Un pago que llega tarde (por ejemplo rechazado después de uno aprobado) no pisa una compra activa. */

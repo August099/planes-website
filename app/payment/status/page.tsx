@@ -36,6 +36,8 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
     include: {
       plan: { select: { id: true, name: true } },
       aircrafts: { select: { id: true, title: true } },
+      // VA-105: la factura para descargar acá mismo cuando esté emitida.
+      payments: { where: { status: "approved" }, select: { invoices: { where: { kind: "FACTURA_C" }, select: { id: true, status: true, pdfPath: true } } } },
       spareParts: { select: { id: true, title: true } },
       hangars: { select: { id: true, title: true } },
     },
@@ -54,6 +56,7 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
       : "/plans";
 
   const mpStatus = params.status ?? params.collection_status ?? null;
+  const invoiceReady = purchase.payments.flatMap((p) => p.invoices).find((i) => i.status === "ISSUED" && i.pdfPath) ?? null;
   const total = Number(purchase.finalPrice);
   const state = purchase.activatedAt
     ? purchase.paymentStatus === "REFUNDED"
@@ -89,7 +92,7 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
                   : purchase.plan
                     ? `Tu ${purchase.plan.name} ya está disponible: cada vez que publiques, se descuenta de tu saldo.`
                     : "Ya tenés el aviso disponible para publicar."}
-                {total > 0 && " Te enviamos la factura por email cuando esté emitida."}
+                {total > 0 && !invoiceReady && " Te enviamos la factura por email cuando esté emitida; también la vas a encontrar en Mis compras."}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 {listing ? (
@@ -100,6 +103,11 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
                   <Link href="/publish" className={primary}>
                     Publicar ahora
                   </Link>
+                )}
+                {invoiceReady && (
+                  <a href={`/api/invoices/${invoiceReady.id}/pdf`} className={secondary}>
+                    Descargar factura
+                  </a>
                 )}
                 <Link href={`/profile/${user.id}`} className={secondary}>
                   Ir a mi perfil

@@ -15,8 +15,14 @@ const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-
 const NUMBER = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
 const DATE = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" });
 const TONE = { ok: "bg-emerald-50 text-emerald-800", wait: "bg-amber-50 text-amber-800", bad: "bg-red-50 text-red-800", muted: "bg-slate-100 text-slate-600" };
-const INVOICE_LABEL: Record<InvoiceStatus, string> = { PENDING: "Pendiente", ISSUED: "Emitida", ERROR: "Error" };
-const INVOICE_TONE: Record<InvoiceStatus, string> = { PENDING: "text-amber-800", ISSUED: "text-emerald-800", ERROR: "text-red-700" };
+const INVOICE_LABEL: Record<InvoiceStatus, string> = { PENDING: "Pendiente", ISSUED: "Emitida", ERROR: "Error", ISSUED_SIMULATED: "Simulada", SKIPPED: "Descartada" };
+const INVOICE_TONE: Record<InvoiceStatus, string> = {
+  PENDING: "text-amber-800",
+  ISSUED: "text-emerald-800",
+  ERROR: "text-red-700",
+  ISSUED_SIMULATED: "text-slate-500",
+  SKIPPED: "text-slate-500",
+};
 
 const day = (v?: string) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : "");
 
@@ -28,7 +34,7 @@ export default async function AdminPaymentsPage({ searchParams }: Props) {
   const sp = await searchParams;
   const from = day(sp.from);
   const to = day(sp.to);
-  const invoice = ["PENDING", "ISSUED", "ERROR", "NONE"].includes(sp.invoice ?? "") ? (sp.invoice as InvoiceStatus | "NONE") : undefined;
+  const invoice = ["PENDING", "ISSUED", "ERROR", "ISSUED_SIMULATED", "SKIPPED", "NONE"].includes(sp.invoice ?? "") ? (sp.invoice as InvoiceStatus | "NONE") : undefined;
 
   const [rows, settings, invoiced, counts] = await Promise.all([
     listAdminPayments({
@@ -92,7 +98,8 @@ export default async function AdminPaymentsPage({ searchParams }: Props) {
           <p className={LABEL}>Facturación</p>
           <p className={`mt-1 text-sm font-semibold ${billingOn ? "text-emerald-700" : "text-amber-800"}`}>{billingOn ? "Activa" : "Desactivada (BILLING_ENABLED)"}</p>
           <p className="mt-1 text-xs text-slate-600 tabular-nums">
-            {counts.pending} pendientes · {counts.issued} emitidas · {counts.error} con error
+            {counts.pending} pendientes · {counts.issued} emitidas · {counts.error} con error · {counts.simulated} simuladas ·{" "}
+            {counts.skipped} descartadas
           </p>
           {!billingOn && <p className="mt-1 text-xs text-slate-500">Los pagos funcionan; las facturas quedan pendientes hasta activar TusFacturas.</p>}
         </div>
@@ -118,6 +125,8 @@ export default async function AdminPaymentsPage({ searchParams }: Props) {
             <option value="PENDING">Pendiente</option>
             <option value="ISSUED">Emitida</option>
             <option value="ERROR">Con error</option>
+            <option value="ISSUED_SIMULATED">Simulada (prueba)</option>
+            <option value="SKIPPED">Descartada</option>
             <option value="NONE">Sin factura</option>
           </select>
         </label>
@@ -180,9 +189,10 @@ export default async function AdminPaymentsPage({ searchParams }: Props) {
                 <td className="px-4 py-3">
                   <span className={`inline-block rounded-sm px-2 py-0.5 text-xs font-semibold ${TONE[r.paymentTone]}`}>{r.paymentLabel}</span>
                   {r.mpPaymentId && <p className="mt-0.5 font-mono text-[11px] text-slate-400">MP {r.mpPaymentId}</p>}
+                  {r.isTest && <p className="mt-0.5 text-[11px] font-semibold text-slate-500">Prueba</p>}
                 </td>
                 <td className={`px-4 py-3 text-xs font-semibold ${r.invoiceStatus ? INVOICE_TONE[r.invoiceStatus] : "text-slate-400"}`}>
-                  {r.invoiceStatus ? INVOICE_LABEL[r.invoiceStatus] : "—"}
+                  {r.invoiceStatus ? INVOICE_LABEL[r.invoiceStatus] : r.amount === 0 ? "No corresponde" : "—"}
                 </td>
                 <td className="px-4 py-3 text-right text-xs">
                   <Link href={`/admin/payments/${encodeURIComponent(r.key)}`} className="font-semibold text-[#001F58] hover:underline">

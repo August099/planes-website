@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { getAdminPaymentDetail } from "@/lib/admin-payments";
-import { RetryInvoiceButton } from "@/components/admin/BillingSettingsForm";
+import { DiscardInvoiceButton, RetryInvoiceButton } from "@/components/admin/BillingSettingsForm";
 
 export const dynamic = "force-dynamic";
 
@@ -102,6 +102,7 @@ export default async function AdminPaymentDetailPage({ params }: Props) {
                   <p className="font-semibold tabular-nums text-[#001F58]">{money(p.amount)}</p>
                 </div>
                 <p className="text-slate-700">
+                  {p.isTest && <span className="mr-1 rounded-sm bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600">Prueba</span>}
                   {p.status}
                   {p.statusDetail ? ` (${p.statusDetail})` : ""} · {p.method ?? "—"}
                   {p.approvedAt ? ` · aprobado ${DATE.format(p.approvedAt)}` : ""}
@@ -116,9 +117,23 @@ export default async function AdminPaymentDetailPage({ params }: Props) {
                           {inv.number != null && ` · N.º ${String(inv.pointOfSale ?? 0).padStart(5, "0")}-${String(inv.number).padStart(8, "0")}`}
                           {inv.cae && ` · CAE ${inv.cae}`}
                           {inv.attempts > 0 && ` · ${inv.attempts} intento(s)`}
+                          {inv.mode && ` · ${inv.mode === "production" ? "emisión real" : "simulada"}`}
+                          {inv.skippedAt && ` · descartada el ${DATE.format(inv.skippedAt)}`}
                           {inv.errors && <p className="mt-1 whitespace-pre-wrap text-red-700">{inv.errors}</p>}
+                          {inv.arcaObservations && <p className="mt-1 whitespace-pre-wrap text-slate-500">{inv.arcaObservations}</p>}
+                          {inv.requestPayload && (
+                            <details className="mt-1">
+                              <summary className="cursor-pointer text-[#001F58]">JSON {inv.mode === "production" ? "enviado" : "que se habría enviado"} a TusFacturas</summary>
+                              <pre className="mt-1 max-h-72 overflow-auto rounded bg-slate-50 p-2 text-[11px] leading-snug">{JSON.stringify(inv.requestPayload, null, 2)}</pre>
+                            </details>
+                          )}
                         </div>
-                        {inv.status === "ERROR" && <RetryInvoiceButton invoiceId={inv.id} />}
+                        {(inv.status === "ERROR" || inv.status === "PENDING") && (
+                          <span className="flex flex-wrap gap-2">
+                            <RetryInvoiceButton invoiceId={inv.id} label={inv.status === "PENDING" ? "Procesar ahora" : "Reintentar factura"} />
+                            <DiscardInvoiceButton invoiceId={inv.id} />
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>

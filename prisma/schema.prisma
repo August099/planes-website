@@ -302,6 +302,8 @@ model Purchase {
 
   @@index([userId, createdAt])
   @@index([paymentStatus, createdAt])
+  // VA-105: reservas de cupón (compras pendientes con cupón) al validar el límite de usos.
+  @@index([couponId, paymentStatus])
 }
 
 model Subscription {
@@ -1042,6 +1044,10 @@ model Payment {
   approvedAt     DateTime?
   purchaseId     String?
   subscriptionId String?
+  // VA-105: live_mode que informa la API de MP y si es un pago de prueba (credenciales o cuentas de
+  // prueba). Un pago de prueba nunca genera una factura real ni cuenta en el tope ni en los KPIs.
+  liveMode       Boolean?
+  isTest         Boolean       @default(false)
   raw            Json?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -1105,6 +1111,13 @@ model Invoice {
   issuedAt          DateTime?
   // Ruta en el bucket privado de Supabase (el PDF de TusFacturas es temporal).
   pdfPath           String?
+  // VA-105: cómo se procesó (production, development o simulated) y el JSON enviado (o que se habría
+  // enviado) a TusFacturas, sin credenciales.
+  mode              String?
+  requestPayload    Json?
+  // VA-105: "Descartar (prueba interna)": quién y cuándo.
+  skippedAt         DateTime?
+  skippedById       String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   payment           Payment       @relation(fields: [paymentId], references: [id])
@@ -1169,6 +1182,11 @@ enum InvoiceStatus {
   PENDING
   ISSUED
   ERROR
+  // VA-105: no se llamó a TusFacturas en producción (local/Preview o pago de prueba): se registra el
+  // JSON que se habría enviado, sin CAE.
+  ISSUED_SIMULATED
+  // VA-105: descartada a mano por un admin (por ejemplo, el pago real de prueba). Nunca se emite.
+  SKIPPED
 }
 
 enum BillingPartyKind {

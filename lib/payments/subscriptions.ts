@@ -10,6 +10,9 @@ import { queueInvoice, receiverFromProfile } from "@/lib/payments/invoices";
 import { isSubscriptionCurrent } from "@/lib/subscriptions";
 import { sendSubscriptionPaymentFailedEmail } from "@/lib/mail";
 import { LISTING_DAYS } from "@/lib/payments/activation";
+import { processInvoice } from "@/lib/billing/issue";
+import { isTestPayment } from "@/lib/billing/guard";
+import { mpAccountIsTest } from "@/lib/payments/mp-account";
 
 // VA-92 · Etapa 2: suscripciones mensuales con la API de Suscripciones de Mercado Pago (preapproval).
 // Se crean por API, sin "Planes de suscripción" del panel: el precio y los beneficios salen de nuestro
@@ -170,6 +173,8 @@ async function handleAuthorizedPayment(authorizedPaymentId: string): Promise<Out
     if (mp.status !== "approved") return { status: "PROCESSED", note: `Cobro ${authorizedPaymentId}: el pago ${mpPaymentId} figura ${mp.status}` };
     const amount = Number(mp.transaction_amount ?? ap.transaction_amount ?? 0);
     const approvedAt = mp.date_approved ? new Date(mp.date_approved) : new Date();
+    const liveMode = typeof mp.live_mode === "boolean" ? mp.live_mode : null;
+    const isTest = isTestPayment({ liveMode, mpAccountIsTest: await mpAccountIsTest() });
 
     // Idempotencia: solo el primero que registra el pago como aprobado extiende el período.
     const claimed = await claimApprovedPayment(mpPaymentId, {
@@ -182,6 +187,8 @@ async function handleAuthorizedPayment(authorizedPaymentId: string): Promise<Out
       paymentType: mp.payment_type_id ?? null,
       approvedAt,
       subscriptionId: sub.id,
+      liveMode,
+      isTest,
       raw: JSON.parse(JSON.stringify({ authorizedPayment: ap, payment: mp })) as Prisma.InputJsonValue,
     });
     if (!claimed) return { status: "PROCESSED", note: `Cobro ${authorizedPaymentId}: el pago ${mpPaymentId} ya estaba registrado` };
@@ -210,7 +217,10 @@ async function handleAuthorizedPayment(authorizedPaymentId: string): Promise<Out
       periodFrom: start,
       periodTo: end,
     });
-    return { status: "PROCESSED", note: `Cobro ${authorizedPaymentId}: aprobado, período hasta ${end.toISOString().slice(0, 10)}` };
+    // VA-105: emite, simula o deja pendiente según canIssueRealInvoice (un cobro de $0 no se factura).
+    const invoice = await prisma.invoice.findUnique({ where: { invoicedPaymentId: claimed.id }, select: { id: true } });
+    const invoiceStatus = invoice ? await processInvoice(invoice.id) : "sin factura ($0)";
+    return { status: "PROCESSED", note: `Cobro ${authorizedPaymentId}: aprobado, período hasta ${end.toISOString().slice(0, 10)}; factura: ${invoiceStatus ?? "en proceso"}` };
   }
 
   const rejected = paymentStatus === "rejected" || ap.status === "recycling" || ap.status === "cancelled";

@@ -23,6 +23,8 @@ export type AdminPaymentRow = {
   paymentTone: "ok" | "wait" | "bad" | "muted";
   mpPaymentId: string | null;
   invoiceStatus: InvoiceStatus | null;
+  /** VA-105: pago de prueba (no cuenta en el tope ni en los KPIs). */
+  isTest: boolean;
 };
 
 const PURCHASE_LABEL: Record<PaymentStatus, [string, AdminPaymentRow["paymentTone"]]> = {
@@ -84,7 +86,7 @@ export async function listAdminPayments(f: AdminPaymentFilters, take = 200): Pro
         paymentStatus: true,
         activatedAt: true,
         user: { select: { id: true, name: true, email: true } },
-        payments: { orderBy: { createdAt: "desc" }, select: { mpPaymentId: true, invoices: { where: { kind: "FACTURA_C" }, select: { status: true } } } },
+        payments: { orderBy: { createdAt: "desc" }, select: { mpPaymentId: true, isTest: true, invoices: { where: { kind: "FACTURA_C" }, select: { status: true } } } },
       },
     }),
     prisma.payment.findMany({
@@ -102,6 +104,7 @@ export async function listAdminPayments(f: AdminPaymentFilters, take = 200): Pro
         status: true,
         amount: true,
         mpPaymentId: true,
+        isTest: true,
         subscription: { select: { plan: { select: { name: true } }, user: { select: { id: true, name: true, email: true } } } },
         invoices: { where: { kind: "FACTURA_C" }, select: { status: true } },
       },
@@ -123,6 +126,7 @@ export async function listAdminPayments(f: AdminPaymentFilters, take = 200): Pro
       paymentTone: tone,
       mpPaymentId: lastPayment?.mpPaymentId ?? null,
       invoiceStatus: p.payments.flatMap((x) => x.invoices)[0]?.status ?? null,
+      isTest: !!lastPayment?.isTest,
     };
   });
   for (const s of subPayments) {
@@ -138,6 +142,7 @@ export async function listAdminPayments(f: AdminPaymentFilters, take = 200): Pro
       paymentTone: tone,
       mpPaymentId: s.mpPaymentId,
       invoiceStatus: s.invoices[0]?.status ?? null,
+      isTest: s.isTest,
     });
   }
   return rows.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, take);
@@ -149,7 +154,7 @@ export async function invoicedLast12Months(now = new Date()) {
   since.setFullYear(since.getFullYear() - 1);
   const sums = await prisma.invoice.groupBy({
     by: ["kind"],
-    where: { status: "ISSUED", issuedAt: { gte: since } },
+    where: { status: "ISSUED", issuedAt: { gte: since }, payment: { isTest: false } },
     _sum: { total: true },
   });
   const sum = (kind: string) => Number(sums.find((s) => s.kind === kind)?._sum.total ?? 0);
@@ -159,7 +164,7 @@ export async function invoicedLast12Months(now = new Date()) {
 export async function invoiceCounts() {
   const rows = await prisma.invoice.groupBy({ by: ["status"], _count: { _all: true } });
   const c = (s: InvoiceStatus) => rows.find((r) => r.status === s)?._count._all ?? 0;
-  return { pending: c("PENDING"), issued: c("ISSUED"), error: c("ERROR") };
+  return { pending: c("PENDING"), issued: c("ISSUED"), error: c("ERROR"), simulated: c("ISSUED_SIMULATED"), skipped: c("SKIPPED") };
 }
 
 /** Detalle de una fila: compra o cobro de suscripción, con sus pagos, facturas y eventos del webhook. */

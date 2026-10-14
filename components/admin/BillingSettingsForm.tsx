@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { retryInvoiceAction, saveBillingSettingsAction } from "@/app/actions/admin-payments-actions";
+import { discardInvoiceAction, retryInvoiceAction, saveBillingSettingsAction } from "@/app/actions/admin-payments-actions";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 // VA-92: configuración de facturación en "Pagos y facturas".
 
@@ -85,7 +86,7 @@ export function BillingSettingsForm({ initial }: { initial: Values }) {
   );
 }
 
-export function RetryInvoiceButton({ invoiceId }: { invoiceId: string }) {
+export function RetryInvoiceButton({ invoiceId, label = "Reintentar factura" }: { invoiceId: string; label?: string }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -103,9 +104,52 @@ export function RetryInvoiceButton({ invoiceId }: { invoiceId: string }) {
         }
         className="rounded-md border border-[#001F58]/20 px-3 py-1.5 text-xs font-semibold text-[#001F58] hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
       >
-        Reintentar factura
+        {label}
       </button>
       {error && <span className="text-xs text-red-700">{error}</span>}
     </span>
+  );
+}
+
+// VA-105 · 1.1: descartar una factura de una prueba interna (nunca se emite).
+export function DiscardInvoiceButton({ invoiceId }: { invoiceId: string }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="rounded-md px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 cursor-pointer"
+      >
+        Descartar (prueba interna)
+      </button>
+      <ConfirmDialog
+        open={open}
+        eyebrow="Factura"
+        title="Descartar esta factura"
+        confirmLabel="Descartar"
+        requireText="DESCARTAR"
+        danger
+        pending={pending}
+        error={error}
+        onClose={() => {
+          setOpen(false);
+          setError(null);
+        }}
+        onConfirm={(typed) =>
+          start(async () => {
+            const res = await discardInvoiceAction(invoiceId, typed);
+            if (!res.ok) return setError(res.error);
+            setOpen(false);
+            router.refresh();
+          })
+        }
+      >
+        <p className="text-sm text-slate-600">Queda descartada y nunca se emite. Usalo solo para pagos de prueba interna (por ejemplo, el pago real que se hace a mano antes del lanzamiento).</p>
+      </ConfirmDialog>
+    </>
   );
 }
