@@ -19,20 +19,16 @@ La rama `milton/actus` (VA-104) muestra todo esto; usa este documento como guía
 | Rutas ocultas | `app/_proximamente/hangars/page.tsx` (listado) · `app/_proximamente/hangars/hangar-details/[id]/page.tsx` (detalle) |
 | URL pública | `/services/hangars` y `/services/hangars/hangar-details/<id>` → **404** |
 | Se mantiene | Modelo `Hangar` y sus enums, `lib/hangars.ts` (`HANGARS_PATH`, `hangarPath`), `components/ui/HangarCard.tsx`, `components/ui/HangarFiltersSidebar.tsx`, `getHangarDetail` en `lib/listing-data.ts`, precios `HANGAR` |
-| Accesos quitados | Menú de Servicios de escritorio (`components/ui/ServicesMenu.tsx`) y del celular (`NAV` en `components/ui/header-menu-shared.tsx`) |
+| Accesos quitados | Menú de Servicios (desde VA-116, 14/10, "Servicios" es un link simple a `/services`, sin panel desplegable) |
 | Nunca tuvo acceso | Sitemap, JSON-LD, búsqueda del header, Home, pestañas del perfil y de `/publish`, recomendaciones |
 
 **Para volver a publicarlo:**
 1. Mover `app/_proximamente/hangars` a `app/services/hangars`.
-2. En `components/ui/header-menu-shared.tsx`, dentro de `sub` de Servicios, entre Guías y el comparador:
-   `{ href: "/services/hangars", label: "Hangares" },`
-3. En `components/ui/ServicesMenu.tsx`, importar `HANGARS_PATH` de `@/lib/hangars` y sumar como primer
-   elemento de `SERVICE_TOOLS`:
-   `{ title: "Hangares", href: HANGARS_PATH, links: [{ label: "Hangares en alquiler y venta", href: HANGARS_PATH, hint: "Espacios, hangares completos y venta" }] },`
-4. En `/services` (`app/services/page.tsx`), sacar "Hangares y espacios" de `upcomingServices` y sumarlo a
+2. Ya no hay menú desplegable de Servicios (VA-116): el acceso es desde la página `/services`.
+3. En `/services` (`app/services/page.tsx`), sacar "Hangares y espacios" de `upcomingServices` y sumarlo a
    "Disponible ahora".
-5. Sumar `/services/hangars` al sitemap (`app/sitemap.ts`) y, si corresponde, los detalles.
-6. `npx next build` y verificar que `/services/hangars` responde 200.
+4. Sumar `/services/hangars` al sitemap (`app/sitemap.ts`) y, si corresponde, los detalles.
+5. `npx next build` y verificar que `/services/hangars` responde 200.
 
 ---
 

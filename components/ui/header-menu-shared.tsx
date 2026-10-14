@@ -11,24 +11,20 @@ export function PendingDot({ className = "" }: { className?: string }) {
   return <span aria-hidden className={`block rounded-full bg-[#E70F1F] ${className}`} />;
 }
 
-// "sub": secciones de Servicios que se listan debajo en el menú de celular (como el panel de escritorio).
-export const NAV: { href: string; label: string; sub?: { href: string; label: string }[] }[] = [
+// VA-116: Servicios sin submenú. VA-120: en el menú de celular, las categorías principales de
+// repuestos van debajo de "Repuestos" (llegan del Header).
+export const NAV: { href: string; label: string }[] = [
   { href: "/", label: "Inicio" },
   { href: "/planes", label: "Aviones" },
   { href: "/spareparts", label: "Repuestos" },
-  {
-    href: "/services",
-    label: "Servicios",
-    sub: [
-      { href: "/services/guides", label: "Guías" },
-      { href: "/planes/compare", label: "Comparador de aeronaves" },
-    ],
-  },
+  { href: "/services", label: "Servicios" },
   { href: "/publish", label: "Vender" },
 ];
+
+export type PartCategoryLink = { id: string; name: string };
 
 export const DESKTOP_TRIGGER_CLASS =
   "relative flex items-center justify-center p-2.5 rounded-lg bg-[#E70F1F] hover:bg-red-700 text-white transition-colors outline-none cursor-pointer shadow-sm border-none";
 export const MOBILE_TRIGGER_CLASS = "relative p-2 rounded-lg border-none hover:bg-white/10 outline-none cursor-pointer";
 
-export type MenuUser = { userId?: string; isAdmin: boolean; hasUnanswered: boolean; loading?: boolean };
+export type MenuUser = { userId?: string; isAdmin: boolean; hasUnanswered: boolean; loading?: boolean; partCategories?: PartCategoryLink[] };

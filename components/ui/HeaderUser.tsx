@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { User, Menu } from "lucide-react";
 import { getHeaderIndicators, type HeaderIndicators } from "@/app/actions/header-actions";
-import { DESKTOP_TRIGGER_CLASS, MOBILE_TRIGGER_CLASS, PendingDot } from "@/components/ui/header-menu-shared";
+import { DESKTOP_TRIGGER_CLASS, MOBILE_TRIGGER_CLASS, PendingDot, type PartCategoryLink } from "@/components/ui/header-menu-shared";
 
 // Parte del header que depende del usuario (VA-71). Es un componente cliente: así el resto del
 // header (y las páginas sin datos de usuario) pueden ser estáticas y cachearse en el CDN.
@@ -118,13 +118,13 @@ export function DesktopUserMenu() {
   );
 }
 
-export function MobileMenu() {
+export function MobileMenu({ partCategories = [] }: { partCategories?: PartCategoryLink[] }) {
   const { status, userId, isAdmin, hasUnanswered } = useHeaderUser();
   const [armed, setArmed] = useState(false);
 
   if (armed) {
     return (
-      <MobileDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} loading={status === "loading"} />
+      <MobileDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} loading={status === "loading"} partCategories={partCategories} />
     );
   }
 
