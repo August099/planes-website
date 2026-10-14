@@ -43,13 +43,44 @@ export async function hasVerifiedBadge(userId: string): Promise<boolean> {
   return !!sub;
 }
 
-/** VA-80: el plan vigente del usuario hace que sus publicaciones no venzan. */
-export async function hasNoExpiryPlan(userId: string): Promise<boolean> {
+export type ListingKind = "AIRCRAFT" | "SPARE_PART" | "HANGAR";
+const LISTING_DAYS_MS = 45 * 24 * 60 * 60 * 1000;
+
+/**
+ * VA-80 / VA-105 (14/10): tipos de aviso que no vencen con el plan vigente. "Sin vencimiento" vale
+ * solo para lo que el plan tiene ilimitado: el Plan Repuestos no frena el vencimiento de los aviones.
+ */
+export async function noExpiryKinds(userId: string, now = new Date()): Promise<Set<ListingKind>> {
   const sub = await prisma.subscription.findFirst({
-    where: { ...currentSubscriptionWhere(userId), plan: { noExpiry: true } },
-    select: { id: true },
+    where: { ...currentSubscriptionWhere(userId, now), plan: { noExpiry: true } },
+    select: { plan: { select: { isUnlimitedAircraft: true, isUnlimitedSpareParts: true, isUnlimitedHangars: true } } },
   });
-  return !!sub;
+  const kinds = new Set<ListingKind>();
+  if (sub?.plan.isUnlimitedAircraft) kinds.add("AIRCRAFT");
+  if (sub?.plan.isUnlimitedSpareParts) kinds.add("SPARE_PART");
+  if (sub?.plan.isUnlimitedHangars) kinds.add("HANGAR");
+  return kinds;
+}
+
+/** El plan vigente hace que los avisos de este tipo no venzan (ni haya que renovarlos). */
+export async function hasNoExpiryPlan(userId: string, kind: ListingKind): Promise<boolean> {
+  return (await noExpiryKinds(userId)).has(kind);
+}
+
+/**
+ * VA-105: alinea las fechas de vencimiento con el plan vigente. Lo cubierto queda sin fecha (también
+ * lo vencido que seguía ACTIVE: no hace falta renovarlo); lo no cubierto que no tenía fecha vuelve a
+ * vencer en 45 días. Se llama al activar, cambiar o terminar una suscripción o cortesía.
+ */
+export async function syncListingExpiry(userId: string, now = new Date()) {
+  const kinds = await noExpiryKinds(userId, now);
+  const restoreAt = new Date(now.getTime() + LISTING_DAYS_MS);
+  const base = { sellerId: userId, status: "ACTIVE" as const };
+  const sync = <T extends { updateMany: (args: { where: object; data: object }) => Promise<unknown> }>(model: T, kind: ListingKind) =>
+    kinds.has(kind)
+      ? model.updateMany({ where: { ...base, listingExpiresAt: { not: null } }, data: { listingExpiresAt: null } })
+      : model.updateMany({ where: { ...base, listingExpiresAt: null }, data: { listingExpiresAt: restoreAt } });
+  await Promise.all([sync(prisma.aircraft, "AIRCRAFT"), sync(prisma.sparePart, "SPARE_PART"), sync(prisma.hangar, "HANGAR")]);
 }
 
 /** VA-80: suscripción del usuario (vigente o no) para mostrar en su perfil. */
@@ -64,15 +95,20 @@ export async function getSubscriptionSummary(userId: string) {
       graceUntil: true,
       mpSubscriptionId: true,
       planId: true,
-      plan: { select: { name: true, price: true, billingInterval: true, noExpiry: true } },
+      plan: { select: { name: true, price: true, billingInterval: true, noExpiry: true, isUnlimitedAircraft: true, isUnlimitedSpareParts: true } },
     },
   });
   if (!sub) return null;
+  // VA-105: qué avisos no vencen (solo lo que el plan tiene ilimitado).
+  const { isUnlimitedAircraft: a, isUnlimitedSpareParts: r } = sub.plan;
+  const noExpiry = sub.plan.noExpiry && (a || r);
+  const noExpiryLabel = a && r ? "tus avisos" : a ? "tus avisos de aviones" : "tus avisos de repuestos";
   return {
     planName: sub.plan.name,
     price: Number(sub.plan.price),
     interval: sub.plan.billingInterval,
-    noExpiry: sub.plan.noExpiry,
+    noExpiry,
+    noExpiryLabel,
     status: sub.status,
     active: isSubscriptionCurrent(sub),
     // VA-92: cobro rechazado, en gracia hasta esta fecha (sigue con los beneficios).

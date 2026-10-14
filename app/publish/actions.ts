@@ -239,7 +239,7 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
   const now = new Date();
   // VA-80: con un plan "sin vencimiento" vigente, la publicación no vence (activeListingWhere
   // acepta listingExpiresAt null).
-  const expiresAt: Date | null = (await hasNoExpiryPlan(user.id)) ? null : new Date(now);
+  const expiresAt: Date | null = (await hasNoExpiryPlan(user.id, data.listingType === "aircraft" ? "AIRCRAFT" : "SPARE_PART")) ? null : new Date(now);
   expiresAt?.setDate(now.getDate() + 45);
   // VA-83: coordenadas de la localidad para el mapa del detalle (si Georef falla, sin mapa).
   const coords = await coordinatesFor(data.city, data.province);

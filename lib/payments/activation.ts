@@ -1,7 +1,7 @@
 import "server-only";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { hasNoExpiryPlan } from "@/lib/subscriptions";
+import { noExpiryKinds, type ListingKind } from "@/lib/subscriptions";
 
 // VA-92: entrega de lo comprado y su reversión. Idempotente: Purchase.activatedAt se marca con un
 // updateMany condicionado (activatedAt IS NULL) dentro de la misma transacción que acredita el
@@ -19,7 +19,7 @@ export async function activatePurchase(purchaseId: string, approvedAt = new Date
   });
   if (!purchase) throw new Error(`No existe la compra ${purchaseId}`);
   // Fuera de la transacción: solo lee la suscripción (no cambia con esta compra).
-  const noExpiry = await hasNoExpiryPlan(purchase.userId);
+  const noExpiry = await noExpiryKinds(purchase.userId);
 
   return prisma.$transaction(async (tx) => {
     const claimed = await tx.purchase.updateMany({
@@ -76,15 +76,16 @@ export const BALANCE_FIELD = {
 } as const;
 
 /** Activa los avisos "pendiente de pago" de la compra. Devuelve cuántos activó. */
-async function activateListings(tx: Tx, purchaseId: string, noExpiry: boolean): Promise<number> {
+async function activateListings(tx: Tx, purchaseId: string, noExpiry: Set<ListingKind>): Promise<number> {
   const now = new Date();
-  const expiresAt = noExpiry ? null : new Date(now.getTime() + LISTING_DAYS * 24 * 60 * 60 * 1000);
-  const data = { status: "ACTIVE" as const, listingStartsAt: now, listingExpiresAt: expiresAt };
+  const expiresAt = new Date(now.getTime() + LISTING_DAYS * 24 * 60 * 60 * 1000);
+  // VA-105: sin vencimiento solo para los tipos que el plan vigente tiene ilimitados.
+  const data = (kind: ListingKind) => ({ status: "ACTIVE" as const, listingStartsAt: now, listingExpiresAt: noExpiry.has(kind) ? null : expiresAt });
   const where = { purchaseId, status: "PENDING_PAYMENT" as const };
   const counts = await Promise.all([
-    tx.aircraft.updateMany({ where, data }),
-    tx.sparePart.updateMany({ where, data }),
-    tx.hangar.updateMany({ where, data }),
+    tx.aircraft.updateMany({ where, data: data("AIRCRAFT") }),
+    tx.sparePart.updateMany({ where, data: data("SPARE_PART") }),
+    tx.hangar.updateMany({ where, data: data("HANGAR") }),
   ]);
   return counts.reduce((n, c) => n + c.count, 0);
 }

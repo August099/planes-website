@@ -40,7 +40,7 @@ export async function renewListingAction(id: string, type: "aircraft" | "sparepa
 
       // VA-80: con un plan "sin vencimiento" vigente del vendedor, no vence.
       const newExpiration: Date | null =
-        current && (await hasNoExpiryPlan(current.sellerId)) ? null : new Date(baseDate);
+        current && (await hasNoExpiryPlan(current.sellerId, "AIRCRAFT")) ? null : new Date(baseDate);
       newExpiration?.setDate(baseDate.getDate() + 45);
 
       await prisma.aircraft.update({
@@ -66,7 +66,7 @@ export async function renewListingAction(id: string, type: "aircraft" | "sparepa
 
       // VA-80: con un plan "sin vencimiento" vigente del vendedor, no vence.
       const newExpiration: Date | null =
-        current && (await hasNoExpiryPlan(current.sellerId)) ? null : new Date(baseDate);
+        current && (await hasNoExpiryPlan(current.sellerId, "SPARE_PART")) ? null : new Date(baseDate);
       newExpiration?.setDate(baseDate.getDate() + 45);
 
       await prisma.sparePart.update({

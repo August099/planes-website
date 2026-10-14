@@ -7,9 +7,8 @@ import { appUrl, mpClient } from "@/lib/mercadopago";
 import { billingSnapshot, parseBilling } from "@/lib/billing-rules";
 import { getBillingSettings } from "@/lib/billing-settings";
 import { queueInvoice, receiverFromProfile } from "@/lib/payments/invoices";
-import { isSubscriptionCurrent } from "@/lib/subscriptions";
+import { isSubscriptionCurrent, syncListingExpiry } from "@/lib/subscriptions";
 import { sendSubscriptionPaymentFailedEmail } from "@/lib/mail";
-import { LISTING_DAYS } from "@/lib/payments/activation";
 import { processInvoice } from "@/lib/billing/issue";
 import { isTestPayment } from "@/lib/billing/guard";
 import { mpAccountIsTest } from "@/lib/payments/mp-account";
@@ -209,6 +208,8 @@ async function handleAuthorizedPayment(authorizedPaymentId: string): Promise<Out
         featuredCredits: sub.plan.featuredPerMonth,
       },
     });
+    // VA-105: los avisos de los tipos que el plan tiene ilimitados dejan de vencer.
+    await syncListingExpiry(sub.userId);
     await queueInvoice({
       paymentId: claimed.id,
       amount,
@@ -346,29 +347,11 @@ export async function runSubscriptionMaintenance(now = new Date()) {
     if (moved.count === 1) {
       if (finalStatus === "CANCELLED") cancelled++;
       else expired++;
-      await restoreListingExpiry(s.userId, now);
+      // VA-105: lo que el plan dejaba sin vencimiento vuelve a vencer en 45 días.
+      await syncListingExpiry(s.userId, now);
     }
   }
   return { expired, cancelled };
 }
 
-/** Sin plan "sin vencimiento", los avisos activos sin fecha vuelven a vencer en 45 días. */
-async function restoreListingExpiry(userId: string, now: Date) {
-  const still = await prisma.subscription.findFirst({
-    where: {
-      userId,
-      plan: { noExpiry: true },
-      OR: [
-        { status: "ACTIVE", currentPeriodEnd: { gt: now } },
-        { status: "PAST_DUE", graceUntil: { gt: now } },
-      ],
-    },
-    select: { id: true },
-  });
-  if (still) return;
-  const listingExpiresAt = new Date(now.getTime() + LISTING_DAYS * 24 * 60 * 60 * 1000);
-  const where = { sellerId: userId, status: "ACTIVE" as const, listingExpiresAt: null };
-  await prisma.aircraft.updateMany({ where, data: { listingExpiresAt } });
-  await prisma.sparePart.updateMany({ where, data: { listingExpiresAt } });
-  await prisma.hangar.updateMany({ where, data: { listingExpiresAt } });
-}
+

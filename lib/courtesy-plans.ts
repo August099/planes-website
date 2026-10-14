@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { isSubscriptionCurrent } from "@/lib/subscriptions";
+import { isSubscriptionCurrent, syncListingExpiry } from "@/lib/subscriptions";
 
 // VA-92: plan de cortesía (suscripción MANUAL). Lo asigna un admin a un usuario hasta una fecha:
 // sin Mercado Pago (mpSubscriptionId vacío), no se cobra ni se renueva, y no cuenta en ingresos ni
@@ -55,6 +55,7 @@ export async function grantCourtesyPlan(input: {
     featuredCredits: plan.featuredPerMonth,
   };
   await prisma.subscription.upsert({ where: { userId: input.userId }, create: { userId: input.userId, ...data }, update: data });
+  await syncListingExpiry(input.userId); // VA-105
   return { ok: true };
 }
 
@@ -63,5 +64,6 @@ export async function revokeCourtesyPlan(userId: string): Promise<CourtesyResult
   const sub = await prisma.subscription.findUnique({ where: { userId }, select: { source: true } });
   if (!sub || sub.source !== "MANUAL") return { ok: false, error: "No tiene un plan de cortesía." };
   await prisma.subscription.update({ where: { userId }, data: { status: "CANCELLED", currentPeriodEnd: new Date() } });
+  await syncListingExpiry(userId); // VA-105
   return { ok: true };
 }
