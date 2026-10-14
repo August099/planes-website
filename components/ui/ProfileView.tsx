@@ -46,8 +46,7 @@ import type { SubscriptionSummary } from "@/lib/subscriptions";
 import type { PurchaseRow } from "@/lib/purchases";
 import { PurchasesPanel } from "@/components/ui/profile/PurchasesPanel";
 import { BillingProfilePanel, type BillingProfileValues } from "@/components/ui/profile/BillingProfilePanel";
-
-const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+import { PASSWORD_REGEX } from "@/lib/password-rules";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -121,6 +120,9 @@ interface Props {
   // VA-92: "Mis compras" y datos de facturación guardados (solo el dueño).
   purchases?: PurchaseRow[];
   billingProfile?: { values: BillingProfileValues; saved: boolean } | null;
+  // VA-105 · 3: "Cambiar contraseña" solo para cuentas con contraseña (las de Google la crean con
+  // "Olvidé mi contraseña").
+  hasPassword?: boolean;
 }
 
 /** Helper para calcular los días restantes de una publicación */
@@ -155,6 +157,7 @@ export function ProfileView({
   subscription = null,
   purchases = [],
   billingProfile = null,
+  hasPassword = false,
 }: Props) {
   const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
   const missingDot = (field: ProfileField) =>
@@ -1000,6 +1003,21 @@ export function ProfileView({
           {storefront && <StorefrontEditor storefront={storefront} />}
 
           {/* Formulario de Cambio de Contraseña */}
+          {!hasPassword ? (
+            <div className="rounded-lg border border-[#001F58]/12 bg-white p-6">
+              <h2 className="flex items-center gap-2 text-lg font-bold text-[#001F58]">
+                <Lock className="h-5 w-5 text-slate-700" />
+                Contraseña
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Tu cuenta entra con Google y no tiene contraseña. Si querés poder entrar también con tu email, creá una:
+                te mandamos un link a tu casilla.
+              </p>
+              <Link href="/forgot-password" className="mt-3 inline-block text-sm font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
+                Crear una contraseña
+              </Link>
+            </div>
+          ) : (
           <form onSubmit={handleChangePasswordSubmit} className="p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 space-y-4">
             <div>
               <h2 className="text-lg font-bold text-[#001F58] flex items-center gap-2">
@@ -1081,6 +1099,7 @@ export function ProfileView({
               </button>
             </div>
           </form>
+          )}
         </div>
       )}
 

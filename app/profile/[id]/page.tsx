@@ -168,6 +168,7 @@ export default async function ProfilePage({ params }: Props) {
         subscription={isOwner ? await getSubscriptionSummary(id) : null}
         purchases={isOwner ? await getUserPurchases(id) : []}
         billingProfile={isOwner ? await ownerBillingProfile(id, rawProfileUser.name, rawProfileUser.email) : null}
+        hasPassword={isOwner ? Boolean((await prisma.user.findUnique({ where: { id }, select: { passwordHash: true } }))?.passwordHash) : false}
       />
     </main>
   );

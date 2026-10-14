@@ -51,6 +51,9 @@ model User {
   billingProfile            BillingProfile?
   Subscription              Subscription?
   listingPriceChanges       ListingPriceChange[]
+  // VA-105 · 3: al cambiar o restablecer la contraseña se cierran las sesiones iniciadas antes (callback jwt).
+  passwordChangedAt         DateTime?
+  passwordResetTokens       PasswordResetToken[]
 }
 
 model Account {
@@ -80,6 +83,29 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// VA-105 · 3: "Olvidé mi contraseña". Se guarda solo el hash (SHA-256) del token; vence en 1 hora,
+// es de un solo uso y pedir uno nuevo invalida los anteriores (usedAt).
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// VA-105 · 3: límite de pedidos (por email y por IP, guardados como hash). Se reutiliza para otros límites.
+model RateLimitEvent {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
 }
 
 model VerificationToken {
