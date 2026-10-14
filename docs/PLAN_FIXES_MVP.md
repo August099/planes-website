@@ -1449,3 +1449,9 @@ Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se 
 - **Decisión (14/10):** **reembolso automático** por Mercado Pago desde "Mis compras" dentro de los 10 días corridos del pago; el webhook revierte lo comprado (saldo, aviso o suscripción), aunque ya se haya usado. Botón visible también en el footer (como pide la Resolución 424/2020) que lleva a "Mis compras".
 
 **Estado (14/10/2026):** ✅ hecho (commit `86173c9`). `lib/payments/withdrawal.ts` + "Arrepentirme" en Mis compras + `/arrepentimiento` (link en el footer). Migración `va125_arrepentimiento`. Verificado con MP simulado (pack: saldo revertido; suscripción: cancelada; fuera de plazo; doble pedido; MP rechaza). **Falta:** probarlo con un pago real (el paso 8 del runbook lo usa).
+
+### VA-126 · Ajustes del socio (14/10): footer, guía de fotos y detalle de repuesto
+- Footer sin "Publicite su negocio" (`/ads`). Formulario de avión: sin las plantillas dibujadas de VA-124 por ahora, solo "sacá buenas fotos" y el máximo de 15 (`PhotoGuide` queda guardado). Detalle de repuesto: "Detalles principales" sin Nº de parte ni Categoría (siguen en la ficha de abajo).
+
+**Estado (14/10/2026):** ✅ hecho (commit `fix(VA-126)`).
+
