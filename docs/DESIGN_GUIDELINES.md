@@ -83,7 +83,7 @@ No sumar verdes, violetas ni otros colores de relleno: el verde quedó solo para
 | Confirmar una acción | `components/ui/ConfirmDialog.tsx` |
 | Compartir | `components/ui/ShareDialog.tsx` |
 | Provincia | `components/ui/ProvinceSelect.tsx` (las 24 de `lib/provinces.ts`) |
-| Mapa de zona aproximada | `components/ui/ListingLocationMap.tsx` (Leaflet al entrar en pantalla, círculo de ~5 km) |
+| Mapa de zona aproximada | `components/ui/ListingLocationMap.tsx` (SVG propio de provincias, sin teselas ni JS: provincia resaltada y punto en la localidad) |
 | Datos de una aeronave (etiquetas y secciones) | `lib/aircraft-fields.ts` (la misma lista en detalle, comparador y PDF) |
 | Comparar aeronaves | `components/ui/compare/CompareButton.tsx` y la bandeja `CompareTray` |
 | Menú desplegable del header (Repuestos) | `components/ui/SparePartsMenu.tsx` (categorías principales de la taxonomía; en celular, `MobileDropdown` en `HeaderMenus.tsx`) |

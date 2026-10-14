@@ -125,7 +125,6 @@ export default function PrivacidadPage() {
                   <li><strong>Vercel:</strong> alojamiento del sitio y medición anónima de su rendimiento.</li>
                   <li><strong>Resend:</strong> envío de los correos del sitio (verificación, contraseña, pagos).</li>
                   <li><strong>TusFacturas:</strong> emisión de las facturas electrónicas ante ARCA.</li>
-                  <li><strong>Stadia Maps:</strong> imágenes del mapa que muestra la zona aproximada de un aviso (no recibe datos de tu cuenta).</li>
                 </ul>
                 <p>Algunos de estos proveedores pueden almacenar datos fuera de la Argentina; en todos los casos se usan solo para prestar el servicio. También podemos compartir datos cuando lo exija una autoridad competente.</p>
               </div>
