@@ -887,10 +887,10 @@ Notas para cuando se encare, a partir de lo que ya existe:
 | D15 | `S/C` "Sin categoría asignada" (VA-43 ítem 7) | VA-43 | ✅ 8/10: se renombra a "Otros" |
 | D16 | ¿TBO obligatorio en Proyecto? (VA-44) | VA-44 | ✅ 8/10: opcional en `PR`, obligatorio en el resto |
 | D13 | ¿Se muestra la matrícula públicamente? | VA-54 | Pendiente |
-| D17 | Saldo de lanzamiento: ¿"hasta el 2/12" es el 2 de diciembre de 2026 inclusive (hora Argentina)? Y a las cuentas que ya existen, ¿se les deja **al menos** 1 / 1 o se les **suma** 1 / 1? | VA-89 | Pendiente (sugerido: 2/12/2026 23:59 ART inclusive; "al menos 1") |
-| D18 | ¿Publicar ya descuenta del saldo (y sin saldo no se puede publicar), o por ahora solo se asigna y el consumo va con la Fase 6? | VA-89 | Pendiente (sugerido: solo asignar ahora) |
+| D17 | Saldo de lanzamiento: fecha de corte y cuentas existentes | VA-89 | ✅ 14/10: 2/12/2026 23:59 hora Argentina inclusive, sin mostrar la fecha; las existentes con al menos 1 / 1 |
+| D18 | ¿Publicar descuenta del saldo? | VA-89 | ✅ Sí (VA-92: suscripción → saldo → pago). El saldo de lanzamiento **reemplaza al cupón LANZAMIENTO** (socio, 14/10) |
 | D19 | Motor obligatorio: ¿también en Proyecto (`PR`)? ¿Bimotor exige 2 motores? | VA-90 | Pendiente (sugerido: Proyecto opcional; Bimotor 2) |
-| D20 | "Aeronaves destacadas": ¿se eligen (admin o plan) o siguen siendo las 6 más recientes? | VA-110 | Pendiente (por ahora las 6 más recientes) |
+| D20 | "Aeronaves destacadas" | VA-110 | ✅ 14/10: 6 al azar entre las recientes hasta que se apliquen los destacados pagos (VA-95) |
 
 ## 9. Checklist final antes de lanzar
 
@@ -1348,3 +1348,15 @@ Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se 
 - **Aceptación:** la Home muestra 6 aeronaves en el carrusel de destacadas (contar los puntos/slides), a 375 y 1280 px.
 
 **Estado (14/10/2026):** ✅ hecho en local (commit `886a570`). **Causa real:** `FeaturedAircraftCarousel` elegía **2 al azar** de las 8 más recientes (`pickFeatured` → `slice(0, 2)`), por eso casi no se deslizaba. Ahora muestra las 6 más recientes activas, en orden aleatorio; la cantidad sale de `FEATURED_AIRCRAFT_COUNT` (`lib/constants.ts`) y la consulta de la Home trae 6 (Últimas publicaciones ya usaba 6). Verificado: 6 slides a 375 y 1280 px, sin scroll horizontal.
+**Cambio (14/10, socio):** 6 **al azar** entre las 30 más recientes activas (`FEATURED_AIRCRAFT_POOL`), hasta que se apliquen los destacados pagos de VA-95 (commit `f8d53c3`). Últimas publicaciones sigue con las 6 más recientes.
+
+### VA-111 · Avisos de la promoción de lanzamiento y ventana de bienvenida (pedido del socio, 14/10)
+- **Decisión:** el saldo de lanzamiento (VA-89) **es** la promoción; reemplaza al cupón `LANZAMIENTO` para dárselo a todos automáticamente.
+- **Hacer:** decir en algunos lugares de la web que se puede publicar el avión gratis durante el lanzamiento, y una ventana flotante que agradezca por apoyar a Ventas Aeronáuticas desde el inicio y diga que se puede publicar un avión y un repuesto gratis, la primera vez que la cuenta vuelve a la web (cuenta nueva o primer inicio de sesión, con cualquier método).
+
+**Estado (14/10/2026):** ✅ hecho en local (commit `a53038e`).
+- **Ventana** `components/ui/LaunchWelcomeDialog.tsx` (en el layout): una sola vez por cuenta, en cualquier dispositivo (`User.launchWelcomeSeenAt`, migración `20261014063054_va111_bienvenida_lanzamiento`), solo a quien recibió el saldo (`launchBalanceGrantedAt`). Cuentas nuevas por email (después de verificar y entrar) y por Google (después de elegir el tipo de cuenta) y las existentes al volver. No sale en login, registro, verificación, contraseña, onboarding ni pagos. "Publicar mi avión" (lleva a `/publish`) o "Más tarde"; Escape también la cierra.
+- **Avisos** "Publicá tu avión gratis durante el lanzamiento. Creá tu cuenta y tenés 1 aviso de avión y 1 de repuesto sin costo.": cartel de la Home para visitantes, `/register`, `/howtopublish` y `/plans`. Se apagan solos en el corte (`isLaunchPromoActive`, en el navegador porque esas páginas son estáticas). Ninguno muestra la fecha.
+- **`/publish`:** "te queda 1 publicación de avión gratis. Se usa sola al publicar" con el saldo real (antes pedía el cupón).
+- **Verificado** (dev, base local): visitante ve los 4 avisos y no la ventana; usuario con saldo ve la ventana, la cierra y al recargar no vuelve; `/publish` muestra el saldo. **Falta:** probarlo con un registro y un login de Google reales en el Preview.
+- **En producción:** `npm run migrate:deploy` (VA-89 y VA-111).

@@ -181,8 +181,8 @@ Esperado: `robots.txt` con `Allow: /` y el sitemap responde `200`.
 - [ ] `/plans` con los tres planes reales.
 - [ ] Login con Google y con email; registro con mail de verificación; "Olvidé mi contraseña" (el mail
       llega y el link funciona).
-- [ ] Publicar con el cupón del 100% creado por los socios: se publica sin pasar por Mercado Pago y sin
-      factura.
+- [ ] Saldo de lanzamiento (VA-89/VA-111): una cuenta nueva ve la ventana de bienvenida una vez y
+      publica un avión y un repuesto sin pasar por Mercado Pago ni factura; un segundo avión ya va al pago.
 - [ ] `/services/hangars`, `/ads` y `/banners` dan 404.
 - [ ] Vercel → Logs sin errores en la primera hora.
 
