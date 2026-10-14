@@ -75,7 +75,7 @@ después, si el informe está bien, con el flag de aplicar.
 | Qué | Informe | Aplicar | Esperado |
 |---|---|---|---|
 | Guías | `npx tsx scripts/seed-guides.ts --allow-remote` | `… --apply --allow-remote` | 4 publicadas y 6 en borrador; las que ya existen no se tocan |
-| Planes reales | `npx tsx --require ./scripts/stub-server-only.cjs scripts/seed-real-plans.ts --confirm-production` | `… --apply --confirm-production` | Quedan Plan Repuestos, Plan Aviones y Suscripción VA. Las cortesías pasan a Suscripción VA. Si frena por una suscripción paga en otro plan, avisar |
+| Planes reales | `npx tsx --require ./scripts/stub-server-only.cjs scripts/seed-real-plans.ts --confirm-production` | `… --apply --confirm-production` | Quedan Plan Repuestos, Plan Aviones, Suscripción VA y **Pago de prueba** (AR$ 100, VA-119, para el paso 8). Las cortesías pasan a Suscripción VA. Si frena por una suscripción paga en otro plan, avisar |
 | Precios sueltos | `/admin/prices` | — | Avión AR$ 30.000, repuesto AR$ 15.000 (o los que decidan) y renovación al 70% |
 | Facturación | `/admin/payments` → Configuración | — | Tope del monotributo, alerta, desde qué monto se pide DNI y días de gracia |
 | Taxonomía | `/admin/taxonomy` | — | Marcas, modelos y categorías como en el Preview |
@@ -167,9 +167,10 @@ Esperado: `robots.txt` con `Allow: /` y el sitemap responde `200`.
 
 ## 8. Pago real de prueba y facturación
 
-1. Con `BILLING_ENABLED=false`, pagar una publicación suelta con una tarjeta real.
+1. Con `BILLING_ENABLED=false`, comprar el **Pago de prueba** (AR$ 100, en `/plans`) con una tarjeta real.
 2. En `/admin/payments` el pago figura aprobado y su factura **pendiente** (no se emitió nada).
 3. Reembolsar el pago desde Mercado Pago y, en el detalle, **Descartar** la factura (escribir DESCARTAR).
+   Después, en `/admin/plans`, **Archivar** el "Pago de prueba" para que no se vea más en `/plans`.
 4. Recién ahí: `TUSFACTURAS_MODE=production` y `BILLING_ENABLED=true` (solo Production) y Redeploy.
 5. La próxima venta real emite la Factura C (punto de venta 3). Revisar la primera en `/admin/payments`.
 

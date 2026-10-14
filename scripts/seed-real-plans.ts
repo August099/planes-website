@@ -1,5 +1,6 @@
 // VA-105 (socio, 14/10): los planes reales. Idempotente por nombre.
-// 1. Crea o actualiza Plan Repuestos, Plan Aviones y Suscripción VA.
+// 1. Crea o actualiza Plan Repuestos, Plan Aviones y Suscripción VA, y (VA-119) el "Pago de prueba"
+//    de AR$ 100 para probar pagos reales (visible en /plans; archivarlo en /admin/plans después).
 // 2. Mueve las cortesías (suscripciones MANUAL) de los otros planes a Suscripción VA. Si hay una
 //    suscripción paga de Mercado Pago en otro plan, frena: eso se resuelve a mano.
 // 3. Borra los otros planes (si alguno tiene compras, lo archiva en vez de borrarlo).
@@ -12,6 +13,7 @@ import { syncListingExpiry } from "@/lib/subscriptions";
 
 const APPLY = process.argv.includes("--apply");
 const VA = "Suscripción VA";
+const TEST_PLAN = "Pago de prueba";
 
 const base = {
   type: "SUBSCRIPTION",
@@ -68,6 +70,23 @@ const PLANS: PlanInput[] = [
     ],
     sortOrder: 30,
   },
+  // VA-119 (socio, 14/10): pago único de AR$ 100 para probar pagos reales en el Preview y en
+  // producción. Visible en /plans. Después de la prueba: /admin/plans → Archivar (o --apply sin él).
+  {
+    ...base,
+    name: TEST_PLAN,
+    type: "AIRCRAFT_PACK",
+    billingInterval: null,
+    price: 100,
+    aircraftListingsCount: 1,
+    isUnlimitedAircraft: false,
+    isUnlimitedSpareParts: false,
+    noExpiry: false,
+    includesCustomPage: false,
+    description: "Pago único para probar el cobro real. Se quita después de la prueba.",
+    features: ["1 publicación de avión", "Pago único, sin débito automático"],
+    sortOrder: 90,
+  },
 ];
 
 async function main() {
@@ -88,7 +107,7 @@ async function main() {
 
   for (const r of records) {
     const existing = await prisma.plan.findFirst({ where: { name: r.name }, select: { id: true } });
-    console.log(`${existing ? "Actualizar" : "Crear"}: ${r.name} · AR$ ${r.price} por mes`);
+    console.log(`${existing ? "Actualizar" : "Crear"}: ${r.name} · AR$ ${r.price} ${r.type === "SUBSCRIPTION" ? "por mes" : "pago único"}`);
     if (APPLY) {
       if (existing) await prisma.plan.update({ where: { id: existing.id }, data: { ...r, archivedAt: null } });
       else await prisma.plan.create({ data: r });
