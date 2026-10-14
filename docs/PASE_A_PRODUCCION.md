@@ -137,9 +137,12 @@ Settings → Environment Variables → entorno **Production**. Después de cambi
 
 ## 6. Fuera del código (checklist)
 
+- [x] URIs del dominio de pre-production cargadas en Google OAuth (socio, 14/10).
 - [ ] Google OAuth en estado **publicado** (no "en prueba"), con `https://ventasaeronauticas.com` en
       orígenes autorizados y `https://ventasaeronauticas.com/api/auth/callback/google` en redirecciones.
-- [ ] Dominio verificado en Resend (SPF y DKIM).
+- [x] Dominio de producción verificado en Resend (SPF y DKIM). `EMAIL_FROM` tiene que usar ese dominio
+      también en el Preview (por ejemplo `Ventas Aeronáuticas <no-reply@ventasaeronauticas.com>`): Resend
+      solo envía desde dominios verificados, sin importar desde qué URL corre la web.
 - [ ] Webhook de producción en Mercado Pago → `https://ventasaeronauticas.com/api/webhooks/mercadopago`,
       eventos **Pagos** y **Planes y suscripciones**. Su clave va a `MP_WEBHOOK_SECRET`.
 - [ ] `www.ventasaeronauticas.com` → dominio sin `www` con 301 (Vercel → Domains).
@@ -194,6 +197,23 @@ Esperado: `robots.txt` con `Allow: /` y el sitemap responde `200`.
 ## Checklist previo a mandar el link a los fundadores
 
 - [ ] Pasos 1 a 9 hechos.
-- [ ] Cupón de fundadores creado y probado (vigencia en hora argentina, usos por persona).
 - [ ] FAQ y términos actualizados (los actualiza el socio).
 - [ ] Prueba en celular real: las 6 pruebas de aceptación de VA-30 y escanear el QR del PDF de un aviso.
+- [ ] "Pago de prueba" archivado en `/admin/plans` (no se ve en `/plans`).
+- [ ] La insignia de miembro fundador se asigna a mano en `/admin/users` a medida que se registran (decisión del socio, 14/10).
+
+## Mail a los miembros fundadores
+
+Link para el botón del mail (lleva al registro, que ya muestra la promoción de lanzamiento; quien ya tiene
+cuenta entra desde "Iniciar sesión" en esa misma pantalla):
+
+```
+https://ventasaeronauticas.com/register?utm_source=mail&utm_medium=email&utm_campaign=fundadores
+```
+
+- Los `utm_*` quedan guardados desde la primera visita (cookie `va_src`, VA-15): las visitas, búsquedas y
+  contactos de quienes llegan por el mail se ven en `/admin/traffic` con el origen **mail**.
+- Para probarlo en el Preview, el mismo link con el dominio de pre-production.
+- Al registrarse y entrar por primera vez ven la ventana de bienvenida con su avión y su repuesto gratis
+  (VA-111). Si hace falta reenviar, el link es el mismo.
+

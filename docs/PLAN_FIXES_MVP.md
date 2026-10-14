@@ -1455,3 +1455,9 @@ Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se 
 
 **Estado (14/10/2026):** ✅ hecho (commit `fix(VA-126)`).
 
+### VA-127 · Términos: arrepentimiento en vez de "no hay reembolsos"
+**Estado (14/10/2026):** ✅ hecho (commit `fix(VA-127)`). La sección 3 describe pagos por Mercado Pago, 45 días y renovación, cancelación de suscripciones, promoción de lanzamiento y el derecho de arrepentimiento (Ley 24.240, Res. 424/2020). Para revisar por los socios.
+
+### VA-128 · Privacidad actualizada + preparación del mail a fundadores (socio, 14/10)
+**Estado (14/10/2026):** ✅ hecho (commit `fix(VA-128)`). Política de privacidad con cookies y medición, Google, proveedores, documentos privados y derechos; sin las alertas ni el formulario que no existen. Runbook: sin el cupón de fundadores (lo reemplaza el saldo de lanzamiento), OAuth del Preview y Resend anotados, insignia de fundador a mano, y sección "Mail a los miembros fundadores" con el link `https://ventasaeronauticas.com/register?utm_source=mail&utm_medium=email&utm_campaign=fundadores` (verificado: guarda el origen en `va_src`).
+
