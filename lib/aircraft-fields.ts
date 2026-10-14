@@ -136,7 +136,8 @@ export const AIRCRAFT_FIELDS: AircraftField[] = [
   },
 
   // Documentación (en el detalle va como bloque de archivos aparte)
-  { key: "documents", section: "documentacion", label: "Documentos adjuntos", inDetail: "none", list: (a) => a.documents.map((d) => d.name) },
+  // VA-105 · 5.7: la documentación es privada: en el comparador solo la cantidad, no los nombres.
+  { key: "documents", section: "documentacion", label: "Documentos adjuntos", inDetail: "none", value: (a) => (a.documents.length ? `${a.documents.length} (privados, los ve el vendedor)` : undefined) },
 
   // Condiciones de venta
   {

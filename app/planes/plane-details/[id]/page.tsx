@@ -306,12 +306,14 @@ export default async function PlaneDetailsPage({
               province={aircraft.province}
             />
 
-            {aircraft.documents.length > 0 && (
+            {/* VA-105 · 5.7: la documentación es privada: solo la ven el dueño y los admins, con link firmado. */}
+            {aircraft.documents.length > 0 && (isOwner || session?.user?.isAdmin) && (
               <div className="order-6 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-3">
-                <h2 className="font-bold text-[#001F58] text-sm">Documentación Adjunta</h2>
+                <h2 className="font-bold text-[#001F58] text-sm">Documentación adjunta</h2>
+                <p className="text-xs text-slate-500">Solo la ves vos{isOwner ? "" : " (admin)"}: no es pública.</p>
                 <div className="space-y-2">
                   {aircraft.documents.map((doc) => (
-                    <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 border border-slate-200 rounded-xl p-3 hover:bg-slate-50 transition-colors w-full group">
+                    <a key={doc.id} href={`/api/listing-documents/${doc.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 border border-slate-200 rounded-xl p-3 hover:bg-slate-50 transition-colors w-full group">
                       <FileText className="w-7 h-7 text-red-600 shrink-0" />
                       <span className="text-xs font-semibold text-slate-700 group-hover:text-[#001F58] truncate">{doc.name}</span>
                     </a>
