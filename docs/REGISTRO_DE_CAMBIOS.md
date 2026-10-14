@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso (14/10):** VA-89 a VA-91 y VA-106 a VA-110 hechas en local (pedidos del 14/10). **Antes:** 73 de 74 tareas cerradas (72 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-63, VA-70 a VA-75 y VA-77 a VA-87 (VA-80 sin Mercado Pago ni facturación, que quedan para la Fase 6). Falta 1: VA-76 (parcial: PageSpeed en pre-production, Speed Insights en Vercel y el TBT de la Home). Nota del 10/10: el conteo anterior tenía un error de uno (la lista sumaba 69, no 68) (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso (14/10):** VA-89 a VA-91 y VA-106 a VA-125 hechas en local (pedidos del 14/10). **Antes:** 73 de 74 tareas cerradas (72 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-63, VA-70 a VA-75 y VA-77 a VA-87 (VA-80 sin Mercado Pago ni facturación, que quedan para la Fase 6). Falta 1: VA-76 (parcial: PageSpeed en pre-production, Speed Insights en Vercel y el TBT de la Home). Nota del 10/10: el conteo anterior tenía un error de uno (la lista sumaba 69, no 68) (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
 
 ---
 
@@ -238,6 +238,19 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 | VA-89 | `f046424` | **Saldo de lanzamiento**: cuentas creadas hasta el 2/12/2026 (hora Argentina) con al menos 1 aviso de avión y 1 de repuesto; registro por email y Google; migración para las existentes; columna "Saldo" en `/admin/users`. Sin textos para el usuario y sin descontar al publicar (D17/D18 a confirmar). | `/admin/users`. `lib/promo.ts`, `lib/launch-balance.ts`. **Producción:** `npm run migrate:deploy` |
 | VA-110 (cambio) | `f8d53c3` | Destacadas: **6 al azar** entre las 30 más recientes (hasta los destacados pagos de VA-95). | `/` |
 | VA-111 | `a53038e` | **Promoción de lanzamiento visible**: el saldo de VA-89 reemplaza al cupón `LANZAMIENTO`. Ventana de bienvenida una vez por cuenta (migración `va111_bienvenida_lanzamiento`), avisos en la Home, `/register`, `/howtopublish` y `/plans` (se apagan solos en el corte) y el saldo gratis en `/publish`. | Iniciar sesión con una cuenta con saldo · `/register` |
+| VA-112 | `dddf80f` | Motor opcional en Proyecto y dos obligatorios en Bimotor. | `/publish` → paso 2 |
+| VA-113 | `53e3b7d` | Detalle del avión: sin matrícula ni estado en "Datos de la aeronave"; matrícula en la ficha. | Detalle de un avión |
+| VA-114 | `dcd5a98` | Lint en cero. | `npm run lint` |
+| VA-115 | `dafc7f5` | Títulos de la Home sin las barras "//" rojas. | `/` |
+| VA-116 + VA-120 | `8256bd3` | Menú desplegable de Repuestos con sus categorías; Servicios es un link simple. | Header → Repuestos |
+| VA-117 | `6d50483` | Detalle del repuesto: solo el link a la categoría principal. | Detalle de un repuesto |
+| VA-118 | — | Revisado: el contador de vistas ya cuenta solo vistas (verificado con datos). | Perfil → tus avisos |
+| VA-119 | `c08ac09` | Plan "Pago de prueba" de AR$ 100 (visible) para probar pagos reales; se carga con `seed-real-plans.ts`. | `/plans` |
+| VA-121 | `1c57d24` | `/plans` con suscripción: "Cancelar" en el actual y "Cambiar a este plan" en los otros (cambio inmediato, sin prorrateo). Migración `va121_cambio_de_plan`. | `/plans` con una suscripción |
+| VA-122 | `d520b95` | Página Nosotros (plantilla de la misión) y formulario de sugerencias con admin. Migración `va122_sugerencias`. | `/about` · `/admin/suggestions` |
+| VA-123 | `61925dd` | FAQ completo (20 preguntas). | `/faq` |
+| VA-124 | `75cb793` | Guía de fotos con plantillas dibujadas que quedan a la vista. | `/publish` → paso 3 |
+| VA-125 | `86173c9` | Botón de arrepentimiento: devolución automática por MP hasta 10 días después del pago. Migración `va125_arrepentimiento`. | Perfil → Mis compras · footer |
 
 **Error de "doctype" en `npm run dev` (14/10, reportado por el socio):** no se pudo reproducir en un entorno limpio: con dependencias recién instaladas, migraciones aplicadas y semillas, `npm run dev` levanta y `/`, `/planes`, `/spareparts`, `/login`, `/services` y `/api/auth/session` responden bien (los únicos errores de consola son fotos de prueba de loremflickr sin red). Tampoco con la base apagada (da un error de Prisma, no de doctype) ni corriendo `next build` con `next dev` abierto. La causa más probable sigue siendo la del 11/10 (`ClientFetchError: Unexpected token '<', "<!DOCTYPE"…`): caché vieja en `.next/dev`. Pasos en la máquina del socio: cortar `npm run dev`, borrar `.next` (`Remove-Item -Recurse -Force .next`), `npm install`, `npx prisma generate`, `npm run migrate:deploy` contra `va_dev` (hay migraciones nuevas: VA-83, VA-85, VA-80, VA-84 y VA-89; si `va_dev` no las tiene, las páginas que las usan fallan) y volver a levantar. Si sigue, hace falta el texto exacto del error (consola del navegador o terminal). Detalle de paso: `prisma/seed.ts` no carga el `.env` (hay que correrlo con `npx tsx --env-file=.env prisma/seed.ts`).
 

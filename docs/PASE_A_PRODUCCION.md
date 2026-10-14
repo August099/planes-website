@@ -169,7 +169,9 @@ Esperado: `robots.txt` con `Allow: /` y el sitemap responde `200`.
 
 1. Con `BILLING_ENABLED=false`, comprar el **Pago de prueba** (AR$ 100, en `/plans`) con una tarjeta real.
 2. En `/admin/payments` el pago figura aprobado y su factura **pendiente** (no se emitió nada).
-3. Reembolsar el pago desde Mercado Pago y, en el detalle, **Descartar** la factura (escribir DESCARTAR).
+3. Pedir la devolución con el **botón de arrepentimiento** (Perfil → Mis compras → "Arrepentirme", VA-125):
+   prueba el reembolso real. En `/admin/payments` el pago queda reintegrado y la factura pendiente, descartada
+   (si no, **Descartar** la factura a mano escribiendo DESCARTAR).
    Después, en `/admin/plans`, **Archivar** el "Pago de prueba" para que no se vea más en `/plans`.
 4. Recién ahí: `TUSFACTURAS_MODE=production` y `BILLING_ENABLED=true` (solo Production) y Redeploy.
 5. La próxima venta real emite la Factura C (punto de venta 3). Revisar la primera en `/admin/payments`.
@@ -185,6 +187,8 @@ Esperado: `robots.txt` con `Allow: /` y el sitemap responde `200`.
 - [ ] Saldo de lanzamiento (VA-89/VA-111): una cuenta nueva ve la ventana de bienvenida una vez y
       publica un avión y un repuesto sin pasar por Mercado Pago ni factura; un segundo avión ya va al pago.
 - [ ] `/services/hangars`, `/ads` y `/banners` dan 404.
+- [ ] `/about` con los textos reales de la misión (no deben quedar `[COMPLETAR]`) y una sugerencia de prueba llega por mail.
+- [ ] `/arrepentimiento` desde el footer lleva a Mis compras.
 - [ ] Vercel → Logs sin errores en la primera hora.
 
 ## Checklist previo a mandar el link a los fundadores

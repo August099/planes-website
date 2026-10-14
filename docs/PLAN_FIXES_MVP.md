@@ -1370,41 +1370,82 @@ Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se 
 ### VA-112 · Motor: opcional en Proyecto y dos obligatorios en Bimotor (D19)
 - `lib/aircraft-rules.ts`: `engines` opcional en `PR`; en `BP`/`BT` hacen falta 2 motores (cliente y servidor). El alta de un Bimotor arranca con dos motores vacíos.
 
+
+**Estado (14/10/2026):** ✅ hecho (commit `dddf80f`). `minEngines()`: Proyecto 0, Bimotor (BP/BT) 2, el resto 1, en el esquema y el formulario; el Bimotor arranca con dos fichas y en Proyecto se descarta la ficha vacía. Verificado con el esquema (MP sin motor ✗, BP con 1 ✗, BT con 2 ✓, PR sin motor ✓).
+
 ### VA-113 · Detalle del avión: sin matrícula ni estado en "Datos de la aeronave" (D13)
 - Sacar "Matrícula" y "Estado" del resumen "Datos de la aeronave". La matrícula se muestra (si se cargó) en la ficha de abajo (General).
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `53e3b7d`). Matrícula como fila de la ficha (General); "Estado" fuera del resumen web (sigue en impresión y comparador). Verificado con un aviso con matrícula.
 
 ### VA-114 · Lint en cero
 - `scripts/stub-server-only.cjs` usa `require()` (regla `no-require-imports`). Arreglarlo sin romper los scripts que lo usan, y la advertencia de `app/opengraph-image.tsx`.
 
+
+**Estado (14/10/2026):** ✅ hecho (commit `dcd5a98`): `npm run lint` sin errores ni advertencias (`require()` permitido solo en `.cjs`, `.next-local` ignorado).
+
 ### VA-115 · Home sin las barras "//" rojas en los títulos
 - `components/ui/home/SectionTitle.tsx` (y los títulos que lo escriben a mano).
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `dafc7f5`): `SectionTitle` y el banner "¿Querés vender tu aeronave?".
 
 ### VA-116 · Sin menú desplegable en "Servicios"
 - "Servicios" vuelve a ser un link simple a `/services` (escritorio y celular).
 
+
+**Estado (14/10/2026):** ✅ hecho junto con VA-120 (commit `8256bd3`). Se borró `ServicesMenu.tsx`; `FUNCIONES_OCULTAS.md` y las pautas, actualizadas.
+
 ### VA-117 · Detalle del repuesto: solo el link a la categoría padre
 - Ajusta VA-108: debajo del título, solo la categoría principal (sin la subcategoría).
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `6d50483`).
 
 ### VA-118 · Revisar el contador de vistas de los avisos
 - Antes contaba todos los eventos (VA-105 5.1 lo corrigió en el perfil). Revisar todos los lugares donde se muestran vistas (perfil, admin, métricas) y confirmar con datos.
 
+
+**Estado (14/10/2026):** ✅ revisado, sin cambios de código: el perfil (VA-105 5.1), el admin de publicaciones, el resumen y oportunidades cuentan solo `AIRCRAFT_VIEW`/`SPARE_PART_VIEW`. "Fuentes de tráfico" cuenta todos los eventos, pero ahí la columna dice "Interacciones". Verificado con datos: 3 vistas + 3 contactos en un aviso → el perfil muestra 3.
+
 ### VA-119 · Plan de pago único de AR$ 100 para probar pagos reales
 - **Decisión (14/10):** visible en `/plans`. Pack de 1 aviso de avión a AR$ 100, creado con un script idempotente (sirve para el Preview y para producción) y archivable desde `/admin/plans` después de la prueba.
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `c08ac09`): "Pago de prueba" (pack de 1 avión, AR$ 100) en `scripts/seed-real-plans.ts`; visible en `/plans` con "Comprar 1 Avión". Runbook: se usa en el paso 8 y después se archiva.
 
 ### VA-120 · Menú desplegable de "Repuestos" con sus categorías
 - Como el panel de Servicios (VA-83): al pasar el mouse por "Repuestos", panel a todo el ancho con las categorías principales (cacheadas) que llevan a `/spareparts?category=<id>`; en celular, debajo de "Repuestos".
 
+
+**Estado (14/10/2026):** ✅ hecho (commit `8256bd3`): `components/ui/SparePartsMenu.tsx` (10 categorías numeradas en dos columnas, "Ver todos los repuestos"); en celular, las categorías debajo de "Repuestos". Verificado a 1280 y 375 px.
+
 ### VA-121 · `/plans` con suscripción: "Cancelar" en el actual y "Cambiar a este plan" en los otros
 - **Decisión (14/10):** cambio **inmediato, sin prorrateo**: "Cambiar a este plan" lleva al pago del nuevo; cuando se aprueba, la suscripción anterior se cancela en el momento (también en Mercado Pago). "Cancelar" usa la cancelación que ya existe en el perfil.
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `1c57d24`). `Subscription.pendingPlanId`/`pendingMpSubscriptionId` (migración `va121_cambio_de_plan`); el plan nuevo reemplaza al actual cuando MP aprueba su primer cobro (se cancela el débito anterior). `/plans`: "Cancelar suscripción" / "Seguir suscripto" en el actual y "Cambiar a este plan" en las otras; aviso en el checkout. Verificado con MP simulado (mismo plan, pendiente, rechazado, aprobado, reenvío, abandono) y la UI con una suscripción de prueba. **Falta:** probarlo con MP real en el Preview.
 
 ### VA-122 · Página "Nosotros" con la misión y formulario de sugerencias
 - Plantilla con la misión (textos de ejemplo marcados para completar). Formulario de sugerencias: se guarda en la base, se ve en el admin y avisa por mail a `SUPPORT_EMAIL`; con límite por IP. Link en el footer.
 
+
+**Estado (14/10/2026):** ✅ hecho (commit `d520b95`). `/about` con textos `[COMPLETAR]` para los socios; sugerencias en `Suggestion` (migración `va122_sugerencias`), mail a `SUPPORT_EMAIL`, 5 por hora por IP; `/admin/suggestions`. Link "Nosotros" en el footer. **Falta:** los textos reales de la misión.
+
 ### VA-123 · FAQ completo según cómo funciona la web
 - Preguntas y respuestas reales (publicar, saldo de lanzamiento, planes, pagos, renovación, arrepentimiento, cuenta, contacto, seguridad) con su `FAQPage` en JSON-LD.
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `61925dd`): 20 preguntas en 4 grupos, todas en el FAQPage. Revisar las respuestas si cambia alguna regla (están en `app/faq/page.tsx`).
 
 ### VA-124 · Guía de fotos con plantillas dibujadas
 - **Decisión (14/10):** solo la guía de fotos. La lista de texto pasa a ser una fila de plantillas dibujadas (frente, lateral, cola, cabina, panel, motor…) que **siguen visibles al lado** de las fotos subidas.
 
+
+**Estado (14/10/2026):** ✅ hecho (commit `75cb793`): `components/ui/publish/PhotoGuide.tsx`, 7 plantillas dibujadas en SVG que se marcan a medida que se cargan fotos. Los dibujos son simples (de línea): si el socio quiere ilustraciones finales, se reemplazan en ese archivo.
+
 ### VA-125 · Botón de arrepentimiento (hasta 10 días después de un pago)
 - **Decisión (14/10):** **reembolso automático** por Mercado Pago desde "Mis compras" dentro de los 10 días corridos del pago; el webhook revierte lo comprado (saldo, aviso o suscripción), aunque ya se haya usado. Botón visible también en el footer (como pide la Resolución 424/2020) que lleva a "Mis compras".
+
+**Estado (14/10/2026):** ✅ hecho (commit `86173c9`). `lib/payments/withdrawal.ts` + "Arrepentirme" en Mis compras + `/arrepentimiento` (link en el footer). Migración `va125_arrepentimiento`. Verificado con MP simulado (pack: saldo revertido; suscripción: cancelada; fuera de plazo; doble pedido; MP rechaza). **Falta:** probarlo con un pago real (el paso 8 del runbook lo usa).
