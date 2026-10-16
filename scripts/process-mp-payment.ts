@@ -28,7 +28,10 @@ async function main() {
     const found = await new MpPayment(mpClient()).search({ options: { external_reference: id, sort: "date_created", criteria: "asc" } });
     paymentIds = (found.results ?? []).map((p) => String(p.id));
     if (paymentIds.length === 0) {
-      console.log(`Mercado Pago no tiene pagos para la compra ${id} (¿se terminó de pagar? ¿mismas credenciales?).`);
+      console.log(`Mercado Pago no tiene pagos para la compra ${id}.`);
+      console.log("Mirá la URL de la vuelta (/payment/status?...): si trae payment_id=<número>, corré el script con --payment <número>.");
+      console.log("Si payment_id está vacío o es null, Mercado Pago rechazó el intento antes de crear el pago (no hay nada que procesar).");
+      console.log("La búsqueda también puede tardar unos minutos en mostrar un pago recién hecho.");
       return;
     }
   }
@@ -44,9 +47,11 @@ async function main() {
   }
 }
 
+// Sin process.exit: en Windows, salir con conexiones todavía cerrándose corta con
+// "Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)". Se cierra la base y el proceso termina solo.
 main()
-  .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
-    process.exit(1);
-  });
+    process.exitCode = 1;
+  })
+  .finally(() => prisma.$disconnect());
