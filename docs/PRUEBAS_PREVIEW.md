@@ -54,7 +54,7 @@ editarla para separar los valores. **Después de cargar todo: Redeploy** del úl
 | `RUNTIME_DATABASE_URL` | pooler de la base del Preview | la usa la app |
 | `NEXT_PUBLIC_SITE_URL` | `https://planes-website-git-pre-production-diodo.vercel.app` | links, QR del PDF, sitemap |
 | `NEXTAUTH_URL` | la misma URL del Preview | links de los mails (verificación, contraseña) |
-| `APP_URL` | la misma URL del Preview | vuelta de Mercado Pago y webhook |
+| `APP_URL` | la misma URL del Preview | vuelta de Mercado Pago y webhook. **Una variable aparte solo para Preview**: el 16/10 estaba la de producción para todos los ambientes y los avisos de los pagos del Preview iban a `ventasaeronauticas.com` |
 | `AUTH_SECRET` | uno propio del Preview (`npx auth secret` o 32 caracteres al azar) | distinto del de producción |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | el cliente OAuth donde agregaste la URI del Preview | redirect: `<URL del Preview>/api/auth/callback/google` |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | del proyecto de Supabase del Preview | |
@@ -63,7 +63,7 @@ editarla para separar los valores. **Después de cargar todo: Redeploy** del úl
 | `SUPPORT_EMAIL` | el mail donde quieren recibir sugerencias y avisos | |
 | `MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY` | de la aplicación de la **cuenta vendedora de prueba** | las que estaban en `.env.local` |
 | `MP_WEBHOOK_SECRET` | la clave del webhook en **modo prueba** (paso 3) | sin ella, ningún pago se activa |
-| `MP_NOTIFICATION_URL` | **vacía, y que no exista para Preview** | usa `APP_URL` + `/api/webhooks/mercadopago`. El 16/10 estaba cargada con la URL de producción para todos los ambientes y los avisos del Preview iban a producción |
+| `MP_NOTIFICATION_URL` | no crearla | sin ella usa `APP_URL` + `/api/webhooks/mercadopago` |
 | `CRON_SECRET` | una cualquiera (opcional) | el cron diario solo corre en Production |
 | `BILLING_ENABLED` | `false` | |
 | `TUSFACTURAS_MODE` | vacía | en el Preview nunca se factura de verdad |
