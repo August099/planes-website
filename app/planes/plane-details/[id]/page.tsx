@@ -24,7 +24,7 @@ import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
 import { DescriptionBody, ListingDescription } from "@/components/ui/listing/ListingDescription";
 import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
 import { ListingLocationMap } from "@/components/ui/ListingLocationMap";
-import { CompareSimilarLink, RecommendationRail } from "@/components/ui/recommendations/RecommendationRail";
+import { RecommendationRail } from "@/components/ui/recommendations/RecommendationRail";
 import { getPartsForAircraft, getSimilarAircraft } from "@/lib/recommendations";
 import { aircraftJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
@@ -345,7 +345,6 @@ export default async function PlaneDetailsPage({
             kind="aircraft"
             id="similares"
             block={similar}
-            action={!isInactive ? <CompareSimilarLink currentId={aircraft.id} items={similar.items} /> : undefined}
           />
         )}
         {parts && <RecommendationRail kind="sparePart" id="repuestos-para" block={parts} />}

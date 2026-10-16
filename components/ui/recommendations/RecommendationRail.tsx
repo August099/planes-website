@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 import { FavoriteIdsProvider } from "@/components/ui/FavoriteIdsProvider";
@@ -68,7 +67,7 @@ export function RecommendationRail(props: Props) {
   );
 }
 
-/** "Comparar estas aeronaves": la actual y las 2 primeras similares (VA-83 + VA-88). */
+/** "Comparar estas aeronaves": la actual y las 2 primeras similares (VA-83 + VA-88). 
 export function CompareSimilarLink({ currentId, items }: { currentId: string; items: { id: string }[] }) {
   const ids = [currentId, ...items.slice(0, 2).map((i) => i.id)];
   return (
@@ -80,3 +79,4 @@ export function CompareSimilarLink({ currentId, items }: { currentId: string; it
     </Link>
   );
 }
+*/
