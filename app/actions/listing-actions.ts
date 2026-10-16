@@ -2,7 +2,7 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { RECOMMENDATIONS_TAG } from "@/lib/recommendations";
-import { hasNoExpiryPlan } from "@/lib/subscriptions";
+import { renewalPrice, renewedExpiry } from "@/lib/renewal";
 import { prisma } from "@/lib/prisma";
 import { assertListingOwner } from "@/lib/listing-auth";
 import { pathFromPublicUrl, removeUploads } from "@/lib/listing-uploads";
@@ -22,67 +22,31 @@ function listingAuthError(error: unknown): string | null {
 // ==========================================
 // 1. RENOVAR / EXTENDER PUBLICACIÓN (+45 DÍAS)
 // ==========================================
-export async function renewListingAction(id: string, type: "aircraft" | "sparepart") {
+export async function renewListingAction(
+  id: string,
+  type: "aircraft" | "sparepart"
+): Promise<{ success: true } | { success: false; error?: string; checkoutUrl?: string }> {
   try {
     await assertListingOwner(id, type);
+    const kind = type === "aircraft" ? "AIRCRAFT" : "SPARE_PART";
+    const select = { listingExpiresAt: true, status: true, sellerId: true } as const;
+    const current = type === "aircraft" ? await prisma.aircraft.findUnique({ where: { id }, select }) : await prisma.sparePart.findUnique({ where: { id }, select });
+    if (!current) return { success: false, error: "La publicación no existe." };
+    if (current.status === "SOLD" || current.status === "PENDING_PAYMENT") return { success: false, error: "Esta publicación no se puede renovar." };
 
-    const now = new Date();
-
-    if (type === "aircraft") {
-      const current = await prisma.aircraft.findUnique({
-        where: { id },
-        select: { listingExpiresAt: true, sellerId: true },
-      });
-
-      const baseDate = current?.listingExpiresAt && new Date(current.listingExpiresAt) > now
-        ? new Date(current.listingExpiresAt)
-        : now;
-
-      // VA-80: con un plan "sin vencimiento" vigente del vendedor, no vence.
-      const newExpiration: Date | null =
-        current && (await hasNoExpiryPlan(current.sellerId)) ? null : new Date(baseDate);
-      newExpiration?.setDate(baseDate.getDate() + 45);
-
-      await prisma.aircraft.update({
-        where: { id },
-        data: {
-          status: "ACTIVE",
-          listingStartsAt: now,
-          listingExpiresAt: newExpiration,
-        },
-      });
-
-      revalidatePath("/planes");
-      revalidatePath(`/planes/plane-details/${id}`);
-    } else {
-      const current = await prisma.sparePart.findUnique({
-        where: { id },
-        select: { listingExpiresAt: true, sellerId: true },
-      });
-
-      const baseDate = current?.listingExpiresAt && new Date(current.listingExpiresAt) > now
-        ? new Date(current.listingExpiresAt)
-        : now;
-
-      // VA-80: con un plan "sin vencimiento" vigente del vendedor, no vence.
-      const newExpiration: Date | null =
-        current && (await hasNoExpiryPlan(current.sellerId)) ? null : new Date(baseDate);
-      newExpiration?.setDate(baseDate.getDate() + 45);
-
-      await prisma.sparePart.update({
-        where: { id },
-        data: {
-          status: "ACTIVE",
-          listingStartsAt: now,
-          listingExpiresAt: newExpiration,
-        },
-      });
-
-      revalidatePath("/spareparts");
-      revalidatePath(`/spareparts/sparepart-details/${id}`);
+    // VA-105 (14/10): sin cargo si el plan vigente deja este tipo sin vencimiento (queda sin fecha) o
+    // si el porcentaje de renovación es 0; si no, se paga en el checkout y se renueva al aprobarse.
+    const price = await renewalPrice(current.sellerId, kind);
+    if (!price.covered && price.amount > 0) {
+      return { success: false, checkoutUrl: `/checkout?renew=${type === "aircraft" ? "aircraft" : "parts"}:${id}` };
     }
+    const data = { status: "ACTIVE" as const, listingExpiresAt: price.covered ? null : renewedExpiry(current.listingExpiresAt) };
+    if (type === "aircraft") await prisma.aircraft.update({ where: { id }, data });
+    else await prisma.sparePart.update({ where: { id }, data });
 
-    revalidatePath("/profile");
+    revalidatePath(type === "aircraft" ? "/planes" : "/spareparts");
+    revalidatePath(type === "aircraft" ? `/planes/plane-details/${id}` : `/spareparts/sparepart-details/${id}`);
+    revalidatePath("/profile/[id]", "page"); // "/profile" no existe: se revalidan los perfiles
     revalidatePath("/"); // VA-76: la Home es estática
     updateTag(RECOMMENDATIONS_TAG); // VA-88
     return { success: true };
@@ -131,7 +95,7 @@ export async function deleteListingAction(id: string, type: "AIRCRAFT" | "SPARE_
       documentUrls.map((url) => pathFromPublicUrl("document", url)).filter((p): p is string => !!p)
     );
 
-    revalidatePath("/profile");
+    revalidatePath("/profile/[id]", "page"); // "/profile" no existe: se revalidan los perfiles
     revalidatePath("/planes");
     revalidatePath("/spareparts");
     revalidatePath("/"); // VA-76: la Home es estática

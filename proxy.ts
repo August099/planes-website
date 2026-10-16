@@ -25,8 +25,10 @@ export const config = {
     "/publish/:path*",
     "/favs/:path*",
     "/questions/:path*",
-    "/ads/:path*",
-    "/banners/:path*",
+    // VA-93: /ads y /banners están ocultos (app/_proximamente); vuelven acá al publicarlos.
     "/admin/:path*",
+    // VA-92: pago y estado del pago
+    "/checkout",
+    "/payment/:path*",
   ],
 };

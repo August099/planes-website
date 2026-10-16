@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isRequired } from "@/lib/aircraft-rules";
+import { isRequired, minEngines } from "@/lib/aircraft-rules";
 import { normalizeProvince } from "@/lib/provinces";
 
 // Esquema único de una publicación nueva: lo usan el formulario (PublishForm) y el
@@ -148,6 +148,21 @@ export const aircraftListingSchema = z
     if (data.condition === "NUEVO" && data.year !== new Date().getFullYear()) {
       ctx.addIssue({ code: "custom", path: ["condition"], message: "Solo una aeronave del año actual puede ser nueva." });
     }
+    // VA-90 / VA-112: motores mínimos según la categoría (lib/aircraft-rules.ts), y un motor cargado tiene marca o modelo
+    // (si no, una ficha vacía contaría como motor).
+    const neededEngines = minEngines(data.categoryId);
+    if (data.engines.length < neededEngines) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["engines"],
+        message: neededEngines === 2 ? "Un bimotor necesita los dos motores." : "Agregá al menos un motor.",
+      });
+    }
+    data.engines.forEach((engine, i) => {
+      if (!engine.brand && !engine.model) {
+        ctx.addIssue({ code: "custom", path: ["engines", i, "brand"], message: "Completá la marca o el modelo del motor." });
+      }
+    });
     if (data.propellers.length > data.engines.length) {
       ctx.addIssue({ code: "custom", path: ["propellers"], message: "No puede haber más hélices que motores." });
     }
@@ -205,7 +220,8 @@ export function toFieldErrors(error: z.ZodError): FieldErrors {
 }
 
 export type ListingResult =
-  | { ok: true; id: string; url: string }
+  // VA-92: checkoutUrl si el aviso quedó "pendiente de pago" (sin saldo ni suscripción).
+  | { ok: true; id: string; url: string; checkoutUrl?: string }
   | { ok: false; error: string; fieldErrors?: FieldErrors };
 
 // Publicación existente cargada en el formulario para editarla (/publish?edit=<id>).

@@ -58,7 +58,7 @@ export function buildCompareSections(aircraft: (AircraftDetail | null)[]): Compa
             const l = f.list(a);
             return l.length ? l : null;
           }
-          return f.value?.(a) ?? null;
+          return f.value?.(a) ?? f.compareEmpty ?? null;
         });
         const numeric = aircraft.map((a) => (a && f.numeric ? f.numeric(a) : undefined));
         rows.push({ key: f.key, label: f.label, cells, best: bestFlags(numeric, f.best), helpHref: f.helpHref });

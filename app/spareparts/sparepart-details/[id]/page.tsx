@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { AircraftGallery } from "@/components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
@@ -17,6 +19,7 @@ import { FeaturesCard } from "@/components/ui/listing/FeaturesCard";
 import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSections";
 import { PublishedLine } from "@/components/ui/listing/PublishedLine";
 import { sparePartConditionLabel, sparePartFeatures, sparePartSections } from "@/lib/listing-detail";
+import { CategoryLinks } from "@/components/ui/listing/CategoryLinks";
 import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
 import { DescriptionBody, ListingDescription } from "@/components/ui/listing/ListingDescription";
 import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
@@ -131,29 +134,31 @@ export default async function SparePartDetailsPage({
   const midCategory = leafCategory?.parent ?? null;
   const rootCategory = midCategory?.parent ?? null;
 
-  let categoryName: string | null = null;
-  let subcategoryName: string | null = null;
+  type CategoryRef = { id: string; name: string } | null;
+  let category: CategoryRef = null;
+  let subcategory: CategoryRef = null;
 
   if (rootCategory) {
     // Categoría (raíz) > Subcategoría (mid) > Sección (leaf)
-    categoryName = rootCategory.name;
-    subcategoryName = midCategory?.name ?? null;
+    category = rootCategory;
+    subcategory = midCategory;
   } else if (midCategory) {
     // Categoría (mid) > Subcategoría (leaf) — no hay Sección
-    categoryName = midCategory.name;
-    subcategoryName = leafCategory?.name ?? null;
+    category = midCategory;
+    subcategory = leafCategory;
   } else if (leafCategory) {
     // Solo hay categoría raíz
-    categoryName = leafCategory.name;
+    category = leafCategory;
   }
+  const subcategoryName = subcategory?.name ?? null;
+  // VA-108 / VA-117: debajo del título, solo el link a la categoría principal (listado filtrado).
+  const categoryLinks = category ? [{ label: category.name, href: `/spareparts?category=${encodeURIComponent(category.id)}` }] : [];
 
   // Datos clave del resumen (VA-41): grilla de 2 columnas.
   const keyFacts: KeyFact[] = [
     { label: "Marca", value: sparePart.brand },
-    { label: "Nº de parte", value: sparePart.partNumber },
     { label: "Estado", value: sparePart.condition ? sparePartConditionLabel(sparePart.condition) : null },
     { label: "Stock", value: `${sparePart.stock} ${sparePart.stock === 1 ? "unidad" : "unidades"}` },
-    { label: "Categoría", value: categoryName },
     { label: "Subcategoría", value: subcategoryName },
   ];
 
@@ -229,6 +234,28 @@ export default async function SparePartDetailsPage({
         </div>
       </div>
 
+      {/* VA-92: aviso para el dueño cuando su repuesto no está visible (pendiente de pago o vencido). */}
+      {!isListingActive(sparePart) && (
+        <div className="bg-amber-500 text-white text-xs font-semibold py-3 px-4 text-center flex items-center justify-center gap-2 print:hidden">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          {sparePart.status === "PENDING_PAYMENT" ? (
+            <>
+              <span>Tu aviso está guardado pero no se publica hasta que se acredite el pago.</span>
+              <Link href={`/checkout?listing=parts:${sparePart.id}`} className="underline font-bold hover:text-amber-100 ml-2">
+                Pagar
+              </Link>
+            </>
+          ) : (
+            <>
+              <span>Tu publicación venció y no es visible para el público. Renovala desde tu perfil.</span>
+              <Link href={`/profile/${sparePart.sellerId}`} className="underline font-bold hover:text-amber-100 ml-2">
+                Ir a mi perfil
+              </Link>
+            </>
+          )}
+        </div>
+      )}
+
       {/* VISTA WEB — VA-41: un solo árbol, mismo orden que el detalle de avión. En celular:
           fotos → título y precio → vendedor → descripción → ficha. Desde lg: dos columnas. */}
       <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
@@ -264,7 +291,8 @@ export default async function SparePartDetailsPage({
               />
               <Separator />
               <div>
-                <h1 className="text-xl font-bold text-[#001F58]">{sparePart.title}</h1>
+                <h1 className="text-2xl font-bold text-[#001F58] break-words">{sparePart.title}</h1>
+                <CategoryLinks items={categoryLinks} />
                 <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
               </div>
               <Separator />

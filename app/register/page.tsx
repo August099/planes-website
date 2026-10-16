@@ -9,6 +9,7 @@ import { registerUserAction } from "@/app/actions/register-action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LaunchPromoNote } from "@/components/ui/LaunchPromoNote";
 import { TermsContent } from "@/lib/terms-content";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { USER_TYPE_OPTIONS } from "@/lib/user-types";
@@ -60,6 +61,9 @@ export default function RegisterPage() {
               Ingresá tus datos para comenzar a publicar en Ventas Aeronáuticas
             </p>
           </div>
+
+          {/* VA-111: promoción de lanzamiento (se apaga sola en el corte) */}
+          <LaunchPromoNote className="text-left" />
 
           {/* MENSAJES DE ESTADO */}
           {successMessage === "CheckEmailRetry" && (

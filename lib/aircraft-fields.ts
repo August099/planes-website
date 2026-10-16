@@ -52,6 +52,8 @@ export interface AircraftField<T = AircraftDetail> {
   best?: Best;
   inDetail: "row" | "feature" | "summary" | "none";
   helpHref?: string;
+  /** Texto del comparador cuando no hay dato (si no, "—"). VA-105 · 5.8: la matrícula es opcional. */
+  compareEmpty?: string;
   /** Solo se muestra si la condición se cumple (por ejemplo, implementos solo en Agrícola). */
   when?: (a: T) => boolean;
 }
@@ -109,7 +111,8 @@ export const AIRCRAFT_FIELDS: AircraftField[] = [
   },
   { key: "category", section: "general", label: "Categoría", inDetail: "summary", value: (a) => text(a.category?.name) },
   { key: "condition", section: "general", label: "Estado", inDetail: "summary", value: (a) => AIRCRAFT_CONDITION_LABELS[a.condition] ?? a.condition },
-  { key: "plate", section: "general", label: "Matrícula", inDetail: "summary", value: (a) => text(a.plate)?.toUpperCase() },
+  // VA-113 (D13): la matrícula va en la ficha de abajo (si se cargó), no en "Datos de la aeronave".
+  { key: "plate", section: "general", label: "Matrícula", inDetail: "row", value: (a) => text(a.plate)?.toUpperCase(), compareEmpty: "No informada" },
   { key: "description", section: "general", label: "Descripción", inDetail: "none", value: (a) => text(a.description) },
 
   // Aviónica, equipamiento, exterior, interior, implementos
@@ -134,7 +137,8 @@ export const AIRCRAFT_FIELDS: AircraftField[] = [
   },
 
   // Documentación (en el detalle va como bloque de archivos aparte)
-  { key: "documents", section: "documentacion", label: "Documentos adjuntos", inDetail: "none", list: (a) => a.documents.map((d) => d.name) },
+  // VA-105 · 5.7: la documentación es privada: en el comparador solo la cantidad, no los nombres.
+  { key: "documents", section: "documentacion", label: "Documentos adjuntos", inDetail: "none", value: (a) => (a.documents.length ? `${a.documents.length} (privados, los ve el vendedor)` : undefined) },
 
   // Condiciones de venta
   {

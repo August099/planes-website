@@ -4,8 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { getListingPrices } from "@/lib/listing-prices";
 import { billingText, defaultUsageText } from "@/lib/plan-rules";
 
-// VA-80: tarjetas de /plans. La primera de cada pestaña es el precio por aviso (VA-59); el resto
-// son los planes activos de la base, editables desde /admin/plans.
+// VA-80: tarjetas de /plans: los planes activos de la base, editables desde /admin/plans.
+// VA-92 (decisión del socio, 13/10): no hay planes de 1 publicación. Quien publica una sola cosa la
+// paga al terminar el formulario, al precio individual de /admin/prices (SinglePrices, referencia).
 export const PLANS_TAG = "plans";
 
 export type PlanCard = {
@@ -31,49 +32,17 @@ const getActivePlans = unstable_cache(
       where: { isActive: true, archivedAt: null, type: { not: "AD_BANNER" } },
       orderBy: [{ sortOrder: "asc" }, { price: "asc" }],
     }),
-  ["active-plans"],
+  // VA-105: clave nueva para no servir los planes de prueba cacheados (los reales se cargan con un
+  // script, que no puede invalidar el tag). Cambios desde /admin/plans invalidan con PLANS_TAG.
+  ["active-plans", "va105-reales"],
   { tags: [PLANS_TAG], revalidate: 3600 }
 );
 
-export async function getPlanCards(): Promise<{ aircraft: PlanCard[]; parts: PlanCard[] }> {
-  const [prices, plans] = await Promise.all([getListingPrices(), getActivePlans()]);
+/** Precio de la publicación individual (ListingPrice, VA-59): se muestra como referencia, no es un plan. */
+export type SinglePrices = { aircraft: string; parts: string };
 
-  const singleAircraft: PlanCard = {
-    id: "listing-aircraft",
-    name: "Plan 1 Avión",
-    price: formatARS(prices.AIRCRAFT.amount),
-    billingText: "/ pago único",
-    postCount: "1 Posteo de Aeronave",
-    badge: null,
-    description: "Ideal para propietarios particulares que buscan vender su aeronave puntualmente.",
-    popular: false,
-    isSubscription: false,
-    features: [
-      "Publicación activa de 1 aeronave",
-      "Sin límite de tiempo de publicación",
-      "Galería completa de fotos e historial",
-      "Contacto directo sin comisiones",
-    ],
-    buttonText: "Comprar 1 Avión",
-  };
-  const singlePart: PlanCard = {
-    id: "listing-parts",
-    name: "Plan 1 Repuesto",
-    price: formatARS(prices.SPARE_PART.amount),
-    billingText: "/ pago único",
-    postCount: "1 Posteo de Repuesto",
-    badge: null,
-    description: "Perfecto para vender una herramienta, aviónica o componente específico.",
-    popular: false,
-    isSubscription: false,
-    features: [
-      "Publicación activa de 1 repuesto",
-      "Sin fecha de vencimiento",
-      "Hasta 5 fotos del repuesto",
-      "Filtro por Categoría y N/P (Número de Parte)",
-    ],
-    buttonText: "Comprar 1 Repuesto",
-  };
+export async function getPlanCards(): Promise<{ plans: PlanCard[]; single: SinglePrices }> {
+  const [prices, plans] = await Promise.all([getListingPrices(), getActivePlans()]);
 
   const toCard = (p: (typeof plans)[number]): PlanCard => {
     const isSubscription = p.type === "SUBSCRIPTION";
@@ -95,8 +64,10 @@ export async function getPlanCards(): Promise<{ aircraft: PlanCard[]; parts: Pla
     };
   };
 
+  // VA-105 (pedido del socio, 14/10): /plans muestra todos los planes juntos, sin pestañas de
+  // aviones y repuestos (showInAircraftTab/showInPartsTab quedan en la base, sin uso).
   return {
-    aircraft: [singleAircraft, ...plans.filter((p) => p.showInAircraftTab).map(toCard)],
-    parts: [singlePart, ...plans.filter((p) => p.showInPartsTab).map(toCard)],
+    plans: plans.map(toCard),
+    single: { aircraft: formatARS(prices.AIRCRAFT.amount), parts: formatARS(prices.SPARE_PART.amount) },
   };
 }

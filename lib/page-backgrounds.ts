@@ -14,12 +14,12 @@ export const PAGE_BACKGROUNDS = {
   guides: "/backgrounds/faq.webp", // /services/guides y sus guías (VA-78)
   ads: "/backgrounds/ads.webp",
   banners: "/backgrounds/banner.webp",
-  legal: "/backgrounds/privacidad.webp", // /terms y /privacy
+  legal: "/backgrounds/publish.webp", // /terms y /privacy
   report: "/backgrounds/admin.webp",
   login: "/backgrounds/login.webp",
-  register: "/backgrounds/register.webp",
+  register: "/backgrounds/login.webp",
   profile: "/backgrounds/profile.webp",
-  plans: "/backgrounds/plans.webp", // también 404, 403, error, mantenimiento y sin conexión
+  plans: "/backgrounds/publish.webp", // también 404, 403, error, mantenimiento y sin conexión
   admin: "/backgrounds/admin.webp",
   default: "/backgrounds/forms.webp", // /favs, /search, /services
 } as const;

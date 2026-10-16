@@ -38,7 +38,7 @@ export default function TerminosPage() {
               TÉRMINOS Y CONDICIONES DE USO
             </h1>
             <p className="text-sm text-[#001F58]/60 mb-12 border-b border-[#001F58]/20 pb-4">
-              <strong>Última actualización:</strong> Julio 2026.
+              <strong>Última actualización:</strong> Octubre 2026.
             </p>
 
             <div className="max-w-3xl font-sans text-sm">

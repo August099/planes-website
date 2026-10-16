@@ -13,14 +13,14 @@ import {
     resolveCategoryId,
     type EngineKind,
 } from "@/lib/aircraft-categories";
-import { isRequired, requiredMark } from "@/lib/aircraft-rules";
+import { isRequired, minEngines, requiredMark } from "@/lib/aircraft-rules";
 import { discardUploaded, uploadListingFiles } from "@/lib/listing-upload-client";
 import { listingSchema, toFieldErrors, MAX_LISTING_IMAGES, type EditListingData, type FieldErrors, type ListingInput } from "@/lib/listing-schema";
 import Image from "next/image";
 import Link from "next/link";
 import Stepper, { Step } from "@/components/ui/Stepper";
 import { PageBackground } from "@/components/ui/PageBackground";
-import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle, Send, AlertCircle, Upload, Paperclip, Search, X, GripHorizontal, Rocket, Sparkles } from "lucide-react";
+import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle, Send, AlertCircle, Upload, Paperclip, Search, X, GripHorizontal, Rocket } from "lucide-react";
 import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
 import { DescriptionTextarea } from "@/components/ui/DescriptionTextarea";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
@@ -61,7 +61,13 @@ interface PublishFormProps {
     needsPhone?: boolean;
     // VA-59: precio vigente por aviso (texto ya formateado), editable desde /admin/prices.
     listingPrices?: { aircraft: string; sparePart: string };
+    // VA-111: publicaciones gratis que le quedan del lanzamiento (solo si recibió ese saldo).
+    freeBalance?: { aircraft: number; parts: number };
+    // VA-94: CTA al publicar el 2.º aviso sin plan (ahorro de un pack frente a la publicación suelta).
+    packHints?: { aircraft: PackHint | null; parts: PackHint | null };
 }
+
+type PackHint = { planId: string; name: string; count: number; perListing: number; single: number; savingPercent: number };
 
 interface EngineInput {
     brand: string;
@@ -95,13 +101,17 @@ function FieldError({ message }: { message?: string }) {
     return <p className="text-[11px] text-red-600 font-semibold mt-1">{message}</p>;
 }
 
+const EMPTY_ENGINE: EngineInput = { brand: "", model: "", engineHours: "", TBO: "", DURG: "", horsepower: "", description: "" };
+
 export default function PublishForm({
     userId,
     brandsData = [],
     spareCategoriesData = [],
     editListing,
     needsPhone = false,
-    listingPrices
+    listingPrices,
+    packHints,
+    freeBalance
 }: PublishFormProps) {
     const errorRef = useRef<HTMLDivElement>(null);
     const isEditing = !!editListing;
@@ -276,7 +286,8 @@ export default function PublishForm({
         setAircraftForm((prev) => withCategory(prev, resolveCategoryId(selectedGroup, engine)));
     };
 
-    const [engines, setEngines] = useState<EngineInput[]>(editListing?.engines ?? []);
+    // VA-90: el alta arranca con un motor vacío, así no hay que buscar "Agregar Motor".
+    const [engines, setEngines] = useState<EngineInput[]>(editListing?.engines ?? [{ ...EMPTY_ENGINE }]);
     const [propellers, setPropellers] = useState<PropellerInput[]>(editListing?.propellers ?? []);
 
     // ESTADO: Formulario de repuestos
@@ -351,7 +362,7 @@ export default function PublishForm({
       }));
     };
 
-    const addEngine = () => setEngines([...engines, { brand: "", model: "", engineHours: "", TBO: "", DURG: "", horsepower: "", description: "" }]);
+    const addEngine = () => setEngines([...engines, { ...EMPTY_ENGINE }]);
     const removeEngine = (index: number) => {
         const updatedEngines = engines.filter((_, i) => i !== index);
         setEngines(updatedEngines);
@@ -475,6 +486,11 @@ export default function PublishForm({
             }
             if (step === 2) {
                 if (!aircraftForm.avDescription.trim() && isRequired("avDescription", aircraftForm.categoryId)) return "La descripción de Aviónica es obligatoria.";
+                const neededEngines = minEngines(aircraftForm.categoryId);
+                if (engines.length < neededEngines) return neededEngines === 2 ? "Un bimotor necesita los dos motores." : "Agregá al menos un motor.";
+                for (let i = 0; i < engines.length; i++) {
+                    if (!engines[i].brand.trim() && !engines[i].model.trim()) return `Completá la marca o el modelo del Motor #${i + 1}.`;
+                }
                 for (let i = 0; i < engines.length; i++) {
                     if (!engines[i].TBO && isRequired("TBO", aircraftForm.categoryId)) return `El TBO del Motor #${i + 1} es obligatorio.`;
                 }
@@ -651,6 +667,12 @@ export default function PublishForm({
           return;
         }
 
+        // VA-92: sin saldo ni suscripción, el aviso quedó "pendiente de pago": se sigue al checkout.
+        if ("checkoutUrl" in res && res.checkoutUrl) {
+          setPublishStatus("¡Aviso guardado! Ahora falta el pago para publicarlo...");
+          router.push(res.checkoutUrl);
+          return;
+        }
         setPublishStatus(isEditing ? "¡Guardado! Abriendo tu aviso..." : "¡Publicado! Abriendo tu aviso...");
         router.push(res.url);
       } catch (error) {
@@ -713,27 +735,47 @@ export default function PublishForm({
               </h1>
             </div>
 
-            {/* VA-47: aviso de la promoción de lanzamiento al publicar un avión; VA-59: con el precio
-                vigente tachado. */}
-            {LAUNCH_PROMO.enabled && !isEditing && activeTab === "aircraft" && (
-              <div className="max-w-2xl mx-auto mb-6 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-                <Sparkles className="h-5 w-5 shrink-0 text-emerald-600" />
-                <p>
-                  <span className="font-bold">{LAUNCH_PROMO.title}:</span> {LAUNCH_PROMO.text.toLowerCase()}.
-                  {listingPrices && listingPrices.aircraft !== "Gratis" && (
-                    <> Precio por aviso: <s className="tabular-nums">{listingPrices.aircraft}</s>.</>
-                  )}
-                </p>
-              </div>
-            )}
-
-            {/* VA-59: precio por aviso de un repuesto. Hasta la Fase 6 (Mercado Pago) no se cobra. */}
-            {listingPrices && !isEditing && activeTab === "parts" && (
-              <p className="max-w-2xl mx-auto mb-6 border-l-2 border-[#001F58]/30 pl-3 text-sm text-slate-600">
-                Precio por aviso de repuesto: <span className="font-semibold tabular-nums text-[#001F58]">{listingPrices.sparePart}</span>
-                {listingPrices.sparePart !== "Gratis" && " · por ahora no se cobra; el pago se habilita más adelante."}
+            {/* VA-111: saldo gratis del lanzamiento (VA-89). Se descuenta solo al publicar, sin cupón. */}
+            {freeBalance && !isEditing && (activeTab === "aircraft" ? freeBalance.aircraft : freeBalance.parts) > 0 && (
+              <p className="max-w-2xl mx-auto mb-4 border-l-2 border-[#E70F1F] pl-3 text-sm text-slate-700">
+                <span className="font-semibold text-[#001F58]">{LAUNCH_PROMO.title}:</span>{" "}
+                {(() => {
+                  const n = activeTab === "aircraft" ? freeBalance.aircraft : freeBalance.parts;
+                  const what = activeTab === "aircraft" ? "avión" : "repuesto";
+                  return `te ${n === 1 ? "queda" : "quedan"} ${n} ${n === 1 ? "publicación" : "publicaciones"} de ${what} gratis. Se usa sola al publicar: no pagás nada.`;
+                })()}
               </p>
             )}
+
+            {/* VA-92: con un pack o una suscripción vigente se publica directo; si no, el aviso se
+                guarda y se paga en el checkout. */}
+            {listingPrices && !isEditing && (
+              <p className="max-w-2xl mx-auto mb-6 border-l-2 border-[#001F58]/30 pl-3 text-sm text-slate-600">
+                Precio por aviso de {activeTab === "aircraft" ? "avión" : "repuesto"}:{" "}
+                <span className="font-semibold tabular-nums text-[#001F58]">
+                  {activeTab === "aircraft" ? listingPrices.aircraft : listingPrices.sparePart}
+                </span>
+                . Si tenés un pack o una suscripción con saldo, se publica sin pagar; si no, al publicar pasás al pago de
+                esta publicación.
+              </p>
+            )}
+
+            {/* VA-94: sin plan ni saldo, al publicar el 2.º aviso de ese tipo: cuánto ahorra con un pack. */}
+            {!isEditing && (() => {
+              const hint = activeTab === "aircraft" ? packHints?.aircraft : packHints?.parts;
+              if (!hint) return null;
+              const ars = (n: number) => `AR$ ${Math.round(n).toLocaleString("es-AR")}`;
+              return (
+                <p className="max-w-2xl mx-auto -mt-3 mb-6 pl-3 text-sm text-slate-600">
+                  ¿Vas a publicar más de uno? Con el <strong className="text-[#001F58]">{hint.name}</strong> cada aviso sale{" "}
+                  <span className="tabular-nums">{ars(hint.perListing)}</span> en vez de <span className="tabular-nums">{ars(hint.single)}</span> (ahorrás{" "}
+                  {hint.savingPercent}%).{" "}
+                  <Link href={`/checkout?planId=${hint.planId}`} className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+                    Ver el plan
+                  </Link>
+                </p>
+              );
+            })()}
 
             {phoneMissing && <PhoneRequiredCard onSaved={() => { setPhoneMissing(false); setFormError(null); }} />}
 
@@ -801,6 +843,13 @@ export default function PublishForm({
                                     style: currentStep === 4 ? { display: 'none' } : {},
                                     onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
                                         const err = validateStep(activeTab, currentStep);
+                                        // VA-112: al pasar al paso de motores de un alta, dejar listos los que pide la categoría (2 en Bimotor).
+                                        if (!err && activeTab === "aircraft" && currentStep === 1 && !isEditing) {
+                                            const needed = minEngines(aircraftForm.categoryId);
+                                            const isBlank = (eng: EngineInput) => Object.values(eng).every((v) => !String(v).trim());
+                                            if (needed === 0) setEngines(engines.filter((eng) => !isBlank(eng)));
+                                            else if (engines.length < needed) setEngines([...engines, ...Array.from({ length: needed - engines.length }, () => ({ ...EMPTY_ENGINE }))]);
+                                        }
                                         if (err) {
                                             e.preventDefault();
                                             setStepAttempted(true);
@@ -980,7 +1029,7 @@ export default function PublishForm({
                                         {/* MOTOR */}
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
                                             <div className="flex justify-between items-center">
-                                                <h4 className="font-bold uppercase text-xs text-[#001F58]">Motor</h4>
+                                                <h4 className="font-bold uppercase text-xs text-[#001F58]">Motor{requiredMark("engines", aircraftForm.categoryId)}</h4>
                                                 <button type="button" onClick={addEngine} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#001F58]/10 text-[#001F58] hover:bg-[#001F58]/20 transition-colors">
                                                     <Plus className="w-4 h-4" /> Agregar Motor
                                                 </button>
@@ -990,7 +1039,7 @@ export default function PublishForm({
                                                     <span className="absolute top-2 left-3 text-[10px] font-bold text-[#001F58] uppercase bg-blue-50 px-2 py-0.5 rounded">Motor #{idx + 1}</span>
                                                     <button type="button" onClick={() => removeEngine(idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold text-[10px] uppercase flex items-center gap-1"><Trash2 className="w-3 h-3" /> Quitar</button>
                                                     
-                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.brand`]} /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Modelo</label><input type="text" placeholder="Ej: O-320" value={eng.model} onChange={e => updateEngine(idx, "model", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO{requiredMark("TBO", aircraftForm.categoryId)}</label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.TBO`]} /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">DURG / SMOH (hs desde última revisión general)</label><input type="number" min="0" placeholder="Ej: 500" value={eng.DURG} onChange={e => updateEngine(idx, "DURG", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
@@ -999,7 +1048,8 @@ export default function PublishForm({
                                                     <div className="col-span-2"><label className="text-[10px] font-bold uppercase mb-1 block">Descripción Adicional</label><input type="text" placeholder="Detalles de cilindros, overhaul o accesorios." value={eng.description} onChange={e => updateEngine(idx, "description", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                 </div>
                                             ))}
-                                            {engines.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">No hay motores agregados.</p>}
+                                            {engines.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">{isRequired("engines", aircraftForm.categoryId) ? "Agregá al menos un motor con el botón \u201cAgregar Motor\u201d." : "Sin motor (opcional en Proyecto)."}</p>}
+                                            <FieldError message={fieldErrors["engines"]} />
                                         </div>
 
                                         {/* HÉLICE */}
@@ -1046,15 +1096,10 @@ export default function PublishForm({
                                                 Paso 3: Fotos y Documentos
                                             </h3>
                                             <p className="text-xs text-slate-500 mt-1">Mostrale al comprador el estado real de tu aeronave. La primera foto será la portada.</p>
-                                            <ul className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 list-disc pl-5 text-[11px] text-slate-500">
-                                                <li>Portada: ¾ de frente</li>
-                                                <li>¾ trasero</li>
-                                                <li>Laterales</li>
-                                                <li>Tablero</li>
-                                                <li>Tapizado</li>
-                                                <li>Motor</li>
-                                                <li>Detalles</li>
-                                            </ul>
+                                            {/* VA-126 (socio, 14/10): por ahora, sin las plantillas dibujadas de VA-124 (PhotoGuide queda en components/ui/publish). */}
+                                            <p className="mt-2 border-l-2 border-[#E70F1F] pl-3 text-xs text-slate-600">
+                                                Sacá buenas fotos: con luz de día, nítidas y de todos los ángulos (exterior, cabina, tablero y motor). Podés subir hasta {MAX_LISTING_IMAGES}.
+                                            </p>
                                         </div>
                                         
                                         <div>
@@ -1118,9 +1163,9 @@ export default function PublishForm({
                                                     <FieldError message={fieldErrors.certDate} />
                                                 </div>
                                                 <div className="sm:col-span-2">
-                                                    <label className="block text-[10px] font-bold uppercase mb-1">Matrícula</label>
+                                                    <label className="block text-[10px] font-bold uppercase mb-1">Matrícula <span className="font-normal normal-case text-slate-500">(opcional)</span></label>
                                                     <input type="text" placeholder="Ej: LV-XXX" value={aircraftForm.plate} onChange={e => setAircraftForm({...aircraftForm, plate: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 uppercase bg-white" />
-                                                    <p className="text-[10px] text-slate-500 mt-1">La matrícula es únicamente para control interno administrativo, NO será pública.</p>
+                                                    <p className="text-[10px] text-slate-500 mt-1">Opcional. Si la cargás, se muestra en el aviso, en el PDF y en el comparador.</p>
                                                 </div>
                                             </div>
 

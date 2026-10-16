@@ -5,13 +5,18 @@ import { HeaderLogo } from "./header-logo";
 import HeaderSearchBar from "./HeaderSearchBar";
 import MobileHeaderSearchBar from "./MobileHeaderSearchBar";
 import { DesktopUserMenu, MobileMenu } from "./HeaderUser";
-import { ServicesMenu } from "./ServicesMenu";
+import { SparePartsMenu } from "./SparePartsMenu";
+import { getSparePartCategories } from "@/lib/cached-data";
 
 // Header estático (VA-71): no lee la sesión en el servidor. Antes llamaba a auth() y consultaba
 // la base en cada request, y eso hacía dinámicas todas las páginas del sitio (cache-control:
 // no-store). La parte del usuario (menú, puntos rojos, admin) vive en HeaderUser.tsx.
-export function Header() {
+export async function Header() {
   const linkClass = "text-sm font-medium hover:text-red-400 transition-colors";
+  // VA-120: categorías principales de repuestos para el menú (taxonomía cacheada, VA-13).
+  const partCategories = (await getSparePartCategories())
+    .filter((c) => c.parentId === null)
+    .map(({ id, name }) => ({ id, name }));
 
   return (
     <SessionProvider>
@@ -32,11 +37,11 @@ export function Header() {
             <Link href="/planes" className={linkClass}>
               Aviones
             </Link>
-            <Link href="/spareparts" className={linkClass}>
-              Repuestos
+            {/* VA-120: Repuestos abre un panel con las categorías; VA-116: Servicios es un link simple */}
+            <SparePartsMenu linkClass={linkClass} categories={partCategories} />
+            <Link href="/services" className={linkClass}>
+              Servicios
             </Link>
-            {/* Servicios abre un panel con cada sección (guías, comparador) */}
-            <ServicesMenu linkClass={linkClass} />
             {/* Sin sesión, el proxy manda a /login y vuelve a /publish después de ingresar. */}
             <Link href="/publish" className={linkClass}>
               Vender
@@ -47,7 +52,7 @@ export function Header() {
           {/* Acciones Mobile (Lupa + Menú) */}
           <div className="flex md:hidden items-center gap-1">
             <MobileHeaderSearchBar />
-            <MobileMenu />
+            <MobileMenu partCategories={partCategories} />
           </div>
         </div>
       </HeaderWrapper>

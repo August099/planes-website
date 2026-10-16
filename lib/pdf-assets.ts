@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/site";
 import { USER_TYPE_LABELS } from "@/lib/user-types";
-import { hasCustomPage } from "@/lib/subscriptions";
+import { hasCustomPage, hasVerifiedBadge } from "@/lib/subscriptions";
 
 // VA-87 A: piezas de los PDF de avisos (logo, fotos comprimidas, QR y vendedor), armadas en el
 // servidor. Las fotos se achican con sharp (viene con Next para su optimizador de imágenes) para
@@ -85,10 +85,7 @@ export async function pdfSeller(sellerId: string) {
       select: { name: true, phone: true, email: true, city: true, province: true, userType: true, businessName: true, website: true, whatsapp: true },
     }),
     hasCustomPage(sellerId),
-    prisma.subscription.findFirst({
-      where: { userId: sellerId, status: "ACTIVE", currentPeriodEnd: { gt: new Date() }, plan: { includesVerifiedBadge: true } },
-      select: { id: true },
-    }),
+    hasVerifiedBadge(sellerId),
   ]);
   if (!user) return null;
   const contacts: { label: string; value: string }[] = [];
@@ -100,7 +97,8 @@ export async function pdfSeller(sellerId: string) {
   return {
     name: (custom && user.businessName) || user.name || "Vendedor",
     typeLabel: USER_TYPE_LABELS[user.userType],
-    badges: [verified && "Vendedor verificado", custom && "Página personalizada"].filter((b): b is string => !!b),
+    // "Cuenta verificada": solo con un plan que incluye la insignia (VA-105), igual que en la web.
+    badges: verified ? ["Cuenta verificada"] : [],
     location: [user.city, user.province].filter(Boolean).join(", "),
     contacts,
   };

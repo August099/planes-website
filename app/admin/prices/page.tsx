@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { getListingPrices } from "@/lib/listing-prices";
 import { formatListingPrice, LISTING_KIND_LABELS, priceChangePercent } from "@/lib/listing-price-format";
 import { ListingPriceEditor } from "@/components/admin/ListingPriceEditor";
+import { RenewalPercentEditor } from "@/components/admin/RenewalPercentEditor";
+import { getBillingSettings } from "@/lib/billing-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +18,9 @@ export default async function AdminPricesPage() {
   const admin = await getCurrentUser();
   if (!admin?.isAdmin) redirect("/");
 
-  const [prices, changes] = await Promise.all([
+  const [prices, settings, changes] = await Promise.all([
     getListingPrices(),
+    getBillingSettings(),
     prisma.listingPriceChange.findMany({
       orderBy: { createdAt: "desc" },
       take: 30,
@@ -61,6 +64,28 @@ export default async function AdminPricesPage() {
             <ListingPriceEditor kind={kind} label={LISTING_KIND_LABELS[kind]} current={prices[kind].amount} />
           </div>
         ))}
+      </section>
+
+      {/* VA-105 (14/10): renovación de un aviso vencido. */}
+      <section className="space-y-4 rounded-lg border border-[#001F58]/12 bg-white p-5">
+        <div>
+          <p className={LABEL}>Renovación de un aviso</p>
+          <p className="mt-1 text-sm text-slate-600">
+            Renovar un aviso (45 días más) cuesta este porcentaje del precio de arriba. Con una suscripción que deja ese tipo de aviso
+            sin vencimiento, renovar es gratis.
+          </p>
+        </div>
+        <RenewalPercentEditor current={settings.renewalPercent} />
+        <p className="text-sm text-slate-700">
+          Hoy:{" "}
+          {KINDS.map((kind, i) => (
+            <span key={kind}>
+              {i > 0 && " · "}
+              {LISTING_KIND_LABELS[kind]}{" "}
+              <strong className="tabular-nums">{formatListingPrice(Math.round((prices[kind].amount * settings.renewalPercent) / 100))}</strong>
+            </span>
+          ))}
+        </p>
       </section>
 
       <section>

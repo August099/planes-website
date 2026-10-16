@@ -193,12 +193,26 @@ export function PlanForm({ planId, initial }: { planId?: string; initial: PlanFo
           />
           <Check label="Insignia de vendedor verificado" checked={v.includesVerifiedBadge} onChange={(c) => set("includesVerifiedBadge", c)} />
           <Check
-            label="Página personalizada"
-            hint="Portada, logo y contacto en el perfil (VA-87)."
+            label="Página VA"
+            hint="Página personalizada: portada, logo y contacto en el perfil (VA-87)."
             checked={v.includesCustomPage}
             disabled={!isSubscription}
             onChange={(c) => set("includesCustomPage", c)}
           />
+          {isSubscription && (
+            <div>
+              <label htmlFor="plan-featured" className={LABEL}>Destacados incluidos por mes</label>
+              <input
+                id="plan-featured"
+                inputMode="numeric"
+                value={String(v.featuredPerMonth ?? 0)}
+                onChange={(e) => set("featuredPerMonth", Number(e.target.value.replace(/\D/g, "") || 0))}
+                className={`${INPUT} tabular-nums sm:max-w-32`}
+              />
+              <p className="mt-1 text-xs text-slate-500">Se reponen en cada período pago y no se acumulan.</p>
+              {err("featuredPerMonth")}
+            </div>
+          )}
         </div>
       </section>
 
@@ -236,11 +250,8 @@ export function PlanForm({ planId, initial }: { planId?: string; initial: PlanFo
           </div>
         </div>
         <div className="grid gap-3 border-t border-[#001F58]/10 pt-4 sm:grid-cols-2">
-          <Check label="Mostrar en la pestaña Aviones" checked={v.showInAircraftTab} onChange={(c) => set("showInAircraftTab", c)} />
-          <Check label="Mostrar en la pestaña Repuestos" checked={v.showInPartsTab} onChange={(c) => set("showInPartsTab", c)} />
           <Check label="Destacar como “Más elegido”" checked={v.isPopular} onChange={(c) => set("isPopular", c)} />
           <Check label="Activo (se ve en /plans)" checked={v.isActive} onChange={(c) => set("isActive", c)} />
-          {err("showInAircraftTab")}
         </div>
         <div className="max-w-[10rem]">
           <label htmlFor="plan-order" className={LABEL}>Orden</label>

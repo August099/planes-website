@@ -18,10 +18,12 @@ export interface CreateCouponInput {
   type: "DISCOUNT" | "RENEWAL";
   discountType?: "FULL_DISCOUNT" | "PERCENTAGE" | "FIXED_AMOUNT";
   discountValue?: number;
-  scope: "ALL" | "AIRCRAFT" | "SPARE_PART" | "AD_BANNER";
+  scope: "ALL" | "AIRCRAFT" | "SPARE_PART" | "AD_BANNER" | "FEATURED";
   maxUses?: number | null;
   maxUsesPerUser: number;
   isActive: boolean;
+  // VA-105: "AAAA-MM-DDTHH:mm" en hora argentina (input datetime-local del admin).
+  startsAt?: string | null;
   expiresAt?: string | null;
 }
 
@@ -52,11 +54,25 @@ export async function getAdminCoupons() {
   try {
     const rawCoupons = await prisma.coupon.findMany({
       orderBy: { createdAt: "desc" },
+      // VA-105 · 2.9: quién usó cada cupón (solo usos con compra; los "guardados" no cuentan).
+      include: {
+        usages: {
+          where: { purchaseId: { not: null } },
+          orderBy: { usedAt: "desc" },
+          select: { usedAt: true, User: { select: { id: true, name: true, email: true } }, Purchase: { select: { description: true, finalPrice: true } } },
+        },
+      },
     });
 
     // Sanitización de objetos Prisma (Decimal -> number, Date -> ISO string)
-    const coupons = rawCoupons.map((coupon) => ({
+    const coupons = rawCoupons.map(({ usages, ...coupon }) => ({
       ...coupon,
+      usages: usages.map((u) => ({
+        usedAt: u.usedAt.toISOString(),
+        user: u.User,
+        description: u.Purchase?.description ?? "",
+        finalPrice: Number(u.Purchase?.finalPrice ?? 0),
+      })),
       discountValue: Number(coupon.discountValue),
       startsAt: coupon.startsAt?.toISOString() ?? null,
       expiresAt: coupon.expiresAt?.toISOString() ?? null,
@@ -78,10 +94,21 @@ export async function createAdminCoupon(data: CreateCouponInput) {
 
     const formattedCode = data.code.trim().toUpperCase();
 
-    // Validar formato de 6 caracteres
-    if (formattedCode.length !== 6) {
-      return { success: false, error: "El código debe tener exactamente 6 caracteres." };
+    // VA-105: de 4 a 20 caracteres (letras, números y guiones), así entran códigos como LANZAMIENTO.
+    if (!/^[A-Z0-9-]{4,20}$/.test(formattedCode)) {
+      return { success: false, error: "El código tiene que tener de 4 a 20 caracteres: letras, números o guiones." };
     }
+    const value = Number(data.discountValue || 0);
+    if (data.type !== "RENEWAL" && data.discountType === "PERCENTAGE" && (value <= 0 || value > 100)) {
+      return { success: false, error: "El porcentaje tiene que estar entre 1 y 100." };
+    }
+    if (data.type !== "RENEWAL" && data.discountType === "FIXED_AMOUNT" && value <= 0) {
+      return { success: false, error: "El monto fijo tiene que ser mayor a 0." };
+    }
+    const startsAt = parseArDateTime(data.startsAt);
+    const expiresAt = parseArDateTime(data.expiresAt);
+    if (startsAt === undefined || expiresAt === undefined) return { success: false, error: "Revisá las fechas." };
+    if (startsAt && expiresAt && expiresAt <= startsAt) return { success: false, error: "El vencimiento tiene que ser posterior al inicio." };
 
     // Verificar si ya existe
     const existing = await prisma.coupon.findUnique({
@@ -103,7 +130,8 @@ export async function createAdminCoupon(data: CreateCouponInput) {
         currentUses: 0,
         maxUsesPerUser: data.maxUsesPerUser || 1,
         isActive: data.isActive,
-        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+        startsAt,
+        expiresAt,
       },
     });
 
@@ -136,4 +164,12 @@ export async function toggleCouponStatus(id: string, isActive: boolean) {
     console.error("Error al actualizar estado del cupón:", error);
     return { success: false, error: "No se pudo actualizar el estado." };
   }
+}
+
+/** "AAAA-MM-DDTHH:mm" (hora argentina) → Date; null si está vacío; undefined si es inválido. */
+function parseArDateTime(value: string | null | undefined): Date | null | undefined {
+  if (!value) return null;
+  if (!/^d{4}-d{2}-d{2}Td{2}:d{2}$/.test(value)) return undefined;
+  const d = new Date(`${value}:00-03:00`);
+  return Number.isNaN(d.getTime()) ? undefined : d;
 }

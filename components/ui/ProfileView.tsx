@@ -31,6 +31,7 @@ import {
   Camera,
   Trash2,
   Ticket,
+  Receipt,
   Plus,
   Star,
   Clock,
@@ -42,8 +43,10 @@ import { StorefrontHeader, type StorefrontData } from "@/components/ui/profile/S
 import { StorefrontEditor } from "@/components/ui/profile/StorefrontEditor";
 import { SubscriptionPanel } from "@/components/ui/profile/SubscriptionPanel";
 import type { SubscriptionSummary } from "@/lib/subscriptions";
-
-const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+import type { PurchaseRow } from "@/lib/purchases";
+import { PurchasesPanel } from "@/components/ui/profile/PurchasesPanel";
+import { BillingProfilePanel, type BillingProfileValues } from "@/components/ui/profile/BillingProfilePanel";
+import { PASSWORD_REGEX } from "@/lib/password-rules";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -114,6 +117,13 @@ interface Props {
   storefront?: StorefrontData | null;
   // VA-80: plan del dueño del perfil (solo se pasa cuando lo mira el dueño).
   subscription?: SubscriptionSummary | null;
+  // VA-92: "Mis compras" y datos de facturación guardados (solo el dueño).
+  purchases?: PurchaseRow[];
+  initialTab?: "purchases";
+  billingProfile?: { values: BillingProfileValues; saved: boolean } | null;
+  // VA-105 · 3: "Cambiar contraseña" solo para cuentas con contraseña (las de Google la crean con
+  // "Olvidé mi contraseña").
+  hasPassword?: boolean;
 }
 
 /** Helper para calcular los días restantes de una publicación */
@@ -146,13 +156,17 @@ export function ProfileView({
   missingProfileFields = [],
   storefront = null,
   subscription = null,
+  purchases = [],
+  billingProfile = null,
+  hasPassword = false,
+  initialTab,
 }: Props) {
   const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
   const missingDot = (field: ProfileField) =>
     isMissing(field) ? (
       <span className="ml-1 inline-block w-2 h-2 rounded-full bg-red-600 align-middle" aria-label="Falta completar" />
     ) : null;
-  const [activeTab, setActiveTab] = useState<"aircrafts" | "spareparts" | "coupons" | "edit">("aircrafts");
+  const [activeTab, setActiveTab] = useState<"aircrafts" | "spareparts" | "coupons" | "purchases" | "edit">(initialTab ?? "aircrafts");
   const [loadingSave, setLoadingSave] = useState(false);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -180,6 +194,11 @@ export function ProfileView({
     setLoadingRenewId(id);
     try {
       const res = await renewListingAction(id, type);
+      // VA-105: sin un plan que la cubra, la renovación se paga en el checkout.
+      if (!res.success && res.checkoutUrl) {
+        window.location.assign(res.checkoutUrl);
+        return;
+      }
       if (!res.success) {
         alert(res.error || "Ocurrió un error al intentar renovar.");
       }
@@ -330,6 +349,7 @@ export function ProfileView({
           instagram={profileUser.instagram}
           facebook={profileUser.facebook}
           isOwner={isOwner}
+          isFoundingMember={profileUser.isFoundingMember}
           onEdit={() => setActiveTab("edit")}
         />
       ) : (
@@ -501,6 +521,19 @@ export function ProfileView({
         </div>
       )}
 
+      {/* VA-94: CTA para el dueño sin plan: beneficios de la Página VA (discreto, sin pop-up). VA-105: "Pro" pasó a "Página VA". */}
+      {isOwner && !storefront && !subscription?.active && (
+        <aside className="flex flex-col gap-3 rounded-lg border border-[#001F58]/12 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-slate-700">
+            <span className="font-semibold text-[#001F58]">Con la Página VA</span> tu perfil pasa a ser tu página: portada, logo, nombre
+            comercial y WhatsApp.
+          </p>
+          <Link href="/plans" className="shrink-0 text-sm font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+            Ver planes
+          </Link>
+        </aside>
+      )}
+
       {/* Selector de pestañas responsive */}
       {/* En celular las pestañas van en grilla de 2 columnas: con scroll horizontal "Ajustes" quedaba escondida (VA-60) */}
       <div className="grid grid-cols-2 gap-x-4 border-b border-slate-200 sm:flex sm:gap-6 sm:overflow-x-auto scrollbar-none">
@@ -544,6 +577,20 @@ export function ProfileView({
 
         {isOwner && (
           <button
+            onClick={() => setActiveTab("purchases")}
+            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+              activeTab === "purchases"
+                ? "border-[#001F58] text-[#001F58]"
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <Receipt className="w-4 h-4" />
+            Mis compras ({purchases.length})
+          </button>
+        )}
+
+        {isOwner && (
+          <button
             onClick={() => setActiveTab("edit")}
             className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === "edit"
@@ -562,6 +609,16 @@ export function ProfileView({
 
       {/* Pestaña Aeronaves */}
       {activeTab === "aircrafts" && (
+        <>
+        {/* VA-94: CTA en "Mis publicaciones" para el dueño sin plan. */}
+        {isOwner && !subscription?.active && (
+          <p className="mb-4 text-sm text-slate-600">
+            Con un plan publicás más y pagás menos.{" "}
+            <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+              Ver planes
+            </Link>
+          </p>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
           {profileUser.aircrafts?.map((item) => {
             const remainingStatus = getRemainingDaysText(item.listingExpiresAt);
@@ -606,7 +663,7 @@ export function ProfileView({
                         onClick={() => handleRenew(item.id, "aircraft")}
                         disabled={loadingRenewId === item.id}
                         className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-3 sm:px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-xs sm:text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
-                        title="Extender publicación 45 días más"
+                        title="Renovar 45 días más (sin cargo con un plan que lo incluya)"
                       >
                         {loadingRenewId === item.id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -662,10 +719,21 @@ export function ProfileView({
             );
           })}
         </div>
+        </>
       )}
 
       {/* Pestaña Repuestos */}
       {activeTab === "spareparts" && (
+        <>
+        {/* VA-94: CTA en "Mis publicaciones" para el dueño sin plan. */}
+        {isOwner && !subscription?.active && (
+          <p className="mb-4 text-sm text-slate-600">
+            Con un plan publicás más y pagás menos.{" "}
+            <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+              Ver planes
+            </Link>
+          </p>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
           {profileUser.spareParts?.map((item) => {
             const remainingStatus = getRemainingDaysText(item.listingExpiresAt);
@@ -709,7 +777,7 @@ export function ProfileView({
                         onClick={() => handleRenew(item.id, "sparepart")}
                         disabled={loadingRenewId === item.id}
                         className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-3 sm:px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-xs sm:text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
-                        title="Extender publicación 45 días más"
+                        title="Renovar 45 días más (sin cargo con un plan que lo incluya)"
                       >
                         {loadingRenewId === item.id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -765,6 +833,7 @@ export function ProfileView({
             );
           })}
         </div>
+        </>
       )}
 
       {/* Pestaña Cupones */}
@@ -871,10 +940,14 @@ export function ProfileView({
         </div>
       )}
 
+      {/* VA-92: Pestaña Mis compras */}
+      {isOwner && activeTab === "purchases" && <PurchasesPanel rows={purchases} />}
+
       {/* Pestaña Ajustes */}
       {isOwner && activeTab === "edit" && (
         <div className="space-y-6 max-w-2xl mx-auto md:mx-0">
           <SubscriptionPanel subscription={subscription} />
+          {billingProfile && <BillingProfilePanel initial={billingProfile.values} saved={billingProfile.saved} />}
 
           {/* Formulario de información de la cuenta */}
           <form onSubmit={handleUpdate} className="p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 space-y-4">
@@ -937,6 +1010,21 @@ export function ProfileView({
           {storefront && <StorefrontEditor storefront={storefront} />}
 
           {/* Formulario de Cambio de Contraseña */}
+          {!hasPassword ? (
+            <div className="rounded-lg border border-[#001F58]/12 bg-white p-6">
+              <h2 className="flex items-center gap-2 text-lg font-bold text-[#001F58]">
+                <Lock className="h-5 w-5 text-slate-700" />
+                Contraseña
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Tu cuenta entra con Google y no tiene contraseña. Si querés poder entrar también con tu email, creá una:
+                te mandamos un link a tu casilla.
+              </p>
+              <Link href="/forgot-password" className="mt-3 inline-block text-sm font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
+                Crear una contraseña
+              </Link>
+            </div>
+          ) : (
           <form onSubmit={handleChangePasswordSubmit} className="p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 space-y-4">
             <div>
               <h2 className="text-lg font-bold text-[#001F58] flex items-center gap-2">
@@ -1018,6 +1106,7 @@ export function ProfileView({
               </button>
             </div>
           </form>
+          )}
         </div>
       )}
 

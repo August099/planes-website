@@ -33,6 +33,7 @@
 | 5 | Responsive y limpieza | Sí (responsive), limpieza recomendada |
 | 5b | **Rendimiento y tiempos de carga** | **Sí** (VA-70: la Home baja 6,5 MB de JavaScript) |
 | 6 | Mercado Pago y facturación | No (más adelante) |
+| 14/10 | **Pedidos del socio después de probar (VA-89 a VA-91 y VA-106 a VA-110)**, ordenados por prioridad: P1 saldo de lanzamiento, motor obligatorio y filtros en celular; P2 orden de filtros y detalle; P3 comparador y destacadas | Sí (P1 y P2) |
 
 ---
 
@@ -864,6 +865,7 @@ Notas para cuando se encare, a partir de lo que ya existe:
 6. VA-54 (campos nuevos, en la misma migración que VA-44 si es posible), VA-47 (solo el aviso), VA-52, VA-53
 7. **VA-70 (íconos de la Home) apenas se pueda, porque es un cambio chico con muchísimo impacto**; después VA-71…VA-76
 8. VA-12, VA-15, VA-16 → VA-61…VA-63 → VA-27 (opcional)
+9. **Pedidos del 14/10:** VA-89 (saldo de lanzamiento, después de D17/D18) → VA-90 (motor obligatorio, después de D19) → VA-91 (filtros en celular) → VA-106 → VA-107 → VA-108 → VA-109 → VA-110
 
 ## 8. Decisiones pendientes (para los socios)
 
@@ -885,6 +887,10 @@ Notas para cuando se encare, a partir de lo que ya existe:
 | D15 | `S/C` "Sin categoría asignada" (VA-43 ítem 7) | VA-43 | ✅ 8/10: se renombra a "Otros" |
 | D16 | ¿TBO obligatorio en Proyecto? (VA-44) | VA-44 | ✅ 8/10: opcional en `PR`, obligatorio en el resto |
 | D13 | ¿Se muestra la matrícula públicamente? | VA-54 | Pendiente |
+| D17 | Saldo de lanzamiento: fecha de corte y cuentas existentes | VA-89 | ✅ 14/10: 2/12/2026 23:59 hora Argentina inclusive, sin mostrar la fecha; las existentes con al menos 1 / 1 |
+| D18 | ¿Publicar descuenta del saldo? | VA-89 | ✅ Sí (VA-92: suscripción → saldo → pago). El saldo de lanzamiento **reemplaza al cupón LANZAMIENTO** (socio, 14/10) |
+| D19 | Motor obligatorio: ¿también en Proyecto (`PR`)? ¿Bimotor exige 2 motores? | VA-90 | Pendiente (sugerido: Proyecto opcional; Bimotor 2) |
+| D20 | "Aeronaves destacadas" | VA-110 | ✅ 14/10: 6 al azar entre las recientes hasta que se apliquen los destacados pagos (VA-95) |
 
 ## 9. Checklist final antes de lanzar
 
@@ -1114,7 +1120,7 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - **Geocodificación** (`lib/geocode.ts`): API Georef, endpoint `localidades` con la provincia canónica (`lib/provinces.ts`, los 24 nombres coinciden con Georef) y el centroide. Primero búsqueda exacta; la aproximada solo se acepta si el nombre difiere en 2 letras o menos, sin contar un artículo inicial ("Amstrong" → Armstrong, "Conquistadores" → Los Conquistadores; "San Fernando" no cae en "San Bernardo"). En CABA, si la ciudad dice "CABA", "Capital Federal", etc., se usa el centroide de la ciudad. Timeout de 4 s; si falla o no encuentra, el aviso se guarda sin coordenadas y se registra (`[geocode] aviso sin coordenadas`). Se llama en `createListing` y en `updateListing` (solo si cambió la ciudad o la provincia, o si todavía no tenía coordenadas).
 - **Script** `scripts/geocode-listings.ts` (dry-run por defecto, `--apply`, `--all`, pausa de 400 ms, solo base local): en `va_dev` resolvió **72 de 86 avisos** (13 de 14 localidades). Quedan **14 sin resolver: "Buenos Aires, Buenos Aires"** (la ciudad es ambigua: no hay una localidad con ese nombre en la provincia; hay que corregir el dato).
 - **Mapa** (`components/ui/ListingLocationMap.tsx` + `LeafletZoneMap.tsx`, Leaflet 1.9): import dinámico `ssr: false` recién cuando el bloque entra en pantalla (IntersectionObserver), placeholder del mismo alto; círculo de 5 km en `#E70F1F` semitransparente, sin marcador; "Ubicación aproximada: Ciudad, Provincia"; sin zoom con la rueda, con botones de zoom; 220 px en celular y 260 px en escritorio; placa con rótulo "Zona" (pautas de diseño). En el detalle de aeronave y de repuesto, en la columna del vendedor (en celular, después del vendedor). Reutilizable (props: coordenadas, ciudad, provincia, radio y rótulo) para hangares y pistas. Si el mapa falla, el aviso se sigue viendo.
-- **Teselas:** **Stadia Maps** ("Alidade Smooth"). CARTO ya pide clave (sin clave devuelve un cartel "API KEY REQUIRED") y MapTiler también. Stadia anda sin clave en localhost y en producción autoriza por **dominio**: hay que crear la cuenta y registrar el dominio (sin clave en el código). Opcional: `NEXT_PUBLIC_STADIA_API_KEY` (no está en el `.env`). **Revisar el plan de Stadia** para uso comercial.
+- **Teselas:** **Stadia Maps** ("Alidade Smooth"). CARTO ya pide clave (sin clave devuelve un cartel "API KEY REQUIRED") y MapTiler también. Stadia anda sin clave en localhost y en producción autoriza por **dominio**: hay que crear la cuenta y registrar el dominio (sin clave en el código). Opcional: `NEXT_PUBLIC_STADIA_API_KEY` (no está en el `.env`). **Revisar el plan de Stadia** para uso comercial. → **Reemplazado en VA-129** por un SVG propio (sin Stadia).
 - **Verificado** en el build de producción con Edge, en 8 avisos de 8 provincias (Buenos Aires, CABA, Córdoba, Corrientes, Entre Ríos, Mendoza, Neuquén, Santa Fe) a 375 y 1280 px: 0 pedidos del mapa antes de hacer scroll, círculo en la ciudad correcta, teselas cargadas, atribución visible, sin scroll horizontal. Editar un aviso de Córdoba a "Villa Carlos Paz" guardó las coordenadas nuevas (−31,418, −64,494) y el mapa mostró la ciudad nueva (dato restaurado después). **No probado por el formulario:** el alta (usa la misma función).
 - **Bug encontrado y arreglado en el camino:** con el mapa visible al cargar, `circle.getBounds()` fallaba (el mapa todavía no tenía vista) y la página entera mostraba el error 500; ahora el encuadre se calcula desde el centro y el radio, y cualquier falla del mapa queda dentro del bloque.
 
@@ -1187,3 +1193,276 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - **Verificado** (build de producción, va_dev) con un script que lee los bloques y los cruza con la base: en 7 detalles, ningún bloque incluye el aviso actual ni avisos no visibles y nunca hay más de 2 por vendedor; sin scroll horizontal a 375 px. Casos: Cessna C-150 (similares de su categoría + categorías vecinas; repuestos Cessna), Pilatus PC-12 turbohélice (sin otras de su categoría: cascada a vecinas y recientes), Cirrus Vision Jet (categoría Otros, sin vecinas: similares + recientes), repuesto con modelos asociados (AB-115, C-150), repuesto sin aeronave (bloque B oculto) y un repuesto con "Cessna" en la descripción (inferido; la descripción se cambió para la prueba y se restauró).
 - **En los datos de prueba:** el "Cilindro Lycoming Superior con Válvulas" está cargado en la categoría "Llantas", así que sus similares son llantas y frenos. Es un dato mal cargado, no un problema de la lógica.
 - **Falta (hangares):** sección 3 de la spec (haversine con caja de lat/long, cascada por radio 50 → 150 → 400 km → provincia → país, distancia en la tarjeta) y "Hangares disponibles cerca" en aeronaves y repuestos.
+
+---
+
+### VA-92 (spec) · Pagos con Mercado Pago + facturación automática con TusFacturasAPP (pedido del socio, 12/10)
+> Especificación: `docs/specs/VA-92-pagos-y-facturacion.md`. Guía operativa: `docs/PAGOS.md`.
+
+**Estado (13/10/2026):** 🟡 **en curso.** Hechas en local: configuración, migraciones, webhook, checkout de pago único, conexión publicar → pagar, plan de cortesía (commits `d77d181`, `a9a1265`, `f6888d6`, `e4cdd76`, `741b744`, `731b617`, `3af5f85`). `pre-production` tiene hasta el webhook (`5063cf4`). **Pendiente del socio:** corregir `MP_WEBHOOK_SECRET` en Preview (las notificaciones reales llegan con la firma de la app de la cuenta vendedora de prueba y hoy se rechazan) y volver a desplegar. Suscripciones con débito automático hechas en local (`6134753`): alta por preapproval, cobros por webhook, gracia con mail, cancelar/seguir desde el perfil y cron diario (`CRON_SECRET`); vigencia única en `lib/subscriptions.ts` (ACTIVE o PAST_DUE en gracia). **Falta probar un débito real en el Preview** (con el email de la cuenta compradora de prueba). "Mis compras", admin "Pagos y facturas" y datos de facturación en el perfil hechos en local (`c3cf515`). **Facturación con TusFacturas en espera** (falta la API; decisión del socio, 13/10).
+
+**Decisiones del socio (12/10):**
+- **Activación:** con pack o suscripción, publicar descuenta 1 del saldo; sin saldo, el aviso queda "pendiente de pago" y va a `/checkout` de ese aviso; lo activa el webhook. La promo de lanzamiento pasa a ser un cupón del 100% administrable.
+- **Sin túnel:** los webhooks se prueban en el Preview de `pre-production` (Deployment Protection desactivada). El desarrollo sigue en local y cada etapa se despliega a `pre-production` al cerrarla.
+- **`MP_NOTIFICATION_URL`** opcional para el `notification_url` de las preferencias; `APP_URL` = localhost en local y la URL del preview en Preview.
+- Solo los nombres de variables de la spec (`MP_*`); los viejos `MERCADOPAGO_*` los borra el socio de su `.env`.
+- **El Preview usa la base de Supabase** (la misma de producción; decisión del socio, 12/10). Las migraciones las corre el socio con `migrate deploy` antes de cada despliegue a `pre-production`. Las compras y eventos de prueba quedan en esa base: limpiarlos antes de abrir producción.
+- **`pre-production` sin la página "Próximamente"** (queda solo en `main`).
+- **Sin planes de 1 publicación (13/10):** quien publica una sola cosa la paga al terminar el formulario, al precio individual de `/admin/prices` (ListingPrice). Al apretar "Publicar": con saldo de un pack o una suscripción se descuenta 1 y se publica; sin saldo, el aviso queda "pendiente de pago" y va al pago de esa publicación (con cupón); un cupón del 100% publica sin pasar por Mercado Pago. En `va_dev` no había filas "Plan 1" (las armaba `lib/plans.ts`); en producción hay que revisarlo con la consulta del registro.
+- **Botones de pago: solo "Pagar"** (el medio se elige dentro de Mercado Pago).
+- **Cuenta Pro = plan con página personalizada.** Plan de cortesía (suscripción `MANUAL`) asignable desde `/admin/users`, con vencimiento y nota: no se cobra ni se renueva, y no cuenta en ingresos ni en los KPIs (VA-102). En `va_dev`: plan "Profesional" (inactivo hasta revisar precio y beneficios) y cortesía por un año para atilasilvero@gmail.com.
+- **Destacados (VA-95):** opción de 7 días (precio a cargar en `/admin/prices`).
+- **Facturación (13/10), para cuando esté la API de TusFacturas:** lo más automatizado posible y con el mínimo de datos para el usuario. Ya hecho: datos de facturación guardados en el perfil (Ajustes) y, en el checkout, solo un resumen editable con "Cambiar" (DNI únicamente cuando ARCA lo pide). Falta: emitir la factura C apenas se aprueba el pago, **ofrecerla para descargar en la pantalla de estado del pago** y dejarla en "Mis compras" del perfil (la columna "Factura" ya está, con "Descargar" cuando haya PDF), PDF en bucket privado de Supabase con link firmado, notas de crédito y reintentos.
+- **Insignia "Miembro fundador" también en los perfiles Pro** (13/10), junto a "Cuenta verificada".
+- **Banners (VA-103):** pago después de que el admin apruebe la solicitud. Secciones: Home (arriba), Home (entre secciones), listado de aeronaves, listado de repuestos, detalle de aviso y guías. **De momento no se muestran en la web:** la página pública va a `app/_proximamente/` y solo se gestionan desde el admin.
+
+**Etapas:**
+0. ✅ Configuración: `.env.example`, `lib/mercadopago.ts` (cliente que falla si falta el token, clave del webhook con fail closed, `APP_URL`, `MP_NOTIFICATION_URL`, `BILLING_ENABLED`), `docs/PAGOS.md`.
+1. ✅ Migración `20261012230000_va92_pagos` (aplicada en `va_dev`): `Purchase` (plan opcional para avisos sueltos, `listingKind`, concepto, moneda, `approvedAt`, `activatedAt`, datos de facturación usados), `PaymentStatus` (+ IN_PROCESS, CANCELLED, REFUNDED, PARTIALLY_REFUNDED), `Subscription` (+ PENDING, PAST_DUE, `graceUntil`, `mpStatus`), tablas `Payment` (`mpPaymentId` único), `WebhookEvent`, `Invoice` (una factura por pago; nota de crédito única por reembolso), `BillingProfile` y `BillingSettings`.
+2. ✅ Webhook (fuente de verdad, etapa 3 de la spec): `POST /api/webhooks/mercadopago` valida `x-signature` (sin clave rechaza todo), guarda cada notificación en `WebhookEvent` (también las rechazadas, con el motivo), responde 200 y procesa con `after()`. El pago se consulta a la API de MP; `Payment` por `mpPaymentId` único; monto y moneda tienen que coincidir con la compra. Activación idempotente (`activatedAt`): saldo de packs, avisos pendientes de pago, banners a revisión y uso del cupón. Reembolso total o contracargo: revierte una vez. Factura C en `PENDING` por pago aprobado. Suscripciones: `IGNORED` hasta la etapa 4. **Probado en local** (build de producción con una clave de prueba solo en el proceso): sin firma, firma con otra clave y firma de otro id → 401 y `REJECTED`; firma válida → 200; pago inexistente → `ERROR` con el detalle de MP; 6 activaciones simultáneas de 2 compras → ganan 2, el reenvío no hace nada, 4 reembolsos → revierten 2, saldo sin negativos; datos restaurados. **Falta probarlo con pagos reales en el Preview.**
+3. Checkout Pro (avisos sueltos, packs y banners), cupones (incluido el 100%), página de estado del pago.
+4. Suscripciones (preapproval), gracia y cancelación.
+5. Facturación con TusFacturas (`BILLING_ENABLED=false` hasta tener credenciales).
+6. Paneles "Mis compras" y admin "Pagos y facturas".
+7. Pruebas y pase a producción (`docs/PAGOS.md`).
+
+**Pendiente antes del primer despliegue a pre-production:** variables del ambiente Preview, base aparte para pre-production con las 27 migraciones y datos base, y qué hacer con la página "Próximamente" que tiene `pre-production` (commit `94c4486`, choca con `app/page.tsx`).
+
+---
+
+## Lote 12/10/2026 · VA-93 a VA-102
+
+Detalle completo y decisiones confirmadas en **`docs/specs/VA-93-a-VA-102-lote-12-10.md`**. Resumen:
+
+| Tarea | Qué |
+|---|---|
+| VA-93 | Servicios: solo Guías y Comparador visibles. Hangares, herramientas, foro y demás se mueven a una carpeta privada que no se publica (`app/_proximamente/`), sin accesos públicos. Documentar en `docs/FUNCIONES_OCULTAS.md` |
+| VA-94 | `/plans` con los planes reales del admin + link "Planes y precios" en Explorar (footer) + CTAs en 4 lugares |
+| VA-95 | Destacados pagos: primero en búsquedas; en la Home, si hay más de 2, 2 destacados al azar; días y precio junto a los precios individuales; destacados incluidos por mes en las suscripciones |
+| VA-96 | Unificar a `aircraft` en código, base y carpetas (rutas con redirects 308; RENAME en la base). Mostrar la lista de renombres antes de hacerlo |
+| VA-97 | Perfil: una sola grilla con interruptores por tipo + filtros por estado en el panel propio |
+| VA-98 | Métricas: básicas para todos; avanzadas (7/30/90 días, gráficos, favoritos, comparador, visitas del perfil) para Pro. Corregir el conteo de "Vistas" |
+| VA-99 | Carga masiva de repuestos (Pro): plantilla xlsx/csv, zip de fotos por P/N (o carga manual), borradores, "Publicar todos" |
+| VA-100 | Footer: color actual en la Home; color de la barra lateral del admin en el resto |
+| VA-101 | Bug: `/onboarding/account-type?from=publish` compila sin parar desde el 2.º acceso |
+| VA-102 | Admin: pestaña "Gastos fijos" (ARS/USD, tipo de cambio manual con fecha) + KPI de cobertura en rojo/verde en el dashboard |
+
+Beneficios Pro como toggles del plan en el admin: "Métricas avanzadas", "Carga masiva" y "Destacados incluidos por mes". El PDF de hangares ya está en VA-87.
+
+### VA-103 · Página de banners (detalle en `docs/specs/VA-93-a-VA-102-lote-12-10.md`)
+Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se muestran en su propia página `/banners`, que reemplaza la actual, rota. Cada plan tiene un formulario de solicitud (contacto, descripción, fotos) que se guarda y le avisa al admin. En el admin se elige la sección donde se muestra: es solo informativa, porque los banners se colocan a mano. ⚠️ **Consultar antes de codear** qué secciones entran en la lista y si el pago es online al solicitar o después de aprobar.
+
+### Regla general para todo lo pendiente
+**Antes de empezar cualquier funcionalidad que falte, preguntar si se muestra en la web o si se arma y queda oculta** en la carpeta privada que no se publica (`app/_proximamente/`, VA-93), con sus accesos quitados y anotada en `docs/FUNCIONES_OCULTAS.md`. Si no hay respuesta, queda oculta.
+
+### VA-104 · Rama `milton/actus` con todas las funciones ocultas visibles (importante) — detalle en `docs/specs/VA-93-a-VA-102-lote-12-10.md`
+- Crear la rama **`milton/actus`** desde `milton/auth-roles`. En ella, todo lo que está en `app/_proximamente/` se muestra en la web, con sus accesos restaurados, siguiendo `docs/FUNCIONES_OCULTAS.md`.
+- ⚠️ **Antes de proceder, preguntar todas las dudas sobre dónde ubicar las secciones nuevas** (header, menú mobile, orden en `/services`, Home, footer). No ubicar nada por cuenta propia.
+- Es una rama de vista previa: **nunca se mergea** a `milton/auth-roles`, `pre-production` ni `main` sin OK explícito.
+- Se actualiza periódicamente desde `milton/auth-roles`. Comparte schema y migraciones con la rama principal: no se crean migraciones solo ahí.
+- Su preview en Vercel nunca usa la base de producción.
+
+---
+
+## Pedidos del socio del 14/10 (después de probar) — ordenados por prioridad
+
+> Lo pidió el socio después de probar todo lo anterior. Numeración: VA-89 a VA-91 y VA-106 a VA-110. **Ojo:** los commits de VA-106 a VA-110 dicen VA-92 a VA-96 en el mensaje (se escribieron en una copia que no tenía el lote del 12/10, que ya usaba esos números): VA-92→VA-106, VA-93→VA-107, VA-94→VA-108, VA-95→VA-109, VA-96→VA-110. **Orden = prioridad**: P1 toca el flujo de publicar o tiene fecha; P2 es usabilidad de listados y detalle; P3 es ajuste visual chico. Cada tarea es un commit `fix(VA-XX)` / `feat(VA-XX)` y sigue `docs/DESIGN_GUIDELINES.md`. Antes de implementar las marcadas ❓, ver las decisiones D17–D20 en la sección 8.
+
+### P1 — Prioridad alta
+
+### VA-89 · Saldo de lanzamiento: 1 aviso de avión y 1 de repuesto gratis para las cuentas creadas hasta el 2/12
+- **Pedido:** todas las cuentas que se creen **hasta el 2/12** tienen que tener un saldo de **1 publicación de avión y 1 de repuesto gratis**. **Sin avisarle a los usuarios la fecha** (no se muestra en ningún lado por ahora); más adelante se hace la ventana para avisarles. Por ahora, **solo la lógica**.
+- **Hoy:** `User.aircraftListingsBalance` y `User.sparePartsListingsBalance` existen (default 0) y solo los suma el webhook de Mercado Pago (`app/api/webhooks/mercadopago/route.ts`); `lib/balances.ts` → `getUserBalances` los lee. **Publicar no consume saldo** (VA-30 punto 8, D2). Las cuentas se crean en dos lugares: `app/actions/register-action.ts` (email y contraseña) y el adapter de Auth.js en el primer login con Google (`lib/auth.ts`, `events`).
+- **Hacer:**
+  1. `lib/promo.ts` (donde ya está `LAUNCH_PROMO`): constante `LAUNCH_FREE_BALANCE = { aircraft: 1, spareParts: 1, until: <2/12 23:59:59 hora Argentina, en UTC> }` y helper `launchFreeBalanceFor(createdAt: Date)` que devuelve `{ aircraft, spareParts }` (0 y 0 después de la fecha). Un solo lugar para cambiar fecha y cantidades. **No** se usa en ningún texto visible.
+  2. **Cuentas nuevas:** aplicar el saldo al crear el usuario en `register-action.ts` (en el mismo `create`) y en `events.createUser` de Auth.js (cuentas de Google; un `update` con `increment`, o set si está en 0). Con la fecha en el servidor, nunca desde el cliente.
+  3. **Cuentas existentes:** migración de datos (`prisma migrate dev --name va89_saldo_lanzamiento`, mostrar el SQL antes) que deja **al menos 1** en cada saldo a todas las cuentas que ya existen: `UPDATE "User" SET "aircraftListingsBalance" = GREATEST("aircraftListingsBalance", 1), "sparePartsListingsBalance" = GREATEST("sparePartsListingsBalance", 1);` ❓ D17 (sumar o "al menos 1").
+  4. **Idempotencia:** que un usuario no reciba el regalo dos veces (por ejemplo, vincular Google a una cuenta con contraseña no es una cuenta nueva). Opcional: columna `launchBalanceGrantedAt DateTime?` para dejar registro y poder auditar/revertir.
+  5. **Consumir el saldo al publicar:** ❓ D18. Hoy publicar es gratis para todos, así que el saldo no cambia nada. Si los socios dicen que sí, en `createListing` (`app/publish/actions.ts`): descontar 1 dentro de la misma transacción que crea el aviso (`updateMany where balance > 0`, y si `count === 0` → error claro), sin descontar al editar ni al renovar. Si dicen que no (lo más probable por "por el momento solo implementa esa lógica"), queda solo la asignación y el consumo va con la Fase 6.
+  6. Mostrar el saldo en `/admin/users` (columna o detalle) para poder verificarlo; nada en la vista del usuario hasta que se haga la ventana de aviso.
+- **Aceptación:** registrar una cuenta por email y una por Google con la fecha de hoy → ambas con 1 / 1; con `until` en el pasado (cambiar la constante en local) → 0 / 0; las cuentas que ya existían quedan con al menos 1 / 1 después de la migración; vincular Google a una cuenta existente no suma; ningún texto del sitio menciona la fecha. **En producción:** `npm run migrate:deploy`.
+
+**Estado (14/10/2026):** ✅ hecho en local (commit `f046424`) con las opciones sugeridas de D17/D18, a confirmar: corte el **2/12/2026 23:59:59 hora Argentina** inclusive (`LAUNCH_FREE_BALANCE.until` = 2026-12-03 03:00 UTC, en `lib/promo.ts`), cuentas existentes con **al menos** 1 / 1 (`GREATEST`, no suma) y **publicar todavía no descuenta**. Registro por email: el saldo va en el mismo `create` (`launchBalanceCreateData`, `lib/launch-balance.ts`). Google: `events.createUser` → `grantLaunchBalance` (SQL con `GREATEST`, solo si `launchBalanceGrantedAt` es null y la cuenta se creó antes del corte). Migración `20261014055051_va89_saldo_lanzamiento`: columna `launchBalanceGrantedAt` + el `UPDATE` de las cuentas existentes (solo las creadas antes del corte, por si se despliega después del 2/12). `/admin/users`: columna "Saldo" (avión / repuesto). Ningún texto visible para el usuario. **Verificado** en una base local con datos de prueba: registro por el formulario → 1 / 1; alta tipo Google → 1 / 1 y la segunda llamada no hace nada; un saldo de 5 queda en 5; cuenta creada el 2/12 23:59:59 ART → sí, el 3/12 00:00 ART → no; las 6 cuentas existentes quedaron con 1 / 1. **No probado con un login real de Google.** **En producción:** `npm run migrate:deploy`.
+
+### VA-90 · Al menos un motor obligatorio al publicar un avión
+- **Hoy:** `lib/listing-schema.ts` l.134 → `engines: z.array(engine).max(MAX_ENGINES).default([])`: se puede publicar sin motores. El formulario (`PublishForm.tsx` ~l.1002) muestra "No hay motores agregados." y deja seguir.
+- **Hacer:**
+  - Esquema Zod compartido: `engines` con `.min(1, "Agregá al menos un motor.")` (error junto al bloque de motores, como el resto de VA-30).
+  - Formulario: `validateStep` del paso de motores bloquea "Siguiente" sin motor; mensaje junto a "Agregar motor". Opcional: arrancar el formulario de alta con un motor vacío ya agregado (y dos en Bimotor) para que no haya que buscar el botón.
+  - Bimotor (`BP`/`BT`): ❓ D19, ¿exigir 2 motores?
+  - Excepciones: ❓ D19, ¿Proyecto (`PR`) también obligatorio? (puede estar sin motor). Si hay excepción, va en `lib/aircraft-rules.ts` junto a las de VA-44.
+  - Edición: el mismo esquema aplica a `updateListing`. Los avisos viejos sin motor no se rompen al verse, pero al editarlos piden cargar uno.
+- **Aceptación:** publicar sin motor → error junto al bloque, en el cliente y en el servidor (probar la action sin el cliente); con un motor → publica. Repuestos no cambian.
+
+**Estado (14/10/2026):** ✅ hecho en local (commit `c6c9b16`). Regla `engines` en `lib/aircraft-rules.ts`: por ahora **obligatoria en todas las categorías**, sin exigir 2 en Bimotor (D19 sigue abierta: si Proyecto queda opcional, se agrega `"PR"` a la lista de excepciones y el resto ya lo respeta). Esquema Zod (cliente y servidor): "Agregá al menos un motor." y, además, **un motor cuenta solo si tiene marca o modelo** (una ficha vacía no alcanza). Formulario: el alta arranca con un motor vacío, el bloque dice "Motor *" y el paso 2 no avanza sin motor. **Verificado:** esquema (sin motor, motor vacío, motor OK) y el formulario a 375 px con una sesión de prueba (sin motor → mensaje; con marca y TBO → pasa al paso 3). Los avisos viejos sin motor se siguen viendo; al editarlos piden cargar uno.
+
+### VA-91 · Filtros en el celular: el header no los tapa y "Aplicar filtros" siempre a mano
+- **Problema (visto por el socio):** en `/planes` y `/spareparts` (y `/services/hangars`, que usa el mismo `FilterShell`), a veces el header queda por encima del panel de filtros, y el botón "Aplicar filtros" queda al final de la lista: con secciones abiertas hay que scrollear todo para encontrarlo.
+- **Hoy:** el panel es `fixed inset-0 z-50` dentro de la página (`components/ui/filters/FilterShell.tsx`); el header es `z-40` (`components/ui/header-wrapper.tsx`) pero puede ganar si el panel queda dentro de un contexto de apilamiento (un padre con `transform`, `filter`, `backdrop-blur` o `z-index`) o si el header es `fixed` y el panel no cubre la zona segura. El botón "Aplicar filtros" está dentro del contenido scrolleable de cada barra (`PlanesFiltersSidebar.tsx` l.440, `SparePartFiltersSidebar.tsx` l.301, `HangarFiltersSidebar.tsx` l.201).
+- **Hacer:**
+  - Renderizar el panel de celular con `createPortal` a `document.body` (sale de cualquier contexto de apilamiento) y con un z-index por encima del header (y de la bandeja del comparador, `z-40`). Bloquear el scroll del body mientras está abierto y cerrarlo con Escape; `role="dialog"` y `aria-modal`.
+  - Estructura del panel: encabezado fijo (título + X), contenido con `overflow-y-auto` y **pie fijo** con "Aplicar filtros" (y "Limpiar" al lado) que siempre se ve, con `padding-bottom: env(safe-area-inset-bottom)`. Alto con `100dvh` para que la barra del navegador del celular no lo esconda.
+  - `FilterShell` recibe el botón de aplicar por prop (`footer`) para que las tres barras lo compartan; en escritorio el botón queda donde está.
+- **Aceptación:** a 375 px (y con un celular real, iOS y Android si se puede), abrir filtros desde arriba de la página y después de scrollear: el header nunca queda encima; con todas las secciones abiertas "Aplicar filtros" se ve sin scrollear; sin scroll horizontal.
+
+**Estado (14/10/2026):** ✅ hecho en local (commit `ff85bd2`). **Causa:** el `<main>` de los listados tiene `isolate` (contexto de apilamiento propio), así que el panel `z-50` quedaba atrapado debajo del header `z-40`. Ahora el panel de celular va en un **portal a `<body>`** (`z-[70]`, también por encima de la bandeja del comparador), con encabezado fijo, contenido con scroll propio y **pie fijo con "Aplicar filtros"** (alto `100dvh`, zona segura abajo), "Limpiar" junto a la X, Escape cierra, el fondo no scrollea y `role="dialog"`. El botón sale de las tres barras (`onApply` de `FilterShell`): planes, repuestos y hangares. **Verificado** a 375×667 después de scrollear y con todas las secciones abiertas: el header no queda encima, "Aplicar filtros" termina en 655 px de 667 y sin scroll horizontal. **Falta:** probar en un celular real.
+
+### P2 — Prioridad media
+
+### VA-106 · Filtros de repuestos: orden nuevo y "Precio" cerrado por defecto
+- **Orden pedido:** **Categoría → Condición → Precio → Provincia**. Hoy es Precio → Categoría → Provincia → Condición (`components/ui/SparePartFiltersSidebar.tsx` l.226–294).
+- **Bug:** "Precio" está **siempre abierto**: `openSections.price` arranca en `true` (l.117). Pasarlo a `searchParams.has("minPrice") || searchParams.has("maxPrice") || searchParams.has("currency")`, igual que las demás (abierta solo si tiene un filtro aplicado, criterio de VA-45/VA-31). Revisar también que el estado se rearme al cambiar la URL.
+- **Aceptación:** `/spareparts` sin parámetros → todas las secciones cerradas, en el orden pedido; `/spareparts?minPrice=100` → Precio abierta. Escritorio y celular.
+
+**Estado (14/10/2026):** ✅ hecho en local (commit `173fc40`). Orden nuevo también en las etiquetas de filtros aplicados. Precio abierta solo con `minPrice`, `maxPrice` o `currency`. Verificado: `/spareparts` todo cerrado; `?minPrice=100&currency=USD` → Precio abierta.
+
+### VA-107 · Filtros de aviones en el orden pedido
+- **Orden pedido:** **Categoría → Marca → Año → Precio → Publica → Provincia → Condición → Opciones**. Hoy es Precio → Año → Categoría → Marca → Provincia → Publica → Opciones → Condición (`components/ui/PlanesFiltersSidebar.tsx` l.296–433).
+- Solo reordenar los `FilterSection` (y las etiquetas de filtros aplicados, si siguen el orden de las secciones). Revisar que Precio no arranque abierta sin filtro (mismo criterio que VA-106).
+- **Aceptación:** `/planes` en escritorio y en el panel de celular muestra las secciones en ese orden; los filtros siguen funcionando igual.
+
+**Estado (14/10/2026):** ✅ hecho en local (commit `2095602`). También las etiquetas aplicadas. Precio ya arrancaba cerrada sin filtro. Verificado en la barra de escritorio y en el panel de celular.
+
+### VA-108 · Detalle: título tan grande como el precio y categoría como link al filtro
+- **Hoy** (`app/planes/plane-details/[id]/page.tsx` l.259 y `app/spareparts/sparepart-details/[id]/page.tsx` l.267): `<h1>` en `text-xl font-bold` y el precio en `text-2xl font-black`.
+- **Hacer:**
+  - Título con el **mismo tamaño que el precio** (`text-2xl`, peso según las pautas; el precio sigue diferenciado por color). Revisar a 375 px que títulos largos no rompan la tarjeta (`break-words`, sin cortar el texto).
+  - **Debajo del título, la categoría como link** al listado filtrado: avión → `/planes?category=<id>` con el nombre de la categoría (ej. "Monomotor Pistón"); repuesto → `/spareparts?category=<id>` (en repuestos, ❓ mostrar "Categoría › Subcategoría" con un link cada una; sugerido: sí). Estilo de link discreto de las pautas (texto chico, azul de marca, rojo al pasar).
+  - Mismo cambio en el detalle de hangar si aplica (tipo de publicación); confirmarlo con el socio, no está en el pedido.
+- **Aceptación:** a 375 y 1280 px, título y precio del mismo tamaño; tocar la categoría lleva a `/planes` (o `/spareparts`) con ese filtro aplicado y la sección abierta (VA-31).
+
+**Estado (14/10/2026):** ✅ hecho en local (commit `f12b03e`). Título `text-2xl` (como el precio) con `break-words`. `components/ui/listing/CategoryLinks.tsx` debajo del título: avión → `/planes?category=<id>` (ej. "Monomotor Turbohélice"); repuesto → "Categoría › Subcategoría", cada una con su link a `/spareparts?category=<id>`. Hangares no se tocó. Verificado a 375 y 1280 px (24 px los dos) y que el link lleva al listado filtrado.
+
+### P3 — Prioridad baja
+
+### VA-109 · Comparador: cerrar la bandeja de una con una X a la derecha
+- **Pedido:** poder **quitar todo el comparador de una vez** con una X en el lado derecho de la bandeja (hoy solo se quita aeronave por aeronave).
+- **Hacer:** en `components/ui/compare/CompareTray.tsx`, botón X a la derecha (44 px, `aria-label="Cerrar comparador"`) que vacía la selección. Agregar `clearCompare()` en `lib/compare-store.ts` (borra `localStorage` con try/catch y avisa a los demás componentes y pestañas, como `removeFromCompare`). Al vaciarse, la bandeja y su espaciador desaparecen. Sin confirmación (se vuelve a armar en dos clics); ❓ si el socio prefiere confirmar, usar `ConfirmDialog`.
+- **Aceptación:** con 2 o 3 aeronaves en la bandeja, tocar la X → la bandeja desaparece y los botones "Agregado" de las tarjetas vuelven a "Comparar", también en otra pestaña abierta. A 375 px la X no tapa "Comparar (n)".
+
+**Estado (14/10/2026):** ✅ hecho en local (commit `e62d505`). X de 44 px a la derecha de "Comparar (n)" en escritorio y celular, con `clearCompare()` (ya existía en `lib/compare-store.ts`), sin confirmación. Verificado a 375 y 1280 px: la bandeja desaparece también en otra pestaña y las tarjetas vuelven a "Comparar".
+
+### VA-110 · "Aeronaves destacadas": carrusel de 6
+- **Hoy:** `app/page.tsx` trae 8 aeronaves (`take: 8`) y `FeaturedAircraftCarousel` las muestra todas; "Últimas publicaciones" usa `slice(0, 6)` de la misma consulta.
+- **Hacer:** pasarle al carrusel de destacadas solo 6 (`slice(0, 6)`) y bajar el `take` a 6 si ya nada usa las 8. Mantener que sea carrusel (Swiper, flechas de VA-82) en escritorio y celular. Mientras no exista una marca de "destacada" en la base, siguen siendo las 6 más recientes activas (❓ D20: ¿destacadas elegidas a mano desde el admin o por plan? No es parte de este pedido).
+- **Aceptación:** la Home muestra 6 aeronaves en el carrusel de destacadas (contar los puntos/slides), a 375 y 1280 px.
+
+**Estado (14/10/2026):** ✅ hecho en local (commit `886a570`). **Causa real:** `FeaturedAircraftCarousel` elegía **2 al azar** de las 8 más recientes (`pickFeatured` → `slice(0, 2)`), por eso casi no se deslizaba. Ahora muestra las 6 más recientes activas, en orden aleatorio; la cantidad sale de `FEATURED_AIRCRAFT_COUNT` (`lib/constants.ts`) y la consulta de la Home trae 6 (Últimas publicaciones ya usaba 6). Verificado: 6 slides a 375 y 1280 px, sin scroll horizontal.
+**Cambio (14/10, socio):** 6 **al azar** entre las 30 más recientes activas (`FEATURED_AIRCRAFT_POOL`), hasta que se apliquen los destacados pagos de VA-95 (commit `f8d53c3`). Últimas publicaciones sigue con las 6 más recientes.
+
+### VA-111 · Avisos de la promoción de lanzamiento y ventana de bienvenida (pedido del socio, 14/10)
+- **Decisión:** el saldo de lanzamiento (VA-89) **es** la promoción; reemplaza al cupón `LANZAMIENTO` para dárselo a todos automáticamente.
+- **Hacer:** decir en algunos lugares de la web que se puede publicar el avión gratis durante el lanzamiento, y una ventana flotante que agradezca por apoyar a Ventas Aeronáuticas desde el inicio y diga que se puede publicar un avión y un repuesto gratis, la primera vez que la cuenta vuelve a la web (cuenta nueva o primer inicio de sesión, con cualquier método).
+
+**Estado (14/10/2026):** ✅ hecho en local (commit `a53038e`).
+- **Ventana** `components/ui/LaunchWelcomeDialog.tsx` (en el layout): una sola vez por cuenta, en cualquier dispositivo (`User.launchWelcomeSeenAt`, migración `20261014063054_va111_bienvenida_lanzamiento`), solo a quien recibió el saldo (`launchBalanceGrantedAt`). Cuentas nuevas por email (después de verificar y entrar) y por Google (después de elegir el tipo de cuenta) y las existentes al volver. No sale en login, registro, verificación, contraseña, onboarding ni pagos. "Publicar mi avión" (lleva a `/publish`) o "Más tarde"; Escape también la cierra.
+- **Avisos** "Publicá tu avión gratis durante el lanzamiento. Creá tu cuenta y tenés 1 aviso de avión y 1 de repuesto sin costo.": cartel de la Home para visitantes, `/register`, `/howtopublish` y `/plans`. Se apagan solos en el corte (`isLaunchPromoActive`, en el navegador porque esas páginas son estáticas). Ninguno muestra la fecha.
+- **`/publish`:** "te queda 1 publicación de avión gratis. Se usa sola al publicar" con el saldo real (antes pedía el cupón).
+- **Verificado** (dev, base local): visitante ve los 4 avisos y no la ventana; usuario con saldo ve la ventana, la cierra y al recargar no vuelve; `/publish` muestra el saldo. **Falta:** probarlo con un registro y un login de Google reales en el Preview.
+- **En producción:** `npm run migrate:deploy` (VA-89 y VA-111).
+
+---
+
+## Pedidos del socio del 14/10 (segunda tanda) — de la más sencilla a la más compleja
+
+> Se trabaja en `milton/auth-roles` (el socio sigue sumando commits ahí). Orden = de la más sencilla a la más compleja, como pidió el socio. Decisiones tomadas el 14/10: D19 (motor) y D13 (matrícula), y las respuestas a las preguntas de VA-119, VA-121, VA-124 y VA-125, anotadas en cada tarea.
+
+### VA-112 · Motor: opcional en Proyecto y dos obligatorios en Bimotor (D19)
+- `lib/aircraft-rules.ts`: `engines` opcional en `PR`; en `BP`/`BT` hacen falta 2 motores (cliente y servidor). El alta de un Bimotor arranca con dos motores vacíos.
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `dddf80f`). `minEngines()`: Proyecto 0, Bimotor (BP/BT) 2, el resto 1, en el esquema y el formulario; el Bimotor arranca con dos fichas y en Proyecto se descarta la ficha vacía. Verificado con el esquema (MP sin motor ✗, BP con 1 ✗, BT con 2 ✓, PR sin motor ✓).
+
+### VA-113 · Detalle del avión: sin matrícula ni estado en "Datos de la aeronave" (D13)
+- Sacar "Matrícula" y "Estado" del resumen "Datos de la aeronave". La matrícula se muestra (si se cargó) en la ficha de abajo (General).
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `53e3b7d`). Matrícula como fila de la ficha (General); "Estado" fuera del resumen web (sigue en impresión y comparador). Verificado con un aviso con matrícula.
+
+### VA-114 · Lint en cero
+- `scripts/stub-server-only.cjs` usa `require()` (regla `no-require-imports`). Arreglarlo sin romper los scripts que lo usan, y la advertencia de `app/opengraph-image.tsx`.
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `dcd5a98`): `npm run lint` sin errores ni advertencias (`require()` permitido solo en `.cjs`, `.next-local` ignorado).
+
+### VA-115 · Home sin las barras "//" rojas en los títulos
+- `components/ui/home/SectionTitle.tsx` (y los títulos que lo escriben a mano).
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `dafc7f5`): `SectionTitle` y el banner "¿Querés vender tu aeronave?".
+
+### VA-116 · Sin menú desplegable en "Servicios"
+- "Servicios" vuelve a ser un link simple a `/services` (escritorio y celular).
+
+
+**Estado (14/10/2026):** ✅ hecho junto con VA-120 (commit `8256bd3`). Se borró `ServicesMenu.tsx`; `FUNCIONES_OCULTAS.md` y las pautas, actualizadas.
+
+### VA-117 · Detalle del repuesto: solo el link a la categoría padre
+- Ajusta VA-108: debajo del título, solo la categoría principal (sin la subcategoría).
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `6d50483`).
+
+### VA-118 · Revisar el contador de vistas de los avisos
+- Antes contaba todos los eventos (VA-105 5.1 lo corrigió en el perfil). Revisar todos los lugares donde se muestran vistas (perfil, admin, métricas) y confirmar con datos.
+
+
+**Estado (14/10/2026):** ✅ revisado, sin cambios de código: el perfil (VA-105 5.1), el admin de publicaciones, el resumen y oportunidades cuentan solo `AIRCRAFT_VIEW`/`SPARE_PART_VIEW`. "Fuentes de tráfico" cuenta todos los eventos, pero ahí la columna dice "Interacciones". Verificado con datos: 3 vistas + 3 contactos en un aviso → el perfil muestra 3.
+
+### VA-119 · Plan de pago único de AR$ 100 para probar pagos reales
+- **Decisión (14/10):** visible en `/plans`. Pack de 1 aviso de avión a AR$ 100, creado con un script idempotente (sirve para el Preview y para producción) y archivable desde `/admin/plans` después de la prueba.
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `c08ac09`): "Pago de prueba" (pack de 1 avión, AR$ 100) en `scripts/seed-real-plans.ts`; visible en `/plans` con "Comprar 1 Avión". Runbook: se usa en el paso 8 y después se archiva.
+
+### VA-120 · Menú desplegable de "Repuestos" con sus categorías
+- Como el panel de Servicios (VA-83): al pasar el mouse por "Repuestos", panel a todo el ancho con las categorías principales (cacheadas) que llevan a `/spareparts?category=<id>`; en celular, debajo de "Repuestos".
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `8256bd3`): `components/ui/SparePartsMenu.tsx` (10 categorías numeradas en dos columnas, "Ver todos los repuestos"); en celular, las categorías debajo de "Repuestos". Verificado a 1280 y 375 px.
+
+### VA-121 · `/plans` con suscripción: "Cancelar" en el actual y "Cambiar a este plan" en los otros
+- **Decisión (14/10):** cambio **inmediato, sin prorrateo**: "Cambiar a este plan" lleva al pago del nuevo; cuando se aprueba, la suscripción anterior se cancela en el momento (también en Mercado Pago). "Cancelar" usa la cancelación que ya existe en el perfil.
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `1c57d24`). `Subscription.pendingPlanId`/`pendingMpSubscriptionId` (migración `va121_cambio_de_plan`); el plan nuevo reemplaza al actual cuando MP aprueba su primer cobro (se cancela el débito anterior). `/plans`: "Cancelar suscripción" / "Seguir suscripto" en el actual y "Cambiar a este plan" en las otras; aviso en el checkout. Verificado con MP simulado (mismo plan, pendiente, rechazado, aprobado, reenvío, abandono) y la UI con una suscripción de prueba. **Falta:** probarlo con MP real en el Preview.
+
+### VA-122 · Página "Nosotros" con la misión y formulario de sugerencias
+- Plantilla con la misión (textos de ejemplo marcados para completar). Formulario de sugerencias: se guarda en la base, se ve en el admin y avisa por mail a `SUPPORT_EMAIL`; con límite por IP. Link en el footer.
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `d520b95`). `/about` con textos `[COMPLETAR]` para los socios; sugerencias en `Suggestion` (migración `va122_sugerencias`), mail a `SUPPORT_EMAIL`, 5 por hora por IP; `/admin/suggestions`. Link "Nosotros" en el footer. **Falta:** los textos reales de la misión.
+
+### VA-123 · FAQ completo según cómo funciona la web
+- Preguntas y respuestas reales (publicar, saldo de lanzamiento, planes, pagos, renovación, arrepentimiento, cuenta, contacto, seguridad) con su `FAQPage` en JSON-LD.
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `61925dd`): 20 preguntas en 4 grupos, todas en el FAQPage. Revisar las respuestas si cambia alguna regla (están en `app/faq/page.tsx`).
+
+### VA-124 · Guía de fotos con plantillas dibujadas
+- **Decisión (14/10):** solo la guía de fotos. La lista de texto pasa a ser una fila de plantillas dibujadas (frente, lateral, cola, cabina, panel, motor…) que **siguen visibles al lado** de las fotos subidas.
+
+
+**Estado (14/10/2026):** ✅ hecho (commit `75cb793`): `components/ui/publish/PhotoGuide.tsx`, 7 plantillas dibujadas en SVG que se marcan a medida que se cargan fotos. Los dibujos son simples (de línea): si el socio quiere ilustraciones finales, se reemplazan en ese archivo.
+
+### VA-125 · Botón de arrepentimiento (hasta 10 días después de un pago)
+- **Decisión (14/10):** **reembolso automático** por Mercado Pago desde "Mis compras" dentro de los 10 días corridos del pago; el webhook revierte lo comprado (saldo, aviso o suscripción), aunque ya se haya usado. Botón visible también en el footer (como pide la Resolución 424/2020) que lleva a "Mis compras".
+
+**Estado (14/10/2026):** ✅ hecho (commit `86173c9`). `lib/payments/withdrawal.ts` + "Arrepentirme" en Mis compras + `/arrepentimiento` (link en el footer). Migración `va125_arrepentimiento`. Verificado con MP simulado (pack: saldo revertido; suscripción: cancelada; fuera de plazo; doble pedido; MP rechaza). **Falta:** probarlo con un pago real (el paso 8 del runbook lo usa).
+
+### VA-126 · Ajustes del socio (14/10): footer, guía de fotos y detalle de repuesto
+- Footer sin "Publicite su negocio" (`/ads`). Formulario de avión: sin las plantillas dibujadas de VA-124 por ahora, solo "sacá buenas fotos" y el máximo de 15 (`PhotoGuide` queda guardado). Detalle de repuesto: "Detalles principales" sin Nº de parte ni Categoría (siguen en la ficha de abajo).
+
+**Estado (14/10/2026):** ✅ hecho (commit `fix(VA-126)`).
+
+### VA-127 · Términos: arrepentimiento en vez de "no hay reembolsos"
+**Estado (14/10/2026):** ✅ hecho (commit `fix(VA-127)`). La sección 3 describe pagos por Mercado Pago, 45 días y renovación, cancelación de suscripciones, promoción de lanzamiento y el derecho de arrepentimiento (Ley 24.240, Res. 424/2020). Para revisar por los socios.
+
+### VA-128 · Privacidad actualizada + preparación del mail a fundadores (socio, 14/10)
+**Estado (14/10/2026):** ✅ hecho (commit `fix(VA-128)`). Política de privacidad con cookies y medición, Google, proveedores, documentos privados y derechos; sin las alertas ni el formulario que no existen. Runbook: sin el cupón de fundadores (lo reemplaza el saldo de lanzamiento), OAuth del Preview y Resend anotados, insignia de fundador a mano, y sección "Mail a los miembros fundadores" con el link `https://ventasaeronauticas.com/register?utm_source=mail&utm_medium=email&utm_campaign=fundadores` (verificado: guarda el origen en `va_src`).
+
+### VA-129 · Mapa de zona sin servicios pagos (socio, 14/10)
+- Stadia Maps cobra el uso comercial (~USD 20/mes). Se reemplaza el mapa de teselas (Leaflet + Stadia) del detalle de aviones, repuestos y hangares por el **mismo SVG de provincias de la Home**: se encuadra la provincia del aviso, se resalta, se marca la localidad con un punto y un recuadro chico muestra dónde queda en el país.
+
+**Estado (14/10/2026):** ✅ hecho (commit `fix(VA-129)`). `components/ui/ListingLocationMap.tsx` ahora es de servidor (sin JS ni pedidos a terceros); `lib/argentina-map.ts` ubica longitud/latitud con la misma proyección del mapa (`scripts/verify-argentina-projection.ts` la compara con d3: 0 px de diferencia). Se quitan `leaflet`, `LeafletZoneMap.tsx`, `NEXT_PUBLIC_STADIA_API_KEY` y Stadia de la política de privacidad. **Ya no hace falta** cuenta ni dominio en Stadia.
+

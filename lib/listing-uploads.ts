@@ -151,3 +151,12 @@ export async function removeUploads(
     if (r.status === "rejected") console.error("Error al borrar archivos subidos:", r.reason);
   }
 }
+
+/** VA-105 · 5.7: link firmado de corta duración a un documento (funciona con el bucket público o privado). */
+export async function signedDocumentUrl(storedUrl: string, seconds = 60): Promise<string | null> {
+  const path = pathFromPublicUrl("document", storedUrl);
+  if (!path) return null;
+  const { data, error } = await supabase.storage.from(LISTING_BUCKETS.document).createSignedUrl(path, seconds);
+  if (error) console.error("[documents] no se pudo firmar el link:", error.message);
+  return data?.signedUrl ?? null;
+}

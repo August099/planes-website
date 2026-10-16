@@ -8,6 +8,8 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 import { profileCompletenessTag } from "@/lib/cached-data";
+import { isValidPasswordChangeProof } from "@/lib/password-proof";
+import { grantLaunchBalance } from "@/lib/launch-balance";
 
 // En Auth.js v5 un throw común en authorize() llega al cliente como "CredentialsSignin".
 // Con CredentialsSignin + code, el login recibe res.code === "EmailNotVerified" (VA-20).
@@ -17,7 +19,7 @@ class EmailNotVerifiedError extends CredentialsSignin {
   code = "EmailNotVerified";
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
     FacebookProvider({
@@ -84,6 +86,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   // VA-87: después del primer login con Google, elegir el tipo de cuenta una sola vez.
   pages: { newUser: "/onboarding/account-type" },
   events: {
+    // VA-89: las cuentas que crea Auth.js (primer login con Google) reciben el saldo de lanzamiento.
+    // Vincular Google a una cuenta que ya existía no pasa por acá (no es una cuenta nueva).
+    async createUser({ user }) {
+      if (!user?.id) return;
+      try {
+        await grantLaunchBalance(user.id);
+      } catch (error) {
+        console.error("[VA-89] No se pudo asignar el saldo de lanzamiento", user.id, error);
+      }
+    },
     // VA-87 · Causa del falso "email no verificado": Auth.js crea los usuarios de OAuth con
     // emailVerified: null (ignora lo que devuelve profile()) y, al vincular Google a una cuenta que
     // ya existía, no toca el usuario. Si Google confirma el email, se guarda acá, en los dos casos.
@@ -98,9 +110,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   callbacks: {
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        // VA-105 · 3: cuándo se inició esta sesión (para cortarla si después cambia la contraseña).
+        token.authAt = Date.now();
       }
 
       // isAdmin se consultaba en cada request (VA-13). Ahora: al iniciar sesión, con
@@ -111,8 +125,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // VA-87: también emailVerified y userTypeConfirmed, leídos de la base (no del proveedor).
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
-          select: { isAdmin: true, emailVerified: true, userTypeConfirmed: true },
+          select: { id: true, isAdmin: true, emailVerified: true, userTypeConfirmed: true, passwordChangedAt: true },
         });
+        // VA-105 · 3: la contraseña cambió después de iniciar esta sesión → se cierra (null borra la
+        // cookie). El dispositivo que la cambió presenta la prueba firmada y sigue adentro. Como este
+        // bloque corre como mucho cada ADMIN_RECHECK_MS, los otros dispositivos salen en ≤ 5 minutos.
+        const changedAt = dbUser?.passwordChangedAt ?? null;
+        if (dbUser && trigger === "update" && isValidPasswordChangeProof((session as { passwordChangeProof?: unknown } | undefined)?.passwordChangeProof, dbUser.id, changedAt)) {
+          token.authAt = Date.now();
+        }
+        const authAt = typeof token.authAt === "number" ? token.authAt : 0;
+        if (changedAt && changedAt.getTime() > authAt) return null;
         token.isAdmin = dbUser?.isAdmin ?? false;
         token.emailVerified = dbUser?.emailVerified ? dbUser.emailVerified.toISOString() : null;
         token.userTypeConfirmed = dbUser?.userTypeConfirmed ?? false;

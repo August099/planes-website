@@ -37,6 +37,11 @@ export function Footer() {
             </h3>
             <ul className="space-y-1 sm:space-y-2 text-sm text-white/90 drop-shadow-sm">
               <li>
+                <Link href="/about" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  Nosotros
+                </Link>
+              </li>
+              <li>
                 <Link href="/faq" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Preguntas frecuentes
                 </Link>
@@ -61,6 +66,11 @@ export function Footer() {
                   Privacidad
                 </Link>
               </li>
+              <li>
+                <Link href="/arrepentimiento" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  Botón de arrepentimiento
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -79,16 +89,12 @@ export function Footer() {
                   Repuestos en venta
                 </Link>
               </li>
-              {/*<li>
+              {/* VA-94 */}
+              <li>
                 <Link href="/plans" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
-                  Planes para publicar
+                  Planes y precios
                 </Link>
               </li>
-              <li>
-                <Link href="/ads" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
-                  Publicite su negocio
-                </Link>
-              </li>*/}
             </ul>
           </div>
 

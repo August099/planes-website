@@ -143,6 +143,12 @@ export default function LoginForm({ errorParam = null, successParam = null, call
             </div>
           )}
 
+          {successParam === "PasswordReset" && (
+            <div className="rounded-xl bg-green-50 p-3 text-xs sm:text-sm text-green-700 border border-green-200">
+              Listo, guardamos tu contraseña nueva. Ya podés iniciar sesión.
+            </div>
+          )}
+
           {(errorMessage === "CredentialsSignin" || errorParam === "CredentialsSignin") && (
             <div className="rounded-xl bg-red-50 p-3 text-xs sm:text-sm text-red-600 border border-red-200">
               Email o contraseña incorrectos. Por favor, verificá tus datos.
@@ -183,9 +189,15 @@ export default function LoginForm({ errorParam = null, successParam = null, call
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-xs font-semibold text-[#001F58]">
-                Contraseña
-              </Label>
+              <div className="flex items-baseline justify-between gap-3">
+                <Label htmlFor="password" className="text-xs font-semibold text-[#001F58]">
+                  Contraseña
+                </Label>
+                {/* VA-105 · 3 */}
+                <Link href="/forgot-password" className="text-xs font-semibold text-[#001F58]/80 hover:text-[#E70F1F] hover:underline">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
               <div className="relative">
                 <Input
                   id="password"

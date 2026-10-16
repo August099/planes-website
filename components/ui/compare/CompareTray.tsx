@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronUp, X } from "lucide-react";
 import { AppImage } from "@/components/ui/AppImage";
-import { COMPARE_MAX, compareUrl, removeFromCompare, useCompareItems } from "@/lib/compare-store";
+import { COMPARE_MAX, clearCompare, compareUrl, removeFromCompare, useCompareItems } from "@/lib/compare-store";
 
 // VA-83: bandeja fija abajo con las aeronaves elegidas. Aparece con la primera. En escritorio
 // muestra las miniaturas; en celular, una barra compacta "n de 3 · Comparar" con las miniaturas
@@ -45,6 +45,19 @@ export function CompareTray() {
     >
       Comparar ({items.length})
     </Link>
+  );
+
+  // VA-109: cerrar el comparador de una (vacía la selección; se vuelve a armar desde las tarjetas).
+  const close = (
+    <button
+      type="button"
+      onClick={clearCompare}
+      aria-label="Cerrar comparador"
+      title="Cerrar comparador"
+      className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md text-white/70 hover:bg-white/10 hover:text-white"
+    >
+      <X className="h-5 w-5" />
+    </button>
   );
 
   const thumbs = (
@@ -92,7 +105,10 @@ export function CompareTray() {
           </p>
           {thumbs}
         </div>
-        {cta}
+        <div className="flex shrink-0 items-center gap-2">
+          {cta}
+          {close}
+        </div>
       </div>
       {/* Celular */}
       <div className="sm:hidden">
@@ -107,7 +123,10 @@ export function CompareTray() {
             {items.length} de {COMPARE_MAX}
             <ChevronUp className={`h-4 w-4 transition-transform ${open ? "" : "rotate-180"}`} aria-hidden />
           </button>
-          {cta}
+          <div className="flex items-center gap-1">
+            {cta}
+            {close}
+          </div>
         </div>
       </div>
     </div>

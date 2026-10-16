@@ -7,6 +7,9 @@ import { revalidatePath, updateTag } from "next/cache";
 import { profileCompletenessTag } from "@/lib/cached-data";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
+import { PASSWORD_REGEX } from "@/lib/password-rules";
+import { passwordChangeProof } from "@/lib/password-proof";
+import { unstable_update } from "@/lib/auth";
 import { normalizeProvince } from "@/lib/provinces";
 import { parseSelectableUserType } from "@/lib/user-types";
 import { hasCustomPage } from "@/lib/subscriptions";
@@ -41,7 +44,7 @@ export async function updateProfileAction(formData: FormData) {
   // VA-87: datos de la página personalizada, solo con el beneficio del plan.
   const storefrontFields = ["businessName", "bio", "website", "whatsapp"].filter((f) => formData.has(f));
   if (storefrontFields.length > 0) {
-    if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye página personalizada.");
+    if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye la Página VA.");
     for (const field of storefrontFields) {
       const value = String(formData.get(field) ?? "").trim();
       dataToUpdate[field] = value === "" ? null : value.slice(0, field === "bio" ? 1500 : 200);
@@ -137,7 +140,6 @@ export async function removeAvatarAction() {
   return { success: true };
 }
 
-const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
 interface ChangePasswordInput {
   currentPassword: string;
@@ -183,12 +185,18 @@ export async function changePasswordAction({ currentPassword, newPassword }: Cha
     // 6. Hashear la nueva contraseña y actualizar mediante prisma
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
+    // VA-105 · 3: passwordChangedAt cierra las otras sesiones (en ≤ 5 minutos, ver lib/auth.ts).
+    const changedAt = new Date();
     await prisma.user.update({
       where: { id: user.id },
       data: {
         passwordHash: hashedPassword,
+        passwordChangedAt: changedAt,
       },
     });
+
+    // Esta sesión sigue: se renueva acá mismo con la prueba firmada (callback jwt, trigger "update").
+    await unstable_update({ passwordChangeProof: passwordChangeProof(user.id, changedAt) } as never);
 
     return { success: true };
   } catch (error) {
@@ -201,7 +209,7 @@ export async function changePasswordAction({ currentPassword, newPassword }: Cha
 export async function uploadStorefrontImageAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) throw new Error("UNAUTHENTICATED");
-  if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye página personalizada.");
+  if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye la Página VA.");
 
   const kind = formData.get("kind");
   if (kind !== "cover" && kind !== "logo") throw new Error("Imagen inválida.");

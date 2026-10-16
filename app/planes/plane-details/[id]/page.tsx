@@ -19,11 +19,12 @@ import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSec
 import { PublishedLine } from "@/components/ui/listing/PublishedLine";
 import { aircraftFeatures, aircraftSections, showsEngineSummary } from "@/lib/listing-detail";
 import { AIRCRAFT_FIELDS } from "@/lib/aircraft-fields";
+import { CategoryLinks } from "@/components/ui/listing/CategoryLinks";
 import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
 import { DescriptionBody, ListingDescription } from "@/components/ui/listing/ListingDescription";
 import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
 import { ListingLocationMap } from "@/components/ui/ListingLocationMap";
-import { CompareSimilarLink, RecommendationRail } from "@/components/ui/recommendations/RecommendationRail";
+import { RecommendationRail } from "@/components/ui/recommendations/RecommendationRail";
 import { getPartsForAircraft, getSimilarAircraft } from "@/lib/recommendations";
 import { aircraftJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
@@ -129,7 +130,8 @@ export default async function PlaneDetailsPage({
   const listingLocation = [aircraft.city, aircraft.province].filter(Boolean).join(", ");
 
   // VA-83: los datos del resumen salen de la misma lista que la ficha y el comparador.
-  const keyFacts: KeyFact[] = AIRCRAFT_FIELDS.filter((f) => f.inDetail === "summary").map((f) => ({ label: f.label, value: f.value?.(aircraft) }));
+  // VA-113: "Estado" no va en "Datos de la aeronave" (sigue en la vista de impresión y el comparador).
+  const keyFacts: KeyFact[] = AIRCRAFT_FIELDS.filter((f) => f.inDetail === "summary" && f.key !== "condition").map((f) => ({ label: f.label, value: f.value?.(aircraft) }));
   // Recuadro "Motor" junto a las fotos: marca, modelo y TBO, en ese orden (pedido del socio, 9/10).
   // Todos los datos del motor siguen en la ficha de abajo.
   const engineSummary: KeyFact[] | null = singleEngine
@@ -151,12 +153,24 @@ export default async function PlaneDetailsPage({
       {isInactive && isOwner && (
         <div className="bg-amber-500 text-white text-xs font-semibold py-3 px-4 text-center flex items-center justify-center gap-2 print:hidden">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>
-            Tu publicación está pausada/vencida y no es visible para el público. Ve a tu perfil para renovarla por 45 días más.
-          </span>
-          <Link href="/profile" className="underline font-bold hover:text-amber-100 ml-2">
-            Ir a mi perfil
-          </Link>
+          {aircraft.status === "PENDING_PAYMENT" ? (
+            <>
+              {/* VA-92: aviso guardado sin saldo ni suscripción: se publica al acreditarse el pago. */}
+              <span>Tu aviso está guardado pero no se publica hasta que se acredite el pago.</span>
+              <Link href={`/checkout?listing=aircraft:${aircraft.id}`} className="underline font-bold hover:text-amber-100 ml-2">
+                Pagar
+              </Link>
+            </>
+          ) : (
+            <>
+              <span>
+                Tu publicación está pausada/vencida y no es visible para el público. Ve a tu perfil para renovarla por 45 días más.
+              </span>
+              <Link href={`/profile/${aircraft.sellerId}`} className="underline font-bold hover:text-amber-100 ml-2">
+                Ir a mi perfil
+              </Link>
+            </>
+          )}
         </div>
       )}
 
@@ -256,7 +270,10 @@ export default async function PlaneDetailsPage({
               <PlaneActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url} />
               <Separator />
               <div>
-                <h1 className="text-xl font-bold text-[#001F58]">{aircraft.title}</h1>
+                <h1 className="text-2xl font-bold text-[#001F58] break-words">{aircraft.title}</h1>
+                {aircraft.category && (
+                  <CategoryLinks items={[{ label: aircraft.category.name, href: `/planes?category=${encodeURIComponent(aircraft.category.id)}` }]} />
+                )}
                 <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
               </div>
               <Separator />
@@ -294,12 +311,14 @@ export default async function PlaneDetailsPage({
               province={aircraft.province}
             />
 
-            {aircraft.documents.length > 0 && (
+            {/* VA-105 · 5.7: la documentación es privada: solo la ven el dueño y los admins, con link firmado. */}
+            {aircraft.documents.length > 0 && (isOwner || session?.user?.isAdmin) && (
               <div className="order-6 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-3">
-                <h2 className="font-bold text-[#001F58] text-sm">Documentación Adjunta</h2>
+                <h2 className="font-bold text-[#001F58] text-sm">Documentación adjunta</h2>
+                <p className="text-xs text-slate-500">Solo la ves vos{isOwner ? "" : " (admin)"}: no es pública.</p>
                 <div className="space-y-2">
                   {aircraft.documents.map((doc) => (
-                    <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 border border-slate-200 rounded-xl p-3 hover:bg-slate-50 transition-colors w-full group">
+                    <a key={doc.id} href={`/api/listing-documents/${doc.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 border border-slate-200 rounded-xl p-3 hover:bg-slate-50 transition-colors w-full group">
                       <FileText className="w-7 h-7 text-red-600 shrink-0" />
                       <span className="text-xs font-semibold text-slate-700 group-hover:text-[#001F58] truncate">{doc.name}</span>
                     </a>
@@ -326,7 +345,6 @@ export default async function PlaneDetailsPage({
             kind="aircraft"
             id="similares"
             block={similar}
-            action={!isInactive ? <CompareSimilarLink currentId={aircraft.id} items={similar.items} /> : undefined}
           />
         )}
         {parts && <RecommendationRail kind="sparePart" id="repuestos-para" block={parts} />}

@@ -78,7 +78,7 @@ export function DesktopDropdown({ userId, isAdmin, hasUnanswered }: MenuUser & {
   );
 }
 
-export function MobileDropdown({ userId, isAdmin, hasUnanswered, loading }: MenuUser) {
+export function MobileDropdown({ userId, isAdmin, hasUnanswered, loading, partCategories = [] }: MenuUser) {
   return (
     <DropdownMenu defaultOpen>
       <DropdownMenuTrigger
@@ -95,7 +95,10 @@ export function MobileDropdown({ userId, isAdmin, hasUnanswered, loading }: Menu
               {item.label}
             </Link>
           </DropdownMenuItem>,
-          ...(item.sub ?? []).map((s) => (
+          ...(item.href === "/spareparts"
+            ? partCategories.map((c) => ({ href: `/spareparts?category=${encodeURIComponent(c.id)}`, label: c.name }))
+            : []
+          ).map((s) => (
             <DropdownMenuItem key={s.href} className="p-0">
               <Link href={s.href} className="w-full border-l-2 border-[#001F58]/15 py-1 pl-4 pr-2 text-sm text-slate-600">
                 {s.label}

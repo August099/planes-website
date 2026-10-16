@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { FOUNDING_MEMBER_LIMIT } from "@/lib/constants";
 import { FoundingMemberToggle } from "@/components/ui/FoundingMemberToggle";
 import { UserTypeSelect } from "@/components/admin/UserTypeSelect";
+import { CourtesyPlanControl } from "@/components/admin/CourtesyPlanControl";
 
 const PAGE_SIZE = 50;
 
@@ -49,12 +50,23 @@ export default async function AdminUsersPage({ searchParams }: Props) {
         isFoundingMember: true,
         userType: true,
         userTypeConfirmed: true,
+        aircraftListingsBalance: true,
+        sparePartsListingsBalance: true,
         _count: { select: { aircrafts: true, spareParts: true, accounts: true } },
+        Subscription: { select: { source: true, status: true, currentPeriodEnd: true, plan: { select: { name: true } } } },
       },
     }),
     prisma.user.count({ where }),
     prisma.user.count({ where: { isFoundingMember: true } }),
   ]);
+  // VA-92: planes de suscripción para "Asignar plan de cortesía" (también inactivos, no archivados).
+  const subscriptionPlans = await prisma.plan.findMany({
+    where: { billingType: "SUBSCRIPTION", archivedAt: null },
+    orderBy: [{ isActive: "desc" }, { sortOrder: "asc" }],
+    select: { id: true, name: true, isActive: true },
+  });
+  const planOptions = subscriptionPlans.map((p) => ({ id: p.id, name: p.isActive ? p.name : `${p.name} (no visible en /plans)` }));
+  const now = new Date();
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const pageUrl = (n: number) => {
@@ -105,21 +117,23 @@ export default async function AdminUsersPage({ searchParams }: Props) {
       </form>
 
       <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-        <table className="w-full min-w-[920px] text-sm">
+        <table className="w-full min-w-[1100px] text-sm">
           <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-3">Usuario</th>
               <th className="px-4 py-3">Alta</th>
               <th className="px-4 py-3">Ingreso</th>
               <th className="px-4 py-3 text-center">Avisos</th>
+              <th className="px-4 py-3 text-center" title="Avisos disponibles: avión / repuesto (VA-89)">Saldo</th>
               <th className="px-4 py-3">Tipo de cuenta</th>
               <th className="px-4 py-3">Miembro fundador</th>
+              <th className="px-4 py-3">Plan</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {users.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
                   No hay usuarios con esa búsqueda.
                 </td>
               </tr>
@@ -147,11 +161,33 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td className="px-4 py-3 text-center text-slate-600">{u._count.aircrafts + u._count.spareParts}</td>
+                  <td className="px-4 py-3 text-center whitespace-nowrap text-slate-600 tabular-nums">
+                    <span title="Avión">{u.aircraftListingsBalance}</span>
+                    <span className="text-slate-400"> / </span>
+                    <span title="Repuesto">{u.sparePartsListingsBalance}</span>
+                  </td>
                   <td className="px-4 py-3">
                     <UserTypeSelect userId={u.id} userType={u.userType} confirmed={u.userTypeConfirmed} />
                   </td>
                   <td className="px-4 py-3">
                     <FoundingMemberToggle userId={u.id} isFounding={u.isFoundingMember} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <CourtesyPlanControl
+                      userId={u.id}
+                      userName={u.name || u.email || "el usuario"}
+                      plans={planOptions}
+                      subscription={
+                        u.Subscription
+                          ? {
+                              planName: u.Subscription.plan.name,
+                              source: u.Subscription.source,
+                              active: u.Subscription.status === "ACTIVE" && u.Subscription.currentPeriodEnd > now,
+                              until: u.Subscription.currentPeriodEnd.toISOString(),
+                            }
+                          : null
+                      }
+                    />
                   </td>
                 </tr>
               );

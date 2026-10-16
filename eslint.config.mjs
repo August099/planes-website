@@ -5,6 +5,11 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  // VA-114: los .cjs son CommonJS (scripts/stub-server-only.cjs y sus stubs): ahí require() es lo correcto.
+  {
+    files: ["**/*.cjs"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
@@ -12,6 +17,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // VA-114: builds locales de verificación (NEXT_DIST_DIR, commit 961f3d7).
+    ".next-local/**",
   ]),
 ]);
 

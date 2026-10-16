@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   // El layout agrega " | Ventas Aeronáuticas".
   title: "Servicios aeronáuticos",
   description:
-    "Guías para comprar y vender aeronaves (pre-compra, transferencia ante ANAC y glosario) y, muy pronto, talleres, hangares, profesionales y empresas del sector.",
+    "Guías para comprar y vender aeronaves (pre-compra, transferencia ante ANAC y glosario), comparador de aeronaves y, muy pronto, talleres, hangares, profesionales y empresas del sector.",
   alternates: { canonical: "/services" },
 };
 
@@ -93,6 +93,21 @@ export default async function ServicesPage() {
             <div className="relative z-10">
               <GuideIndex guides={await getPublishedGuides()} />
             </div>
+          </div>
+          {/* VA-93: el comparador, como franja (no otra tarjeta igual a la de las guías). */}
+          <div className="flex flex-col gap-4 border-y border-[#001F58]/12 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-[#001F58]">Comparador de aeronaves</h3>
+              <p className="mt-0.5 text-sm leading-relaxed text-slate-600">
+                Elegí hasta 3 aeronaves publicadas y comparalas dato por dato: horas, motor, aviónica y precio.
+              </p>
+            </div>
+            <Link
+              href="/planes/compare"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-[#001F58]/20 px-5 text-sm font-semibold text-[#001F58] transition-colors hover:border-[#001F58]"
+            >
+              Abrir el comparador →
+            </Link>
           </div>
         </section>
 

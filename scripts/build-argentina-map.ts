@@ -94,6 +94,10 @@ ${ordered}
 
 // Centro de CABA, para el círculo clickeable.
 export const CABA_MARKER = { cx: ${cx}, cy: ${cy} };
+
+// Proyección con la que se dibujó el mapa (Transversa de Mercator, meridiano 64° O). Sirve para
+// ubicar un punto (longitud, latitud) en este mismo viewBox (VA-129: mapa de zona de los avisos).
+export const ARGENTINA_PROJECTION = { rotate: [64, 0] as [number, number], scale: ${projection.scale()}, translate: [${projection.translate()[0]}, ${projection.translate()[1]}] as [number, number] };
 `;
 
 mkdirSync(OUT_DIR, { recursive: true });

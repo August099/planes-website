@@ -48,6 +48,24 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
   const end = DATE.format(new Date(subscription.currentPeriodEnd));
   const per = subscription.interval === "YEARLY" ? "año" : "mes";
 
+  // VA-92: cortesía (asignada por el admin): sin precio, sin cobros y sin cancelar.
+  if (subscription.courtesy) {
+    return (
+      <section className="rounded-lg border border-[#001F58]/12 bg-white">
+        <div className="p-5">
+          <p className={LABEL}>Tu plan</p>
+          <p className="mt-1 text-lg font-bold text-[#001F58]">{subscription.planName}</p>
+          <p className="text-sm text-slate-600">
+            Plan de cortesía, sin cargo{subscription.noExpiry && ` · ${subscription.noExpiryLabel} no vencen`}
+          </p>
+        </div>
+        <p className="border-t border-[#001F58]/10 px-5 py-3 text-sm text-slate-600">
+          Vigente hasta el <strong>{end}</strong>. No se cobra ni se renueva solo.
+        </p>
+      </section>
+    );
+  }
+
   return (
     <section className="rounded-lg border border-[#001F58]/12 bg-white">
       <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
@@ -56,7 +74,7 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
           <p className="mt-1 text-lg font-bold text-[#001F58]">{subscription.planName}</p>
           <p className="text-sm tabular-nums text-slate-600">
             AR$ {NUMBER.format(subscription.price)} por {per}
-            {subscription.noExpiry && " · tus avisos no vencen"}
+            {subscription.noExpiry && ` · ${subscription.noExpiryLabel} no vencen`}
           </p>
         </div>
         {subscription.cancelAtPeriodEnd ? (
@@ -78,6 +96,13 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
           </button>
         )}
       </div>
+      {/* VA-92: cobro rechazado: sigue con los beneficios hasta graceUntil. */}
+      {subscription.graceUntil && (
+        <p className="border-t border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-900">
+          No pudimos cobrar tu plan. Revisá el medio de pago en tu cuenta de Mercado Pago: el cobro se reintenta solo. Si no se
+          acredita, el plan se da de baja el <strong>{DATE.format(new Date(subscription.graceUntil))}</strong>.
+        </p>
+      )}
       <p className="border-t border-[#001F58]/10 px-5 py-3 text-sm text-slate-600">
         {subscription.cancelAtPeriodEnd ? (
           <>Cancelada: la podés usar hasta el <strong>{end}</strong> y después no se cobra más.</>
@@ -103,7 +128,7 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
       >
         <p className="text-sm text-slate-600">
           Vas a poder usar el plan hasta el <strong>{end}</strong>. Después no se vuelve a cobrar
-          {subscription.noExpiry ? " y tus avisos vuelven a tener fecha de vencimiento" : ""}.
+          {subscription.noExpiry ? ` y ${subscription.noExpiryLabel} vuelven a tener fecha de vencimiento` : ""}.
         </p>
       </ConfirmDialog>
     </section>

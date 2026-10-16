@@ -9,6 +9,7 @@ import { Resend } from "resend";
 import { EMAIL_FROM, escapeHtml, getSupportEmail } from "@/lib/mail";
 import { AnalyticsEventType } from "@prisma/client";
 import { hasNoExpiryPlan } from "@/lib/subscriptions";
+import { consumeListingAllowance, refundListingAllowance } from "@/lib/payments/allowance";
 import { coordinatesFor } from "@/lib/geocode";
 import {
   listingSchema,
@@ -71,9 +72,9 @@ async function findRecentDuplicate(listingType: ListingType, sellerId: string, t
   const where = { sellerId, title, createdAt: { gte: new Date(Date.now() - DUPLICATE_WINDOW_MS) } };
   const found =
     listingType === "aircraft"
-      ? await prisma.aircraft.findFirst({ where, select: { id: true } })
-      : await prisma.sparePart.findFirst({ where, select: { id: true } });
-  return found?.id ?? null;
+      ? await prisma.aircraft.findFirst({ where, select: { id: true, status: true } })
+      : await prisma.sparePart.findFirst({ where, select: { id: true, status: true } });
+  return found ?? null;
 }
 
 const listingUrl = (listingType: ListingType, id: string) =>
@@ -215,11 +216,16 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
   }
   const data = parsed.data;
 
-  const duplicateId = await findRecentDuplicate(listingType, user.id, data.title);
-  if (duplicateId) {
+  const duplicate = await findRecentDuplicate(listingType, user.id, data.title);
+  if (duplicate) {
     // Ya existe: los archivos de este segundo envío sobran.
     await removeUploads(user.id, listingType, imagePaths, docPaths);
-    return { ok: true, id: duplicateId, url: listingUrl(listingType, duplicateId) };
+    return {
+      ok: true,
+      id: duplicate.id,
+      url: listingUrl(listingType, duplicate.id),
+      ...(duplicate.status === "PENDING_PAYMENT" ? { checkoutUrl: `/checkout?listing=${listingType}:${duplicate.id}` } : {}),
+    };
   }
 
   const uploads = await verifyUploads(
@@ -233,28 +239,38 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
   const now = new Date();
   // VA-80: con un plan "sin vencimiento" vigente, la publicación no vence (activeListingWhere
   // acepta listingExpiresAt null).
-  const expiresAt: Date | null = (await hasNoExpiryPlan(user.id)) ? null : new Date(now);
+  const expiresAt: Date | null = (await hasNoExpiryPlan(user.id, data.listingType === "aircraft" ? "AIRCRAFT" : "SPARE_PART")) ? null : new Date(now);
   expiresAt?.setDate(now.getDate() + 45);
   // VA-83: coordenadas de la localidad para el mapa del detalle (si Georef falla, sin mapa).
   const coords = await coordinatesFor(data.city, data.province);
+
+  // Las categorías se validan antes de reservar el permiso de publicación (VA-92).
+  const aircraftCategoryId = data.listingType === "aircraft" ? await resolveAircraftCategory(data) : null;
+  if (data.listingType === "aircraft" && !aircraftCategoryId) {
+    return fail({ ok: false, error: "Seleccioná una categoría válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });
+  }
+  if (data.listingType === "parts" && !(await isValidSparePartCategory(data.categoryId))) {
+    const msg = "Seleccioná la categoría más específica.";
+    return fail({ ok: false, error: msg, fieldErrors: { categoryId: msg } });
+  }
+
+  // VA-92: suscripción o saldo → se publica ya; si no, queda "pendiente de pago" y va al checkout.
+  const kind = listingType === "aircraft" ? "AIRCRAFT" : "SPARE_PART";
+  const allowance = await consumeListingAllowance(user.id, kind);
+  const publication = allowance
+    ? { status: "ACTIVE" as const, listingStartsAt: now, listingExpiresAt: expiresAt }
+    : { status: "PENDING_PAYMENT" as const, listingStartsAt: null, listingExpiresAt: null };
 
   try {
     let id: string;
 
     if (data.listingType === "aircraft") {
-      const categoryId = await resolveAircraftCategory(data);
-      if (!categoryId) {
-        return fail({ ok: false, error: "Seleccioná una categoría válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });
-      }
-
       const aircraft = await prisma.aircraft.create({
         data: {
           sellerId: user.id,
-          ...aircraftFields(data, categoryId),
+          ...aircraftFields(data, aircraftCategoryId!),
           ...coords,
-          status: "ACTIVE",
-          listingStartsAt: now,
-          listingExpiresAt: expiresAt,
+          ...publication,
           images: { create: uploads.imageUrls.map((url, order) => ({ url, order })) },
           documents: { create: uploads.documents },
           engines: { create: engineRows(data) },
@@ -264,19 +280,12 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
       });
       id = aircraft.id;
     } else {
-      if (!(await isValidSparePartCategory(data.categoryId))) {
-        const msg = "Seleccioná la categoría más específica.";
-        return fail({ ok: false, error: msg, fieldErrors: { categoryId: msg } });
-      }
-
       const sparePart = await prisma.sparePart.create({
         data: {
           sellerId: user.id,
           ...sparePartFields(data),
           ...coords,
-          status: "ACTIVE",
-          listingStartsAt: now,
-          listingExpiresAt: expiresAt,
+          ...publication,
           images: { create: uploads.imageUrls.map((url, order) => ({ url, order })) },
         },
         select: { id: true },
@@ -303,9 +312,15 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
     revalidatePath("/");
     revalidatePath(listingType === "aircraft" ? "/planes" : "/spareparts");
     updateTag(RECOMMENDATIONS_TAG); // VA-88
-    return { ok: true, id, url: listingUrl(listingType, id) };
+    return {
+      ok: true,
+      id,
+      url: listingUrl(listingType, id),
+      ...(allowance ? {} : { checkoutUrl: `/checkout?listing=${listingType}:${id}` }),
+    };
   } catch (error) {
     console.error("Error al crear la publicación:", error);
+    await refundListingAllowance(user.id, kind, allowance);
     return fail({ ok: false, error: "No se pudo guardar la publicación. Probá de nuevo." });
   }
 }
@@ -463,7 +478,7 @@ export async function updateListing(id: string, input: ListingInput): Promise<Li
     }
 
     revalidatePath("/");
-    revalidatePath("/profile");
+    revalidatePath("/profile/[id]", "page"); // "/profile" no existe: se revalidan los perfiles
     updateTag(RECOMMENDATIONS_TAG); // VA-88
     return { ok: true, id, url: listingUrl(listingType, id) };
   } catch (error) {

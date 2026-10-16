@@ -4,6 +4,6 @@ import { PlansClient } from "./PlansClient";
 // VA-59 / VA-80: precios por aviso y planes salen de la base (cacheados con tags); la página sigue
 // estática y se regenera cuando el admin cambia un precio o un plan.
 export default async function PlansPage() {
-  const { aircraft, parts } = await getPlanCards();
-  return <PlansClient aircraftPlans={aircraft} partsPlans={parts} />;
+  const { plans, single } = await getPlanCards();
+  return <PlansClient plans={plans} single={single} />;
 }
