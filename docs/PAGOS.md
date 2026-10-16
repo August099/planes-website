@@ -75,6 +75,23 @@ planes, precios por aviso, guías): ver el checklist de la etapa en `docs/PLAN_F
 - La clave secreta que muestra el panel va en `MP_WEBHOOK_SECRET` del ambiente Preview.
 - Después de cambiar una variable en Vercel hay que **volver a desplegar** para que la tome.
 
+## Pago real en local (16/10/2026)
+
+Para probar un cobro real antes de cargar las credenciales de producción en Vercel. Solo pagos únicos
+(el **Pago de prueba** de AR$ 100); las suscripciones necesitan una `back_url` https y se prueban en el Preview.
+
+1. En el archivo de entorno local: `MP_ACCESS_TOKEN` y `MP_PUBLIC_KEY` de producción, `APP_URL=http://localhost:3000`,
+   `BILLING_ENABLED=false` y `TUSFACTURAS_MODE` vacío (en local nunca se emite una factura real: hace falta `VERCEL_ENV=production`).
+   Reiniciar `npm run dev`.
+2. Que el plan "Pago de prueba" exista en la base local (`seed-real-plans`, ver el runbook) y comprarlo desde `/plans`.
+3. Pagar con **otra** cuenta de Mercado Pago o con una tarjeta sin iniciar sesión: Mercado Pago no deja pagarle a la misma cuenta que cobra.
+4. Al terminar, tocar "Volver al sitio" (en local no hay vuelta automática). La página de estado queda en "pendiente":
+   Mercado Pago no puede mandar el webhook a localhost (en local la preferencia ni siquiera lleva `notification_url`).
+5. Procesar el pago como lo haría el webhook, con el id de la compra (el `?purchase=` de la URL):
+   `npx tsx --env-file=.env.local --require ./scripts/stub-server-only.cjs scripts/process-mp-payment.ts <idDeCompra>`
+   (cambiar `.env.local` por el archivo donde estén las credenciales). Recargar la página de estado: tiene que decir aprobado.
+6. Opcional: probar el **arrepentimiento** desde Perfil › Mis compras. El reembolso se hace por la API y se refleja solo, sin webhook.
+
 ## Suscripciones
 
 - Se crean por API (preapproval), sin "Planes de suscripción" del panel: el precio sale de `/admin/plans`.

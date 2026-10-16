@@ -239,7 +239,8 @@ export async function startCheckout(input: {
       back_urls: { success: back, pending: back, failure: back },
       // Mercado Pago solo acepta auto_return con una URL https (en local, http, se vuelve a mano).
       ...(base.startsWith("https://") ? { auto_return: "approved" } : {}),
-      notification_url: withSourceNews(notificationUrl()),
+      // En local (http) Mercado Pago no puede avisar: el pago se procesa con scripts/process-mp-payment.ts.
+      ...(notificationUrl().startsWith("https://") ? { notification_url: withSourceNews(notificationUrl()) } : {}),
       statement_descriptor: "VENTAS AERO",
       expires: true,
       // Con cupón, el link vence junto con la reserva del uso; sin cupón, en 3 días.
