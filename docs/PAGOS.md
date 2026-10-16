@@ -82,15 +82,17 @@ Para probar un cobro real antes de cargar las credenciales de producción en Ver
 
 1. En el archivo de entorno local: `MP_ACCESS_TOKEN` y `MP_PUBLIC_KEY` de producción, `APP_URL=http://localhost:3000`,
    `BILLING_ENABLED=false` y `TUSFACTURAS_MODE` vacío (en local nunca se emite una factura real: hace falta `VERCEL_ENV=production`).
-   Reiniciar `npm run dev`.
+   Reiniciar `npm run dev`. Ojo: `.env.local` pisa a `.env`; si ahí quedaron las credenciales de la cuenta vendedora de prueba, Mercado Pago responde "Una de las partes es de prueba". El `preference-id` de la URL de Mercado Pago empieza con el id de la cuenta que cobra.
 2. Que el plan "Pago de prueba" exista en la base local (`seed-real-plans`, ver el runbook) y comprarlo desde `/plans`.
 3. Pagar con **otra** cuenta de Mercado Pago o con una tarjeta sin iniciar sesión: Mercado Pago no deja pagarle a la misma cuenta que cobra.
 4. Al terminar, tocar "Volver al sitio" (en local no hay vuelta automática). La página de estado queda en "pendiente":
    Mercado Pago no puede mandar el webhook a localhost (en local la preferencia ni siquiera lleva `notification_url`).
 5. Procesar el pago como lo haría el webhook, con el id de la compra (el `?purchase=` de la URL):
-   `npx tsx --env-file=.env.local --require ./scripts/stub-server-only.cjs scripts/process-mp-payment.ts <idDeCompra>`
-   (cambiar `.env.local` por el archivo donde estén las credenciales). Recargar la página de estado: tiene que decir aprobado.
+   `npx tsx --env-file=.env --env-file=.env.local --require ./scripts/stub-server-only.cjs scripts/process-mp-payment.ts <idDeCompra>`
+   (los dos archivos, como Next: `.env.local` pisa a `.env`; el script tiene que usar el mismo `MP_ACCESS_TOKEN` que `npm run dev`). Recargar la página de estado: tiene que decir aprobado.
 6. Opcional: probar el **arrepentimiento** desde Perfil › Mis compras. El reembolso se hace por la API y se refleja solo, sin webhook.
+
+Probado el 16/10/2026: pago real 184437395216 (AR$ 100, dinero en cuenta) aprobado y activado con el script.
 
 ## Suscripciones
 

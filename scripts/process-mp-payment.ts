@@ -3,11 +3,11 @@
 // MP_ACCESS_TOKEN del .env.local) y lo procesa con handlePayment (activa, revierte o registra).
 //
 // Uso (el id de la compra es el ?purchase= de /payment/status):
-//   npx tsx --env-file=.env.local --require ./scripts/stub-server-only.cjs scripts/process-mp-payment.ts <idDeCompra>
+//   npx tsx --env-file=.env --env-file=.env.local --require ./scripts/stub-server-only.cjs scripts/process-mp-payment.ts <idDeCompra>
 // O con el id del pago de Mercado Pago (el ?payment_id= de la vuelta, o el del comprobante):
-//   npx tsx --env-file=.env.local --require ./scripts/stub-server-only.cjs scripts/process-mp-payment.ts --payment <idDePago>
+//   npx tsx --env-file=.env --env-file=.env.local --require ./scripts/stub-server-only.cjs scripts/process-mp-payment.ts --payment <idDePago>
 // Para ver los últimos 10 pagos de la cuenta (sin procesar nada):
-//   npx tsx --env-file=.env.local --require ./scripts/stub-server-only.cjs scripts/process-mp-payment.ts --recent
+//   npx tsx --env-file=.env --env-file=.env.local --require ./scripts/stub-server-only.cjs scripts/process-mp-payment.ts --recent
 import { Payment as MpPayment } from "mercadopago";
 import { mpClient, mpIsTestMode } from "@/lib/mercadopago";
 import { handlePayment } from "@/lib/payments/process";
