@@ -6,6 +6,8 @@
 //   npx tsx --env-file=.env.local --require ./scripts/stub-server-only.cjs scripts/process-mp-payment.ts <idDeCompra>
 // O con el id del pago de Mercado Pago (el ?payment_id= de la vuelta, o el del comprobante):
 //   npx tsx --env-file=.env.local --require ./scripts/stub-server-only.cjs scripts/process-mp-payment.ts --payment <idDePago>
+// Para ver los últimos 10 pagos de la cuenta (sin procesar nada):
+//   npx tsx --env-file=.env.local --require ./scripts/stub-server-only.cjs scripts/process-mp-payment.ts --recent
 import { Payment as MpPayment } from "mercadopago";
 import { mpClient, mpIsTestMode } from "@/lib/mercadopago";
 import { handlePayment } from "@/lib/payments/process";
@@ -13,6 +15,18 @@ import { prisma } from "@/lib/prisma";
 
 async function main() {
   const args = process.argv.slice(2);
+  if (args[0] === "--recent") {
+    console.log(`Credenciales de Mercado Pago: ${mpIsTestMode() ? "de PRUEBA" : "de PRODUCCIÓN"}`);
+    const found = await new MpPayment(mpClient()).search({ options: { sort: "date_created", criteria: "desc", limit: 10 } });
+    const rows = found.results ?? [];
+    if (rows.length === 0) console.log("La cuenta no tiene pagos.");
+    for (const p of rows) {
+      console.log(
+        `${p.date_created} · pago ${p.id} · ${p.status} (${p.status_detail}) · ${p.currency_id} ${p.transaction_amount} · ${p.payment_method_id ?? "—"} · compra ${p.external_reference ?? "—"}`
+      );
+    }
+    return;
+  }
   const byPayment = args[0] === "--payment";
   const id = byPayment ? args[1] : args[0];
   if (!id) {
