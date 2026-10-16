@@ -1,30 +1,50 @@
+
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { activeListingWhere } from "@/lib/listing-filters";
+import { getAircraftTaxonomy, getSparePartCategories } from "@/lib/cached-data";
 import { HowItWorks } from "@/components/ui/HowItWorks";
+import { GuidesSection } from "@/components/ui/GuidesSection";
 import { SellerCta } from "@/components/ui/SellerCta";
-import { TrustBlock } from "@/components/ui/TrustBlock";
 import { SparePartCategoriesCarousel } from "@/components/ui/SparePartCategoriesCarousel";
 import { FeaturedAircraftCarousel } from "@/components/ui/FeaturedAircraftCarousel";
 import { LatestAircraft, ListingItem } from "@/components/ui/LatestListings";
 import { HeroBanner } from "@/components/ui/hero-banner";
+import { LaunchPromoBanner } from "@/components/ui/LaunchPromoBanner";
+import { FavoriteIdsProvider } from "@/components/ui/FavoriteIdsProvider";
 import HomeServicesCards from "@/components/ui/HomeServiceCards";
 import { FeaturedBrands } from "@/components/ui/FeaturedBrands";
+import { AircraftTypesSection } from "@/components/ui/AircraftTypesSection";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { organizationAndWebsiteJsonLd } from "@/lib/structured-data";
+import { FEATURED_AIRCRAFT_POOL, LATEST_AIRCRAFT_COUNT, PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { ProvinceExplorer, type ProvinceCounts } from "@/components/ui/ProvinceExplorer";
+import { provinceByName } from "@/lib/provinces";
+import { BrandSlashes } from "@/components/ui/BrandSlashes";
+
+// Título y descripción salen del layout; acá solo el canonical.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
+// VA-76: la Home es estática y se regenera cada 5 minutos (y al publicar, editar, renovar o borrar
+// un aviso, con revalidatePath("/")). Antes leía la sesión para marcar favoritos y se renderizaba
+// en cada visita sin caché; ahora los favoritos los pide el navegador (FavoriteIdsProvider).
+export const revalidate = 300;
 
 export default async function HomePage() {
-  // 1. Obtener usuario actual
-  const user = await getCurrentUser();
-
-  // 2. Traer datos y favoritos en paralelo
+  // Datos en paralelo
   const [
     featuredAircraftsFromDb,
-    latestAircraftsFromDb,
     latestSparePartsFromDb,
     sparePartCategories,
     featuredBrandsFromDb,
-    userFavorites,
+    aircraftByProvince,
+    sparePartsByProvince,
+    aircraftByCategory,
   ] = await Promise.all([
     prisma.aircraft.findMany({
-      where: { status: "ACTIVE" },
+      where: activeListingWhere(),
       include: {
         images: { orderBy: { order: "asc" }, take: 1 },
         category: true,
@@ -32,23 +52,11 @@ export default async function HomePage() {
         model: true,
       },
       orderBy: { createdAt: "desc" },
-      take: 8,
-    }),
-    // Últimas Aeronaves
-    prisma.aircraft.findMany({
-      where: { status: "ACTIVE" },
-      include: {
-        images: { orderBy: { order: "asc" }, take: 1 },
-        category: true,
-        brand: true,
-        model: true,
-      },
-      orderBy: { createdAt: "desc" },
-      take: 6,
+      take: FEATURED_AIRCRAFT_POOL,
     }),
     // Últimos Repuestos
     prisma.sparePart.findMany({
-      where: { status: "ACTIVE" },
+      where: activeListingWhere(),
       include: {
         images: { orderBy: { order: "asc" }, take: 1 },
         category: true,
@@ -56,47 +64,35 @@ export default async function HomePage() {
       orderBy: { createdAt: "desc" },
       take: 6,
     }),
-    // Categorías de Repuestos
-    prisma.category.findMany({
-      where: { parentId: null },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        icon: true,
-      },
-      orderBy: { name: "asc" },
-    }),
-    // Marcas de Aeronaves con Logo
-    prisma.aircraftBrand.findMany({
-      where: {
-        logoUrl: {
-          not: null,
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        logoUrl: true,
-      },
-      orderBy: { name: "asc" },
-    }),
-    // Favoritos del usuario logueado
-    user
-      ? prisma.favorite.findMany({
-          where: { userId: user.id },
-          select: { aircraftId: true, sparePartId: true },
-        })
-      : Promise.resolve([]),
+    // Categorías raíz de repuestos y marcas con logo: salen de la taxonomía cacheada (VA-13)
+    getSparePartCategories().then((all) =>
+      all.filter((c) => c.parentId === null).map(({ id, name, slug, icon }) => ({ id, name, slug, icon }))
+    ),
+    getAircraftTaxonomy().then(({ brands }) =>
+      brands.filter((b) => b.logoUrl !== null).map(({ id, name, logoUrl }) => ({ id, name, logoUrl }))
+    ),
+    // VA-77: avisos visibles por provincia (mismo criterio que /planes y /spareparts). Dinámico,
+    // como el resto de la Home, para que coincida siempre con los listados.
+    prisma.aircraft.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
+    prisma.sparePart.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
+    // VA-86: avisos visibles por categoría de aeronave (mismo criterio que /planes).
+    prisma.aircraft.groupBy({ by: ["categoryId"], where: activeListingWhere(), _count: { _all: true } }),
   ]);
+  const categoryCounts: Record<string, number> = Object.fromEntries(
+    aircraftByCategory.filter((g) => g.categoryId).map((g) => [g.categoryId as string, g._count._all])
+  );
 
-  // Sets de búsqueda rápida para los IDs favoritos
-  const userFavAircraftIds = new Set(
-    userFavorites.filter((f) => f.aircraftId).map((f) => f.aircraftId)
-  );
-  const userFavSparePartIds = new Set(
-    userFavorites.filter((f) => f.sparePartId).map((f) => f.sparePartId)
-  );
+  // { slug: { aircraft, parts } }. Las provincias que no son una de las 24 canónicas no cuentan
+  // (los listados filtran por igualdad exacta); ver scripts/normalize-provinces.ts.
+  const provinceCounts: ProvinceCounts = {};
+  const addCount = (province: string | null, field: "aircraft" | "parts", n: number) => {
+    const slug = provinceByName(province)?.slug;
+    if (!slug) return;
+    provinceCounts[slug] ??= { aircraft: 0, parts: 0 };
+    provinceCounts[slug][field] += n;
+  };
+  aircraftByProvince.forEach((g) => addCount(g.province, "aircraft", g._count._all));
+  sparePartsByProvince.forEach((g) => addCount(g.province, "parts", g._count._all));
 
   // Formateo para Aeronaves Destacadas (OverlayCard)
   const formattedFeaturedAircrafts = featuredAircraftsFromDb.map((aircraft) => ({
@@ -112,12 +108,12 @@ export default async function HomePage() {
     totalTimeHours: aircraft.totalTimeHours,
     city: aircraft.city,
     province: aircraft.province,
-    imageUrl: aircraft.images[0]?.url ?? "/placeholder.png",
-    isFavoriteInitial: userFavAircraftIds.has(aircraft.id),
+    imageUrl: aircraft.images[0]?.url ?? PLACEHOLDER_IMAGE,
   }));
 
-  // Mapear aeronaves a ListingItem
-  const aircraftListings: ListingItem[] = latestAircraftsFromDb.map(
+  // Mapear aeronaves a ListingItem. "Últimas aeronaves" salen de la misma consulta de
+  // destacadas (antes eran dos queries idénticas, VA-13).
+  const aircraftListings: ListingItem[] = featuredAircraftsFromDb.slice(0, LATEST_AIRCRAFT_COUNT).map(
     (aircraft) => ({
       type: "AIRCRAFT",
       id: aircraft.id,
@@ -130,9 +126,8 @@ export default async function HomePage() {
       totalTimeHours: aircraft.totalTimeHours,
       city: aircraft.city,
       province: aircraft.province,
-      imageUrl: aircraft.images[0]?.url ?? "/placeholder.png",
+      imageUrl: aircraft.images[0]?.url ?? PLACEHOLDER_IMAGE,
       createdAt: aircraft.createdAt,
-      isFavoriteInitial: userFavAircraftIds.has(aircraft.id),
     })
   );
 
@@ -149,9 +144,8 @@ export default async function HomePage() {
       city: part.city,
       province: part.province,
       inPesos: part.inPesos,
-      imageUrl: part.images[0]?.url ?? "/placeholder.png",
+      imageUrl: part.images[0]?.url ?? PLACEHOLDER_IMAGE,
       createdAt: part.createdAt,
-      isFavoriteInitial: userFavSparePartIds.has(part.id),
     })
   );
 
@@ -165,28 +159,54 @@ export default async function HomePage() {
 
   return (
     <>
-      <div className="bg-[#FAF5F5] min-h-screen">
+      <JsonLd data={organizationAndWebsiteJsonLd()} />
+      {/* VA-79: la Home es una sola pieza. Cuatro zonas con degradés que se continúan (el color con
+          que termina una es el color con que empieza la siguiente); estilos en app/globals.css. */}
+      <FavoriteIdsProvider>
+      <main className="home-theme relative isolate overflow-x-clip">
+        {/* Zona 1 · Cielo: hero + marcas + destacadas */}
         <HeroBanner />
+        <div className="home-zone home-zone-1">
+          <div aria-hidden className="home-zone-bg" />
+          {/* VA-47: invitación a registrarse, solo para visitantes sin cuenta (se decide en el navegador) */}
+          <LaunchPromoBanner />
+          <FeaturedBrands brands={featuredBrandsFromDb} />
+          <AircraftTypesSection counts={categoryCounts} />
+          <div className="container mx-auto px-4 pb-12">
+            <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
+          </div>
+        </div>
 
-        {/* MARQUESINA DE MARCAS */}
-        <FeaturedBrands brands={featuredBrandsFromDb} />
+        {/* Zona 2 · Altura: últimas publicaciones + provincias + categorías */}
+        <div className="home-zone home-zone-2">
+          <div aria-hidden className="home-zone-bg" />
+          <div className="container mx-auto px-4 py-8 space-y-16">
+            <LatestAircraft items={combinedLatestListings} />
+            <ProvinceExplorer counts={provinceCounts} />
+            <SparePartCategoriesCarousel categories={sparePartCategories} />
+          </div>
+        </div>
 
-        <main className="container mx-auto px-4 py-8 space-y-12">
-          {/* AERONAVES DESTACADAS */}
-          <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
+        {/* Zona 3 · Puente: SellerCta flota mientras el fondo pasa de claro a oscuro */}
+        <div className="home-zone home-zone-3 pt-8 pb-20">
+          <div aria-hidden className="home-zone-bg" />
+          <SellerCta />
+        </div>
 
-          {/* ÚLTIMAS PUBLICACIONES */}
-          <LatestAircraft items={combinedLatestListings} />
-
-          {/* CATEGORÍAS DE REPUESTOS */}
-          <SparePartCategoriesCarousel categories={sparePartCategories} />
-        </main>
-
-        {/* SECCIONES FINALES */}
-        <SellerCta />
-        <HowItWorks />
-        <HomeServicesCards />
-      </div>
+        {/* Zona 4 · Estratósfera: cómo funciona + guías + servicios; el footer sigue el mismo color */}
+        <div className="home-zone home-zone-4 pb-8">
+          <div aria-hidden className="home-zone-bg" />
+          <BrandSlashes className="-top-6 right-[-4rem] w-72 sm:w-[28rem]" />
+          <BrandSlashes className="bottom-24 -left-24 w-64 sm:w-96" />
+          <HowItWorks />
+          <GuidesSection />
+          <HomeServicesCards />
+        </div>
+      </main>
+      </FavoriteIdsProvider>
     </>
   );
-}
+} 
+
+
+

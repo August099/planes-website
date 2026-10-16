@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 import {
@@ -11,8 +12,9 @@ import {
   changePasswordAction, // Asegúrate de importar tu Server Action o API para cambiar contraseña
 } from "@/app/actions/profile-actions";
 import { claimCouponToProfile } from "@/app/actions/coupon-validation";
-import { deleteListingAction, updateListingAction, renewListingAction } from "@/app/actions/listing-actions";
+import { deleteListingAction, renewListingAction } from "@/app/actions/listing-actions";
 import { RefreshCw, Lock } from "lucide-react";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import {
   MapPin,
   Calendar,
@@ -29,13 +31,22 @@ import {
   Camera,
   Trash2,
   Ticket,
+  Receipt,
   Plus,
-  X,
   Star,
   Clock,
 } from "lucide-react";
-
-const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+import { PROFILE_FIELD_LABELS, type ProfileField } from "@/lib/profile";
+import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
+import { USER_TYPE_LABELS, USER_TYPE_OPTIONS } from "@/lib/user-types";
+import { StorefrontHeader, type StorefrontData } from "@/components/ui/profile/StorefrontHeader";
+import { StorefrontEditor } from "@/components/ui/profile/StorefrontEditor";
+import { SubscriptionPanel } from "@/components/ui/profile/SubscriptionPanel";
+import type { SubscriptionSummary } from "@/lib/subscriptions";
+import type { PurchaseRow } from "@/lib/purchases";
+import { PurchasesPanel } from "@/components/ui/profile/PurchasesPanel";
+import { BillingProfilePanel, type BillingProfileValues } from "@/components/ui/profile/BillingProfilePanel";
+import { PASSWORD_REGEX } from "@/lib/password-rules";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -55,11 +66,64 @@ function InstagramIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+// Lo que la vista usa de cada aviso del perfil (app/profile/[id]/page.tsx manda más campos).
+type ProfileListing = {
+  id: string;
+  title: string;
+  price: number | null;
+  city: string;
+  province: string;
+  category: { id: string; name: string } | null;
+  images: { url: string }[];
+  listingExpiresAt: string | null;
+  // Solo para el dueño.
+  _count?: { favorites: number; questions: number; analyticsEvents: number };
+};
+
+export type ProfileUserData = {
+  id: string;
+  name: string | null;
+  email?: string | null;
+  phone?: string | null;
+  image: string | null;
+  city: string | null;
+  province: string | null;
+  userType: string;
+  isFoundingMember: boolean;
+  facebook: string | null;
+  instagram: string | null;
+  createdAt: string;
+  aircrafts: (ProfileListing & { year: number; totalTimeHours: number | null })[];
+  spareParts: (ProfileListing & { inPesos: boolean })[];
+};
+
+export type ProfileCoupon = {
+  usageId: string;
+  code: string;
+  type: string;
+  discountType: string | null;
+  discountValue: number;
+  purchaseId: string | null;
+};
+
 interface Props {
-  profileUser: any;
+  profileUser: ProfileUserData;
   isOwner: boolean;
   currentUserFavIds: string[];
-  userCoupons?: any[];
+  userCoupons?: ProfileCoupon[];
+  // VA-46: campos que le faltan al dueño (se calculan en el servidor, ver lib/profile.ts).
+  missingProfileFields?: ProfileField[];
+  // VA-87: datos de la página personalizada; null si el vendedor no tiene el beneficio del plan.
+  storefront?: StorefrontData | null;
+  // VA-80: plan del dueño del perfil (solo se pasa cuando lo mira el dueño).
+  subscription?: SubscriptionSummary | null;
+  // VA-92: "Mis compras" y datos de facturación guardados (solo el dueño).
+  purchases?: PurchaseRow[];
+  initialTab?: "purchases";
+  billingProfile?: { values: BillingProfileValues; saved: boolean } | null;
+  // VA-105 · 3: "Cambiar contraseña" solo para cuentas con contraseña (las de Google la crean con
+  // "Olvidé mi contraseña").
+  hasPassword?: boolean;
 }
 
 /** Helper para calcular los días restantes de una publicación */
@@ -89,16 +153,25 @@ export function ProfileView({
   isOwner,
   currentUserFavIds,
   userCoupons = [],
+  missingProfileFields = [],
+  storefront = null,
+  subscription = null,
+  purchases = [],
+  billingProfile = null,
+  hasPassword = false,
+  initialTab,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<"aircrafts" | "spareparts" | "coupons" | "edit">("aircrafts");
+  const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
+  const missingDot = (field: ProfileField) =>
+    isMissing(field) ? (
+      <span className="ml-1 inline-block w-2 h-2 rounded-full bg-red-600 align-middle" aria-label="Falta completar" />
+    ) : null;
+  const [activeTab, setActiveTab] = useState<"aircrafts" | "spareparts" | "coupons" | "purchases" | "edit">(initialTab ?? "aircrafts");
   const [loadingSave, setLoadingSave] = useState(false);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Estados para Modal de Edición de Publicaciones
-  const [editingItem, setEditingItem] = useState<{ item: any; type: "aircraft" | "sparepart" } | null>(null);
-  const [loadingModal, setLoadingModal] = useState(false);
-  const [priceConsult, setPriceConsult] = useState(false);
 
   // Estados para reclamo de cupones
   const [couponCodeInput, setCouponCodeInput] = useState("");
@@ -121,10 +194,15 @@ export function ProfileView({
     setLoadingRenewId(id);
     try {
       const res = await renewListingAction(id, type);
-      if (!res.success) {
-        alert("Ocurrió un error al intentar renovar.");
+      // VA-105: sin un plan que la cubra, la renovación se paga en el checkout.
+      if (!res.success && res.checkoutUrl) {
+        window.location.assign(res.checkoutUrl);
+        return;
       }
-    } catch (error) {
+      if (!res.success) {
+        alert(res.error || "Ocurrió un error al intentar renovar.");
+      }
+    } catch {
       alert("Error de conexión al renovar.");
     } finally {
       setLoadingRenewId(null);
@@ -134,32 +212,12 @@ export function ProfileView({
   const handleDelete = async (id: string, type: "aircraft" | "sparepart") => {
     if (!confirm("¿Estás seguro de que querés eliminar esta publicación?")) return;
     try {
-      await deleteListingAction(id, type === "aircraft" ? "AIRCRAFT" : "SPARE_PART");
-    } catch (error) {
+      const res = await deleteListingAction(id, type === "aircraft" ? "AIRCRAFT" : "SPARE_PART");
+      if (!res.success) {
+        alert(res.error || "Error al eliminar la publicación.");
+      }
+    } catch {
       alert("Error al eliminar la publicación.");
-    }
-  };
-
-  const handleEditOpen = (item: any, type: "aircraft" | "sparepart") => {
-    setEditingItem({ item, type });
-    setPriceConsult(!item.price);
-  };
-
-  const handleUpdateListingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoadingModal(true);
-    try {
-      const formData = new FormData(e.currentTarget);
-      formData.append("id", editingItem!.item.id);
-      formData.append("listingType", editingItem!.type);
-      formData.append("priceOnRequest", priceConsult.toString());
-
-      await updateListingAction(formData);
-      setEditingItem(null);
-    } catch (error) {
-      alert("Error al actualizar la publicación.");
-    } finally {
-      setLoadingModal(false);
     }
   };
 
@@ -173,7 +231,7 @@ export function ProfileView({
       await updateProfileAction(formData);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (error) {
+    } catch {
       alert("Error al actualizar los datos.");
     } finally {
       setLoadingSave(false);
@@ -219,8 +277,8 @@ export function ProfileView({
         setConfirmPassword("");
         setTimeout(() => setPasswordSuccess(false), 4000);
       }
-    } catch (err) {
-      setPasswordError("Ocurrió un error inesperado. Reintenta más tarde.");
+    } catch {
+      setPasswordError("Ocurrió un error inesperado. Probá de nuevo más tarde.");
     } finally {
       setLoadingPassword(false);
     }
@@ -236,7 +294,7 @@ export function ProfileView({
 
     try {
       await updateAvatarAction(formData);
-    } catch (error) {
+    } catch {
       alert("Error al subir la imagen.");
     } finally {
       setLoadingAvatar(false);
@@ -248,7 +306,7 @@ export function ProfileView({
     setLoadingAvatar(true);
     try {
       await removeAvatarAction();
-    } catch (error) {
+    } catch {
       alert("Error al eliminar la imagen.");
     } finally {
       setLoadingAvatar(false);
@@ -280,156 +338,208 @@ export function ProfileView({
 
   return (
     <div className="space-y-6">
-      {/* Header Card del Perfil */}
-      <div className="p-6 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6">
-        <div className="relative group w-24 h-24 rounded-full overflow-hidden bg-slate-200 border-2 border-[#001F58]/10 shrink-0 flex items-center justify-center">
-          {profileUser.image ? (
-            <Image
-              src={profileUser.image}
-              alt={profileUser.name || "Usuario"}
-              fill
-              className="object-cover"
-            />
-          ) : (
-            <svg
-              className="w-16 h-16 text-slate-400 translate-y-2"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-            </svg>
-          )}
-
-          {loadingAvatar && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white z-10">
-              <Loader2 className="w-5 h-5 animate-spin" />
-            </div>
-          )}
-
-          {isOwner && !loadingAvatar && (
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                title="Cambiar foto"
-                className="p-1.5 rounded-full bg-white/90 text-slate-800 hover:bg-white cursor-pointer"
+      {/* VA-87: con el beneficio "Página personalizada", encabezado de tienda; si no, el común. */}
+      {storefront ? (
+        <StorefrontHeader
+          storefront={storefront}
+          fallbackName={profileUser.name || "Usuario de Ventas Aeronáuticas"}
+          userTypeLabel={USER_TYPE_LABELS[profileUser.userType as keyof typeof USER_TYPE_LABELS] ?? profileUser.userType}
+          location={locationText}
+          memberSince={memberSince}
+          instagram={profileUser.instagram}
+          facebook={profileUser.facebook}
+          isOwner={isOwner}
+          isFoundingMember={profileUser.isFoundingMember}
+          onEdit={() => setActiveTab("edit")}
+        />
+      ) : (
+        <div className="p-6 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6">
+          <div className="relative group w-24 h-24 rounded-full overflow-hidden bg-slate-200 border-2 border-[#001F58]/10 shrink-0 flex items-center justify-center">
+            {profileUser.image ? (
+              <Image
+                src={profileUser.image}
+                alt={profileUser.name || "Usuario"}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <svg
+                className="w-16 h-16 text-slate-400 translate-y-2"
+                fill="currentColor"
+                viewBox="0 0 24 24"
               >
-                <Camera className="w-4 h-4" />
-              </button>
-              {profileUser.image && (
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              </svg>
+            )}
+
+            {loadingAvatar && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white z-10">
+                <Loader2 className="w-5 h-5 animate-spin" />
+              </div>
+            )}
+
+            {isOwner && !loadingAvatar && (
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
                 <button
                   type="button"
-                  onClick={handleRemoveAvatar}
-                  title="Eliminar foto"
-                  className="p-1.5 rounded-full bg-red-600/90 text-white hover:bg-red-600 cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Cambiar foto"
+                  className="p-1.5 rounded-full bg-white/90 text-slate-800 hover:bg-white cursor-pointer"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Camera className="w-4 h-4" />
+                </button>
+                {profileUser.image && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    title="Eliminar foto"
+                    className="p-1.5 rounded-full bg-red-600/90 text-white hover:bg-red-600 cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleAvatarChange}
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+            />
+          </div>
+
+          <div className="flex-1 text-center md:text-left space-y-2 w-full">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+              <div>
+                {/* NOMBRE DEL USUARIO */}
+                <h1 className="text-2xl font-bold text-[#001F58]">
+                  {profileUser.name || "Usuario de Ventas Aeronáuticas"}
+                </h1>
+
+                {/* INSIGNIAS: TIPO DE CUENTA Y MIEMBRO FUNDADOR */}
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-1.5">
+                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold uppercase tracking-wider">
+                    {USER_TYPE_LABELS[profileUser.userType as keyof typeof USER_TYPE_LABELS] ?? profileUser.userType}
+                  </span>
+
+                  {profileUser.isFoundingMember && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold shadow-2xs">
+                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
+                      Miembro Fundador
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {isOwner && (
+                <button
+                  onClick={() => setActiveTab("edit")}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer self-center md:self-auto"
+                >
+                  <Edit className="w-4 h-4" />
+                  Editar Perfil
                 </button>
               )}
             </div>
-          )}
 
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleAvatarChange}
-            accept="image/*"
-            className="hidden"
-          />
-        </div>
-
-        <div className="flex-1 text-center md:text-left space-y-2 w-full">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-            <div>
-              {/* NOMBRE DEL USUARIO */}
-              <h1 className="text-2xl font-bold text-[#001F58]">
-                {profileUser.name || "Usuario de Ventas Aeronáuticas"}
-              </h1>
-
-              {/* INSIGNIAS: TIPO DE CUENTA Y MIEMBRO FUNDADOR */}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-1.5">
-                <span className="inline-block px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold uppercase tracking-wider">
-                  {profileUser.userType}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-slate-500 pt-1">
+              {locationText && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {locationText}
                 </span>
+              )}
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                Miembro desde {memberSince}
+              </span>
 
-                {profileUser.isFoundingMember && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold shadow-2xs">
-                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
-                    Miembro Fundador
-                  </span>
+              {isOwner && profileUser.phone && (
+                <span className="flex items-center gap-1 font-medium text-slate-700">
+                  <Phone className="w-3.5 h-3.5 text-blue-600" />
+                  {profileUser.phone}
+                </span>
+              )}
+              {isOwner && (
+                <span className="flex items-center gap-1 font-medium text-slate-700">
+                  <Mail className="w-3.5 h-3.5 text-blue-600" />
+                  {profileUser.email}
+                </span>
+              )}
+            </div>
+
+            {(profileUser.facebook || profileUser.instagram) && (
+              <div className="flex items-center justify-center md:justify-start gap-3 pt-2">
+                {profileUser.facebook && (
+                  <a
+                    href={profileUser.facebook}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-slate-400 hover:text-blue-600 transition-colors"
+                  >
+                    <FacebookIcon className="w-4 h-4" />
+                  </a>
+                )}
+                {profileUser.instagram && (
+                  <a
+                    href={profileUser.instagram}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-slate-400 hover:text-pink-600 transition-colors"
+                  >
+                    <InstagramIcon className="w-4 h-4" />
+                  </a>
                 )}
               </div>
-            </div>
-
-            {isOwner && (
-              <button
-                onClick={() => setActiveTab("edit")}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer self-center md:self-auto"
-              >
-                <Edit className="w-4 h-4" />
-                Editar Perfil
-              </button>
             )}
           </div>
-
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-slate-500 pt-1">
-            {locationText && (
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5" />
-                {locationText}
-              </span>
-            )}
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" />
-              Miembro desde {memberSince}
-            </span>
-
-            {isOwner && profileUser.phone && (
-              <span className="flex items-center gap-1 font-medium text-slate-700">
-                <Phone className="w-3.5 h-3.5 text-blue-600" />
-                {profileUser.phone}
-              </span>
-            )}
-            {isOwner && (
-              <span className="flex items-center gap-1 font-medium text-slate-700">
-                <Mail className="w-3.5 h-3.5 text-blue-600" />
-                {profileUser.email}
-              </span>
-            )}
-          </div>
-
-          {(profileUser.facebook || profileUser.instagram) && (
-            <div className="flex items-center justify-center md:justify-start gap-3 pt-2">
-              {profileUser.facebook && (
-                <a
-                  href={profileUser.facebook}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-slate-400 hover:text-blue-600 transition-colors"
-                >
-                  <FacebookIcon className="w-4 h-4" />
-                </a>
-              )}
-              {profileUser.instagram && (
-                <a
-                  href={profileUser.instagram}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-slate-400 hover:text-pink-600 transition-colors"
-                >
-                  <InstagramIcon className="w-4 h-4" />
-                </a>
-              )}
-            </div>
-          )}
         </div>
-      </div>
+      )}
+
+      {/* VA-46: aviso de perfil incompleto (solo el dueño) */}
+      {isOwner && missingProfileFields.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+          <div className="flex items-start gap-2">
+            <span className="mt-1.5 inline-block w-2.5 h-2.5 shrink-0 rounded-full bg-red-600" />
+            <div>
+              <p className="text-sm font-semibold text-red-800">Completá tu perfil para que te puedan contactar</p>
+              <p className="text-xs text-red-700">
+                Falta: {missingProfileFields.map((f) => PROFILE_FIELD_LABELS[f]).join(", ")}.
+                {missingProfileFields.includes("phone") && " Sin teléfono no se puede publicar."}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab("edit")}
+            className="min-h-11 shrink-0 rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 transition-colors cursor-pointer"
+          >
+            Completar ahora
+          </button>
+        </div>
+      )}
+
+      {/* VA-94: CTA para el dueño sin plan: beneficios de la Página VA (discreto, sin pop-up). VA-105: "Pro" pasó a "Página VA". */}
+      {isOwner && !storefront && !subscription?.active && (
+        <aside className="flex flex-col gap-3 rounded-lg border border-[#001F58]/12 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-slate-700">
+            <span className="font-semibold text-[#001F58]">Con la Página VA</span> tu perfil pasa a ser tu página: portada, logo, nombre
+            comercial y WhatsApp.
+          </p>
+          <Link href="/plans" className="shrink-0 text-sm font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+            Ver planes
+          </Link>
+        </aside>
+      )}
 
       {/* Selector de pestañas responsive */}
-      <div className="flex border-b border-slate-200 gap-6 overflow-x-auto scrollbar-none">
+      {/* En celular las pestañas van en grilla de 2 columnas: con scroll horizontal "Ajustes" quedaba escondida (VA-60) */}
+      <div className="grid grid-cols-2 gap-x-4 border-b border-slate-200 sm:flex sm:gap-6 sm:overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab("aircrafts")}
-          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+          className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
             activeTab === "aircrafts"
               ? "border-[#001F58] text-[#001F58]"
               : "border-transparent text-slate-400 hover:text-slate-600"
@@ -441,7 +551,7 @@ export function ProfileView({
 
         <button
           onClick={() => setActiveTab("spareparts")}
-          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+          className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
             activeTab === "spareparts"
               ? "border-[#001F58] text-[#001F58]"
               : "border-transparent text-slate-400 hover:text-slate-600"
@@ -454,7 +564,7 @@ export function ProfileView({
         {isOwner && (
           <button
             onClick={() => setActiveTab("coupons")}
-            className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === "coupons"
                 ? "border-[#001F58] text-[#001F58]"
                 : "border-transparent text-slate-400 hover:text-slate-600"
@@ -467,8 +577,22 @@ export function ProfileView({
 
         {isOwner && (
           <button
+            onClick={() => setActiveTab("purchases")}
+            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+              activeTab === "purchases"
+                ? "border-[#001F58] text-[#001F58]"
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <Receipt className="w-4 h-4" />
+            Mis compras ({purchases.length})
+          </button>
+        )}
+
+        {isOwner && (
+          <button
             onClick={() => setActiveTab("edit")}
-            className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === "edit"
                 ? "border-[#001F58] text-[#001F58]"
                 : "border-transparent text-slate-400 hover:text-slate-600"
@@ -476,14 +600,27 @@ export function ProfileView({
           >
             <Edit className="w-4 h-4" />
             Ajustes
+            {missingProfileFields.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-red-600" aria-label="Perfil incompleto" />
+            )}
           </button>
         )}
       </div>
 
       {/* Pestaña Aeronaves */}
       {activeTab === "aircrafts" && (
+        <>
+        {/* VA-94: CTA en "Mis publicaciones" para el dueño sin plan. */}
+        {isOwner && !subscription?.active && (
+          <p className="mb-4 text-sm text-slate-600">
+            Con un plan publicás más y pagás menos.{" "}
+            <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+              Ver planes
+            </Link>
+          </p>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-          {profileUser.aircrafts?.map((item: any) => {
+          {profileUser.aircrafts?.map((item) => {
             const remainingStatus = getRemainingDaysText(item.listingExpiresAt);
 
             return (
@@ -497,7 +634,7 @@ export function ProfileView({
                   totalTimeHours={item.totalTimeHours}
                   city={item.city}
                   province={item.province}
-                  imageUrl={item.images[0]?.url ?? "/placeholder.png"}
+                  imageUrl={item.images[0]?.url ?? PLACEHOLDER_IMAGE}
                   isFavoriteInitial={currentUserFavIds.includes(item.id)}
                 />
 
@@ -525,8 +662,8 @@ export function ProfileView({
                         type="button"
                         onClick={() => handleRenew(item.id, "aircraft")}
                         disabled={loadingRenewId === item.id}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
-                        title="Extender publicación 45 días más"
+                        className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-3 sm:px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-xs sm:text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                        title="Renovar 45 días más (sin cargo con un plan que lo incluya)"
                       >
                         {loadingRenewId === item.id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -557,18 +694,19 @@ export function ProfileView({
                       </div>
 
                       <div className="flex items-center gap-1 border-l pl-2 border-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => handleEditOpen(item, "aircraft")}
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
+                        <Link
+                          href={`/publish?edit=${item.id}&type=aircraft`}
+                          className="p-3 sm:p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
+                          aria-label="Editar publicación"
                           title="Editar Publicación"
                         >
                           <Edit className="w-3.5 h-3.5" />
-                        </button>
+                        </Link>
                         <button
                           type="button"
                           onClick={() => handleDelete(item.id, "aircraft")}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                          className="p-3 sm:p-1 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                          aria-label="Eliminar publicación"
                           title="Eliminar Publicación"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -581,12 +719,23 @@ export function ProfileView({
             );
           })}
         </div>
+        </>
       )}
 
       {/* Pestaña Repuestos */}
       {activeTab === "spareparts" && (
+        <>
+        {/* VA-94: CTA en "Mis publicaciones" para el dueño sin plan. */}
+        {isOwner && !subscription?.active && (
+          <p className="mb-4 text-sm text-slate-600">
+            Con un plan publicás más y pagás menos.{" "}
+            <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+              Ver planes
+            </Link>
+          </p>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-          {profileUser.spareParts?.map((item: any) => {
+          {profileUser.spareParts?.map((item) => {
             const remainingStatus = getRemainingDaysText(item.listingExpiresAt);
 
             return (
@@ -599,7 +748,7 @@ export function ProfileView({
                   category={item.category}
                   city={item.city}
                   province={item.province}
-                  imageUrl={item.images[0]?.url ?? "/placeholder.png"}
+                  imageUrl={item.images[0]?.url ?? PLACEHOLDER_IMAGE}
                   isFavoriteInitial={currentUserFavIds.includes(item.id)}
                 />
 
@@ -627,8 +776,8 @@ export function ProfileView({
                         type="button"
                         onClick={() => handleRenew(item.id, "sparepart")}
                         disabled={loadingRenewId === item.id}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
-                        title="Extender publicación 45 días más"
+                        className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-3 sm:px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-xs sm:text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                        title="Renovar 45 días más (sin cargo con un plan que lo incluya)"
                       >
                         {loadingRenewId === item.id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -659,18 +808,19 @@ export function ProfileView({
                       </div>
 
                       <div className="flex items-center gap-1 border-l pl-2 border-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => handleEditOpen(item, "sparepart")}
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
+                        <Link
+                          href={`/publish?edit=${item.id}&type=parts`}
+                          className="p-3 sm:p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
+                          aria-label="Editar publicación"
                           title="Editar Publicación"
                         >
                           <Edit className="w-3.5 h-3.5" />
-                        </button>
+                        </Link>
                         <button
                           type="button"
                           onClick={() => handleDelete(item.id, "sparepart")}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                          className="p-3 sm:p-1 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                          aria-label="Eliminar publicación"
                           title="Eliminar Publicación"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -683,6 +833,7 @@ export function ProfileView({
             );
           })}
         </div>
+        </>
       )}
 
       {/* Pestaña Cupones */}
@@ -745,7 +896,7 @@ export function ProfileView({
 
             {userCoupons.length === 0 ? (
               <div className="p-6 text-center text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                No tienes cupones guardados actualmente.
+                No tenés cupones guardados.
               </div>
             ) : (
               <div className="space-y-2">
@@ -789,9 +940,15 @@ export function ProfileView({
         </div>
       )}
 
+      {/* VA-92: Pestaña Mis compras */}
+      {isOwner && activeTab === "purchases" && <PurchasesPanel rows={purchases} />}
+
       {/* Pestaña Ajustes */}
       {isOwner && activeTab === "edit" && (
         <div className="space-y-6 max-w-2xl mx-auto md:mx-0">
+          <SubscriptionPanel subscription={subscription} />
+          {billingProfile && <BillingProfilePanel initial={billingProfile.values} saved={billingProfile.saved} />}
+
           {/* Formulario de información de la cuenta */}
           <form onSubmit={handleUpdate} className="p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 space-y-4">
             <h2 className="text-lg font-bold text-[#001F58]">Editar Información de Cuenta</h2>
@@ -802,16 +959,26 @@ export function ProfileView({
                 <input type="text" name="name" defaultValue={profileUser.name || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Teléfono de Contacto</label>
+                <label htmlFor="profile-user-type" className="block text-xs font-semibold text-slate-600 mb-1">Tipo de cuenta</label>
+                <select id="profile-user-type" name="userType" defaultValue={profileUser.userType} className="w-full px-3 py-2 text-xs border rounded-xl bg-white">
+                  {USER_TYPE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Teléfono de Contacto{missingDot("phone")}</label>
                 <input type="text" name="phone" defaultValue={profileUser.phone || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Ciudad</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Ciudad{missingDot("city")}</label>
                 <input type="text" name="city" defaultValue={profileUser.city || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Provincia</label>
-                <input type="text" name="province" defaultValue={profileUser.province || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Provincia{missingDot("province")}</label>
+                <ProvinceSelect name="province" defaultValue={profileUser.province} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">Facebook (URL)</label>
@@ -840,7 +1007,24 @@ export function ProfileView({
             </div>
           </form>
 
+          {storefront && <StorefrontEditor storefront={storefront} />}
+
           {/* Formulario de Cambio de Contraseña */}
+          {!hasPassword ? (
+            <div className="rounded-lg border border-[#001F58]/12 bg-white p-6">
+              <h2 className="flex items-center gap-2 text-lg font-bold text-[#001F58]">
+                <Lock className="h-5 w-5 text-slate-700" />
+                Contraseña
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Tu cuenta entra con Google y no tiene contraseña. Si querés poder entrar también con tu email, creá una:
+                te mandamos un link a tu casilla.
+              </p>
+              <Link href="/forgot-password" className="mt-3 inline-block text-sm font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
+                Crear una contraseña
+              </Link>
+            </div>
+          ) : (
           <form onSubmit={handleChangePasswordSubmit} className="p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 space-y-4">
             <div>
               <h2 className="text-lg font-bold text-[#001F58] flex items-center gap-2">
@@ -848,7 +1032,7 @@ export function ProfileView({
                 Seguridad & Contraseña
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                Actualiza tu contraseña. Debe contener al menos 8 caracteres, una letra mayúscula, un número y un carácter especial.
+                Actualizá tu contraseña. Tiene que tener al menos 8 caracteres, una letra mayúscula, un número y un carácter especial.
               </p>
             </div>
 
@@ -922,198 +1106,10 @@ export function ProfileView({
               </button>
             </div>
           </form>
+          )}
         </div>
       )}
 
-      {/* MODAL DE EDICIÓN RÁPIDA DE PUBLICACIÓN */}
-      {editingItem && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-2xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto space-y-4">
-            <div className="flex justify-between items-center border-b pb-3 border-slate-100">
-              <h3 className="font-bold text-[#001F58] text-lg">
-                Editar {editingItem.type === "aircraft" ? "Aeronave" : "Repuesto"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setEditingItem(null)}
-                className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdateListingSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider mb-1">Título</label>
-                <input
-                  type="text"
-                  name="title"
-                  required
-                  defaultValue={editingItem.item.title}
-                  className="w-full px-3 py-2 text-xs border rounded-xl"
-                />
-              </div>
-
-              {editingItem.type === "aircraft" ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Año</label>
-                    <input
-                      type="number"
-                      name="year"
-                      required
-                      min="1900"
-                      max={new Date().getFullYear()}
-                      defaultValue={editingItem.item.year}
-                      className="w-full px-3 py-2 text-xs border rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Horas Totales</label>
-                    <input
-                      type="number"
-                      name="totalTimeHours"
-                      required
-                      min="0"
-                      defaultValue={editingItem.item.totalTimeHours}
-                      className="w-full px-3 py-2 text-xs border rounded-xl"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">P/N (SKU)</label>
-                    <input
-                      type="text"
-                      name="partNumber"
-                      defaultValue={editingItem.item.partNumber || ""}
-                      className="w-full px-3 py-2 text-xs border rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Stock</label>
-                    <input
-                      type="number"
-                      name="stock"
-                      required
-                      min="1"
-                      defaultValue={editingItem.item.stock || 1}
-                      className="w-full px-3 py-2 text-xs border rounded-xl"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider mb-1">Precio</label>
-                <input
-                  type="number"
-                  name="price"
-                  disabled={priceConsult}
-                  defaultValue={editingItem.item.price || ""}
-                  placeholder={priceConsult ? "A Consultar" : "Ej: 120000"}
-                  className="w-full px-3 py-2 text-xs border rounded-xl disabled:bg-slate-100"
-                />
-                <div className="flex items-center gap-4 mt-2">
-                  <label className="flex items-center gap-1 text-xs cursor-pointer font-medium">
-                    <input
-                      type="checkbox"
-                      checked={priceConsult}
-                      onChange={(e) => setPriceConsult(e.target.checked)}
-                      className="rounded"
-                    />
-                    Precio a Consultar
-                  </label>
-
-                  {editingItem.type === "sparepart" && (
-                    <label className="flex items-center gap-1 text-xs cursor-pointer font-medium">
-                      <input
-                        type="checkbox"
-                        name="inPesos"
-                        defaultChecked={editingItem.item.inPesos}
-                        className="rounded"
-                      />
-                      Expresado en Pesos (ARS)
-                    </label>
-                  )}
-                </div>
-              </div>
-
-              {editingItem.type === "aircraft" && (
-                <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <label className="block text-xs font-bold uppercase tracking-wider">Opciones de Negociación</label>
-                  <div className="flex flex-wrap gap-4 text-xs font-medium">
-                    <label className="flex items-center gap-1 cursor-pointer">
-                      <input type="checkbox" name="financing" defaultChecked={editingItem.item.financing} className="rounded" />
-                      Financiación
-                    </label>
-                    <label className="flex items-center gap-1 cursor-pointer">
-                      <input type="checkbox" name="trade" defaultChecked={editingItem.item.trade} className="rounded" />
-                      Permuta
-                    </label>
-                    <label className="flex items-center gap-1 cursor-pointer">
-                      <input type="checkbox" name="rent" defaultChecked={editingItem.item.rent} className="rounded" />
-                      Alquiler
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider mb-1">Ciudad</label>
-                  <input
-                    type="text"
-                    name="city"
-                    required
-                    defaultValue={editingItem.item.city}
-                    className="w-full px-3 py-2 text-xs border rounded-xl"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider mb-1">Provincia</label>
-                  <input
-                    type="text"
-                    name="province"
-                    required
-                    defaultValue={editingItem.item.province}
-                    className="w-full px-3 py-2 text-xs border rounded-xl"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider mb-1">Descripción</label>
-                <textarea
-                  name="description"
-                  required
-                  rows={3}
-                  defaultValue={editingItem.item.description}
-                  className="w-full px-3 py-2 text-xs border rounded-xl"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setEditingItem(null)}
-                  className="px-4 py-2 text-xs border rounded-xl hover:bg-slate-50 cursor-pointer font-semibold"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loadingModal}
-                  className="px-5 py-2 bg-[#001F58] text-white text-xs font-bold rounded-xl hover:bg-blue-900 cursor-pointer flex items-center gap-2"
-                >
-                  {loadingModal ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar Cambios"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

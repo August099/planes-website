@@ -1,40 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { createPortal } from "react-dom";
+import { ShareDialog } from "@/components/ui/ShareDialog";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  MapPin, 
-  Heart, 
-  Share2, 
-  Loader2, 
-  X, 
-  Copy, 
-  Check, 
-  MessageCircle, 
-  Mail 
+import {
+  MapPin,
+  Heart,
+  Share2,
+  Loader2,
 } from "lucide-react";
 import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
 import { useRouter } from "next/navigation";
 import { ImageCarousel } from "./CardImageCarousel";
+import { formatPrice } from "@/lib/format";
+import { errorMessage } from "@/lib/errors";
+import { useFavoriteIds } from "@/components/ui/FavoriteIdsProvider";
+import { CompareButton } from "@/components/ui/compare/CompareButton";
 
-// Iconos personalizados para el menú de compartir
-function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-    </svg>
-  );
-}
 
-function TwitterIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  );
-}
 
 type CategoryProp = { id?: string; name: string } | string | null;
 
@@ -76,23 +60,16 @@ export function AircraftCard({
   isFavoriteInitial = false,
   onFavoriteToggle,
 }: AircraftCardProps) {
-  const [isFavorite, setIsFavorite] = useState(isFavoriteInitial);
+  // VA-76: en páginas estáticas (la Home) el favorito llega después, desde FavoriteIdsProvider;
+  // lo que el usuario toca en la card manda sobre eso.
+  const favoriteIds = useFavoriteIds();
+  const [favoriteOverride, setIsFavorite] = useState<boolean | null>(null);
+  const isFavorite = favoriteOverride ?? (isFavoriteInitial || !!favoriteIds?.aircraft.includes(id));
   const [loadingFav, setLoadingFav] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [copiedDesktop, setCopiedDesktop] = useState(false);
   const router = useRouter();
 
-  const numericPrice =
-    price !== null && price !== undefined ? Number(price) : NaN;
-  const formattedPrice =
-    !isNaN(numericPrice) && numericPrice > 0
-      ? new Intl.NumberFormat("es-AR", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 0,
-        }).format(numericPrice)
-      : "Consultar";
+  const formattedPrice = formatPrice(price, { fallback: "Consultar" });
 
   const locationText = [city, province].filter(Boolean).join(", ");
 
@@ -108,7 +85,7 @@ export function AircraftCard({
   const specs = [
     categoryFormatted,
     year,
-    totalTimeHours ? `${totalTimeHours.toLocaleString()} hs` : null,
+    totalTimeHours != null ? `${totalTimeHours.toLocaleString("es-AR")} hs` : "Horas no informadas",
   ].filter(Boolean);
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
@@ -128,9 +105,9 @@ export function AircraftCard({
       if (onFavoriteToggle) {
         onFavoriteToggle(id, res.isFavorite);
       }
-    } catch (error: any) {
+    } catch (error) {
       setIsFavorite(!nextState);
-      if (error.message === "UNAUTHENTICATED") {
+      if (errorMessage(error) === "UNAUTHENTICATED") {
         router.push("/login");
       }
     } finally {
@@ -138,55 +115,19 @@ export function AircraftCard({
     }
   };
 
-  const handleShareClick = async (e: React.MouseEvent) => {
+  // Compartir: siempre la ventana flotante, en celular y en escritorio (pedido del socio, 9/10).
+  const handleShareClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    const shareUrl = `${window.location.origin}/planes/plane-details/${id}`;
-    const isMobile = window.innerWidth < 640;
-
-    // 1. En Mobile: Usar Web Share API si está disponible
-    if (isMobile && navigator.share) {
-      try {
-        await navigator.share({
-          title: title,
-          url: shareUrl,
-        });
-        return;
-      } catch (error) {
-        // Si cancela la interacción de compartir, salimos
-        return;
-      }
-    }
-
-    // 2. En Mobile (si no hay Web Share API): abrir modal flotante
-    if (isMobile) {
-      setIsShareModalOpen(true);
-      return;
-    }
-
-    // 3. En Escritorio: Copiar enlace directamente sin abrir modal ni alert
-    await navigator.clipboard.writeText(shareUrl);
-    setCopiedDesktop(true);
-    setTimeout(() => setCopiedDesktop(false), 2000);
+    setIsShareModalOpen(true);
   };
 
   const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/planes/plane-details/${id}` : "";
-  const encodedShareUrl = encodeURIComponent(shareUrl);
-  const shareText = encodeURIComponent(`Mirá esta publicación en Ventas Aeronáuticas: ${title}`);
-
-  const handleCopyLink = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   return (
     <>
       <Link href={`/planes/plane-details/${id}`} className="group block h-full">
-        <Card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <Card data-card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <div className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100">
             <ImageCarousel
               images={images}
@@ -194,19 +135,19 @@ export function AircraftCard({
               alt={title}
             />
 
+            {/* VA-83: agregar a la comparación (no compite con favoritos, que va arriba). */}
+            <div className="absolute bottom-2.5 left-2.5 z-30">
+              <CompareButton item={{ id, title, image: images[0]?.url ?? imageUrl ?? null }} />
+            </div>
+
             <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleShareClick}
                 aria-label="Compartir"
-                title={copiedDesktop ? "¡Enlace copiado!" : "Compartir"}
                 className="p-2 rounded-full bg-white/80 backdrop-blur-md text-slate-700 hover:text-blue-600 hover:bg-white shadow-sm transition-all duration-200 cursor-pointer flex items-center justify-center"
               >
-                {copiedDesktop ? (
-                  <Check className="w-4 h-4 text-emerald-600" />
-                ) : (
-                  <Share2 className="w-4 h-4" />
-                )}
+                <Share2 className="w-4 h-4" />
               </button>
 
               <button
@@ -276,117 +217,7 @@ export function AircraftCard({
         </Card>
       </Link>
 
-      {/* MODAL DE REDES SOCIALES PARA MOBILE (Renderizado en el Portal de React) */}
-      {isShareModalOpen && typeof document !== "undefined" && createPortal(
-        <div 
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end justify-center p-0 animate-in fade-in duration-200"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsShareModalOpen(false);
-          }}
-        >
-          <div 
-            className="w-full bg-white rounded-t-3xl p-6 space-y-5 shadow-2xl animate-in slide-in-from-bottom duration-300"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-[#001F58] text-base">Compartir aviso</h3>
-              <button
-                type="button"
-                onClick={() => setIsShareModalOpen(false)}
-                className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-4 gap-4 py-2 text-center">
-              <a
-                href={`https://wa.me/?text=${shareText}%20${encodedShareUrl}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="flex flex-col items-center gap-1.5 group cursor-pointer"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <MessageCircle className="w-6 h-6" />
-                </div>
-                <span className="text-[11px] font-semibold text-slate-700">WhatsApp</span>
-              </a>
-
-              <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${encodedShareUrl}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="flex flex-col items-center gap-1.5 group cursor-pointer"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <FacebookIcon className="w-5 h-5" />
-                </div>
-                <span className="text-[11px] font-semibold text-slate-700">Facebook</span>
-              </a>
-
-              <a
-                href={`https://twitter.com/intent/tweet?text=${shareText}&url=${encodedShareUrl}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="flex flex-col items-center gap-1.5 group cursor-pointer"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-800 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <TwitterIcon className="w-5 h-5" />
-                </div>
-                <span className="text-[11px] font-semibold text-slate-700">X (Twitter)</span>
-              </a>
-
-              <a
-                href={`mailto:?subject=${encodeURIComponent(title)}&body=${shareText}%20${encodedShareUrl}`}
-                onClick={(e) => e.stopPropagation()}
-                className="flex flex-col items-center gap-1.5 group cursor-pointer"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <span className="text-[11px] font-semibold text-slate-700">Email</span>
-              </a>
-            </div>
-
-            <div className="pt-2">
-              <div className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-200 rounded-xl">
-                <input
-                  type="text"
-                  readOnly
-                  value={shareUrl}
-                  className="flex-1 bg-transparent px-2 text-xs text-slate-600 truncate focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="px-3 py-1.5 bg-[#001F58] hover:bg-blue-900 text-white font-semibold text-xs rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      Copiado
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      Copiar
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      <ShareDialog open={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} url={shareUrl} title={title} />
     </>
   );
 }

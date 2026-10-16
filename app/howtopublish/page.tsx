@@ -1,5 +1,6 @@
-import Image from "next/image";
+import type { Metadata } from "next";
 import Link from "next/link";
+import { PageBackground } from "@/components/ui/PageBackground";
 import { 
     UserPlus, 
     ListPlus, 
@@ -10,21 +11,25 @@ import {
     Ticket,
     ShieldCheck
 } from "lucide-react";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { LaunchPromoNote } from "@/components/ui/LaunchPromoNote";
+import { getListingPrices } from "@/lib/listing-prices";
 
-export default function HowToPublishPage() {
+export const metadata: Metadata = {
+  title: "Cómo publicar tu avión o repuesto",
+  description: "Paso a paso para publicar tu avión o repuesto en Ventas Aeronáuticas y llegar a compradores de todo el país.",
+  alternates: { canonical: "/howtopublish" },
+};
+
+export default async function HowToPublishPage() {
+  // VA-59: precio vigente de publicar, editable desde /admin/prices.
+  const prices = await getListingPrices();
     return (
         <main className="relative isolate overflow-hidden min-h-screen">
-            {/* Fondo general */}
-            <Image 
-                src="/bkg-publish2.png" 
-                alt="Fondo de la plataforma" 
-                fill 
-                priority 
-                className="-z-20 object-cover" 
-            />
-            <div className="absolute inset-0 -z-10 bg-slate-50/90 backdrop-blur-[2px]" />
+            <PageBackground page="howtopublish" />
 
-            <div className="container mx-auto px-4 pt-16 pb-24 max-w-4xl">
+            <div className="container mx-auto px-4 pt-6 pb-24 max-w-4xl">
+                <Breadcrumbs items={[{ label: "Cómo publicar" }]} className="mb-8 sm:mb-12" />
                 
                 {/* Encabezado Principal */}
                 <div className="text-center mb-16">
@@ -35,6 +40,9 @@ export default function HowToPublishPage() {
                         Vender tu aeronave o repuesto en nuestra plataforma es un proceso seguro y directo. Seguí estos 4 simples pasos para llegar a miles de compradores.
                     </p>
                 </div>
+
+                {/* VA-111: promoción de lanzamiento (se apaga sola en el corte) */}
+                <LaunchPromoNote showLink className="mx-auto -mt-8 mb-12 max-w-2xl bg-white/80 py-3 pr-4" />
 
                 {/* Pasos a seguir (Diseño Lineal para máxima claridad) */}
                 <div className="space-y-6 mb-16">
@@ -85,6 +93,16 @@ export default function HowToPublishPage() {
                             <p className="text-lg text-blue-100 mb-4">
                                 Antes de que el anuncio se haga público, el sistema te pedirá abonar el costo de la publicación mediante nuestra pasarela de pago segura. 
                             </p>
+                            <dl className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-white/20 bg-white/20 tabular-nums">
+                                <div className="bg-[#001F58] px-4 py-3">
+                                    <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-200">Un avión</dt>
+                                    <dd className="mt-0.5 text-xl font-bold text-white">{prices.AIRCRAFT.label}</dd>
+                                </div>
+                                <div className="bg-[#001F58] px-4 py-3">
+                                    <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-200">Un repuesto</dt>
+                                    <dd className="mt-0.5 text-xl font-bold text-white">{prices.SPARE_PART.label}</dd>
+                                </div>
+                            </dl>
                             <div className="bg-white/10 border border-white/20 p-4 rounded-xl flex items-start gap-3">
                                 <Ticket className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
                                 <p className="text-base text-white font-medium">
@@ -110,7 +128,7 @@ export default function HowToPublishPage() {
                 </div>
 
                 {/* Acciones Principales */}
-                <div className="flex flex-col sm:flex-row justify-center gap-4 mb-20">
+                <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
                     <Link 
                         href="/publish" 
                         className="px-8 py-4 bg-[#001F58] text-white rounded-xl font-bold text-lg text-center hover:bg-blue-900 transition-colors shadow-lg flex items-center justify-center gap-2"
@@ -118,6 +136,14 @@ export default function HowToPublishPage() {
                         Comenzar Ahora <ArrowRight className="w-5 h-5" />
                     </Link>
                 </div>
+
+                {/* VA-78: guía para vender */}
+                <p className="mb-20 text-center text-sm text-slate-600">
+                    ¿Querés vender más rápido?{" "}
+                    <Link href="/services/guides/selling-your-aircraft" className="font-semibold text-[#E70F1F] hover:underline">
+                        Leé la guía para vender tu avión
+                    </Link>
+                </p>
 
                 {/* Sección Alternativa: Publicación Asistida */}
                 <div className="bg-white rounded-3xl p-8 sm:p-10 border-2 border-red-100 shadow-2xl relative overflow-hidden">

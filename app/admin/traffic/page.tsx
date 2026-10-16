@@ -5,7 +5,7 @@ import { getTrafficSourcesAnalytics } from "../actions";
 import { Globe2, Users, UserCheck, UserX, ArrowUpRight } from "lucide-react";
 
 export default function AdminTrafficPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Awaited<ReturnType<typeof getTrafficSourcesAnalytics>> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function AdminTrafficPage() {
                     <td colSpan={3} className="py-6 text-center text-slate-400">Sin datos de origen registrados.</td>
                   </tr>
                 ) : (
-                  data?.topReferrers?.map((item: any) => (
+                  data?.topReferrers?.map((item) => (
                     <tr key={item.source} className="hover:bg-slate-50">
                       <td className="py-2.5 font-medium text-slate-700 max-w-xs truncate flex items-center gap-1.5">
                         <ArrowUpRight className="w-3 h-3 text-slate-400 shrink-0" />

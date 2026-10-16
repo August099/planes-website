@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { PageBackground } from "@/components/ui/PageBackground";
 import {
   Plane,
   Wrench,
@@ -13,6 +13,7 @@ import {
   Send,
   Loader2,
 } from "lucide-react";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export function ReportContent() {
   const searchParams = useSearchParams();
@@ -74,12 +75,19 @@ export function ReportContent() {
       });
 
       if (!res.ok) {
-        throw new Error("Error al enviar el reporte");
+        const data = await res.json().catch(() => null);
+        // Los 400/404 traen un mensaje para el usuario; el resto, el mensaje genérico.
+        setError(
+          res.status < 500 && data?.error
+            ? data.error
+            : "Ocurrió un error al enviar tu reporte. Probá de nuevo."
+        );
+        return;
       }
 
       setSubmitted(true);
-    } catch (err) {
-      setError("Ocurrió un error al enviar tu reporte. Por favor, reintenta.");
+    } catch {
+      setError("Ocurrió un error al enviar tu reporte. Probá de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -87,15 +95,9 @@ export function ReportContent() {
 
   if (submitted) {
     return (
-      <main className="relative isolate overflow-hidden min-h-screen -mb-16 flex items-center justify-center py-16">
-        <Image
-          src="/bkg-report.jpg"
-          alt="Fondo Reporte"
-          fill
-          priority
-          className="-z-20 object-cover"
-        />
-        <div className="absolute inset-0 -z-10 bg-background/85" />
+      <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
+      <Breadcrumbs items={[{ label: "Reportar publicación" }]} className="absolute inset-x-0 top-0 container mx-auto px-4 pt-3" />
+        <PageBackground page="report" />
 
         <div className="container mx-auto px-4 max-w-md">
           <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-8 backdrop-blur-sm shadow-xl text-center space-y-6">
@@ -119,15 +121,9 @@ export function ReportContent() {
   }
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16 flex items-center justify-center py-16">
-      <Image
-        src="/bkg-report.jpg"
-        alt="Fondo Reporte"
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
+      <Breadcrumbs items={[{ label: "Reportar publicación" }]} className="absolute inset-x-0 top-0 container mx-auto px-4 pt-3" />
+      <PageBackground page="report" />
 
       <div className="container mx-auto px-4 max-w-lg">
         <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl space-y-6">
@@ -196,9 +192,10 @@ export function ReportContent() {
               </label>
               <textarea
                 value={details}
+                maxLength={1000}
                 onChange={(e) => setDetails(e.target.value)}
                 rows={3}
-                placeholder="Si deseas, puedes darnos más detalles del problema..."
+                placeholder="Si querés, podés darnos más detalles del problema..."
                 className="w-full px-3 py-2 bg-white/80 border border-[#001F58]/20 rounded-lg focus:ring-2 focus:ring-[#001F58] focus:outline-none text-[#001F58] text-xs sm:text-sm font-sans placeholder:text-[#001F58]/40"
               />
             </div>

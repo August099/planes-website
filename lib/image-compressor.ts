@@ -1,6 +1,6 @@
 import imageCompression from "browser-image-compression";
 
-export type ImageBucketType = "listings" | "avatars" | "brands" | "documents";
+export type ImageBucketType = "listings" | "avatars" | "brands" | "documents" | "covers";
 
 interface CompressionPreset {
   maxSizeMB: number;
@@ -19,6 +19,12 @@ const BUCKET_PRESETS: Record<ImageBucketType, CompressionPreset> = {
   brands: {
     maxSizeMB: 0.3, // ~300 KB
     maxWidthOrHeight: 800,
+    useWebWorker: true,
+  },
+  // VA-87: portada de la página personalizada (banner ancho).
+  covers: {
+    maxSizeMB: 0.6,
+    maxWidthOrHeight: 1920,
     useWebWorker: true,
   },
   listings: {

@@ -4,27 +4,29 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+// Imágenes en public/cards/ (VA-52), generadas con scripts/optimize-cards.mjs.
 export default function HomeServicesCards() {
   const cards = [
     {
       title: "AVIONES",
       status: "Disponible",
       isAvailable: true,
-      image: "/card-plane.png",
+      image: "/cards/planes.webp",
+      position: "object-[70%_65%]", // que se vea el avión, no solo el cielo
       href: "/planes",
     },
     {
       title: "REPUESTOS",
       status: "Disponible",
       isAvailable: true,
-      image: "/card-sparepart.png",
+      image: "/cards/spareparts.webp",
       href: "/spareparts",
     },
     {
       title: "SERVICIOS",
       status: "Próximamente",
       isAvailable: false,
-      image: "/card-service.png",
+      image: "/cards/services.webp",
       href: "/services",
       hasArrow: true,
     },
@@ -32,18 +34,19 @@ export default function HomeServicesCards() {
 
   return (
     /* SECCIÓN DE ANCHO COMPLETO SIN ESQUINAS REDONDEADAS */
-    <section className="w-full bg-[#001F58] py-8 sm:py-12">
+    <section className="w-full py-8 sm:py-12">
       <div className="container mx-auto px-4">
         {/* GRILLA ADAPTABLE A MOBILE */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {cards.map((card, index) => (
             <Link key={index} href={card.href} className="block group">
-              <div className="relative w-full h-40 sm:h-48 md:h-52 rounded-2xl overflow-hidden border border-white/20 bg-[#001F58] shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer">
+              <div className="relative w-full h-40 sm:h-48 md:h-52 rounded-lg overflow-hidden border border-white/20 bg-[#001F58] transition-colors duration-300 hover:border-[#E70F1F] cursor-pointer">
                 <Image
                   src={card.image}
                   alt={card.title}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className={`object-cover ${card.position ?? ""} group-hover:scale-105 transition-transform duration-500 ease-out`}
                 />
 
                 <div className="absolute inset-0 bg-[#001F58]/50 mix-blend-multiply transition-opacity duration-300 group-hover:bg-[#001F58]/40" />

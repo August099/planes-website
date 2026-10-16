@@ -1,334 +1,489 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { getAnalyticsContext } from "@/lib/analytics-context";
 import { getCurrentUser } from "@/lib/auth-helpers";
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
-import { createClient } from "@supabase/supabase-js";
+import { revalidatePath, updateTag } from "next/cache";
+import { RECOMMENDATIONS_TAG } from "@/lib/recommendations";
 import { Resend } from "resend";
-import { AircraftCondition, EngineType, SparepartCondition, AnalyticsEventType } from "@prisma/client";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { EMAIL_FROM, escapeHtml, getSupportEmail } from "@/lib/mail";
+import { AnalyticsEventType } from "@prisma/client";
+import { hasNoExpiryPlan } from "@/lib/subscriptions";
+import { consumeListingAllowance, refundListingAllowance } from "@/lib/payments/allowance";
+import { coordinatesFor } from "@/lib/geocode";
+import {
+  listingSchema,
+  toFieldErrors,
+  type AircraftListing,
+  type SparePartListing,
+  type ListingInput,
+  type ListingResult,
+} from "@/lib/listing-schema";
+import { assertListingOwner } from "@/lib/listing-auth";
+import { engineTypeForCategory } from "@/lib/aircraft-categories";
+import {
+  createUploadTargets,
+  pathFromPublicUrl,
+  removeUploads,
+  verifyUploads,
+  type ListingType,
+  type UploadRequest,
+} from "@/lib/listing-uploads";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Configuración de límites para documentos
-const MAX_DOC_SIZE = 10 * 1024 * 1024; // 10 MB
-const ALLOWED_DOC_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "image/jpeg",
-  "image/png",
-  "image/webp"
-];
+// La categoría por defecto del modelo o de la variante tiene prioridad (igual que en el
+// formulario). Si la categoría resultante no existe, se rechaza (VA-22: antes se usaba
+// la primera categoría que existiera).
+async function resolveAircraftCategory(data: AircraftListing): Promise<string | null> {
+  let categoryId = data.categoryId;
+  if (data.subModelId) {
+    const subModel = await prisma.aircraftSubModel.findUnique({
+      where: { id: data.subModelId },
+      select: { categoryOverride: true, model: { select: { defaultCategoryId: true } } },
+    });
+    if (subModel?.categoryOverride) categoryId = subModel.categoryOverride;
+    else if (subModel?.model?.defaultCategoryId) categoryId = subModel.model.defaultCategoryId;
+  } else if (data.modelId) {
+    const model = await prisma.aircraftModel.findUnique({
+      where: { id: data.modelId },
+      select: { defaultCategoryId: true },
+    });
+    if (model?.defaultCategoryId) categoryId = model.defaultCategoryId;
+  }
+  const category = await prisma.aircraftCategory.findUnique({ where: { id: categoryId }, select: { id: true } });
+  return category?.id ?? null;
+}
 
-export async function createListing(formData: FormData) {
+// La categoría de un repuesto tiene que existir y ser la más específica (sin hijas).
+async function isValidSparePartCategory(categoryId: string) {
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId },
+    select: { _count: { select: { children: true } } },
+  });
+  return !!category && category._count.children === 0;
+}
+
+// Doble clic o reintento: si el mismo vendedor creó un aviso con el mismo título en los
+// últimos 2 minutos, se devuelve ese en vez de crear otro.
+const DUPLICATE_WINDOW_MS = 2 * 60 * 1000;
+
+async function findRecentDuplicate(listingType: ListingType, sellerId: string, title: string) {
+  const where = { sellerId, title, createdAt: { gte: new Date(Date.now() - DUPLICATE_WINDOW_MS) } };
+  const found =
+    listingType === "aircraft"
+      ? await prisma.aircraft.findFirst({ where, select: { id: true, status: true } })
+      : await prisma.sparePart.findFirst({ where, select: { id: true, status: true } });
+  return found ?? null;
+}
+
+const listingUrl = (listingType: ListingType, id: string) =>
+  listingType === "aircraft" ? `/planes/plane-details/${id}` : `/spareparts/sparepart-details/${id}`;
+
+// Campos propios (sin relaciones ni estado/vigencia), iguales en el alta y en la edición.
+function aircraftFields(data: AircraftListing, categoryId: string) {
+  return {
+    title: data.title,
+    categoryId,
+    brandId: data.brandId || null,
+    customBrand: data.brandId ? null : data.customBrand || null,
+    modelId: data.modelId || null,
+    subModelId: data.subModelId || null,
+    customModel: data.modelId ? null : data.customModel || null,
+    year: data.year,
+    totalTimeHours: data.totalTimeHours ?? null,
+    price: data.priceOnRequest ? null : data.price ?? null,
+    city: data.city,
+    province: data.province,
+    description: data.description,
+    condition: data.condition,
+    // VA-21/VA-43: el tipo de motor sale de la categoría (MP/BP pistón, MT/BT turbohélice).
+    engineType: engineTypeForCategory(categoryId),
+    financing: data.financing,
+    trade: data.trade,
+    rent: data.rent,
+    negotiable: data.negotiable,
+    extraEquipment: data.extraEquipment || null,
+    // "Implementos agrícolas" solo existe en la categoría Agrícola (VA-54).
+    agEquipment: categoryId === "A" ? data.agEquipment || null : null,
+    avDescription: data.avDescription || null,
+    avAaptoifr: data.avAaptoifr,
+    avAutopilot: data.avAutopilot,
+    certified: data.certified,
+    certDate: data.certDate ? new Date(data.certDate) : null,
+    plate: data.plate || null,
+    intDescription: data.intDescription || null,
+    extDescription: data.extDescription || null,
+    passengers: data.passengers ?? null,
+    airconditioner: data.airconditioner,
+    oxygen: data.oxygen,
+  };
+}
+
+function engineRows(data: AircraftListing) {
+  return data.engines.map((e) => ({
+    brand: e.brand || null,
+    model: e.model || null,
+    engineHours: e.engineHours ?? null,
+    TBO: e.TBO ?? null,
+    DURG: e.DURG ?? null,
+    horsepower: e.horsepower ?? null,
+    description: e.description || null,
+  }));
+}
+
+function propellerRows(data: AircraftListing) {
+  return data.propellers.map((p) => ({
+    brand: p.brand || null,
+    model: p.model || null,
+    propellerHours: p.propellerHours ?? null,
+    description: p.description || null,
+  }));
+}
+
+function sparePartFields(data: SparePartListing) {
+  return {
+    title: data.title,
+    categoryId: data.categoryId,
+    brand: data.brand || null,
+    partNumber: data.partNumber || null,
+    price: data.priceOnRequest ? null : data.price ?? null,
+    inPesos: data.inPesos,
+    stock: data.stock,
+    condition: data.condition,
+    city: data.city,
+    province: data.province,
+    description: data.description,
+    aircrafts: data.aircrafts,
+  };
+}
+
+/**
+ * Paso 1 de la publicación: firma una URL de subida por archivo. El navegador sube
+ * las fotos y documentos directo a Supabase y después llama a createListing con las rutas.
+ */
+export async function prepareListingUploads(input: { listingType: ListingType; files: UploadRequest[] }) {
   const user = await getCurrentUser();
+  if (!user?.id) return { ok: false as const, error: "Tenés que iniciar sesión." };
 
-  if (!user) {
-    throw new Error("UNAUTHENTICATED");
+  const listingType: ListingType = input?.listingType === "parts" ? "parts" : "aircraft";
+  const files = Array.isArray(input?.files) ? input.files : [];
+  return createUploadTargets(user.id, listingType, files);
+}
+
+/** Borra archivos subidos que no llegaron a una publicación (error o cancelación). */
+export async function discardListingUploads(input: {
+  listingType: ListingType;
+  images: string[];
+  documents: string[];
+}) {
+  const user = await getCurrentUser();
+  if (!user?.id) return { ok: false as const };
+  const listingType: ListingType = input?.listingType === "parts" ? "parts" : "aircraft";
+  await removeUploads(user.id, listingType, input?.images ?? [], input?.documents ?? []);
+  return { ok: true as const };
+}
+
+/**
+ * Paso 2: crea la publicación con los datos del formulario y las rutas de los archivos
+ * ya subidos. Devuelve { ok: true, id, url } o { ok: false, error, fieldErrors }.
+ */
+export async function createListing(input: ListingInput): Promise<ListingResult> {
+  const user = await getCurrentUser();
+  if (!user?.id) return { ok: false, error: "Tenés que iniciar sesión." };
+
+  // VA-46 (decisión D7): sin teléfono no se publica (no habría WhatsApp ni llamada).
+  const seller = await prisma.user.findUnique({ where: { id: user.id }, select: { phone: true } });
+  const sellerHasPhone = !!seller?.phone?.trim();
+
+  const parsed = listingSchema.safeParse(input);
+  const listingType: ListingType = input?.listingType === "parts" ? "parts" : "aircraft";
+  const imagePaths = Array.isArray(input?.images) ? input.images.filter((p) => typeof p === "string") : [];
+  const rawDocs = input?.listingType === "aircraft" && Array.isArray(input.documents) ? input.documents : [];
+  const docPaths = rawDocs.map((d) => d?.path).filter((p): p is string => typeof p === "string");
+
+  // Ante cualquier error, se borran los archivos ya subidos para no dejar huérfanos.
+  const fail = async (result: Extract<ListingResult, { ok: false }>) => {
+    await removeUploads(user.id!, listingType, imagePaths, docPaths);
+    return result;
+  };
+
+  if (!sellerHasPhone) {
+    return fail({ ok: false, error: "Para publicar tenés que cargar tu teléfono de contacto en tu perfil." });
+  }
+  if (!parsed.success) {
+    return fail({ ok: false, error: "Revisá los campos marcados.", fieldErrors: toFieldErrors(parsed.error) });
+  }
+  const data = parsed.data;
+
+  const duplicate = await findRecentDuplicate(listingType, user.id, data.title);
+  if (duplicate) {
+    // Ya existe: los archivos de este segundo envío sobran.
+    await removeUploads(user.id, listingType, imagePaths, docPaths);
+    return {
+      ok: true,
+      id: duplicate.id,
+      url: listingUrl(listingType, duplicate.id),
+      ...(duplicate.status === "PENDING_PAYMENT" ? { checkoutUrl: `/checkout?listing=${listingType}:${duplicate.id}` } : {}),
+    };
   }
 
-  const listingType = formData.get("listingType") as string;
-  const files = formData.getAll("files") as File[];
+  const uploads = await verifyUploads(
+    user.id,
+    listingType,
+    data.images,
+    data.listingType === "aircraft" ? data.documents : []
+  );
+  if (!uploads.ok) return fail({ ok: false, error: uploads.error, fieldErrors: { images: uploads.error } });
 
-  // 1. Subida de imágenes a Supabase Storage
-  const uploadedUrls: string[] = [];
-  for (const file of files) {
-    if (file && file.size > 0) {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-      const filePath = `${listingType}/${user.id}/${fileName}`;
-
-      const { error } = await supabase.storage
-        .from("listings")
-        .upload(filePath, file);
-
-      if (error) {
-        console.error("Error al subir imagen a Supabase:", error);
-        continue;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("listings")
-        .getPublicUrl(filePath);
-
-      if (publicUrlData?.publicUrl) {
-        uploadedUrls.push(publicUrlData.publicUrl);
-      }
-    }
-  }
-
-  // 2. Subida de documentos a Supabase Storage
-  const documentFiles = formData.getAll("documents") as File[];
-  const uploadedDocs: { name: string; url: string }[] = [];
-
-  for (const docFile of documentFiles) {
-    if (docFile && docFile.size > 0) {
-      if (docFile.size > MAX_DOC_SIZE || !ALLOWED_DOC_TYPES.includes(docFile.type)) {
-        continue;
-      }
-
-      const fileExt = docFile.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 6)}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
-
-      const { error } = await supabase.storage
-        .from("documents")
-        .upload(filePath, docFile);
-
-      if (error) {
-        console.error("Error al subir documento a Supabase:", error);
-        continue;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("documents")
-        .getPublicUrl(filePath);
-
-      if (publicUrlData?.publicUrl) {
-        uploadedDocs.push({
-          name: docFile.name,
-          url: publicUrlData.publicUrl,
-        });
-      }
-    }
-  }
-
-  // Configuración de fechas de vigencia (+45 DÍAS)
   const now = new Date();
-  const expiresAt = new Date();
-  expiresAt.setDate(now.getDate() + 45);
+  // VA-80: con un plan "sin vencimiento" vigente, la publicación no vence (activeListingWhere
+  // acepta listingExpiresAt null).
+  const expiresAt: Date | null = (await hasNoExpiryPlan(user.id, data.listingType === "aircraft" ? "AIRCRAFT" : "SPARE_PART")) ? null : new Date(now);
+  expiresAt?.setDate(now.getDate() + 45);
+  // VA-83: coordenadas de la localidad para el mapa del detalle (si Georef falla, sin mapa).
+  const coords = await coordinatesFor(data.city, data.province);
 
-  let redirectTarget = "";
-
-  // 3. Guardado en la base de datos
-  if (listingType === "aircraft") {
-    const title = formData.get("title") as string;
-    let categoryId = formData.get("categoryId") as string;
-    const brandId = formData.get("brandId") as string;
-    const customBrand = formData.get("customBrand") as string;
-    const modelId = formData.get("modelId") as string;
-    const subModelId = formData.get("subModelId") as string;
-    const customModel = formData.get("customModel") as string;
-
-    // Resolución de categoría
-    if (subModelId) {
-      const subModel = await prisma.aircraftSubModel.findUnique({
-        where: { id: subModelId },
-        select: { categoryOverride: true, model: { select: { defaultCategoryId: true } } }
-      });
-      if (subModel?.categoryOverride) categoryId = subModel.categoryOverride;
-      else if (subModel?.model?.defaultCategoryId) categoryId = subModel.model.defaultCategoryId;
-    } else if (modelId && modelId !== "CUSTOM_MODEL") {
-      const model = await prisma.aircraftModel.findUnique({
-        where: { id: modelId },
-        select: { defaultCategoryId: true }
-      });
-      if (model?.defaultCategoryId) categoryId = model.defaultCategoryId;
-    }
-
-    let categoryExists = false;
-    if (categoryId && categoryId.trim() !== "") {
-      const validCategory = await prisma.aircraftCategory.findUnique({ where: { id: categoryId } });
-      if (validCategory) categoryExists = true;
-    }
-
-    if (!categoryExists) {
-      const fallbackCategory = await prisma.aircraftCategory.findFirst();
-      if (fallbackCategory) categoryId = fallbackCategory.id;
-      else throw new Error("No hay categorías registradas en la base de datos.");
-    }
-
-    const year = parseInt(formData.get("year") as string, 10);
-    const totalTimeHours = parseInt(formData.get("totalTimeHours") as string, 10);
-    const priceRaw = formData.get("price") as string;
-    const priceOnRequest = formData.get("priceOnRequest") === "true";
-    const city = formData.get("city") as string;
-    const province = formData.get("province") as string;
-    const description = formData.get("description") as string;
-    
-    // Validar AircraftCondition Enum
-    const conditionRaw = (formData.get("condition") as string) || "USADO";
-    const condition = (Object.values(AircraftCondition).includes(conditionRaw as AircraftCondition)
-      ? conditionRaw
-      : AircraftCondition.USADO) as AircraftCondition;
-
-    const isEngineTypeRequired = categoryId === "MP" || categoryId === "BP" || categoryId === "M" || categoryId === "B";
-    const rawEngineType = formData.get("engineType") as EngineType;
-    const engineType = isEngineTypeRequired && rawEngineType ? rawEngineType : null;
-
-    const financing = formData.get("financing") === "true";
-    const trade = formData.get("trade") === "true";
-    const rent = formData.get("rent") === "true";
-
-    const avDescription = (formData.get("avDescription") as string) || "";
-    const avAaptoifr = formData.get("avAaptoifr") === "true";
-    const avAutopilot = formData.get("avAutopilot") === "true";
-
-    const certified = formData.get("certified") === "true";
-    const certDateRaw = formData.get("certDate") as string;
-    const certDate = certDateRaw ? new Date(certDateRaw) : new Date();
-    const plate = (formData.get("plate") as string) || "";
-
-    const intDescription = (formData.get("intDescription") as string) || "";
-    const extDescription = (formData.get("extDescription") as string) || "";
-    const passengersRaw = formData.get("passengers") as string;
-    const passengers = passengersRaw ? parseInt(passengersRaw, 10) : 0;
-    const airconditioner = formData.get("airconditioner") === "true";
-    const oxygen = formData.get("oxygen") === "true";
-
-    const enginesJSON = formData.get("engines") as string;
-    const propellersJSON = formData.get("propellers") as string;
-
-    const engines = enginesJSON ? JSON.parse(enginesJSON) : [];
-    const propellers = propellersJSON ? JSON.parse(propellersJSON) : [];
-
-    const newAircraft = await prisma.aircraft.create({
-      data: {
-        sellerId: user.id,
-        title,
-        categoryId,
-        brandId: brandId === "CUSTOM" ? null : brandId || null,
-        customBrand: brandId === "CUSTOM" ? customBrand : null,
-        modelId: modelId === "CUSTOM_MODEL" ? null : modelId || null,
-        subModelId: subModelId || null,
-        customModel: customModel || null,
-        year,
-        totalTimeHours,
-        price: priceOnRequest || !priceRaw ? null : parseFloat(priceRaw),
-        city,
-        province,
-        description,
-        condition,
-        engineType,
-        financing,
-        trade,
-        rent,
-        avDescription,
-        avAaptoifr,
-        avAutopilot,
-        certified,
-        certDate,
-        plate,
-        intDescription,
-        extDescription,
-        passengers,
-        airconditioner,
-        oxygen,
-        status: "ACTIVE",
-        listingStartsAt: now,
-        listingExpiresAt: expiresAt,
-        images: {
-          create: uploadedUrls.map((url, index) => ({ url, order: index })),
-        },
-        documents: {
-          create: uploadedDocs.map((doc) => ({ name: doc.name, url: doc.url })),
-        },
-        engines: {
-          create: engines.map((e: any) => ({
-            brand: e.brand || null,
-            model: e.model || null,
-            engineHours: e.engineHours ? parseInt(e.engineHours, 10) : null,
-            TBO: parseInt(e.TBO || "0", 10),
-            DURG: e.DURG ? parseInt(e.DURG, 10) : null,
-            description: e.description || null,
-          })),
-        },
-        propeller: {
-          create: propellers.map((p: any) => ({
-            model: p.model || null,
-            propellerHours: p.propellerHours ? parseInt(p.propellerHours, 10) : null,
-            description: p.description || null,
-          })),
-        },
-      },
-    });
-
-    // 📊 REGISTRO DE EVENTO EN ANALYTICS
-    try {
-      await prisma.analyticsEvent.create({
-        data: {
-          eventType: AnalyticsEventType.CREATE_AIRCRAFT_LISTING,
-          userId: user.id,
-          aircraftId: newAircraft.id,
-        },
-      });
-    } catch (err) {
-      console.error("Error al registrar evento CREATE_AIRCRAFT_LISTING:", err);
-    }
-
-    revalidatePath("/planes");
-    redirectTarget = `/planes/plane-details/${newAircraft.id}`;
-  } else {
-    // Repuestos
-    const title = formData.get("title") as string;
-    const categoryId = formData.get("categoryId") as string;
-    const brand = (formData.get("brand") as string) || "";
-    const partNumber = formData.get("partNumber") as string;
-    const priceRaw = formData.get("price") as string;
-    const priceOnRequest = formData.get("priceOnRequest") === "true";
-    const city = formData.get("city") as string;
-    const province = formData.get("province") as string;
-    const description = formData.get("description") as string;
-    const inPesos = formData.get("inPesos") === "true";
-    const stock = parseInt((formData.get("stock") as string) || "1", 10);
-    const aircraftsJSON = formData.get("aircrafts") as string;
-    const aircrafts = aircraftsJSON ? JSON.parse(aircraftsJSON) : [];
-
-    // Validar SparepartCondition Enum
-    const conditionRaw = (formData.get("condition") as string) || "NUEVO";
-    const condition = (Object.values(SparepartCondition).includes(conditionRaw as SparepartCondition)
-      ? conditionRaw
-      : SparepartCondition.NUEVO) as SparepartCondition;
-
-    const newSparePart = await prisma.sparePart.create({
-      data: {
-        sellerId: user.id,
-        title,
-        categoryId,
-        brand,
-        partNumber: partNumber || null,
-        price: priceOnRequest || !priceRaw ? null : parseFloat(priceRaw),
-        inPesos,
-        stock,
-        condition,
-        city,
-        province,
-        description,
-        aircrafts: aircrafts.length > 0 ? aircrafts : undefined,
-        status: "ACTIVE",
-        listingStartsAt: now,
-        listingExpiresAt: expiresAt,
-        images: {
-          create: uploadedUrls.map((url, index) => ({ url, order: index })),
-        },
-      },
-    });
-
-    // 📊 REGISTRO DE EVENTO EN ANALYTICS
-    try {
-      await prisma.analyticsEvent.create({
-        data: {
-          eventType: AnalyticsEventType.CREATE_SPARE_PART_LISTING,
-          userId: user.id,
-          sparePartId: newSparePart.id,
-        },
-      });
-    } catch (err) {
-      console.error("Error al registrar evento CREATE_SPARE_PART_LISTING:", err);
-    }
-
-    revalidatePath("/spareparts");
-    redirectTarget = `/spareparts/sparepart-details/${newSparePart.id}`;
+  // Las categorías se validan antes de reservar el permiso de publicación (VA-92).
+  const aircraftCategoryId = data.listingType === "aircraft" ? await resolveAircraftCategory(data) : null;
+  if (data.listingType === "aircraft" && !aircraftCategoryId) {
+    return fail({ ok: false, error: "Seleccioná una categoría válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });
+  }
+  if (data.listingType === "parts" && !(await isValidSparePartCategory(data.categoryId))) {
+    const msg = "Seleccioná la categoría más específica.";
+    return fail({ ok: false, error: msg, fieldErrors: { categoryId: msg } });
   }
 
-  // Redirección segura fuera de cualquier bloque interno
-  if (redirectTarget) {
-    redirect(redirectTarget);
+  // VA-92: suscripción o saldo → se publica ya; si no, queda "pendiente de pago" y va al checkout.
+  const kind = listingType === "aircraft" ? "AIRCRAFT" : "SPARE_PART";
+  const allowance = await consumeListingAllowance(user.id, kind);
+  const publication = allowance
+    ? { status: "ACTIVE" as const, listingStartsAt: now, listingExpiresAt: expiresAt }
+    : { status: "PENDING_PAYMENT" as const, listingStartsAt: null, listingExpiresAt: null };
+
+  try {
+    let id: string;
+
+    if (data.listingType === "aircraft") {
+      const aircraft = await prisma.aircraft.create({
+        data: {
+          sellerId: user.id,
+          ...aircraftFields(data, aircraftCategoryId!),
+          ...coords,
+          ...publication,
+          images: { create: uploads.imageUrls.map((url, order) => ({ url, order })) },
+          documents: { create: uploads.documents },
+          engines: { create: engineRows(data) },
+          propeller: { create: propellerRows(data) },
+        },
+        select: { id: true },
+      });
+      id = aircraft.id;
+    } else {
+      const sparePart = await prisma.sparePart.create({
+        data: {
+          sellerId: user.id,
+          ...sparePartFields(data),
+          ...coords,
+          ...publication,
+          images: { create: uploads.imageUrls.map((url, order) => ({ url, order })) },
+        },
+        select: { id: true },
+      });
+      id = sparePart.id;
+    }
+
+    try {
+      await prisma.analyticsEvent.create({
+        data: {
+          eventType:
+            listingType === "aircraft"
+              ? AnalyticsEventType.CREATE_AIRCRAFT_LISTING
+              : AnalyticsEventType.CREATE_SPARE_PART_LISTING,
+          userId: user.id,
+          ...(await getAnalyticsContext()),
+          ...(listingType === "aircraft" ? { aircraftId: id } : { sparePartId: id }),
+        },
+      });
+    } catch (err) {
+      console.error("Error al registrar el evento de alta:", err);
+    }
+
+    revalidatePath("/");
+    revalidatePath(listingType === "aircraft" ? "/planes" : "/spareparts");
+    updateTag(RECOMMENDATIONS_TAG); // VA-88
+    return {
+      ok: true,
+      id,
+      url: listingUrl(listingType, id),
+      ...(allowance ? {} : { checkoutUrl: `/checkout?listing=${listingType}:${id}` }),
+    };
+  } catch (error) {
+    console.error("Error al crear la publicación:", error);
+    await refundListingAllowance(user.id, kind, allowance);
+    return fail({ ok: false, error: "No se pudo guardar la publicación. Probá de nuevo." });
+  }
+}
+
+/**
+ * Edición completa con el mismo formulario del alta (VA-30, punto 7).
+ * En "images" y "documents" llegan mezcladas las URLs de los archivos que ya tenía el
+ * aviso (se conservan) y las rutas de los nuevos que el navegador acaba de subir.
+ */
+export async function updateListing(id: string, input: ListingInput): Promise<ListingResult> {
+  const user = await getCurrentUser();
+  if (!user?.id) return { ok: false, error: "Tenés que iniciar sesión." };
+
+  const listingType: ListingType = input?.listingType === "parts" ? "parts" : "aircraft";
+  const incomingImages = Array.isArray(input?.images) ? input.images.filter((p) => typeof p === "string") : [];
+  const incomingDocs = input?.listingType === "aircraft" && Array.isArray(input.documents) ? input.documents : [];
+
+  // Dueño (o admin). Si no lo es, no se toca nada, ni siquiera los archivos.
+  try {
+    await assertListingOwner(id, listingType === "aircraft" ? "aircraft" : "sparepart");
+  } catch {
+    return { ok: false, error: "No tenés permiso para editar esta publicación." };
+  }
+
+  let sellerId: string;
+  let currentLocation: { city: string | null; province: string | null; latitude: number | null };
+  let imageUrls: string[];
+  let docUrls: string[] = [];
+  if (listingType === "aircraft") {
+    const aircraft = await prisma.aircraft.findUnique({
+      where: { id },
+      select: {
+        sellerId: true,
+        city: true,
+        province: true,
+        latitude: true,
+        images: { select: { url: true } },
+        documents: { select: { url: true } },
+      },
+    });
+    if (!aircraft) return { ok: false, error: "La publicación no existe." };
+    sellerId = aircraft.sellerId;
+    currentLocation = aircraft;
+    imageUrls = aircraft.images.map((i) => i.url);
+    docUrls = aircraft.documents.map((d) => d.url);
+  } else {
+    const sparePart = await prisma.sparePart.findUnique({
+      where: { id },
+      select: { sellerId: true, city: true, province: true, latitude: true, images: { select: { url: true } } },
+    });
+    if (!sparePart) return { ok: false, error: "La publicación no existe." };
+    sellerId = sparePart.sellerId;
+    currentLocation = sparePart;
+    imageUrls = sparePart.images.map((i) => i.url);
+  }
+
+  const currentImages = new Set(imageUrls);
+  const currentDocs = new Set(docUrls);
+  const newImagePaths = incomingImages.filter((p) => !currentImages.has(p));
+  const newDocPaths = incomingDocs.map((d) => d?.path).filter((p): p is string => typeof p === "string" && !currentDocs.has(p));
+
+  // Ante cualquier error, se borran solo los archivos NUEVOS de esta edición.
+  const fail = async (result: Extract<ListingResult, { ok: false }>) => {
+    await removeUploads(user.id!, listingType, newImagePaths, newDocPaths);
+    return result;
+  };
+
+  const parsed = listingSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail({ ok: false, error: "Revisá los campos marcados.", fieldErrors: toFieldErrors(parsed.error) });
+  }
+  const data = parsed.data;
+
+  const uploads = await verifyUploads(
+    user.id,
+    listingType,
+    newImagePaths,
+    data.listingType === "aircraft" ? data.documents.filter((d) => !currentDocs.has(d.path)) : []
+  );
+  if (!uploads.ok) return fail({ ok: false, error: uploads.error, fieldErrors: { images: uploads.error } });
+
+  // Orden final: cada URL existente queda igual; cada ruta nueva se reemplaza por su URL pública.
+  const newUrlByPath = new Map(newImagePaths.map((path, i) => [path, uploads.imageUrls[i]]));
+  const finalImages = data.images.map((entry) => (currentImages.has(entry) ? entry : newUrlByPath.get(entry)!));
+  const removedImages = [...currentImages].filter((url) => !finalImages.includes(url));
+
+  // VA-83: se vuelve a geocodificar solo si cambió la ciudad o la provincia (o si todavía no tenía
+  // coordenadas); si no, quedan las que estaban.
+  const locationChanged =
+    data.city !== currentLocation.city || data.province !== currentLocation.province || currentLocation.latitude === null;
+  const coords = locationChanged ? await coordinatesFor(data.city, data.province) : {};
+
+  try {
+    if (data.listingType === "aircraft") {
+      const categoryId = await resolveAircraftCategory(data);
+      if (!categoryId) {
+        return fail({ ok: false, error: "Seleccioná una categoría válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });
+      }
+      const keptDocs = data.documents.filter((d) => currentDocs.has(d.path)).map((d) => d.path);
+      const removedDocs = [...currentDocs].filter((url) => !keptDocs.includes(url));
+
+      await prisma.$transaction([
+        prisma.aircraftImage.deleteMany({ where: { aircraftId: id } }),
+        prisma.aircraftEngine.deleteMany({ where: { aircraftId: id } }),
+        prisma.aircraftPropeller.deleteMany({ where: { aircraftId: id } }),
+        prisma.aircraftDocument.deleteMany({ where: { aircraftId: id, url: { notIn: keptDocs } } }),
+        prisma.aircraft.update({
+          where: { id },
+          data: {
+            ...aircraftFields(data, categoryId),
+            ...coords,
+            images: { create: finalImages.map((url, order) => ({ url, order })) },
+            documents: { create: uploads.documents },
+            engines: { create: engineRows(data) },
+            propeller: { create: propellerRows(data) },
+          },
+        }),
+      ]);
+
+      // Recién con la base actualizada se borran del bucket los archivos que se quitaron.
+      await removeUploads(
+        sellerId,
+        listingType,
+        removedImages.map((url) => pathFromPublicUrl("image", url)).filter((p): p is string => !!p),
+        removedDocs.map((url) => pathFromPublicUrl("document", url)).filter((p): p is string => !!p)
+      );
+      revalidatePath(`/planes/plane-details/${id}`);
+      revalidatePath("/planes");
+    } else {
+      if (!(await isValidSparePartCategory(data.categoryId))) {
+        const msg = "Seleccioná la categoría más específica.";
+        return fail({ ok: false, error: msg, fieldErrors: { categoryId: msg } });
+      }
+
+      await prisma.$transaction([
+        prisma.sparePartImage.deleteMany({ where: { sparePartId: id } }),
+        prisma.sparePart.update({
+          where: { id },
+          data: {
+            ...sparePartFields(data),
+            ...coords,
+            images: { create: finalImages.map((url, order) => ({ url, order })) },
+          },
+        }),
+      ]);
+
+      await removeUploads(
+        sellerId,
+        listingType,
+        removedImages.map((url) => pathFromPublicUrl("image", url)).filter((p): p is string => !!p),
+        []
+      );
+      revalidatePath(`/spareparts/sparepart-details/${id}`);
+      revalidatePath("/spareparts");
+    }
+
+    revalidatePath("/");
+    revalidatePath("/profile/[id]", "page"); // "/profile" no existe: se revalidan los perfiles
+    updateTag(RECOMMENDATIONS_TAG); // VA-88
+    return { ok: true, id, url: listingUrl(listingType, id) };
+  } catch (error) {
+    console.error("Error al editar la publicación:", error);
+    return fail({ ok: false, error: "No se pudo guardar la publicación. Probá de nuevo." });
   }
 }
 
@@ -338,23 +493,57 @@ export async function sendManagedListingEmail(data: {
   itemType: string;
   description: string;
 }) {
+  // Solo usuarios logueados: evita que la action se use como relay de spam.
+  const user = await getCurrentUser();
+  if (!user?.id) {
+    return { success: false, error: "Tenés que iniciar sesión." };
+  }
+
+  const name = String(data?.name ?? "").trim();
+  const whatsapp = String(data?.whatsapp ?? "").trim();
+  const description = String(data?.description ?? "").trim();
+  const itemType = data?.itemType === "Repuesto" ? "Repuesto" : "Aeronave";
+
+  if (!name || name.length > 100) {
+    return { success: false, error: "Ingresá un nombre válido (máximo 100 caracteres)." };
+  }
+  if (!/^[\d\s()+-]{6,30}$/.test(whatsapp)) {
+    return { success: false, error: "Ingresá un número de WhatsApp válido." };
+  }
+  if (description.length > 1000) {
+    return { success: false, error: "Los detalles no pueden superar los 1000 caracteres." };
+  }
+
+  const supportEmail = getSupportEmail();
+  if (!supportEmail) {
+    console.error("Falta la variable SUPPORT_EMAIL: no se puede enviar la solicitud de publicación asistida.");
+    return { success: false, error: "El servicio no está disponible en este momento." };
+  }
+
   try {
-    await resend.emails.send({
-      from: "Ventas Aeronáuticas <contacto@tu-dominio.com>",
-      to: ["soporte@tu-dominio.com"],
-      subject: `Nueva solicitud de publicación asistida: ${data.itemType}`,
+    const { error } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [supportEmail],
+      replyTo: user.email || undefined,
+      subject: `Nueva solicitud de publicación asistida: ${itemType}`,
       html: `
         <h2>Nueva solicitud de publicación asistida</h2>
-        <p><strong>Nombre:</strong> ${data.name}</p>
-        <p><strong>WhatsApp:</strong> ${data.whatsapp}</p>
-        <p><strong>Tipo de Producto:</strong> ${data.itemType}</p>
-        <p><strong>Detalles:</strong> ${data.description}</p>
+        <p><strong>Nombre:</strong> ${escapeHtml(name)}</p>
+        <p><strong>WhatsApp:</strong> ${escapeHtml(whatsapp)}</p>
+        <p><strong>Email de la cuenta:</strong> ${escapeHtml(user.email || "-")}</p>
+        <p><strong>Tipo de Producto:</strong> ${itemType}</p>
+        <p><strong>Detalles:</strong> ${escapeHtml(description).replace(/\n/g, "<br>")}</p>
       `,
     });
 
+    if (error) {
+      console.error("Error de Resend al enviar solicitud asistida:", error);
+      return { success: false, error: "No se pudo enviar la solicitud." };
+    }
+
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error enviando email:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: "No se pudo enviar la solicitud." };
   }
 }

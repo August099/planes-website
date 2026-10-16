@@ -2,21 +2,24 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
 import { usePathname } from "next/navigation";
 import { 
   MessageSquare, 
   ArrowUpRight, 
   Reply, 
   CheckCircle2, 
-  Clock, 
-  AlertCircle 
+  Clock
 } from "lucide-react";
-import { answerQuestionAction } from "@/app/actions/questions";
+import { answerQuestionAction, type getUserQuestionsAction } from "@/app/actions/questions";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { errorMessage } from "@/lib/errors";
+
+type UserQuestions = Awaited<ReturnType<typeof getUserQuestionsAction>>;
 
 interface QuestionsClientProps {
-  receivedQuestions: any[];
-  sentQuestions: any[];
+  receivedQuestions: UserQuestions["receivedQuestions"];
+  sentQuestions: UserQuestions["sentQuestions"];
 }
 
 export function QuestionsClient({
@@ -37,15 +40,19 @@ export function QuestionsClient({
 
     setIsAnswering(true);
     try {
-      await answerQuestionAction({
+      const res = await answerQuestionAction({
         questionId,
         answerText,
         path: pathname,
       });
+      if (!res.success) {
+        alert(res.error || "Error al responder");
+        return;
+      }
       setReplyingToId(null);
       setAnswerText("");
-    } catch (err: any) {
-      alert(err.message || "Error al responder");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al responder");
     } finally {
       setIsAnswering(false);
     }
@@ -60,7 +67,7 @@ export function QuestionsClient({
           Mis Consultas
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Gestiona las preguntas sobre tus publicaciones y el estado de tus consultas enviadas.
+          Gestioná las preguntas sobre tus publicaciones y el estado de tus consultas enviadas.
         </p>
       </div>
 
@@ -74,10 +81,15 @@ export function QuestionsClient({
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
-          Preguntas recibidas ({receivedQuestions.length})
+          {/* En celular, textos cortos para que las dos pestañas entren en una línea (VA-60) */}
+          <span className="sm:hidden">Recibidas ({receivedQuestions.length})</span>
+          <span className="hidden sm:inline">Preguntas recibidas ({receivedQuestions.length})</span>
           {pendingReceivedCount > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[11px] font-bold animate-pulse">
-              {pendingReceivedCount} sin responder
+            <span
+              aria-label={`${pendingReceivedCount} sin responder`}
+              className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[11px] font-bold animate-pulse whitespace-nowrap"
+            >
+              {pendingReceivedCount}<span className="hidden sm:inline"> sin responder</span>
             </span>
           )}
         </button>
@@ -90,7 +102,8 @@ export function QuestionsClient({
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
-          Mis preguntas realizadas ({sentQuestions.length})
+          <span className="sm:hidden">Realizadas ({sentQuestions.length})</span>
+          <span className="hidden sm:inline">Mis preguntas realizadas ({sentQuestions.length})</span>
         </button>
       </div>
 
@@ -99,15 +112,18 @@ export function QuestionsClient({
         <div className="space-y-4">
           {receivedQuestions.length === 0 ? (
             <div className="p-8 text-center text-slate-400 text-sm bg-white rounded-2xl border border-dashed border-slate-200">
-              No has recibido preguntas en tus publicaciones por el momento.
+              Todavía no recibiste preguntas en tus publicaciones.
             </div>
           ) : (
             receivedQuestions.map((q) => {
               const item = q.aircraft || q.sparePart;
+              // Una pregunta siempre es de un avión o de un repuesto; si faltaran los dos, no rompe la página.
               const detailsUrl = q.aircraft
                 ? `/planes/plane-details/${q.aircraft.id}`
-                : `/spareparts/sparepart-details/${q.sparePart.id}`;
-              const imageUrl = item?.images?.[0]?.url || "/placeholder.png";
+                : q.sparePart
+                  ? `/spareparts/sparepart-details/${q.sparePart.id}`
+                  : "/questions";
+              const imageUrl = item?.images?.[0]?.url || PLACEHOLDER_IMAGE;
               const isPending = !q.answer;
 
               return (
@@ -123,7 +139,7 @@ export function QuestionsClient({
                   <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 gap-3">
                     <div className="flex items-center gap-3">
                       <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
-                        <Image src={imageUrl} alt={item?.title || "Producto"} fill className="object-cover" />
+                        <AppImage src={imageUrl} alt={item?.title || "Producto"} fill sizes="64px" className="object-cover" />
                       </div>
                       <span className="text-sm font-bold text-[#001F58] line-clamp-1">
                         {item?.title}
@@ -165,8 +181,9 @@ export function QuestionsClient({
                         {replyingToId === q.id ? (
                           <div className="space-y-2">
                             <textarea
-                              placeholder="Escribe tu respuesta aquí..."
+                              placeholder="Escribí tu respuesta acá..."
                               value={answerText}
+                              maxLength={1000}
                               onChange={(e) => setAnswerText(e.target.value)}
                               className="w-full border border-slate-300 rounded-xl p-3 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                               rows={3}
@@ -225,10 +242,13 @@ export function QuestionsClient({
           ) : (
             sentQuestions.map((q) => {
               const item = q.aircraft || q.sparePart;
+              // Una pregunta siempre es de un avión o de un repuesto; si faltaran los dos, no rompe la página.
               const detailsUrl = q.aircraft
                 ? `/planes/plane-details/${q.aircraft.id}`
-                : `/spareparts/sparepart-details/${q.sparePart.id}`;
-              const imageUrl = item?.images?.[0]?.url || "/placeholder.png";
+                : q.sparePart
+                  ? `/spareparts/sparepart-details/${q.sparePart.id}`
+                  : "/questions";
+              const imageUrl = item?.images?.[0]?.url || PLACEHOLDER_IMAGE;
 
               return (
                 <div key={q.id} className="p-5 rounded-2xl border border-slate-200 bg-white space-y-3">
@@ -236,7 +256,7 @@ export function QuestionsClient({
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 gap-3">
                     <div className="flex items-center gap-3">
                       <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
-                        <Image src={imageUrl} alt={item?.title || "Producto"} fill className="object-cover" />
+                        <AppImage src={imageUrl} alt={item?.title || "Producto"} fill sizes="64px" className="object-cover" />
                       </div>
                       <div>
                         <span className="text-sm font-bold text-[#001F58] line-clamp-1">

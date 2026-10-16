@@ -4,38 +4,45 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
+// "¿Querés vender tu aeronave?" (VA-79 opción b, VA-84): banner dentro del contenedor que flota sobre
+// el degradé de la Home. VA-84: la foto se ve entera; el velo azul solo cubre el lado del texto
+// (abajo en celular, a la izquierda desde md), lo justo para que el texto blanco cumpla AA.
 export function SellerCta() {
   return (
-    <section className="relative w-full overflow-hidden">
-      <div className="relative w-full h-[280px] sm:h-[320px] md:h-[360px] flex items-center justify-center">
+    <section className="container mx-auto px-4">
+      <div className="relative isolate flex min-h-[340px] items-end overflow-hidden rounded-lg bg-[#001F58] ring-1 ring-white/10 md:min-h-[380px] md:items-center">
         <Image
-          src="/bkg-cta.png"
-          alt="Fondo CTA Vender Aeronave"
+          src="/backgrounds/cta.webp"
+          alt=""
           fill
-          priority
-          className="object-cover object-[center_60%]"
+          // VA-62: está lejos del primer pantallazo; sin priority no compite con el hero.
+          sizes="(min-width: 1280px) 1248px, 100vw"
+          className="-z-20 object-cover object-[center_60%]"
         />
+        {/* Velo solo detrás del texto */}
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 bg-gradient-to-t from-[#001F58]/95 via-[#001F58]/80 to-[#001F58]/10 md:bg-gradient-to-r md:from-[#001F58]/95 md:via-[#001F58]/80 md:via-50% md:to-[#001F58]/0 md:to-80%"
+        />
+        {/* Acento rojo de marca */}
+        <div aria-hidden className="absolute inset-y-0 left-0 w-1.5 bg-[#E70F1F]" />
 
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="flex max-w-xl flex-col items-start space-y-3 px-6 py-8 sm:space-y-4 sm:px-10 md:py-12">
+          <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            ¿Querés vender tu aeronave?
+          </h2>
 
-        <div className="relative z-10 container mx-auto px-4 flex flex-col items-center text-center space-y-3 sm:space-y-4 max-w-3xl">
-          <div className="bg-[#001F58]/90 backdrop-blur-sm px-6 py-2.5 sm:px-8 sm:py-3 rounded-2xl shadow-lg border border-white/10">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight">
-              ¿Queres vender tu aeronave?
-            </h2>
-          </div>
-
-          <p className="text-white text-sm sm:text-base md:text-lg font-medium drop-shadow-md max-w-xl">
-            Publica en minutos y llega a compradores de todo el país
+          <p className="text-sm font-medium text-white/90 sm:text-base md:text-lg">
+            Publicá en minutos y llegá a compradores de todo el país
           </p>
 
           <div className="pt-1">
             <Link href="/register">
               <Button
                 size="lg"
-                className="bg-[#D92D20] hover:bg-[#B42318] text-white text-base sm:text-lg font-bold px-8 py-6 rounded-2xl shadow-xl transition-transform active:scale-95 border-0 cursor-pointer"
+                className="cursor-pointer rounded-md border-0 bg-[#E70F1F] px-8 py-6 text-base font-bold text-white transition-colors hover:bg-[#C20D1A] sm:text-lg"
               >
-                Publicar mi avion
+                Publicar mi avión
               </Button>
             </Link>
           </div>

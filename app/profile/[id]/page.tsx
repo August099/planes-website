@@ -1,15 +1,23 @@
 import { prisma } from "@/lib/prisma";
+import { activeListingWhere } from "@/lib/listing-filters";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { notFound } from "next/navigation";
-import { ProfileView } from "@/components/ui/ProfileView";
-import Image from "next/image";
+import { ProfileView, type ProfileCoupon } from "@/components/ui/ProfileView";
+import { PageBackground } from "@/components/ui/PageBackground";
+import { getMissingProfileFieldsCached } from "@/lib/cached-data";
+import { getSubscriptionSummary, hasCustomPage, hasVerifiedBadge } from "@/lib/subscriptions";
+import { getUserPurchases } from "@/lib/purchases";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }
 
-export default async function ProfilePage({ params }: Props) {
+export default async function ProfilePage({ params, searchParams }: Props) {
   const { id } = await params;
+  // VA-125: /profile/<id>?tab=compras abre "Mis compras" (lo usa el botón de arrepentimiento).
+  const { tab } = await searchParams;
   const currentUser = await getCurrentUser();
   const isOwner = currentUser?.id === id;
 
@@ -28,8 +36,15 @@ export default async function ProfilePage({ params }: Props) {
       facebook: true,
       instagram: true,
       createdAt: true,
+      // VA-87: página personalizada
+      businessName: true,
+      bio: true,
+      coverUrl: true,
+      logoUrl: true,
+      website: true,
+      whatsapp: true,
       aircrafts: {
-        where: isOwner ? undefined : { status: "ACTIVE" },
+        where: isOwner ? undefined : activeListingWhere(),
         include: {
           category: { select: { id: true, name: true } },
           images: { orderBy: { order: "asc" }, take: 1 },
@@ -38,7 +53,8 @@ export default async function ProfilePage({ params }: Props) {
               select: {
                 favorites: true,
                 questions: true,
-                analyticsEvents: true,
+                // VA-105 · 5.1: solo vistas (ya deduplicadas al registrarlas, VA-17), no clics de contacto.
+                analyticsEvents: { where: { eventType: "AIRCRAFT_VIEW" } },
               },
             },
           }),
@@ -46,7 +62,7 @@ export default async function ProfilePage({ params }: Props) {
         orderBy: { createdAt: "desc" },
       },
       spareParts: {
-        where: isOwner ? undefined : { status: "ACTIVE" },
+        where: isOwner ? undefined : activeListingWhere(),
         include: {
           category: { select: { id: true, name: true } },
           images: { orderBy: { order: "asc" }, take: 1 },
@@ -55,7 +71,8 @@ export default async function ProfilePage({ params }: Props) {
               select: {
                 favorites: true,
                 questions: true,
-                analyticsEvents: true,
+                // VA-105 · 5.1: solo vistas (ya deduplicadas al registrarlas, VA-17), no clics de contacto.
+                analyticsEvents: { where: { eventType: "SPARE_PART_VIEW" } },
               },
             },
           }),
@@ -69,8 +86,21 @@ export default async function ProfilePage({ params }: Props) {
     notFound();
   }
 
+  // VA-87: con el beneficio del plan, el perfil se muestra como página personalizada.
+  const storefront = (await hasCustomPage(id))
+    ? {
+        businessName: rawProfileUser.businessName,
+        bio: rawProfileUser.bio,
+        coverUrl: rawProfileUser.coverUrl,
+        logoUrl: rawProfileUser.logoUrl,
+        website: rawProfileUser.website,
+        whatsapp: rawProfileUser.whatsapp,
+        verified: await hasVerifiedBadge(id),
+      }
+    : null;
+
   // Obtener los cupones guardados/utilizados por el usuario si es el propietario
-  let userCoupons: any[] = [];
+  let userCoupons: ProfileCoupon[] = [];
   if (isOwner) {
     const usages = await prisma.couponUsage.findMany({
       where: { userId: id },
@@ -131,23 +161,41 @@ export default async function ProfilePage({ params }: Props) {
 
   return (
     <main className="relative min-h-[calc(100vh-80px)] container mx-auto px-4 py-8 pb-16">
-      <div className="fixed inset-0 -z-10 pointer-events-none">
-        <Image
-          src="/bkg-forms.png"
-          alt="Fondo Perfil"
-          fill
-          priority
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-background/85" />
-      </div>
+      <PageBackground page="profile" />
+      <Breadcrumbs items={[{ label: "Perfil" }, { label: rawProfileUser.name ?? "Usuario" }]} className="-mt-4 mb-2" />
 
       <ProfileView
+        initialTab={tab === "compras" && isOwner ? "purchases" : undefined}
         profileUser={profileUser}
         isOwner={isOwner}
         currentUserFavIds={currentUserFavIds}
         userCoupons={userCoupons}
+        missingProfileFields={isOwner ? await getMissingProfileFieldsCached(id) : []}
+        storefront={storefront}
+        subscription={isOwner ? await getSubscriptionSummary(id) : null}
+        purchases={isOwner ? await getUserPurchases(id) : []}
+        billingProfile={isOwner ? await ownerBillingProfile(id, rawProfileUser.name, rawProfileUser.email) : null}
+        hasPassword={isOwner ? Boolean((await prisma.user.findUnique({ where: { id }, select: { passwordHash: true } }))?.passwordHash) : false}
       />
     </main>
   );
+}
+
+// VA-92: datos de facturación del dueño (o los del perfil, para precargar si todavía no guardó nada).
+async function ownerBillingProfile(userId: string, name: string | null, email: string | null) {
+  const p = await prisma.billingProfile.findUnique({ where: { userId } });
+  if (!p) {
+    return { saved: false, values: { kind: "CONSUMIDOR_FINAL" as const, name: name ?? "", docNumber: "", ivaCondition: "" as const, address: "", email: email ?? "" } };
+  }
+  return {
+    saved: true,
+    values: {
+      kind: p.kind,
+      name: p.name,
+      docNumber: p.docNumber ?? "",
+      ivaCondition: (["RI", "M", "E"].includes(p.ivaCondition) ? p.ivaCondition : "") as "RI" | "M" | "E" | "",
+      address: p.address ?? "",
+      email: p.email,
+    },
+  };
 }

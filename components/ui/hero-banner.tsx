@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { getImageProps } from "next/image";
 import HomeHeroFilter from "./HomeFilter";
 
 interface HeroBannerProps {
@@ -16,31 +16,38 @@ export function HeroBanner({
     horizontal: "70%", 
   },
 }: HeroBannerProps) {
+  // Art direction (VA-73): un solo <img> dentro de <picture>. Antes había dos <Image priority>
+  // (escritorio y celular) ocultos con CSS, y el navegador descargaba los dos en cualquier equipo.
+  const common = { alt: "Fondo Ventas Aeronáuticas", sizes: "100vw", loading: "eager" as const };
+  const {
+    props: { srcSet: desktopSrcSet },
+  } = getImageProps({ ...common, src: "/backgrounds/home2.webp", width: 1671, height: 941 });
+  const {
+    props: { srcSet: mobileSrcSet, ...imgProps },
+  } = getImageProps({ ...common, src: "/backgrounds/home-mobile.webp", width: 940, height: 1672 });
+
   return (
     <section className="relative w-full h-screen min-h-[550px] sm:min-h-[600px] overflow-hidden">
       
-      {/* Imagen de Fondo (Escritorio) */}
-      <Image
-        src="/bkg-home2.png"
-        alt="Fondo Ventas Aeronáuticas"
-        fill
-        priority
-        className="hidden md:block object-cover object-center select-none"
-        sizes="100vw"
-      />
-
-      {/* Imagen de Fondo (Celulares) */}
-      <Image
-        src="/bkg-home-mobile.png"
-        alt="Fondo Ventas Aeronáuticas Mobile"
-        fill
-        priority
-        className="block md:hidden object-cover object-center select-none"
-        sizes="100vw"
-      />
+      <picture>
+        <source media="(min-width: 768px)" srcSet={desktopSrcSet} sizes="100vw" />
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- el alt viene en imgProps (getImageProps) */}
+        <img
+          {...imgProps}
+          srcSet={mobileSrcSet}
+          fetchPriority="high"
+          className="absolute inset-0 h-full w-full object-cover object-center select-none"
+        />
+      </picture>
 
       {/* Sombreado suave solo para mejorar lectura en celulares */}
       <div className="absolute inset-0 bg-black/20 md:bg-transparent pointer-events-none" />
+
+      {/* VA-79: la foto no termina en un borde recto; se funde con el celeste de la zona 1. */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 bottom-0 h-16 sm:h-24 pointer-events-none bg-gradient-to-b from-transparent to-[#CFE3F6]"
+      />
 
       {/* Contenedor del Texto */}
       <div
@@ -57,9 +64,12 @@ export function HeroBanner({
         }
       >
         <div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight md:leading-none whitespace-normal md:whitespace-nowrap">
+          {/* VA-55 (pedido del socio, 9/10): se mantiene el degradé blanco → rojo en "a bordo", sin
+              recuadro oscuro detrás. El rojo final es más claro que el de marca (#E70F1F) para que
+              se lea sobre el azul de la foto, y una sombra suave le da contraste. */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight md:leading-none whitespace-normal md:whitespace-nowrap drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]">
             <span className="text-white">Bienvenido </span>
-            <span className="bg-gradient-to-r from-white via-red-100 to-[#E70F1F] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-white via-red-200 to-[#FF5A64] bg-clip-text text-transparent">
               a bordo
             </span>
           </h1>

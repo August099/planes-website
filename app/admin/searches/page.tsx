@@ -5,7 +5,7 @@ import { getSearchesAnalytics } from "../actions";
 import { Search, Hash } from "lucide-react";
 
 export default function AdminSearchesPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Awaited<ReturnType<typeof getSearchesAnalytics>> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function AdminSearchesPage() {
                   </td>
                 </tr>
               ) : (
-                data?.topSearches?.map((item: any) => (
+                data?.topSearches?.map((item) => (
                   <tr key={item.term} className="hover:bg-slate-50">
                     <td className="py-3 font-semibold text-slate-800 capitalize">{item.term}</td>
                     <td className="py-3 font-bold text-red-600">{item.count} veces</td>

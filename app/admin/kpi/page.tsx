@@ -17,7 +17,7 @@ import {
 const METRIC_DESCRIPTIONS: Record<string, string> = {
   "Ingresos Mensuales (MRR)": "Revenue recurrente mensual generado por suscripciones activas y paquetes en la plataforma.",
   "Ingresos Anuales (ARR)": "Proyección anualizada de los ingresos recurrentes (MRR × 12).",
-  "Margen EBITDA": "Porcentaje de rentabilidad operativa antes de intereses, impuestos, depreciación y amortización.",
+  "Margen EBITDA": "Porcentaje de rentabilidad operativa antes de intereses, impuestos, depreciación y amortización. Todavía no se calcula: el sistema no tiene cargados los costos.",
   "Crecimiento (Mes/Año)": "Porcentaje de variación de ingresos comparando el mes actual respecto al mes anterior.",
   "Usuarios Activos (MAU)": "Cantidad de usuarios únicos que interactuaron con la plataforma en los últimos 30 días.",
   "Publicadores Activos": "Número de vendedores que tienen al menos una publicación activa en el catálogo.",
@@ -25,16 +25,30 @@ const METRIC_DESCRIPTIONS: Record<string, string> = {
   "Contactos Generados": "Total histórico de consultas enviadas y clics en WhatsApp, teléfono o email.",
   "Ventas Concretadas": "Cantidad de publicaciones de aeronaves y repuestos marcadas como vendidas.",
   "Volumen Facilitado (GMV)": "Valor monetario acumulado de las operaciones de compra-venta facilitadas.",
-  "Retención de Publicadores": "Porcentaje de vendedores que vuelven a publicar o renovar sus anuncios expirados.",
-  "Costo de Adquisición (CAC)": "Inversión estimada de marketing requerida para captar un nuevo publicador."
+  "Retención de Publicadores": "Porcentaje de vendedores que vuelven a publicar o renovar sus anuncios expirados. Todavía no se calcula: falta el historial de renovaciones.",
+  "Costo de Adquisición (CAC)": "Inversión estimada de marketing requerida para captar un nuevo publicador. Todavía no se calcula: falta cargar el gasto en marketing."
 };
 
 export default function AdminMetricsDashboard() {
   const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({
+  const [metrics, setMetrics] = useState<{
+    mrr: number | null;
+    arr: number | null;
+    ebitda: number | null;
+    revenueGrowth: number;
+    mau: number;
+    activePublishers: number;
+    activeListings: number;
+    contactsGenerated: number;
+    completedSales: number;
+    gmv: number | null;
+    usdArsRate: number | null;
+    retentionRate: number | null;
+    cac: number | null;
+  }>({
     mrr: 0,
     arr: 0,
-    ebitda: 0,
+    ebitda: null,
     revenueGrowth: 0,
     mau: 0,
     activePublishers: 0,
@@ -42,8 +56,9 @@ export default function AdminMetricsDashboard() {
     contactsGenerated: 0,
     completedSales: 0,
     gmv: 0,
-    retentionRate: 0,
-    cac: 0
+    usdArsRate: null,
+    retentionRate: null,
+    cac: null
   });
 
   useEffect(() => {
@@ -55,8 +70,12 @@ export default function AdminMetricsDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const formatCurrency = (val: number) => 
-    new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(val);
+  // null = el dato no existe (VA-12): sin cotización del dólar o métrica que todavía no se calcula.
+  const formatCurrency = (val: number | null, missing = "Sin cotización") =>
+    val === null
+      ? missing
+      : new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(val);
+  const formatPercent = (val: number | null) => (val === null ? "Sin datos" : `${val}%`);
   const formatNumber = (val: number) => new Intl.NumberFormat("es-AR").format(val);
 
   if (loading) {
@@ -68,6 +87,11 @@ export default function AdminMetricsDashboard() {
       <div className="border-b border-slate-200 pb-5">
         <h1 className="text-2xl font-bold text-[#001F58]">Métricas de Negocio (KPIs)</h1>
         <p className="text-xs text-slate-500 mt-1">Monitoreo en tiempo real del rendimiento financiero y operativo de la plataforma (en Pesos ARS).</p>
+        <p className="text-[11px] text-slate-400 mt-1">
+          {metrics.usdArsRate
+            ? `Montos en dólares convertidos al dólar oficial (venta): ${formatCurrency(metrics.usdArsRate)}.`
+            : "No se pudo obtener la cotización del dólar: los montos en dólares no se convierten."}
+        </p>
       </div>
 
       {/* MÉTRICAS FINANCIERAS CRÍTICAS */}
@@ -78,7 +102,7 @@ export default function AdminMetricsDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <KpiCard title="Ingresos Mensuales (MRR)" value={formatCurrency(metrics.mrr)} trend={`${metrics.revenueGrowth >= 0 ? '+' : ''}${metrics.revenueGrowth}%`} isCritical />
           <KpiCard title="Ingresos Anuales (ARR)" value={formatCurrency(metrics.arr)} isCritical />
-          <KpiCard title="Margen EBITDA" value={`${metrics.ebitda}%`} isCritical />
+          <KpiCard title="Margen EBITDA" value={formatPercent(metrics.ebitda)} isCritical />
           <KpiCard title="Crecimiento (Mes/Año)" value={`${metrics.revenueGrowth}%`} trend={metrics.revenueGrowth >= 0 ? "Positivo" : "Negativo"} isCritical />
         </div>
       </section>
@@ -104,8 +128,8 @@ export default function AdminMetricsDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <KpiCard title="Ventas Concretadas" value={formatNumber(metrics.completedSales)} />
           <KpiCard title="Volumen Facilitado (GMV)" value={formatCurrency(metrics.gmv)} />
-          <KpiCard title="Retención de Publicadores" value={`${metrics.retentionRate}%`} />
-          <KpiCard title="Costo de Adquisición (CAC)" value={formatCurrency(metrics.cac)} />
+          <KpiCard title="Retención de Publicadores" value={formatPercent(metrics.retentionRate)} />
+          <KpiCard title="Costo de Adquisición (CAC)" value={formatCurrency(metrics.cac, "Sin datos")} />
         </div>
       </section>
     </div>

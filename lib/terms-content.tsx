@@ -47,11 +47,14 @@ export function TermsContent() {
         <h3 className="font-heading font-semibold text-[#001F58] text-base">
           3. Planes de Publicación y Condiciones de Pago
         </h3>
-        <p>El servicio de exposición de anuncios requiere la contratación de planes de pago, los cuales se rigen bajo las siguientes reglas:</p>
+        <p>Publicar anuncios requiere pagar cada publicación o contratar un plan, bajo las siguientes reglas:</p>
         <ul className="list-disc pl-5 space-y-1.5">
-          <li><strong>Procesamiento de Pagos:</strong> Todos los cargos se facturan en Pesos Argentinos a través de pasarelas de pago seguras.</li>
-          <li><strong>Vencimiento y Renovación:</strong> Las publicaciones tienen un período de vigencia determinado por el plan contratado.</li>
-          <li><strong>Política de Reembolsos:</strong> No se realizarán reembolsos ni devoluciones de dinero una vez aprobado el pago.</li>
+          <li><strong>Procesamiento de Pagos:</strong> Todos los cargos se expresan y facturan en Pesos Argentinos y se cobran a través de Mercado Pago. Las suscripciones se debitan en forma mensual hasta que el usuario las cancele.</li>
+          <li><strong>Vencimiento y Renovación:</strong> Una publicación individual tiene una vigencia de 45 días y puede renovarse antes de vencer. Las publicaciones cubiertas por un plan con publicaciones ilimitadas no vencen mientras el plan esté vigente.</li>
+          <li><strong>Cancelación de Suscripciones:</strong> El usuario puede cancelar su suscripción en cualquier momento desde su perfil o desde la página de planes; no se realizan nuevos débitos y el plan se mantiene hasta el fin del período pagado.</li>
+          <li><strong>Promoción de Lanzamiento:</strong> Las cuentas creadas durante el período de lanzamiento reciben, sin costo, publicaciones gratuitas cuya cantidad se informa en la plataforma. No son canjeables por dinero.</li>
+          <li><strong>Derecho de Arrepentimiento:</strong> Conforme al artículo 34 de la Ley 24.240 de Defensa del Consumidor y a la Resolución 424/2020, el usuario puede revocar la compra dentro de los 10 (diez) días corridos desde el pago, sin costo ni responsabilidad, mediante el &quot;Botón de arrepentimiento&quot; disponible en el pie de todas las páginas y en &quot;Mis compras&quot;. Se reintegra el total abonado por el mismo medio de pago y se da de baja lo contratado.</li>
+          <li><strong>Otros Reembolsos:</strong> Fuera del plazo de arrepentimiento no se realizan reembolsos por publicaciones o planes ya utilizados, salvo error de cobro imputable a Ventas Aeronáuticas.</li>
         </ul>
       </div>
 

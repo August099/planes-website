@@ -26,6 +26,7 @@ import {
 } from "@/app/actions/admin-taxonomy-actions";
 import { Plus, Plane, Wrench, CheckCircle2, ExternalLink, Pencil, Trash2, X, Check, ImageIcon, Upload } from "lucide-react";
 import { FilterType } from "@prisma/client";
+import { errorMessage } from "@/lib/errors";
 
 interface SubModel {
   id: string;
@@ -189,8 +190,8 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       await createAircraftBrandAction(name, logoUrl);
       form.reset();
       showFeedback("Marca agregada exitosamente");
-    } catch (err: any) {
-      alert(err?.message || "Error al guardar la marca");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al guardar la marca");
     } finally {
       setLoading(false);
     }
@@ -211,8 +212,8 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       await updateAircraftBrandAction(id, editName, finalLogoUrl);
       cancelEditing();
       showFeedback("Marca actualizada");
-    } catch (err: any) {
-      alert(err?.message || "Error al actualizar la marca");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al actualizar la marca");
     } finally {
       setLoading(false);
     }
@@ -232,7 +233,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
   // MODELOS
   const handleAddModel = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedBrandId) return alert("Selecciona una marca primero");
+    if (!selectedBrandId) return alert("Seleccioná una marca primero");
     setLoading(true);
     const form = e.currentTarget;
     const name = new FormData(form).get("name") as string;
@@ -271,7 +272,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
   // SUBMODELOS / VARIANTES
   const handleAddSubModel = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedModelId) return alert("Selecciona un modelo primero");
+    if (!selectedModelId) return alert("Seleccioná un modelo primero");
     setLoading(true);
     const form = e.currentTarget;
     const name = new FormData(form).get("name") as string;
@@ -670,7 +671,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                 <label className="flex-1 px-3 py-2 border rounded-xl bg-white text-xs text-slate-500 cursor-pointer flex items-center justify-between hover:bg-slate-50">
                   <span className="truncate">Subir foto desde PC...</span>
                   <Upload className="w-3.5 h-3.5 text-slate-400" />
-                  <input type="file" name="file" accept="image/*" className="hidden" />
+                  <input type="file" name="file" accept="image/jpeg,image/png,image/webp" className="hidden" />
                 </label>
 
                 <button
@@ -711,7 +712,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                         <Upload className="w-3 h-3 text-slate-400" />
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp"
                           className="hidden"
                           onChange={(e) => {
                             if (e.target.files?.[0]) setEditFile(e.target.files[0]);
@@ -724,9 +725,11 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                       <div className="flex items-center gap-2">
                         {brand.logoUrl ? (
                           <div className="relative w-6 h-6 rounded border bg-white overflow-hidden shrink-0 flex items-center justify-center">
-                            <img
+                            <Image
                               src={brand.logoUrl}
                               alt={brand.name}
+                              width={24}
+                              height={24}
                               className="w-full h-full object-contain p-0.5"
                             />
                           </div>

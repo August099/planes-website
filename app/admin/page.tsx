@@ -17,18 +17,17 @@ import {
   Mail,
   Phone,
   Download,
-  Trash2,
-  TrendingUp
+  Trash2
 } from "lucide-react";
+import { errorMessage } from "@/lib/errors";
 
 export default function AdminOverviewPage() {
   const [period, setPeriod] = useState<PeriodFilter>("30d");
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Awaited<ReturnType<typeof getDashboardOverview>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchOverview = async (selectedPeriod: PeriodFilter) => {
-    setLoading(true);
     try {
       const res = await getDashboardOverview(selectedPeriod);
       setData(res);
@@ -39,8 +38,21 @@ export default function AdminOverviewPage() {
     }
   };
 
+  // Carga al entrar y al cambiar de período; si llega tarde la respuesta de un período anterior,
+  // se descarta (VA-63).
   useEffect(() => {
-    fetchOverview(period);
+    let cancelled = false;
+    getDashboardOverview(period)
+      .then((res) => {
+        if (!cancelled) setData(res);
+      })
+      .catch((err) => console.error("Error al cargar resumen:", err))
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [period]);
 
   const handleDownloadCSV = async () => {
@@ -59,7 +71,7 @@ export default function AdminOverviewPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (err) {
+    } catch {
       alert("Error al generar la planilla CSV.");
     } finally {
       setActionLoading(false);
@@ -77,8 +89,8 @@ export default function AdminOverviewPage() {
       const res = await archiveAndPurgeOldAnalytics();
       alert(res.message);
       fetchOverview(period);
-    } catch (err: any) {
-      alert(err.message || "Error al respaldar y purgar analíticas.");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al respaldar y purgar analíticas.");
     } finally {
       setActionLoading(false);
     }
@@ -127,7 +139,11 @@ export default function AdminOverviewPage() {
             ].map((btn) => (
               <button
                 key={btn.id}
-                onClick={() => setPeriod(btn.id as PeriodFilter)}
+                onClick={() => {
+                  if (btn.id === period) return;
+                  setLoading(true);
+                  setPeriod(btn.id as PeriodFilter);
+                }}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                   period === btn.id
                     ? "bg-[#001F58] text-white shadow"
@@ -247,7 +263,7 @@ export default function AdminOverviewPage() {
                         </td>
                       </tr>
                     ) : (
-                      data.chartData.map((row: any) => {
+                      data.chartData.map((row) => {
                         const ratio = row.views > 0 ? ((row.contacts / row.views) * 100).toFixed(1) : "0.0";
                         return (
                           <tr key={row.date} className="hover:bg-slate-50">

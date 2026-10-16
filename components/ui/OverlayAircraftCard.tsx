@@ -1,8 +1,10 @@
 "use client";
 
-import Image from "next/image";
+import { AppImage } from "@/components/ui/AppImage";
+import { CompareButton } from "@/components/ui/compare/CompareButton";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { formatPrice } from "@/lib/format";
 
 type CategoryProp = { id?: string; name: string } | string | null;
 
@@ -45,19 +47,15 @@ export function OverlayAircraftCard({
       ? `${brandName} ${modelName}`.trim()
       : title || "Aeronave";
 
-  const numericPrice =
-    price !== null && price !== undefined ? Number(price) : NaN;
-  const formattedPrice =
-    !isNaN(numericPrice) && numericPrice > 0
-      ? `$${new Intl.NumberFormat("es-AR", {
-          maximumFractionDigits: 0,
-        }).format(numericPrice)}`
-      : "Consultar";
+  const formattedPrice = formatPrice(price, { fallback: "Consultar" });
 
   return (
     <Link href={`/planes/plane-details/${id}`} className="group block h-full">
       <Card className="relative w-full aspect-[4/3] sm:aspect-[16/11] overflow-hidden rounded-2xl border-0 shadow-lg group-hover:shadow-2xl transition-all duration-300 bg-slate-900">
         {/* BADGE DESTACADO */}
+        <div className="absolute top-3 right-3 z-10">
+          <CompareButton variant="overlay" item={{ id, title: displayTitle, image: imageUrl ?? null }} />
+        </div>
         {featuredBadge && (
           <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-red-600 text-white text-[11px] font-bold rounded-lg shadow-md uppercase tracking-wide">
             {featuredBadge}
@@ -65,10 +63,12 @@ export function OverlayAircraftCard({
         )}
 
         {/* IMAGEN CON ZOOM EN HOVER */}
-        <Image
+        <AppImage
           src={imageUrl}
           alt={displayTitle}
           fill
+          // VA-73: 1 card por fila en celular y 2 desde 640 px (FeaturedAircraftCarousel), dentro del container.
+          sizes="(max-width: 640px) 100vw, (max-width: 1536px) 50vw, 768px"
           className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
         />
 
@@ -88,7 +88,7 @@ export function OverlayAircraftCard({
             <span className="font-semibold text-lg sm:text-xl text-white/95 drop-shadow-sm">
               {formattedPrice}
             </span>
-            {year && (
+            {year != null && (
               <span className="font-semibold text-base sm:text-lg text-white/90 drop-shadow-sm">
                 {year}
               </span>

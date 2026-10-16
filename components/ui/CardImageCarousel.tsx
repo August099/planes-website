@@ -1,15 +1,18 @@
 "use client";
 
 import { useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
-
-import "swiper/css";
 
 import { AppImage } from "@/components/ui/AppImage";
 
-type ImageCarouselImage = {
+export const CARD_IMAGE_SIZES = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw";
+
+// VA-76: Swiper se descarga y se monta recién cuando el usuario interactúa con la card.
+const CardImageSwiper = dynamic(() => import("@/components/ui/CardImageSwiper"), { ssr: false });
+
+export type ImageCarouselImage = {
   id: string;
   url: string;
   order: number;
@@ -28,6 +31,12 @@ export function ImageCarousel({
 }: ImageCarouselProps) {
   const swiperRef = useRef<SwiperType | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  // VA-74: en el HTML inicial va solo la primera foto de cada card. VA-76: tampoco se monta Swiper
+  // hasta que el usuario interactúa (mouse encima, toque o foco): antes /planes inicializaba 21
+  // carruseles al hidratar y era lo que más pesaba en el TBT. En celular, el primer deslizamiento
+  // monta el carrusel y el siguiente ya cambia de foto.
+  const [revealed, setRevealed] = useState(false);
+  const reveal = () => setRevealed(true);
 
   const finalImages: ImageCarouselImage[] =
     images.length > 0
@@ -52,45 +61,39 @@ export function ImageCarousel({
     );
   }
 
-  console.log("ImageCarousel:", {
-  images,
-  imagesLength: images.length,
-  finalImagesLength: finalImages.length,
-});
-
   const hasMultipleImages = finalImages.length > 1;
 
   return (
     <div
       className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100"
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        reveal();
+      }}
+      onTouchStart={reveal}
+      onFocus={reveal}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Swiper
-        onSwiper={(swiper) => {
-          swiperRef.current = swiper;
-        }}
-        slidesPerView={1}
-        spaceBetween={0}
-        loop={hasMultipleImages}
-        allowTouchMove={hasMultipleImages}
-        className="w-full h-full"
-      >
-        {finalImages.map((image, index) => (
-          <SwiperSlide key={`${image.id}-${index}`}>
-            <div className="relative w-full h-full">
-              <AppImage
-                src={image.url}
-                alt={`${alt} - Foto ${index + 1}`}
-                fill
-                optimizedWidth={600}
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className="object-cover"
-              />
-            </div>
-          </SwiperSlide>
-        ))}
-      </Swiper>
+      {/* Primera foto fija: es lo que se ve hasta que Swiper termina de cargar (y queda debajo). */}
+      <AppImage
+        src={finalImages[0].url}
+        alt={`${alt} - Foto 1`}
+        fill
+        sizes={CARD_IMAGE_SIZES}
+        className="object-cover"
+      />
+
+      {hasMultipleImages && revealed && (
+        <div className="absolute inset-0 z-10">
+          <CardImageSwiper
+            images={finalImages}
+            alt={alt}
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper;
+            }}
+          />
+        </div>
+      )}
 
       {hasMultipleImages && (
         <>

@@ -2,19 +2,19 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Eye, EyeOff, FileText, Check } from "lucide-react";
+import { Eye, EyeOff, FileText } from "lucide-react";
 
 import { registerUserAction } from "@/app/actions/register-action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LaunchPromoNote } from "@/components/ui/LaunchPromoNote";
 import { TermsContent } from "@/lib/terms-content";
+import { PageBackground } from "@/components/ui/PageBackground";
+import { USER_TYPE_OPTIONS } from "@/lib/user-types";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -48,15 +48,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16 flex items-center justify-center py-16">
-      <Image
-        src="/bkg-register.jpg"
-        alt="Fondo Registro"
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
+      <PageBackground page="register" />
 
       <div className="container mx-auto px-4 max-w-lg">
         <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl space-y-6">
@@ -69,7 +62,16 @@ export default function RegisterPage() {
             </p>
           </div>
 
+          {/* VA-111: promoción de lanzamiento (se apaga sola en el corte) */}
+          <LaunchPromoNote className="text-left" />
+
           {/* MENSAJES DE ESTADO */}
+          {successMessage === "CheckEmailRetry" && (
+            <div className="rounded-xl bg-amber-50 p-3 text-xs sm:text-sm text-amber-700 border border-amber-200">
+              ¡Cuenta creada! No pudimos enviarte el mail de activación: pedilo de nuevo desde &quot;Iniciar sesión&quot; con &quot;Reenviar mail de verificación&quot;.
+            </div>
+          )}
+
           {successMessage === "CheckEmail" && (
             <div className="rounded-xl bg-green-50 p-3 text-xs sm:text-sm text-green-700 border border-green-200">
               ¡Cuenta creada! Te enviamos un correo para activar tu casilla antes de ingresar.
@@ -78,7 +80,7 @@ export default function RegisterPage() {
 
           {errorMessage === "TermsRequired" && (
             <div className="rounded-xl bg-red-50 p-3 text-xs sm:text-sm text-red-600 border border-red-200">
-              Debes aceptar los Términos y Condiciones para registrarte.
+              Tenés que aceptar los Términos y Condiciones para registrarte.
             </div>
           )}
 
@@ -103,7 +105,8 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* method="post": si se envía antes de que cargue React, la contraseña no queda en la URL */}
+          <form method="post" onSubmit={handleSubmit} className="space-y-4">
             {/* NOMBRE COMPLETO */}
             <div className="space-y-1.5">
               <Label htmlFor="name" className="text-xs font-semibold text-[#001F58]">
@@ -143,8 +146,11 @@ export default function RegisterPage() {
                 defaultValue="PARTICULAR"
                 className="w-full px-3 py-2 text-xs sm:text-sm rounded-md border border-[#001F58]/20 bg-white/80 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#001F58] font-medium"
               >
-                <option value="PARTICULAR">Particular / Privado</option>
-                <option value="COMPANY">Empresa / Taller / Broker</option>
+                {USER_TYPE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
               </select>
             </div>
 

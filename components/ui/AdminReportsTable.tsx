@@ -1,18 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { updateReportStatusAction } from "@/app/actions/report-actions";
 import {
   Plane,
   Wrench,
-  AlertCircle,
   ExternalLink,
   CheckCircle2,
   XCircle,
   Clock,
   Loader2,
 } from "lucide-react";
+import { errorMessage } from "@/lib/errors";
 
 interface ReportItem {
   id: string;
@@ -39,8 +38,8 @@ export function AdminReportsTable({ reports }: { reports: ReportItem[] }) {
     setLoadingId(reportId);
     try {
       await updateReportStatusAction(reportId, newStatus);
-    } catch (err: any) {
-      alert(err.message || "Error al actualizar el estado");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al actualizar el estado");
     } finally {
       setLoadingId(null);
     }
@@ -49,7 +48,7 @@ export function AdminReportsTable({ reports }: { reports: ReportItem[] }) {
   return (
     <div className="space-y-4">
       {/* Filtros por Estado */}
-      <div className="flex gap-2 border-b border-slate-200 pb-3">
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
         {(["PENDING", "REVIEWED", "DISMISSED", "ALL"] as const).map((st) => {
           const count = st === "ALL" ? reports.length : reports.filter((r) => r.status === st).length;
           const labels = {

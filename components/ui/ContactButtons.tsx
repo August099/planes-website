@@ -2,6 +2,7 @@
 
 import { Phone, MessageCircle, Mail } from "lucide-react";
 import { logContactClick } from "@/app/actions/analytics-actions"; // Ajusta la ruta si es necesario
+import { ensureAnalyticsCookies } from "@/lib/analytics-client";
 
 interface ContactButtonsProps {
   phone?: string | null;
@@ -9,7 +10,7 @@ interface ContactButtonsProps {
   whatsappUrl?: string | null;
   emailUrl?: string | null;
   entityId: string;
-  entityType: "AIRCRAFT" | "SPARE_PART";
+  entityType: "AIRCRAFT" | "SPARE_PART" | "HANGAR";
 }
 
 export function ContactButtons({
@@ -23,6 +24,7 @@ export function ContactButtons({
   
   const handleTrack = (eventType: "PHONE_CLICK" | "WHATSAPP_CLICK" | "EMAIL_CLICK") => {
     // Se ejecuta en segundo plano, no bloquea que se abra el link
+    ensureAnalyticsCookies();
     logContactClick(entityId, entityType, eventType);
   };
 
