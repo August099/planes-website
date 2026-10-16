@@ -24,6 +24,7 @@ async function main() {
       console.log(
         `${p.date_created} · pago ${p.id} · ${p.status} (${p.status_detail}) · ${p.currency_id} ${p.transaction_amount} · ${p.payment_method_id ?? "—"} · compra ${p.external_reference ?? "—"}`
       );
+      console.log(`    aviso (notification_url): ${(p as { notification_url?: string | null }).notification_url ?? "— (ninguno)"}`);
     }
     return;
   }
