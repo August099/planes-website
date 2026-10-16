@@ -255,8 +255,25 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 | VA-127 | ver git log | Términos: derecho de arrepentimiento en lugar de "no se realizan reembolsos". | `/terms` → 3 |
 | VA-128 | ver git log | Privacidad actualizada (cookies, Google, proveedores, documentos privados, derechos) y link del mail a fundadores en el runbook. | `/privacy` · `docs/PASE_A_PRODUCCION.md` |
 | VA-129 | ver git log | **Mapa de zona gratis**: el bloque "Zona" del detalle usa el SVG de provincias de la Home (provincia resaltada, punto en la localidad, recuadro con el país) en vez de Leaflet + Stadia Maps, que cobraba el uso comercial. Sin JS ni pedidos a terceros. | Detalle de un aviso → bloque "Zona" |
+| Dependencias | `7d6405a` | `npm audit fix` (solo el lockfile): Next 16.4.0, @auth/core 0.41.3, sharp, postcss y otras; de 35 avisos quedan 13, todos en herramientas de desarrollo (CLI de prisma y shadcn, eslint). Después de `npm ci` hay que correr `npx prisma generate`. | `npm audit` |
+| Pagos en local | `f2b91d5`, `d15d8ac`, `0aafd24`, `b75b51f` | **Pago real en local**: `scripts/process-mp-payment.ts` procesa los pagos de una compra como el webhook (`--payment <id>`, `--recent`); en http la preferencia va sin `notification_url`. Pasos en `docs/PAGOS.md`. | `docs/PAGOS.md` → "Pago real en local" |
 
 **Error de "doctype" en `npm run dev` (14/10, reportado por el socio):** no se pudo reproducir en un entorno limpio: con dependencias recién instaladas, migraciones aplicadas y semillas, `npm run dev` levanta y `/`, `/planes`, `/spareparts`, `/login`, `/services` y `/api/auth/session` responden bien (los únicos errores de consola son fotos de prueba de loremflickr sin red). Tampoco con la base apagada (da un error de Prisma, no de doctype) ni corriendo `next build` con `next dev` abierto. La causa más probable sigue siendo la del 11/10 (`ClientFetchError: Unexpected token '<', "<!DOCTYPE"…`): caché vieja en `.next/dev`. Pasos en la máquina del socio: cortar `npm run dev`, borrar `.next` (`Remove-Item -Recurse -Force .next`), `npm install`, `npx prisma generate`, `npm run migrate:deploy` contra `va_dev` (hay migraciones nuevas: VA-83, VA-85, VA-80, VA-84 y VA-89; si `va_dev` no las tiene, las páginas que las usan fallan) y volver a levantar. Si sigue, hace falta el texto exacto del error (consola del navegador o terminal). Detalle de paso: `prisma/seed.ts` no carga el `.env` (hay que correrlo con `npx tsx --env-file=.env prisma/seed.ts`).
+
+## Pruebas de pagos (16/10/2026)
+
+**Hecho, con plata real y las credenciales de producción (cuenta del socio), en local:**
+- Pago del "Pago de prueba" (AR$ 100, pago 184437395216, dinero en cuenta): aprobado por Mercado Pago, compra activada con `process-mp-payment.ts` y factura pendiente (`BILLING_ENABLED=false`).
+- Botón de arrepentimiento: el reembolso real se hizo por la API y la compra quedó reintegrada. ✅
+- Aprendido: `.env.local` pisa a `.env`; con las credenciales de la cuenta vendedora de prueba ahí, Mercado Pago responde "Una de las partes es de prueba". El `preference-id` empieza con el id de la cuenta que cobra.
+
+**Pendiente:**
+1. **Preview** (credenciales de prueba, `MP_WEBHOOK_SECRET` del panel en modo prueba):
+   - webhook: el pago se activa solo, sin el script, y la página de estado pasa sola a "¡Pago acreditado!";
+   - vuelta automática al sitio (`auto_return`, solo con https);
+   - suscripción mensual: alta, cancelación y "Cambiar a este plan" (VA-121).
+2. **Producción**, paso 8 del runbook (`docs/PASE_A_PRODUCCION.md`): webhook de la aplicación real configurado con su clave en `MP_WEBHOOK_SECRET`, un pago real de AR$ 100 que se active por webhook, arrepentimiento y archivar el "Pago de prueba".
+3. **Facturación real**: recién después del punto 2, `TUSFACTURAS_MODE=production` y `BILLING_ENABLED=true` (solo Production) y revisar la primera Factura C en `/admin/payments`. En local y en el Preview nunca se emite.
 
 ## Bugs encontrados en el camino (fuera del plan)
 

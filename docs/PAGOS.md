@@ -92,7 +92,7 @@ Para probar un cobro real antes de cargar las credenciales de producción en Ver
    (los dos archivos, como Next: `.env.local` pisa a `.env`; el script tiene que usar el mismo `MP_ACCESS_TOKEN` que `npm run dev`). Recargar la página de estado: tiene que decir aprobado.
 6. Opcional: probar el **arrepentimiento** desde Perfil › Mis compras. El reembolso se hace por la API y se refleja solo, sin webhook.
 
-Probado el 16/10/2026: pago real 184437395216 (AR$ 100, dinero en cuenta) aprobado y activado con el script.
+Probado el 16/10/2026: pago real 184437395216 (AR$ 100, dinero en cuenta) aprobado y activado con el script, y devuelto con el botón de arrepentimiento. Pendientes: ver `docs/REGISTRO_DE_CAMBIOS.md` → "Pruebas de pagos".
 
 ## Suscripciones
 
