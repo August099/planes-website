@@ -63,7 +63,7 @@ editarla para separar los valores. **Después de cargar todo: Redeploy** del úl
 | `SUPPORT_EMAIL` | el mail donde quieren recibir sugerencias y avisos | |
 | `MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY` | de la aplicación de la **cuenta vendedora de prueba** | las que estaban en `.env.local` |
 | `MP_WEBHOOK_SECRET` | la clave del webhook en **modo prueba** (paso 3) | sin ella, ningún pago se activa |
-| `MP_NOTIFICATION_URL` | vacía | usa `APP_URL` + `/api/webhooks/mercadopago` |
+| `MP_NOTIFICATION_URL` | **vacía, y que no exista para Preview** | usa `APP_URL` + `/api/webhooks/mercadopago`. El 16/10 estaba cargada con la URL de producción para todos los ambientes y los avisos del Preview iban a producción |
 | `CRON_SECRET` | una cualquiera (opcional) | el cron diario solo corre en Production |
 | `BILLING_ENABLED` | `false` | |
 | `TUSFACTURAS_MODE` | vacía | en el Preview nunca se factura de verdad |
@@ -86,6 +86,12 @@ Para pagar: la **cuenta compradora de prueba** (logueado con ella en Mercado Pag
 las tarjetas de prueba de `docs/PAGOS.md` (titular `APRO` = aprobado, `OTHE` = rechazado).
 
 ---
+
+**Si un pago aprobado no se activa solo:** `scripts/process-mp-payment.ts --recent` muestra, por pago,
+a qué `notification_url` mandó el aviso Mercado Pago (tiene que ser la del Preview). En la base del
+Preview, `select "receivedAt", topic, status, error from "WebhookEvent" order by "receivedAt" desc limit 10;`
+muestra si llegó y por qué se rechazó. Para activar a mano una compra: el script con `DATABASE_URL` y
+`RUNTIME_DATABASE_URL` de la base del Preview puestas en la terminal.
 
 ## 4. Desplegar la rama
 
