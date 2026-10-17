@@ -24,8 +24,10 @@ import {
   createFilterAction,
   deleteFilterAction,
 } from "@/app/actions/admin-taxonomy-actions";
-import { Plus, Plane, Wrench, CheckCircle2, ExternalLink, Pencil, Trash2, X, Check, ImageIcon, Upload } from "lucide-react";
+import { Plus, Plane, Wrench, CheckCircle2, Pencil, Trash2, X, Check, ImageIcon, Upload } from "lucide-react";
 import { FilterType } from "@prisma/client";
+import { CATEGORY_ICON_OPTIONS } from "@/lib/category-icon-names";
+import { DynamicCategoryIcon } from "@/components/ui/DynamicCategoryIcon";
 import { errorMessage } from "@/lib/errors";
 
 interface SubModel {
@@ -400,15 +402,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                 onChange={(e) => setEditName(e.target.value)}
                 className="flex-1 px-2 py-1 text-xs border rounded-lg bg-white"
               />
-              {depth === 0 && (
-                <input
-                  type="text"
-                  value={editIcon}
-                  onChange={(e) => setEditIcon(e.target.value)}
-                  placeholder="Icono"
-                  className="w-24 px-2 py-1 text-xs border rounded-lg bg-white"
-                />
-              )}
+              {depth === 0 && <CategoryIconSelect value={editIcon} onChange={setEditIcon} aria-label="Ícono" />}
               <button onClick={() => handleUpdate(node.id)} className="text-green-600">
                 <Check className="w-4 h-4" />
               </button>
@@ -421,8 +415,8 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
               <div className="flex items-center gap-2">
                 <span className={depth === 0 ? "text-[#001F58]" : "text-slate-600"}>{node.name}</span>
                 {node.icon && (
-                  <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-md font-mono">
-                    {node.icon}
+                  <span className="text-[#001F58]" title={CATEGORY_ICON_OPTIONS.find((o) => o.value === node.icon)?.label ?? node.icon}>
+                    <DynamicCategoryIcon name={node.icon} className="h-4 w-4" />
                   </span>
                 )}
               </div>
@@ -948,25 +942,11 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
 
               {!selectedSpareParentId && (
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-[11px] font-semibold text-slate-500">
-                      Icono (React Icons)
-                    </label>
-                    <a
-                      href="https://react-icons.github.io/react-icons/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                    >
-                      Buscar icono <ExternalLink className="w-2.5 h-2.5" />
-                    </a>
-                  </div>
-                  <input
-                    type="text"
-                    name="icon"
-                    placeholder="Ej: PiEngine, TiLightBulb, BsNut"
-                    className="w-full px-3 py-2 text-xs border rounded-xl bg-white"
-                  />
+                  {/* VA-148: uno de los 14 íconos propios (components/icons/category). */}
+                  <label htmlFor="new-category-icon" className="block text-[11px] font-semibold text-slate-500">
+                    Ícono
+                  </label>
+                  <CategoryIconSelect id="new-category-icon" name="icon" />
                 </div>
               )}
 
@@ -1219,6 +1199,45 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
 
         </div>
       )}
+    </div>
+  );
+}
+// VA-148: selector de ícono de una categoría padre (con vista previa del elegido).
+function CategoryIconSelect({
+  id,
+  name,
+  value,
+  onChange,
+  "aria-label": ariaLabel,
+}: {
+  id?: string;
+  name?: string;
+  value?: string;
+  onChange?: (v: string) => void;
+  "aria-label"?: string;
+}) {
+  const [own, setOwn] = useState("");
+  const current = value ?? own;
+  return (
+    <div className="flex items-center gap-2">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-[#001F58]" aria-hidden>
+        {current ? <DynamicCategoryIcon name={current} className="h-5 w-5" /> : null}
+      </span>
+      <select
+        id={id}
+        name={name}
+        aria-label={ariaLabel}
+        value={current}
+        onChange={(e) => (onChange ? onChange(e.target.value) : setOwn(e.target.value))}
+        className="min-w-0 flex-1 rounded-xl border bg-white px-2 py-1.5 text-xs"
+      >
+        <option value="">Sin ícono</option>
+        {CATEGORY_ICON_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

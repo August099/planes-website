@@ -1531,9 +1531,22 @@ Probados en celular; verificar también en escritorio.
 ### VA-149 · Categorías de aviones: dibujos blancos con línea roja y azul, y orden nuevo
 - **Orden:** Monomotor → Bimotor → Experimental / LSA → Agrícola → Helicóptero → Proyecto → Otros. Se aplica en la Home, en el filtro de `/planes` y en el formulario. "Experimental / Avión ligero" pasa a llamarse "Experimental / LSA".
 - **Dibujos:** los 7 de `public/aircraft-types/` pasan de azul a **blanco con la línea roja y azul**, con el mismo encuadre. Primero se intenta recolorearlos con un script, con antes y después; si no queda prolijo, se frena y el socio pasa imágenes nuevas.
-- **Estado (17/10):** orden y nombre ✅ (migración de datos `va149_experimental_lsa`). Dibujos: el recoloreo por script no quedó prolijo (grises, bordes dentados, franja azul casi invisible) → se esperan las imágenes nuevas.
+- **Estado (17/10):** ✅ hecho. Orden y nombre (migración de datos `va149_experimental_lsa`); dibujos nuevos del socio en `public/aircraft-types/` (el recoloreo por script no quedó prolijo y se descartó).
 
 ### VA-148 · Íconos nuevos para las categorías de repuestos
 - Usar los íconos de `categories-icons/ventas-aeronauticas-icons/src/icons/`, pasados a componentes TypeScript del proyecto.
 - Reemplazar los actuales en la Home, en el menú de Repuestos, en los filtros y en el admin.
 - Mostrar la tabla categoría → ícono antes de aplicarla, y no sumar peso de JavaScript a la Home.
+- **Estado (17/10):** ✅ hecho. Los 14 íconos ya eran componentes propios desde VA-70; ahora el admin elige entre ellos, los nombres viejos se migraron (`va148_iconos_categorias`, tabla aprobada por el socio) y se quitó `react-icons`. Sin íconos sin usar en el código: Gps, Combustible, Hélice y Frenos quedan disponibles en el selector. JS de la Home igual (801 KB).
+
+### VA-151 · Métricas de la cuenta VA (primer nivel) — detalle en `docs/specs/VA-151-metricas-cuenta-va.md`
+- **Reemplaza la parte "avanzada" de VA-98.** Pocas métricas a propósito: lo avanzado queda para una futura **cuenta empresarial**.
+- **Quién lo ve:** un interruptor nuevo en el plan, `includesSellerMetrics`, prendido en "Suscripción VA" (cortesías incluidas). Quien no tiene cuenta VA ve lo básico más una línea discreta hacia `/plans`.
+- **Pestaña "Métricas" del perfil propio, últimos 7 o 30 días:**
+  - 4 tarjetas con variación contra el período anterior: vistas, contactos, favoritos nuevos y visitas a la Página VA (evento `PROFILE_VIEW`, nuevo si no existe);
+  - gráfico de vistas por día;
+  - contactos por canal (WhatsApp, teléfono, email y formulario);
+  - tabla por aviso con vistas, contactos, favoritos y tasa de contacto, marcando el más visto y el de mejor tasa.
+- **Reglas de los datos:** no cuentan el dueño, los admins ni los bots; solo totales, nunca quién vio; retención mínima de 60 días; consultas agregadas con caché.
+- **Al desplegar:** sumar "Métricas de tus avisos" a la tarjeta de la Suscripción VA en `/plans`.
+- **Prioridad:** después de VA-148 a VA-150. Preguntar si sale en el lanzamiento o queda oculto.

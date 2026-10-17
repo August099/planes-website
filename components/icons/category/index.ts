@@ -19,8 +19,8 @@ export type { CategoryIconProps } from "./CategoryIconBase";
 
 type CategoryIcon = ComponentType<CategoryIconProps>;
 
-// Íconos disponibles para las categorías de repuestos. En el admin de taxonomía
-// se carga el nombre (por ejemplo "MotorIcon") en el campo "icon" de la categoría.
+// Íconos disponibles para las categorías de repuestos. En el admin de taxonomía se elige uno de
+// la lista (lib/category-icon-names.ts) y se guarda su nombre (por ejemplo "MotorIcon").
 export const CATEGORY_ICONS: Record<string, CategoryIcon> = {
   AceiteraIcon,
   AvionAgricolaIcon,
@@ -38,23 +38,10 @@ export const CATEGORY_ICONS: Record<string, CategoryIcon> = {
   TornilloTuercaIcon,
 };
 
-// Nombres de react-icons que ya están guardados en la base, mapeados al ícono propio
-// equivalente para no tener que migrar los datos.
-const LEGACY_ICON_NAMES: Record<string, CategoryIcon> = {
-  FaHeadset: HeadsetIcon,
-  MdRadar: InstrumentosVueloIcon,
-  FaPlaneUp: AvionIcon,
-  FaTools: HerramientasIcon,
-  GiPlantWatering: AvionAgricolaIcon,
-  FaOilCan: AceiteraIcon,
-  TbScrew: TornilloTuercaIcon,
-  TbEngine: MotorIcon,
-  FaBolt: LucesElectricosIcon,
-  GiCarWheel: RuedaIcon,
-};
+// VA-148: los nombres viejos de react-icons se migraron en la base (va148_iconos_categorias).
 
 export function getCategoryIcon(name?: string | null): CategoryIcon | null {
   const key = name?.trim();
   if (!key) return null;
-  return CATEGORY_ICONS[key] ?? LEGACY_ICON_NAMES[key] ?? null;
+  return CATEGORY_ICONS[key] ?? null;
 }

@@ -40,7 +40,8 @@ export const getAircraftTaxonomy = unstable_cache(
     ]);
     return { categories, brands };
   },
-  ["aircraft-taxonomy"],
+  // VA-148/VA-149: clave nueva para no servir el orden y los nombres de íconos viejos cacheados.
+  ["aircraft-taxonomy", "va149"],
   { tags: [AIRCRAFT_TAXONOMY_TAG], revalidate: 3600 }
 );
 
@@ -51,7 +52,7 @@ export const getSparePartCategories = unstable_cache(
       select: { id: true, name: true, slug: true, parentId: true, icon: true },
       orderBy: { name: "asc" },
     }),
-  ["sparepart-categories"],
+  ["sparepart-categories", "va148"],
   { tags: [SPAREPART_CATEGORIES_TAG], revalidate: 3600 }
 );
 

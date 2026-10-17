@@ -289,6 +289,8 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 | VA-147 | Nuevo orden de la Home. | `/` |
 | VA-150 | **Arrepentimiento sin usar gratis lo comprado.** Cada aviso guarda con qué se pagó y el saldo va por lotes (lanzamiento, packs), con un orden único de consumo. Al arrepentirse se retira lo obtenido con ese pago: avisos a "pendiente de pago", renovaciones a su vencimiento anterior, créditos sin usar del pack, la suscripción y el uso del cupón. Mismo camino para el botón, el reembolso a mano en Mercado Pago y el contracargo. El diálogo dice qué se retira y llega un mail. Admin: filtro "Arrepentimientos", lo revertido en cada pago y la cuenta por usuario. Por ahora, en suscripciones solo el primer cobro (constante). 13 casos con Mercado Pago simulado. | Perfil → Mis compras → Arrepentirme |
 | VA-149 (orden) | Orden de categorías de aviones en la Home, el filtro, el formulario y el admin: Monomotor → Bimotor → Experimental / LSA → Agrícola → Helicóptero → Proyecto → Otros. "Experimental / Avión Ligero (LSA)" pasa a "Experimental / LSA". Dibujos: el recoloreo por script no quedó prolijo; se esperan las imágenes nuevas. | `/` · `/planes` · `/publish` |
+| VA-149 (dibujos) | Dibujos blancos con la línea roja y azul (los pasó el socio) en "Explorá por tipo de aeronave", con sus medidas reales. | `/` |
+| VA-148 | Íconos de las categorías de repuestos: el admin elige entre los 14 íconos propios (con vista previa) en vez de escribir un nombre de react-icons; los nombres guardados se migraron (`va148_iconos_categorias`) y se quitó la dependencia `react-icons`. JS de la Home: 801,3 → 801,2 KB. | `/admin/taxonomy` · Home |
 
 ## Pruebas de pagos (16/10/2026)
 
