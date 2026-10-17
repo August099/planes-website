@@ -877,7 +877,8 @@ export default function PublishForm({
 
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Año *</label>
-                                                <input type="number" min="1900" max={currentYear} value={aircraftForm.year} onChange={e => {
+                                                {/* VA-145: vacío se guarda como 0 y se muestra vacío (antes quedaba un "0" imposible de borrar). */}
+                                                <input type="number" min="1900" max={currentYear} value={aircraftForm.year || ""} onChange={e => {
                                                     const year = Number(e.target.value);
                                                     setAircraftForm({...aircraftForm, year, condition: year === currentYear ? aircraftForm.condition : "USADO"});
                                                 }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
