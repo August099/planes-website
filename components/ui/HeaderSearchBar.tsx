@@ -28,6 +28,14 @@ export default function HeaderSearchBar() {
     setPrevSection(section);
     if (section) setSearchType(section);
   }
+  // VA-146: al cambiar de página se limpia el buscador. Antes el texto quedaba, el cambio de sección
+  // cambiaba el tipo y la búsqueda se repetía sola y abría los resultados en la página nueva.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setQuery("");
+    setIsOpen(false);
+  }
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
