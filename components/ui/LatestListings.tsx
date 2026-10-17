@@ -6,13 +6,13 @@ import { SparePartCard } from "@/components/ui/SparePartCard";
 
 // Swiper React
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
+import { Navigation, Pagination } from "swiper/modules";
 
 // Estilos de Swiper
 import "swiper/css";
 import "swiper/css/navigation";
 import { SectionTitle } from "@/components/ui/home/SectionTitle";
-import { CarouselArrow } from "@/components/ui/home/CarouselArrow";
+import { CarouselArrow, CarouselDots, carouselPagination } from "@/components/ui/home/CarouselArrow";
 
 type CategoryProp = { id?: string; name: string } | string | null;
 
@@ -78,13 +78,15 @@ export function LatestAircraft({ items }: LatestListingsProps) {
         <CarouselArrow id="swiper-latest-listings-prev" direction="prev" />
 
         <Swiper
-          modules={[Navigation]}
+          modules={[Navigation, Pagination]}
           navigation={{
             prevEl: "#swiper-latest-listings-prev",
             nextEl: "#swiper-latest-listings-next",
           }}
-          spaceBetween={20}
-          slidesPerView={1}
+          pagination={carouselPagination("swiper-latest-listings-dots")}
+          spaceBetween={12}
+          // VA-139: en celular se asoma la tarjeta siguiente.
+          slidesPerView={1.15}
           breakpoints={{
             480: {
               slidesPerView: 2,
@@ -134,6 +136,7 @@ export function LatestAircraft({ items }: LatestListingsProps) {
         </Swiper>
 
         <CarouselArrow id="swiper-latest-listings-next" direction="next" />
+        <CarouselDots id="swiper-latest-listings-dots" />
       </div>
     </section>
   );

@@ -265,3 +265,22 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
   border-color: rgb(0 31 88 / 0.12);
   box-shadow: 0 1px 2px rgb(0 31 88 / 0.06);
 }
+
+/* VA-139: puntos de los carruseles de la Home (Swiper los dibuja con estas clases). */
+.va-dots.swiper-pagination-lock { display: none; }
+.va-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgb(0 31 88 / 0.22);
+  cursor: pointer;
+  transition: width 150ms, background-color 150ms;
+}
+.va-dot-active {
+  width: 20px;
+  background: #e70f1f;
+}
+@media (prefers-reduced-motion: reduce) {
+  .va-dot { transition: none; }
+}
