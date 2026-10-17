@@ -5,8 +5,8 @@ import { SectionTitle } from "@/components/ui/home/SectionTitle";
 // "Explorá por tipo de aeronave" (VA-86). Server component, sin JS de cliente. Ajuste del socio
 // (10/10): en celular, grilla de 2 por fila (la séptima sola y centrada); imágenes y textos un 15 %
 // más chicos que la primera versión. Correspondencia con AircraftCategory confirmada por el socio (10/10):
-// Monomotor = MP + MT, Bimotor = BP + BT, Experimental / Avión ligero = E, Agrícola = A,
-// Helicóptero = H, Proyecto = PR, Otros = S/C.
+// Monomotor = MP + MT, Bimotor = BP + BT, Experimental / LSA = E, Agrícola = A,
+// Helicóptero = H, Proyecto = PR, Otros = S/C. VA-149 (17/10): orden y nombre como en lib/aircraft-categories.ts.
 const TYPES = [
   {
     name: "Monomotor",
@@ -23,6 +23,13 @@ const TYPES = [
     categories: ["BP", "BT"],
   },
   {
+    name: "Experimental / LSA",
+    image: "avion-ligero",
+    width: 417,
+    height: 147,
+    categories: ["E"],
+  },
+  {
     name: "Agrícola",
     image: "agricola",
     width: 396,
@@ -35,13 +42,6 @@ const TYPES = [
     width: 372,
     height: 171,
     categories: ["H"],
-  },
-  {
-    name: "Experimental / Avión ligero",
-    image: "avion-ligero",
-    width: 417,
-    height: 147,
-    categories: ["E"],
   },
   {
     name: "Proyecto",

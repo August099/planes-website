@@ -15,17 +15,29 @@ export const ENGINE_LABELS: Record<EngineKind, string> = {
   TURBOPROP: "Turbohélice",
 };
 
+// VA-149 (socio, 17/10): el mismo orden en todo el sitio (Home, filtro de /planes y formulario):
+// Monomotor → Bimotor → Experimental / LSA → Agrícola → Helicóptero → Proyecto → Otros, y dentro de
+// Monomotor y Bimotor, Pistón antes que Turbohélice.
 export const AIRCRAFT_CATEGORIES: AircraftCategoryDef[] = [
   { id: "MP", group: "Monomotor", engine: "PISTON" },
   { id: "MT", group: "Monomotor", engine: "TURBOPROP" },
   { id: "BP", group: "Bimotor", engine: "PISTON" },
   { id: "BT", group: "Bimotor", engine: "TURBOPROP" },
+  { id: "E", group: "Experimental / LSA" },
   { id: "A", group: "Agrícola" },
   { id: "H", group: "Helicóptero" },
-  { id: "E", group: "Experimental / LSA" },
   { id: "PR", group: "Proyecto" },
   { id: "S/C", group: "Otros" },
 ];
+
+/** VA-149: ordena categorías que vienen de la base (ordenadas por nombre) según AIRCRAFT_CATEGORIES. */
+export function sortAircraftCategories<T extends { id: string }>(list: T[]): T[] {
+  const rank = (id: string) => {
+    const i = AIRCRAFT_CATEGORIES.findIndex((c) => c.id === id);
+    return i === -1 ? AIRCRAFT_CATEGORIES.length : i;
+  };
+  return [...list].sort((a, b) => rank(a.id) - rank(b.id));
+}
 
 // Grupos en el orden en que se muestran ("Tipo de aeronave").
 export const AIRCRAFT_GROUPS = [...new Set(AIRCRAFT_CATEGORIES.map((c) => c.group))];
