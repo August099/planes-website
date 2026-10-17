@@ -2,6 +2,7 @@ import "server-only";
 import type { InvoiceStatus, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withdrawalUntil } from "@/lib/payments/withdrawal";
+import { pendingPaymentExpired } from "@/lib/payments/pending";
 
 // VA-92 · Etapa 5: "Mis compras" del perfil. Une las compras de pago único (Purchase) y los cobros de
 // la suscripción (Payment con subscriptionId), con el estado del pago y de la factura.
@@ -54,6 +55,7 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
         finalPrice: true,
         paymentStatus: true,
         activatedAt: true,
+        updatedAt: true,
         payments: {
           where: { status: "approved" },
           select: {
@@ -95,7 +97,12 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
       description: p.description || "Compra",
       amount,
       // Un cupón del 100% no pasa por Mercado Pago: se muestra como "Sin cargo".
-      payment: amount === 0 && p.activatedAt ? { key: "FREE", label: "Sin cargo", tone: "ok" } : PAYMENT[p.paymentStatus],
+      payment:
+        amount === 0 && p.activatedAt
+          ? { key: "FREE", label: "Sin cargo", tone: "ok" }
+          : pendingPaymentExpired(p) // VA-140
+            ? { key: "EXPIRED", label: "Cancelado (no se pagó)", tone: "muted" }
+            : PAYMENT[p.paymentStatus],
       // VA-105 1.2: sin cargo (cupón del 100%) → no corresponde factura.
       invoice:
         amount === 0 && p.activatedAt

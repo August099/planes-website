@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { pendingPaymentExpired } from "@/lib/payments/pending";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { AutoRefresh } from "@/components/checkout/AutoRefresh";
 import { PageBackground } from "@/components/ui/PageBackground";
@@ -62,7 +63,7 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
     ? purchase.paymentStatus === "REFUNDED"
       ? "refunded"
       : "active"
-    : purchase.paymentStatus === "REJECTED" || purchase.paymentStatus === "CANCELLED" || mpStatus === "rejected" || mpStatus === "null"
+    : purchase.paymentStatus === "REJECTED" || purchase.paymentStatus === "CANCELLED" || mpStatus === "rejected" || mpStatus === "null" || pendingPaymentExpired(purchase)
       ? "failed"
       : purchase.paymentStatus === "IN_PROCESS" || mpStatus === "pending" || mpStatus === "in_process"
         ? "pending"
@@ -136,7 +137,7 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
                 Tu pago está pendiente
               </h1>
               <p className="mt-3 text-sm text-slate-600">
-                Mercado Pago todavía no lo acreditó (con efectivo puede tardar hasta 2 días hábiles). Cuando se acredite, activamos tu
+                Mercado Pago todavía no lo acreditó (a veces revisa el pago unos minutos). Cuando se acredite, activamos tu
                 compra automáticamente.
               </p>
               <AutoRefresh everyMs={15_000} maxMs={10 * 60_000} />
