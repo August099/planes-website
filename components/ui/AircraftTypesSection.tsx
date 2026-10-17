@@ -14,7 +14,6 @@ const TYPES = [
     width: 402,
     height: 158,
     categories: ["MP", "MT"],
-    description: "Un motor a pistón, de ala alta o baja. El avión privado por excelencia.",
   },
   {
     name: "Bimotor",
@@ -22,7 +21,6 @@ const TYPES = [
     width: 386,
     height: 166,
     categories: ["BP", "BT"],
-    description: "Dos motores para viajar más lejos, más rápido y con más redundancia.",
   },
   {
     name: "Agrícola",
@@ -30,7 +28,6 @@ const TYPES = [
     width: 396,
     height: 147,
     categories: ["A"],
-    description: "Aeroaplicadores listos para trabajar, con su equipo de aplicación.",
   },
   {
     name: "Helicóptero",
@@ -38,7 +35,6 @@ const TYPES = [
     width: 372,
     height: 171,
     categories: ["H"],
-    description: "Helicópteros civiles para trabajo aéreo, traslados y uso privado.",
   },
   {
     name: "Experimental / Avión ligero",
@@ -46,7 +42,6 @@ const TYPES = [
     width: 417,
     height: 147,
     categories: ["E"],
-    description: "Livianos y económicos de operar, ideales para instrucción y recreación.",
   },
   {
     name: "Proyecto",
@@ -54,7 +49,6 @@ const TYPES = [
     width: 308,
     height: 146,
     categories: ["PR"],
-    description: "En restauración, fuera de servicio o incompletos, para ponerlos de nuevo en el aire.",
   },
   {
     name: "Otros",
@@ -63,7 +57,6 @@ const TYPES = [
     height: 162,
     categories: ["S/C"],
     // Ajustado (10/10): los turbohélices tienen categoría propia (MT y BT).
-    description: "Jets y todo lo que no entra en las categorías anteriores.",
   },
 ];
 
@@ -101,7 +94,6 @@ export function AircraftTypesSection({ counts }: { counts: Record<string, number
                   <h3 className="mt-3 text-[0.95rem] leading-snug font-bold text-[#001F58] decoration-[#E70F1F] decoration-2 underline-offset-4 group-hover:underline group-focus-visible:underline">
                     {type.name}
                   </h3>
-                  <p className="mx-auto mt-1 max-w-[15rem] text-xs leading-relaxed text-slate-600">{type.description}</p>
                   <p
                     className={`mt-2 text-[0.6rem] font-semibold uppercase tracking-[0.14em] tabular-nums ${
                       total > 0 ? "text-[#001F58]" : "text-slate-500"
