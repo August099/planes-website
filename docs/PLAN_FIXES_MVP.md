@@ -1473,13 +1473,24 @@ Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se 
 Probados en celular; verificar también en escritorio.
 
 ### VA-130 · 404 sin el ícono de "Volver a la Base"
+**Estado (17/10/2026):** ✅ hecho. Sin el ✈️ en el 404 y en el 403.
 ### VA-131 · Detalle de avión: grilla "General" con Marca, Modelo, Año, Hs totales, Categoría y Estado; "Datos de la aeronave" sin Categoría (ya está el link arriba)
+**Estado (17/10/2026):** ✅ hecho. La grilla "General" de la ficha web lleva Marca, Modelo, Año, Horas totales, Categoría, Estado y Matrícula; "Datos de la aeronave" queda con Marca, Modelo, Variante, Año y Horas.
 ### VA-132 · Checkout: el resumen (con el cupón) antes de la sección de pago
+**Estado (17/10/2026):** ✅ hecho. En celular el resumen con el cupón va arriba; en escritorio sigue a la derecha.
 ### VA-133 · Menú desplegable de Repuestos: categorías colapsables (celular)
+**Estado (17/10/2026):** ✅ hecho. "Repuestos" abre el listado y la flecha despliega las categorías (cerradas al abrir el menú). En escritorio el panel sigue igual.
 ### VA-134 · Favoritos sin sesión: llevar al login (y el error que da dentro de un detalle)
+**Estado (17/10/2026):** ✅ hecho. La acción devuelve `needsLogin` en vez de tirar un error (en producción el mensaje llegaba vacío y el detalle mostraba "Ocurrió un error"); tarjetas y detalle llevan a `/login?callbackUrl=…` y vuelven al aviso.
 ### VA-135 · Ventana de bienvenida del lanzamiento: solo después de registrarse, no en cada inicio de sesión
+**Estado (17/10/2026):** ✅ hecho. Solo para cuentas creadas en las últimas 24 h con el saldo de lanzamiento, y se marca como vista al mostrarla (antes volvía en cada carga hasta tocar un botón y les salía a las cuentas viejas).
 ### VA-136 · Header de la Home: al recargar queda blanco en vez de transparente
+**Estado (17/10/2026):** ❓ no se reproduce: en local (dev y build de producción, 375 px) el header de la Home queda transparente al recargar, también con la página scrolleada. Pedirle al socio captura, navegador y si estaba logueado.
 ### VA-137 · Buscador: solo muestra aeronaves y al salir redirige a repuestos
+**Estado (17/10/2026):** ✅ hecho. El buscador del celular buscaba solo aeronaves (no tiene selector de tipo): ahora busca en los dos. La pantalla de búsqueda ocupa una entrada del historial: el "atrás" del celular la cierra en vez de volver a la página anterior (probablemente eso llevaba a Repuestos).
 ### VA-138 · Mapa de zona: no aparece en el detalle de aviones ni de repuestos
+**Estado (17/10/2026):** ✅ hecho. El bloque no salía en avisos sin coordenadas (datos de prueba, o si Georef no respondió al publicar): ahora se encuadra y resalta la provincia sin el punto.
 ### VA-139 · Carruseles de la Home: que se note que hay más (indicadores) y flechas que funcionen en celular, con un solo criterio
+**Estado (17/10/2026):** ✅ hecho. Destacadas, Últimas publicaciones y Categorías: puntos debajo en todos los tamaños; en celular (sin flechas) se asoma la tarjeta siguiente; en escritorio siguen las flechas.
 ### VA-140 · Pago pendiente: cancelarlo a los 5 minutos
+**Estado (17/10/2026):** ✅ hecho. El link de Mercado Pago vence a los 5 minutos; pasado ese tiempo la compra sin pagar figura "Cancelado (no se pagó)" en Mis compras y la página de estado ofrece reintentar. Se excluyen efectivo y cajero (quedaban pendientes días). Los pagos "en proceso" no se tocan. Test en `tests/pending.test.ts`.

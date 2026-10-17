@@ -260,6 +260,22 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 
 **Error de "doctype" en `npm run dev` (14/10, reportado por el socio):** no se pudo reproducir en un entorno limpio: con dependencias recién instaladas, migraciones aplicadas y semillas, `npm run dev` levanta y `/`, `/planes`, `/spareparts`, `/login`, `/services` y `/api/auth/session` responden bien (los únicos errores de consola son fotos de prueba de loremflickr sin red). Tampoco con la base apagada (da un error de Prisma, no de doctype) ni corriendo `next build` con `next dev` abierto. La causa más probable sigue siendo la del 11/10 (`ClientFetchError: Unexpected token '<', "<!DOCTYPE"…`): caché vieja en `.next/dev`. Pasos en la máquina del socio: cortar `npm run dev`, borrar `.next` (`Remove-Item -Recurse -Force .next`), `npm install`, `npx prisma generate`, `npm run migrate:deploy` contra `va_dev` (hay migraciones nuevas: VA-83, VA-85, VA-80, VA-84 y VA-89; si `va_dev` no las tiene, las páginas que las usan fallan) y volver a levantar. Si sigue, hace falta el texto exacto del error (consola del navegador o terminal). Detalle de paso: `prisma/seed.ts` no carga el `.env` (hay que correrlo con `npx tsx --env-file=.env prisma/seed.ts`).
 
+## Pedidos del socio del 17/10 (VA-130 a VA-140)
+
+| Tarea | Qué cambió | Dónde verlo |
+|---|---|---|
+| VA-130 | 404 y 403 sin el ícono en "Volver a la Base". | Cualquier URL que no existe |
+| VA-131 | Grilla "General" del detalle con Marca, Modelo, Año, Horas, Categoría, Estado y Matrícula; "Datos de la aeronave" sin Categoría. | Detalle de un avión |
+| VA-132 | Checkout en celular: el resumen con el cupón antes del pago. | `/checkout` a 375 px |
+| VA-133 | Menú del celular: categorías de Repuestos colapsables. | Menú ☰ → flecha de Repuestos |
+| VA-134 | Favoritos sin sesión llevan al login y vuelven al aviso (antes: error en el detalle). | Corazón sin sesión |
+| VA-135 | Ventana de bienvenida solo una vez y solo al registrarse. | Registrar una cuenta nueva |
+| VA-136 | ❓ No se reproduce (header blanco al recargar la Home). | — |
+| VA-137 | Buscador del celular con aeronaves y repuestos; el "atrás" lo cierra. | Lupa en celular |
+| VA-138 | Mapa de zona también sin coordenadas (provincia resaltada). | Detalle de un aviso |
+| VA-139 | Carruseles de la Home con puntos y la tarjeta siguiente asomada en celular. | `/` |
+| VA-140 | Compra pendiente de pago cancelada a los 5 minutos; sin efectivo ni cajero. | Mis compras · página de estado |
+
 ## Pruebas de pagos (16/10/2026)
 
 **Hecho, con plata real y las credenciales de producción (cuenta del socio), en local:**
