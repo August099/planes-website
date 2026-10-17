@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Heart, Share2, Printer, TriangleAlert } from "lucide-react";
 import { ShareDialog } from "@/components/ui/ShareDialog";
 import { CompareButton } from "@/components/ui/compare/CompareButton";
 import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
-import { errorMessage } from "@/lib/errors";
 
 interface Props {
   title: string;
@@ -19,6 +19,7 @@ interface Props {
 }
 
 export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = false, type = "AIRCRAFT", compareImage = null }: Props) {
+  const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(isFavoriteInitial);
   const [isPending, setIsPending] = useState(false);
   
@@ -35,14 +36,15 @@ export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = fals
 
     try {
       const res = await toggleFavoriteAction(aircraftId, type);
-      setIsFavorite(res.isFavorite);
-    } catch (error) {
-      setIsFavorite(previousState);
-      if (errorMessage(error) === "UNAUTHENTICATED") {
-        alert("Tenés que iniciar sesión para guardar favoritos.");
-      } else {
-        alert("Ocurrió un error al actualizar favoritos.");
+      if (res.needsLogin) {
+        setIsFavorite(previousState);
+        router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+        return;
       }
+      setIsFavorite(res.isFavorite);
+    } catch {
+      setIsFavorite(previousState);
+      alert("Ocurrió un error al actualizar favoritos.");
     } finally {
       setIsPending(false);
     }

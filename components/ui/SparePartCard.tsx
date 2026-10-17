@@ -15,7 +15,6 @@ import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
 import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/format";
 import { formatEnum, SPARE_PART_CONDITION_LABELS } from "@/lib/constants";
-import { errorMessage } from "@/lib/errors";
 import { useFavoriteIds } from "@/components/ui/FavoriteIdsProvider";
 
 
@@ -79,17 +78,19 @@ export function SparePartCard({
     setLoadingFav(true);
 
     try {
-      const res = await toggleFavoriteAction(id, "SPARE_PART"); 
+      const res = await toggleFavoriteAction(id, "SPARE_PART");
+      if (res.needsLogin) {
+        setIsFavorite(!nextState);
+        router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+        return;
+      }
       setIsFavorite(res.isFavorite);
 
       if (onFavoriteToggle) {
         onFavoriteToggle(id, res.isFavorite);
       }
-    } catch (error) {
+    } catch {
       setIsFavorite(!nextState);
-      if (errorMessage(error) === "UNAUTHENTICATED") {
-        router.push("/login");
-      }
     } finally {
       setLoadingFav(false);
     }

@@ -9,11 +9,15 @@ import { revalidatePath } from "next/cache";
 // crea. Los índices únicos (userId, aircraftId) y (userId, sparePartId) impiden duplicados; si un
 // doble clic crea el mismo favorito en paralelo, el segundo create falla con P2002 y se toma como
 // "ya es favorito".
-export async function toggleFavoriteAction(itemId: string, type: "AIRCRAFT" | "SPARE_PART") {
+// VA-134: sin sesión devuelve { needsLogin: true } en vez de tirar un error: en producción Next
+// oculta el mensaje de los errores de las server actions y el cliente no podía distinguirlo.
+export type FavoriteResult = { needsLogin: true } | { needsLogin?: false; isFavorite: boolean };
+
+export async function toggleFavoriteAction(itemId: string, type: "AIRCRAFT" | "SPARE_PART"): Promise<FavoriteResult> {
   const user = await getCurrentUser();
 
   if (!user) {
-    throw new Error("UNAUTHENTICATED");
+    return { needsLogin: true };
   }
   if (typeof itemId !== "string" || !itemId) {
     throw new Error("Aviso inválido.");
