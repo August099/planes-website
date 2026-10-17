@@ -54,7 +54,7 @@ editarla para separar los valores. **Después de cargar todo: Redeploy** del úl
 | `RUNTIME_DATABASE_URL` | pooler de la base del Preview | la usa la app |
 | `NEXT_PUBLIC_SITE_URL` | `https://planes-website-git-pre-production-diodo.vercel.app` | links, QR del PDF, sitemap |
 | `NEXTAUTH_URL` | la misma URL del Preview | links de los mails (verificación, contraseña) |
-| `APP_URL` | la misma URL del Preview | vuelta de Mercado Pago y webhook |
+| `APP_URL` | la misma URL del Preview | vuelta de Mercado Pago y webhook. **Una variable aparte solo para Preview**: el 16/10 estaba la de producción para todos los ambientes y los avisos de los pagos del Preview iban a `ventasaeronauticas.com` |
 | `AUTH_SECRET` | uno propio del Preview (`npx auth secret` o 32 caracteres al azar) | distinto del de producción |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | el cliente OAuth donde agregaste la URI del Preview | redirect: `<URL del Preview>/api/auth/callback/google` |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | del proyecto de Supabase del Preview | |
@@ -63,7 +63,7 @@ editarla para separar los valores. **Después de cargar todo: Redeploy** del úl
 | `SUPPORT_EMAIL` | el mail donde quieren recibir sugerencias y avisos | |
 | `MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY` | de la aplicación de la **cuenta vendedora de prueba** | las que estaban en `.env.local` |
 | `MP_WEBHOOK_SECRET` | la clave del webhook en **modo prueba** (paso 3) | sin ella, ningún pago se activa |
-| `MP_NOTIFICATION_URL` | vacía | usa `APP_URL` + `/api/webhooks/mercadopago` |
+| `MP_NOTIFICATION_URL` | no crearla | sin ella usa `APP_URL` + `/api/webhooks/mercadopago` |
 | `CRON_SECRET` | una cualquiera (opcional) | el cron diario solo corre en Production |
 | `BILLING_ENABLED` | `false` | |
 | `TUSFACTURAS_MODE` | vacía | en el Preview nunca se factura de verdad |
@@ -87,6 +87,12 @@ las tarjetas de prueba de `docs/PAGOS.md` (titular `APRO` = aprobado, `OTHE` = r
 
 ---
 
+**Si un pago aprobado no se activa solo:** `scripts/process-mp-payment.ts --recent` muestra, por pago,
+a qué `notification_url` mandó el aviso Mercado Pago (tiene que ser la del Preview). En la base del
+Preview, `select "receivedAt", topic, status, error from "WebhookEvent" order by "receivedAt" desc limit 10;`
+muestra si llegó y por qué se rechazó. Para activar a mano una compra: el script con `DATABASE_URL` y
+`RUNTIME_DATABASE_URL` de la base del Preview puestas en la terminal.
+
 ## 4. Desplegar la rama
 
 ```powershell
@@ -107,10 +113,10 @@ Marcar cada punto. Celular real para los que dicen 📱.
 
 ### Cuentas y lanzamiento
 - [ ] Registro con email: llega el mail de verificación y el link abre el Preview (no localhost).
-- [ ] Login con Google.
+- [x] Login en el Preview (confirmado por el socio, 17/10). Falta confirmar que fue **con Google** y probar el registro de una cuenta nueva con Google.
 - [ ] "Olvidé mi contraseña": llega el mail y el link funciona.
 - [ ] Ventana de bienvenida del lanzamiento: sale **una sola vez** por cuenta nueva.
-- [ ] Publicar un avión y un repuesto **gratis** con el saldo de lanzamiento (sin pasar por Mercado Pago); el segundo avión ya pide pago.
+- [x] Publicar en el Preview (confirmado por el socio, 17/10). Falta confirmar: un avión y un repuesto **gratis** con el saldo de lanzamiento (sin pasar por Mercado Pago); el segundo avión ya pide pago.
 
 ### Publicar y ver
 - [ ] Formulario de avión: motor opcional en Proyecto, dos obligatorios en Bimotor; texto de fotos (máx. 15).
@@ -125,8 +131,8 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Pago **rechazado** (titular `OTHE`): la página dice que no se pudo cobrar y no se activa nada.
 - [ ] **Suscripción mensual**: en el checkout, el email de la **cuenta compradora de prueba**; se activa sola y aparece en el perfil.
 - [ ] `/plans` con la suscripción activa: "Cancelar" en la actual y "Cambiar a este plan" en las otras; probar el cambio (inmediato).
-- [ ] Cancelar la suscripción: queda activa hasta el fin del período.
-- [ ] **Arrepentimiento** de un pago único desde Mis compras: se devuelve y se revierte lo comprado.
+- [x] Cancelar la suscripción: queda activa hasta el fin del período (confirmado por el socio, 17/10).
+- [x] **Arrepentimiento** de un pago único desde Mis compras: se devuelve y se revierte lo comprado (probado con dinero real, 16/10). Con VA-150 hay que repetirlo con los casos nuevos.
 
 ### Páginas y mails
 - [ ] `/about`: el formulario de sugerencias guarda y llega el mail a `SUPPORT_EMAIL`; aparece en `/admin/suggestions`.

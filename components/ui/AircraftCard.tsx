@@ -14,7 +14,6 @@ import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
 import { useRouter } from "next/navigation";
 import { ImageCarousel } from "./CardImageCarousel";
 import { formatPrice } from "@/lib/format";
-import { errorMessage } from "@/lib/errors";
 import { useFavoriteIds } from "@/components/ui/FavoriteIdsProvider";
 import { CompareButton } from "@/components/ui/compare/CompareButton";
 
@@ -100,16 +99,18 @@ export function AircraftCard({
 
     try {
       const res = await toggleFavoriteAction(id, "AIRCRAFT");
+      if (res.needsLogin) {
+        setIsFavorite(!nextState);
+        router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+        return;
+      }
       setIsFavorite(res.isFavorite);
 
       if (onFavoriteToggle) {
         onFavoriteToggle(id, res.isFavorite);
       }
-    } catch (error) {
+    } catch {
       setIsFavorite(!nextState);
-      if (errorMessage(error) === "UNAUTHENTICATED") {
-        router.push("/login");
-      }
     } finally {
       setLoadingFav(false);
     }

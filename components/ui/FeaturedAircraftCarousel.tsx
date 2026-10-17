@@ -8,13 +8,13 @@ import {
 
 // Swiper React
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
+import { Navigation, Pagination } from "swiper/modules";
 
 // Estilos Swiper
 import "swiper/css";
 import "swiper/css/navigation";
 import { SectionTitle } from "@/components/ui/home/SectionTitle";
-import { CarouselArrow } from "@/components/ui/home/CarouselArrow";
+import { CarouselArrow, CarouselDots, carouselPagination } from "@/components/ui/home/CarouselArrow";
 import { FEATURED_AIRCRAFT_COUNT } from "@/lib/constants";
 
 export interface FeaturedAircraftProps extends AircraftCardProps {
@@ -58,18 +58,20 @@ function FeaturedCarousel({ aircrafts }: Props) {
       </div>
 
       {/* CONTENEDOR CON NAVEGACIÓN LATERAL */}
-      <div className="relative px-6 sm:px-10">
+      <div className="relative sm:px-10">
         <CarouselArrow id="swiper-aircraft-prev" direction="prev" />
 
         {/* SWIPER */}
         <Swiper
-          modules={[Navigation]}
+          modules={[Navigation, Pagination]}
           navigation={{
             prevEl: "#swiper-aircraft-prev",
             nextEl: "#swiper-aircraft-next",
           }}
-          spaceBetween={20}
-          slidesPerView={1}
+          pagination={carouselPagination("swiper-aircraft-dots")}
+          spaceBetween={12}
+          // VA-139: en celular se asoma la tarjeta siguiente.
+          slidesPerView={1.12}
           breakpoints={{
             640: {
               slidesPerView: 2,
@@ -89,6 +91,7 @@ function FeaturedCarousel({ aircrafts }: Props) {
         </Swiper>
 
         <CarouselArrow id="swiper-aircraft-next" direction="next" />
+        <CarouselDots id="swiper-aircraft-dots" />
       </div>
     </section>
   );

@@ -4,7 +4,8 @@ import { Prisma, type CouponScope, type ListingKind } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getListingPrices } from "@/lib/listing-prices";
 import { defaultUsageText } from "@/lib/plan-rules";
-import { COUPON_RESERVATION_MINUTES, CouponUnavailableError, evaluateCoupon, withCouponReservation } from "@/lib/coupons";
+import { CouponUnavailableError, evaluateCoupon, withCouponReservation } from "@/lib/coupons";
+import { PENDING_PAYMENT_MINUTES } from "@/lib/payments/pending";
 import { billingSnapshot, parseBilling, type BillingData } from "@/lib/billing-rules";
 import { appUrl, mpClient, notificationUrl } from "@/lib/mercadopago";
 import { activatePurchase } from "@/lib/payments/activation";
@@ -243,8 +244,10 @@ export async function startCheckout(input: {
       ...(notificationUrl().startsWith("https://") ? { notification_url: withSourceNews(notificationUrl()) } : {}),
       statement_descriptor: "VENTAS AERO",
       expires: true,
-      // Con cupón, el link vence junto con la reserva del uso; sin cupón, en 3 días.
-      expiration_date_to: new Date(Date.now() + (couponId ? COUPON_RESERVATION_MINUTES * 60_000 : 3 * 24 * 60 * 60 * 1000)).toISOString(),
+      // VA-140: el link vence a los 5 minutos (después la compra se muestra cancelada y se reintenta).
+      // Sin efectivo ni cajero (Rapipago, Pago Fácil, red Link): esos pagos quedan pendientes días.
+      expiration_date_to: new Date(Date.now() + PENDING_PAYMENT_MINUTES * 60_000).toISOString(),
+      payment_methods: { excluded_payment_types: [{ id: "ticket" }, { id: "atm" }] },
       metadata: { purchase_id: purchaseId },
     },
   });

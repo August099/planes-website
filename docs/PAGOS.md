@@ -28,7 +28,7 @@ migraciones); en Vercel, Settings › Environment Variables, con el ambiente que
 | `MP_PUBLIC_KEY` | prueba | prueba | producción | Checkout Pro redirige: hoy no se usa en el cliente. |
 | `MP_WEBHOOK_SECRET` | opcional | sí | sí | Sin ella el webhook responde 401 a todo y lo registra (fail closed). |
 | `APP_URL` | `http://localhost:3000` | URL del preview | URL de producción | `back_urls` de Mercado Pago. |
-| `MP_NOTIFICATION_URL` | opcional | opcional | no | `notification_url` de las preferencias. Si falta: `APP_URL` + `/api/webhooks/mercadopago`. |
+| `MP_NOTIFICATION_URL` | opcional | no | no | `notification_url` de las preferencias. Si falta: `APP_URL` + `/api/webhooks/mercadopago`. |
 | `BILLING_ENABLED` | `false` | `false` | `true` | En `false` los pagos funcionan y la factura queda pendiente. |
 | `CRON_SECRET` | opcional | sí | sí | Cron diario de suscripciones (`vercel.json` → `/api/cron/subscriptions`). Vercel la manda como `Authorization: Bearer …`. Sin ella, el cron responde 401 y no cierra nada. |
 | `TUSFACTURAS_API_KEY`, `TUSFACTURAS_API_TOKEN`, `TUSFACTURAS_USER_TOKEN` | — | opcional (nunca se usan fuera de Producción) | producción | Credenciales de la cuenta **de producción** de TusFacturas. |

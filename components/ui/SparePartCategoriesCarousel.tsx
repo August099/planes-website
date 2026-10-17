@@ -6,13 +6,13 @@ import { DynamicCategoryIcon } from "@/components/ui/DynamicCategoryIcon";
 
 // Importaciones de Swiper
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
+import { Navigation, Pagination } from "swiper/modules";
 
 // Estilos de Swiper obligatorios
 import "swiper/css";
 import "swiper/css/navigation";
 import { SectionTitle } from "@/components/ui/home/SectionTitle";
-import { CarouselArrow } from "@/components/ui/home/CarouselArrow";
+import { CarouselArrow, CarouselDots, carouselPagination } from "@/components/ui/home/CarouselArrow";
 
 export interface CategoryItem {
   id: string;
@@ -50,16 +50,18 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
 
         {/* SWIPER */}
         <Swiper
-          modules={[Navigation]}
+          modules={[Navigation, Pagination]}
           navigation={{
             prevEl: "#swiper-button-prev-cat",
             nextEl: "#swiper-button-next-cat",
           }}
-          spaceBetween={16}
-          slidesPerView={2} // Para móviles pequeños
+          pagination={carouselPagination("swiper-cat-dots")}
+          spaceBetween={12}
+          // VA-139: en celular se asoma la tarjeta siguiente.
+          slidesPerView={2.3}
           breakpoints={{
             480: {
-              slidesPerView: 3,
+              slidesPerView: 3.3,
               spaceBetween: 16,
             },
             640: {
@@ -98,6 +100,7 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
         </Swiper>
 
         <CarouselArrow id="swiper-button-next-cat" direction="next" />
+        <CarouselDots id="swiper-cat-dots" />
       </div>
     </section>
   );

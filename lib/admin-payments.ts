@@ -45,6 +45,8 @@ export const PAYMENT_FILTERS: { value: string; label: string }[] = [
   { value: "CANCELLED", label: "Cancelado" },
   { value: "REFUNDED", label: "Reintegrado" },
   { value: "PARTIALLY_REFUNDED", label: "Reintegro parcial" },
+  // VA-150: pagos con pedido de arrepentimiento (botón de "Mis compras").
+  { value: "WITHDRAWAL", label: "Arrepentimientos" },
 ];
 
 const MP_TO_PURCHASE: Record<string, PaymentStatus> = {
@@ -61,7 +63,8 @@ const MP_TO_PURCHASE: Record<string, PaymentStatus> = {
 
 export async function listAdminPayments(f: AdminPaymentFilters, take = 200): Promise<AdminPaymentRow[]> {
   const created = f.from || f.to ? { ...(f.from && { gte: f.from }), ...(f.to && { lte: f.to }) } : undefined;
-  const paymentStatus = PAYMENT_FILTERS.some((o) => o.value === f.payment) ? (f.payment as PaymentStatus) : undefined;
+  const withdrawals = f.payment === "WITHDRAWAL";
+  const paymentStatus = !withdrawals && PAYMENT_FILTERS.some((o) => o.value === f.payment) ? (f.payment as PaymentStatus) : undefined;
   const invoiceWhere =
     f.invoice === "NONE"
       ? { none: { kind: "FACTURA_C" as const } }
@@ -74,6 +77,7 @@ export async function listAdminPayments(f: AdminPaymentFilters, take = 200): Pro
       where: {
         ...(created && { createdAt: created }),
         ...(paymentStatus && { paymentStatus }),
+        ...(withdrawals && { payments: { some: { withdrawalRequestedAt: { not: null } } } }),
         ...(invoiceWhere && { payments: f.invoice === "NONE" ? { none: { invoices: { some: { kind: "FACTURA_C" } } } } : { some: { invoices: invoiceWhere } } }),
       },
       orderBy: { createdAt: "desc" },
@@ -92,6 +96,7 @@ export async function listAdminPayments(f: AdminPaymentFilters, take = 200): Pro
     prisma.payment.findMany({
       where: {
         subscriptionId: { not: null },
+        ...(withdrawals && { withdrawalRequestedAt: { not: null } }),
         ...(created && { createdAt: created }),
         ...(paymentStatus && { status: { in: Object.entries(MP_TO_PURCHASE).filter(([, v]) => v === paymentStatus).map(([k]) => k) } }),
         ...(invoiceWhere && { invoices: invoiceWhere }),
@@ -184,7 +189,8 @@ export async function getAdminPaymentDetail(key: string) {
     });
     if (!purchase) return null;
     const events = await eventsFor(purchase.payments.map((p) => p.mpPaymentId));
-    return { type: "purchase" as const, purchase, payments: purchase.payments, events };
+    const reversals = await reversalsFor(purchase.payments.map((p) => p.id));
+    return { type: "purchase" as const, purchase, payments: purchase.payments, events, reversals };
   }
   if (type === "s") {
     const payment = await prisma.payment.findUnique({
@@ -196,9 +202,26 @@ export async function getAdminPaymentDetail(key: string) {
     });
     if (!payment) return null;
     const events = await eventsFor([payment.mpPaymentId, payment.subscription?.mpSubscriptionId ?? ""].filter(Boolean));
-    return { type: "subscription" as const, payment, payments: [payment], events };
+    const reversals = await reversalsFor([payment.id]);
+    return { type: "subscription" as const, payment, payments: [payment], events, reversals };
   }
   return null;
+}
+
+/** VA-150: lo que se revirtió por el reembolso de estos pagos (arrepentimiento, reembolso o contracargo). */
+async function reversalsFor(paymentIds: string[]) {
+  if (paymentIds.length === 0) return [];
+  const rows = await prisma.listingFunding.findMany({ where: { revertedPaymentId: { in: paymentIds } }, orderBy: { revertedAt: "asc" } });
+  const titles = new Map<string, string>();
+  const ids = (k: string) => rows.filter((r) => r.listingKind === k).map((r) => r.listingId);
+  const [a, p, h] = await Promise.all([
+    prisma.aircraft.findMany({ where: { id: { in: ids("AIRCRAFT") } }, select: { id: true, title: true } }),
+    prisma.sparePart.findMany({ where: { id: { in: ids("SPARE_PART") } }, select: { id: true, title: true } }),
+    prisma.hangar.findMany({ where: { id: { in: ids("HANGAR") } }, select: { id: true, title: true } }),
+  ]);
+  for (const l of [...a, ...p, ...h]) titles.set(l.id, l.title);
+  const what = { PUBLISH: "volvió a pendiente de pago", RENEWAL: "volvió al vencimiento anterior", FEATURED: "se quitó el destacado" } as const;
+  return rows.map((r) => ({ id: r.id, revertedAt: r.revertedAt!, title: titles.get(r.listingId) ?? "(aviso borrado)", detail: what[r.reason], source: r.source }));
 }
 
 async function eventsFor(externalIds: string[]) {

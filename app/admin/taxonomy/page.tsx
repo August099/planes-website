@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import { TaxonomyManager } from "@/components/ui/TaxonomyManager";
+import { sortAircraftCategories } from "@/lib/aircraft-categories";
 
 export default async function AdminTaxonomyPage() {
   const user = await getCurrentUser();
@@ -23,7 +24,7 @@ export default async function AdminTaxonomyPage() {
     prisma.aircraftCategory.findMany({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
-    }),
+    }).then(sortAircraftCategories), // VA-149
     prisma.aircraftBrand.findMany({
       select: {
         id: true,

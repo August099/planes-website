@@ -2,6 +2,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getMissingProfileFields, type ProfileField } from "@/lib/profile";
+import { sortAircraftCategories } from "@/lib/aircraft-categories";
 
 // Datos que casi no cambian y se pedían en cada request (VA-13). Se cachean con tags y las
 // actions de taxonomía (app/actions/admin-taxonomy-actions.ts) los invalidan con updateTag.
@@ -15,7 +16,7 @@ export const SPAREPART_CATEGORIES_TAG = "sparepart-categories";
 export const getAircraftTaxonomy = unstable_cache(
   async () => {
     const [categories, brands] = await Promise.all([
-      prisma.aircraftCategory.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+      prisma.aircraftCategory.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }).then(sortAircraftCategories),
       prisma.aircraftBrand.findMany({
         orderBy: { name: "asc" },
         select: {
@@ -39,7 +40,8 @@ export const getAircraftTaxonomy = unstable_cache(
     ]);
     return { categories, brands };
   },
-  ["aircraft-taxonomy"],
+  // VA-148/VA-149: clave nueva para no servir el orden y los nombres de íconos viejos cacheados.
+  ["aircraft-taxonomy", "va149"],
   { tags: [AIRCRAFT_TAXONOMY_TAG], revalidate: 3600 }
 );
 
@@ -50,7 +52,7 @@ export const getSparePartCategories = unstable_cache(
       select: { id: true, name: true, slug: true, parentId: true, icon: true },
       orderBy: { name: "asc" },
     }),
-  ["sparepart-categories"],
+  ["sparepart-categories", "va148"],
   { tags: [SPAREPART_CATEGORIES_TAG], revalidate: 3600 }
 );
 

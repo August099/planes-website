@@ -144,6 +144,23 @@ export default async function AdminPaymentDetailPage({ params }: Props) {
         )}
       </section>
 
+      {/* VA-150: lo que se retiró por el arrepentimiento, un reembolso o un contracargo. */}
+      {detail.reversals.length > 0 && (
+        <section className={BOX}>
+          <p className={`border-b border-[#001F58]/10 px-5 py-3 ${LABEL}`}>Lo que se revirtió</p>
+          <ul className="divide-y divide-slate-100">
+            {detail.reversals.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-baseline justify-between gap-2 px-5 py-2.5 text-sm">
+                <span className="text-slate-800">
+                  <strong className="font-semibold text-[#001F58]">{r.title}</strong>: {r.detail}
+                </span>
+                <span className="text-xs tabular-nums text-slate-500">{DATE.format(r.revertedAt)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className={BOX}>
         <p className={`border-b border-[#001F58]/10 px-5 py-3 ${LABEL}`}>Eventos del webhook</p>
         {detail.events.length === 0 ? (

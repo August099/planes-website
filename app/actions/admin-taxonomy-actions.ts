@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { parseCategoryIconName } from "@/lib/category-icon-names";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { validateImage } from "@/lib/upload-validation";
 import { revalidatePath, updateTag } from "next/cache";
@@ -187,6 +188,8 @@ export async function deleteAircraftSubModelAction(id: string) {
 export async function createSparePartCategoryAction(name: string, parentId?: string, icon?: string) {
   await verifyAdmin();
   if (!name.trim()) throw new Error("Nombre requerido");
+  // VA-148: solo uno de los 14 íconos propios (o ninguno).
+  if (icon?.trim() && !parseCategoryIconName(icon)) throw new Error("Ícono inválido");
 
   const slug = name
     .toLowerCase()
@@ -201,7 +204,7 @@ export async function createSparePartCategoryAction(name: string, parentId?: str
       name: name.trim(),
       slug: `${slug}-${Date.now().toString().slice(-4)}`,
       parentId: parentId || null,
-      icon: !parentId && icon ? icon.trim() : null,
+      icon: !parentId ? parseCategoryIconName(icon) : null,
     },
   });
 
@@ -213,12 +216,13 @@ export async function createSparePartCategoryAction(name: string, parentId?: str
 export async function updateSparePartCategoryAction(id: string, name: string, icon?: string) {
   await verifyAdmin();
   if (!id || !name.trim()) throw new Error("Datos incompletos");
+  if (icon?.trim() && !parseCategoryIconName(icon)) throw new Error("Ícono inválido");
 
   await prisma.category.update({
     where: { id },
     data: {
       name: name.trim(),
-      icon: icon ? icon.trim() : null,
+      icon: parseCategoryIconName(icon),
     },
   });
 

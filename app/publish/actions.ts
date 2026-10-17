@@ -10,6 +10,7 @@ import { EMAIL_FROM, escapeHtml, getSupportEmail } from "@/lib/mail";
 import { AnalyticsEventType } from "@prisma/client";
 import { hasNoExpiryPlan } from "@/lib/subscriptions";
 import { consumeListingAllowance, refundListingAllowance } from "@/lib/payments/allowance";
+import { recordFunding } from "@/lib/balances";
 import { coordinatesFor } from "@/lib/geocode";
 import {
   listingSchema,
@@ -291,6 +292,15 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
         select: { id: true },
       });
       id = sparePart.id;
+    }
+
+    // VA-150: con qué se pagó la publicación (suscripción o lote de saldo), para el arrepentimiento.
+    if (allowance) {
+      try {
+        await recordFunding(prisma, { userId: user.id, kind, listingId: id, reason: "PUBLISH", funding: allowance });
+      } catch (err) {
+        console.error("[VA-150] no se pudo registrar con qué se pagó el aviso:", err);
+      }
     }
 
     try {

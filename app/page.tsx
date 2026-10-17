@@ -164,26 +164,30 @@ export default async function HomePage() {
           que termina una es el color con que empieza la siguiente); estilos en app/globals.css. */}
       <FavoriteIdsProvider>
       <main className="home-theme relative isolate overflow-x-clip">
-        {/* Zona 1 · Cielo: hero + marcas + destacadas */}
+        {/* Zona 1 · Cielo: hero + tipos de aeronave + destacadas.
+            VA-147 (socio, 17/10): hero, tipos, destacadas, últimas, repuestos por categoría,
+            fabricantes, mapa, CTA de vendedores, cómo funciona, guías y secciones. */}
         <HeroBanner />
         <div className="home-zone home-zone-1">
           <div aria-hidden className="home-zone-bg" />
           {/* VA-47: invitación a registrarse, solo para visitantes sin cuenta (se decide en el navegador) */}
           <LaunchPromoBanner />
-          <FeaturedBrands brands={featuredBrandsFromDb} />
           <AircraftTypesSection counts={categoryCounts} />
           <div className="container mx-auto px-4 pb-12">
             <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
           </div>
         </div>
 
-        {/* Zona 2 · Altura: últimas publicaciones + provincias + categorías */}
+        {/* Zona 2 · Altura: últimas publicaciones + repuestos por categoría + fabricantes + mapa */}
         <div className="home-zone home-zone-2">
           <div aria-hidden className="home-zone-bg" />
-          <div className="container mx-auto px-4 py-8 space-y-16">
+          <div className="container mx-auto px-4 pt-8 space-y-16">
             <LatestAircraft items={combinedLatestListings} />
-            <ProvinceExplorer counts={provinceCounts} />
             <SparePartCategoriesCarousel categories={sparePartCategories} />
+          </div>
+          <FeaturedBrands brands={featuredBrandsFromDb} />
+          <div className="container mx-auto px-4 pb-8">
+            <ProvinceExplorer counts={provinceCounts} />
           </div>
         </div>
 

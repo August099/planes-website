@@ -878,18 +878,18 @@ Notas para cuando se encare, a partir de lo que ya existe:
 | D5 | Campos nuevos del avión | VA-54 | ✅ Según la composición. DURG = SMOH |
 | D6 | Imágenes | VA-40, 51, 52, 56 | Footer: parece listo. Logo: borrador generado. Fondos: usar los de `public/` según la tabla de VA-56 |
 | D7 | ¿Es obligatorio el teléfono para publicar? | VA-46 | ✅ Sí, se bloquea publicar sin teléfono (se puede cargar en el mismo `/publish`). La foto de perfil es opcional (9/10) |
-| D8 | Máximo de imágenes por publicación | VA-07 | Pendiente (sugerido 20) |
+| D8 | Máximo de imágenes por publicación | VA-07 | ✅ 15 fotos (VA-126) |
 | D9 | Interpretación de los menús desplegables | VA-45, VA-48 | VA-45 ✅ confirmado en vivo. VA-48: se eligió el desplegable en el header, pero el socio después pidió sacarlo (descartado, 9/10) |
 | D10 | Teléfono real del footer | VA-50 | ✅ +54 9 3456 44-5758 (9/10) |
 | D11 | Publicaciones de prueba | VA-27 | ✅ No importan, no se borran |
-| D14 | Hosting | VA-30, VA-70 | ✅ Vercel (límite de 4,5 MB por request). Falta confirmar la región de las funciones vs. la de Supabase |
+| D14 | Hosting | VA-30, VA-70 | ⏳ Abierta: Vercel (límite de 4,5 MB por request). Falta confirmar la región de las funciones contra la de Supabase (ca-central-1, Montreal) y medir la latencia (ver el checklist de lanzamiento) |
 | D12 | Modelos marcados `(PR)` en la composición: ¿"Proyecto" o "para más adelante"? | VA-43 | ✅ 8/10: "para más adelante". Las variantes heredan la categoría del modelo; Aero Commander 500 → `BP`, Turbo Commander 680 → `BT` |
 | D15 | `S/C` "Sin categoría asignada" (VA-43 ítem 7) | VA-43 | ✅ 8/10: se renombra a "Otros" |
 | D16 | ¿TBO obligatorio en Proyecto? (VA-44) | VA-44 | ✅ 8/10: opcional en `PR`, obligatorio en el resto |
-| D13 | ¿Se muestra la matrícula públicamente? | VA-54 | Pendiente |
+| D13 | ¿Se muestra la matrícula públicamente? | VA-54 | ✅ 14/10: no va en "Datos de la aeronave"; sí en la ficha (VA-113) |
 | D17 | Saldo de lanzamiento: fecha de corte y cuentas existentes | VA-89 | ✅ 14/10: 2/12/2026 23:59 hora Argentina inclusive, sin mostrar la fecha; las existentes con al menos 1 / 1 |
 | D18 | ¿Publicar descuenta del saldo? | VA-89 | ✅ Sí (VA-92: suscripción → saldo → pago). El saldo de lanzamiento **reemplaza al cupón LANZAMIENTO** (socio, 14/10) |
-| D19 | Motor obligatorio: ¿también en Proyecto (`PR`)? ¿Bimotor exige 2 motores? | VA-90 | Pendiente (sugerido: Proyecto opcional; Bimotor 2) |
+| D19 | Motor obligatorio: ¿también en Proyecto (`PR`)? ¿Bimotor exige 2 motores? | VA-90 | ✅ 14/10: opcional en Proyecto y dos obligatorios en Bimotor (VA-112) |
 | D20 | "Aeronaves destacadas" | VA-110 | ✅ 14/10: 6 al azar entre las recientes hasta que se apliquen los destacados pagos (VA-95) |
 
 ## 9. Checklist final antes de lanzar
@@ -916,6 +916,45 @@ Notas para cuando se encare, a partir de lo que ya existe:
 
 
 ---
+
+---
+
+## Checklist de lanzamiento oficial (armado el 17/10)
+
+> Una sola lista de lo que falta, en tres grupos. Se actualiza al cerrar cada punto. El detalle de cada paso está en `docs/PRUEBAS_PREVIEW.md` (Preview) y `docs/PASE_A_PRODUCCION.md` (producción).
+
+### 1. Bloquea el lanzamiento
+- [ ] **Migraciones nuevas en el Preview:** al menos las del 17/10 (`va150_registro_de_consumo`, `va149_experimental_lsa` y `va148_iconos_categorias`). Se confirma con `npx prisma migrate status` y se aplican con `npx prisma migrate deploy` (lo corre el socio).
+- [ ] **Pruebas en el Preview:**
+  - [ ] Webhook: el pago se activa solo y la página pasa sola a "¡Pago acreditado!", con vuelta automática al sitio.
+  - [ ] Suscripción mensual: alta con la cuenta compradora de prueba y "Cambiar a este plan" (VA-121). La cancelación ya está probada.
+  - [ ] VA-150 con pagos de prueba: los casos de la tabla que se puedan probar con Mercado Pago de prueba.
+  - [ ] Registro y login con Google reales: saldo de lanzamiento 1/1 y ventana de bienvenida una sola vez (VA-89, VA-111, VA-135).
+- [ ] **Celular real:** las 6 pruebas de VA-30, el QR del PDF, filtros con "Aplicar" visible y carruseles de la Home.
+- [ ] **Rendimiento (VA-76):** PageSpeed Insights sobre el Preview (Home, `/planes` y un detalle, en celular): Lighthouse ≥ 85 y menos de 1 MB de JavaScript en la Home.
+- [ ] **D14:** región de las funciones de Vercel contra Supabase (Montreal), con latencia antes y después si conviene moverlas.
+- [ ] **Fuera del código** (`docs/PASE_A_PRODUCCION.md`, sección 6): Google OAuth publicado, dominio en Resend, webhook de producción, `www` → sin `www`, bucket `documents` privado y Search Console/Bing.
+- [ ] **Runbook actualizado** (`docs/PASE_A_PRODUCCION.md`) contra el estado actual: migraciones, variables y scripts de datos base.
+- [ ] **Limpieza de producción** con `scripts/prod-cleanup-report.ts` (solo informe) y decisión sobre los fundadores asignados a cuentas de prueba.
+- [ ] **Testeo final en producción:** webhook real, pago real de AR$ 100, arrepentimiento, archivar el "Pago de prueba" y recién ahí `TUSFACTURAS_MODE=production` y `BILLING_ENABLED=true` (solo en Production).
+- [ ] **Textos del socio:** FAQ, términos y `/about` sin `[COMPLETAR]`.
+
+### 2. Se decide
+- [ ] **VA-95 · Destacados pagos:** ¿salen en el lanzamiento? Si sí, se arma el plan (compra, días y precio, orden en listados, Home, vencimiento y arrepentimiento con VA-150).
+- [ ] **VA-150:** ¿arrepentimiento solo en el primer cobro de la suscripción o en cada cobro? Hoy: solo el primero (`WITHDRAWAL_SUBSCRIPTION_SCOPE`). Confirmar con el contador o un abogado.
+- [ ] **VA-97** (grilla del perfil) y **VA-100** (color del footer): ¿antes del lanzamiento?
+- [ ] **VA-151 · Métricas de la cuenta VA:** ¿se muestra en el lanzamiento o queda oculta? (Spec en `docs/specs/VA-151-metricas-cuenta-va.md`.)
+- [ ] **VA-136** (header blanco al recargar la Home): no se reproduce; hace falta una captura y el dispositivo y navegador donde pasa.
+- [ ] **VA-96 · Renombrar a `aircraft`:** propuesto dejarlo para después del lanzamiento o no hacerlo.
+
+### 3. Después del lanzamiento
+- VA-96 (si se hace), VA-98 avanzado, VA-99, VA-102, VA-103 (banners, en standby), VA-104 y el resto de hangares.
+- Admin en celular (la barra lateral deja poco espacio a 375 px).
+- Avatar y logo de marca con subida directa a Storage (hoy pasan por la función: límite de 4,5 MB).
+- `SellerCta`: un `<Button>` dentro de un link (HTML inválido).
+- Hélices cargadas antes del 8/10 con la marca dentro del modelo (dato viejo).
+- Favicon cuadrado (hoy 148×256; lo maneja el socio).
+- Huérfanos en Storage (`scripts/storage-orphans.mjs`, primero sin `--delete`).
 
 ## Anexo A — Resumen de la "Composición de VA" relevante para el código
 
@@ -1466,3 +1505,87 @@ Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se 
 
 **Estado (14/10/2026):** ✅ hecho (commit `fix(VA-129)`). `components/ui/ListingLocationMap.tsx` ahora es de servidor (sin JS ni pedidos a terceros); `lib/argentina-map.ts` ubica longitud/latitud con la misma proyección del mapa (`scripts/verify-argentina-projection.ts` la compara con d3: 0 px de diferencia). Se quitan `leaflet`, `LeafletZoneMap.tsx`, `NEXT_PUBLIC_STADIA_API_KEY` y Stadia de la política de privacidad. **Ya no hace falta** cuenta ni dominio en Stadia.
 
+
+
+## Pedidos del socio del 17/10 (probando el Preview en celular) — de la más sencilla a la más compleja
+
+Probados en celular; verificar también en escritorio.
+
+### VA-130 · 404 sin el ícono de "Volver a la Base"
+**Estado (17/10/2026):** ✅ hecho. Sin el ✈️ en el 404 y en el 403.
+### VA-131 · Detalle de avión: grilla "General" con Marca, Modelo, Año, Hs totales, Categoría y Estado; "Datos de la aeronave" sin Categoría (ya está el link arriba)
+**Estado (17/10/2026):** ✅ hecho. La grilla "General" de la ficha web lleva Marca, Modelo, Año, Horas totales, Categoría, Estado y Matrícula; "Datos de la aeronave" queda con Marca, Modelo, Variante, Año y Horas.
+### VA-132 · Checkout: el resumen (con el cupón) antes de la sección de pago
+**Estado (17/10/2026):** ✅ hecho. En celular el resumen con el cupón va arriba; en escritorio sigue a la derecha.
+### VA-133 · Menú desplegable de Repuestos: categorías colapsables (celular)
+**Estado (17/10/2026):** ✅ hecho. "Repuestos" abre el listado y la flecha despliega las categorías (cerradas al abrir el menú). En escritorio el panel sigue igual.
+### VA-134 · Favoritos sin sesión: llevar al login (y el error que da dentro de un detalle)
+**Estado (17/10/2026):** ✅ hecho. La acción devuelve `needsLogin` en vez de tirar un error (en producción el mensaje llegaba vacío y el detalle mostraba "Ocurrió un error"); tarjetas y detalle llevan a `/login?callbackUrl=…` y vuelven al aviso.
+### VA-135 · Ventana de bienvenida del lanzamiento: solo después de registrarse, no en cada inicio de sesión
+**Estado (17/10/2026):** ✅ hecho. Solo para cuentas creadas en las últimas 24 h con el saldo de lanzamiento, y se marca como vista al mostrarla (antes volvía en cada carga hasta tocar un botón y les salía a las cuentas viejas).
+### VA-136 · Header de la Home: al recargar queda blanco en vez de transparente
+**Estado (17/10/2026):** ❓ no se reproduce: en local (dev y build de producción, 375 px) el header de la Home queda transparente al recargar, también con la página scrolleada. Pedirle al socio captura, navegador y si estaba logueado.
+### VA-137 · Buscador: solo muestra aeronaves y al salir redirige a repuestos
+**Estado (17/10/2026):** ✅ hecho. El buscador del celular buscaba solo aeronaves (no tiene selector de tipo): ahora busca en los dos. La pantalla de búsqueda ocupa una entrada del historial: el "atrás" del celular la cierra en vez de volver a la página anterior (probablemente eso llevaba a Repuestos).
+### VA-138 · Mapa de zona: no aparece en el detalle de aviones ni de repuestos
+**Estado (17/10/2026):** ✅ hecho. El bloque no salía en avisos sin coordenadas (datos de prueba, o si Georef no respondió al publicar): ahora se encuadra y resalta la provincia sin el punto.
+### VA-139 · Carruseles de la Home: que se note que hay más (indicadores) y flechas que funcionen en celular, con un solo criterio
+**Estado (17/10/2026):** ✅ hecho. Destacadas, Últimas publicaciones y Categorías: puntos debajo en todos los tamaños; en celular (sin flechas) se asoma la tarjeta siguiente; en escritorio siguen las flechas.
+### VA-140 · Pago pendiente: cancelarlo a los 5 minutos
+**Estado (17/10/2026):** ✅ hecho. El link de Mercado Pago vence a los 5 minutos; pasado ese tiempo la compra sin pagar figura "Cancelado (no se pagó)" en Mis compras y la página de estado ofrece reintentar. Se excluyen efectivo y cajero (quedaban pendientes días). Los pagos "en proceso" no se tocan. Test en `tests/pending.test.ts`.
+
+## Pedidos del socio del 17/10 (segunda tanda) — de la más sencilla a la más compleja
+
+### VA-141 · Recomendaciones del detalle sin subtítulo
+**Estado (17/10/2026):** ✅ hecho. `RecommendationRail` muestra solo el título.
+### VA-142 · "Categorías de aviones" de la Home sin subtítulos
+**Estado (17/10/2026):** ✅ hecho. Cada tipo queda con la imagen, el nombre y la cantidad de avisos.
+### VA-143 · Guías en la Home: solo el título y el enlace (sin el índice)
+**Estado (17/10/2026):** ✅ hecho. Título "Guías para comprar y vender" y "Ver todas las guías →".
+### VA-144 · Servicios: "En proceso" en vez de "Próximamente"
+**Estado (17/10/2026):** ✅ hecho en la tarjeta de la Home. La página /services sigue con su sección "Próximamente / En camino" (no se pidió).
+### VA-145 · Formularios: el campo Año no deja borrar el cero
+**Estado (17/10/2026):** ✅ hecho. Vacío se guarda como 0 y se muestra vacío; la validación sigue pidiendo un año entre 1900 y el actual.
+### VA-146 · Buscador: si había algo escrito y se cambia de pestaña/ventana, la búsqueda se repite (revisar si sigue)
+**Estado (17/10/2026):** ✅ reproducido y arreglado. Cambiar de pestaña del navegador no repetía nada; lo que pasaba era al cambiar de página: el texto quedaba, el cambio de sección cambiaba el tipo y la búsqueda se repetía y abría los resultados en la página nueva. Ahora el buscador se limpia al cambiar de página.
+### VA-147 · Nuevo orden de la Home: hero, categorías de aviones, destacados, últimas publicaciones, repuestos por categoría, explorá por fabricante, mapa, CTA de vendedores, cómo funciona, guías, secciones
+**Estado (17/10/2026):** ✅ hecho. Fabricantes no se ve en local porque las marcas de la base local no tienen logo (en el Preview sí).
+
+## Pedidos del socio del 17/10 (tercera tanda) — ordenados por prioridad · detalle en `docs/specs/VA-148-a-VA-150-lote-17-10.md`
+
+> Ya se probaron en el Preview pagos con dinero real (con factura de prueba) y el botón de arrepentimiento. Todo lo que falta se prueba en el Preview y después va el testeo final en producción.
+
+### VA-150 · Arrepentimiento: cubrir todos los casos para que no se pueda usar gratis lo comprado (prioridad alta)
+- **Problema:** el reembolso no retira lo ya usado. Por ejemplo, un pack con el que ya se publicó: el saldo no queda negativo y el aviso sigue gratis. O una suscripción con avisos publicados: los avisos quedan activos.
+- **Hacer:**
+  - registro de con qué se pagó cada aviso, con un orden de consumo único (suscripción → saldo de lanzamiento → packs del más viejo al más nuevo);
+  - reversión por tipo de compra (aviso suelto, pack, renovación, destacado, suscripción, cambio de plan): lo obtenido con ese pago vuelve a "pendiente de pago" o se revierte;
+  - el mismo camino para el botón, los reembolsos manuales desde Mercado Pago y los contracargos;
+  - el diálogo muestra qué se retira, más un mail de confirmación;
+  - en el admin, los arrepentimientos por usuario;
+  - 13 tests.
+- ❓ **Decisión:** ¿arrepentimiento solo en el alta de la suscripción o en cada cobro mensual? Sugerido: solo en el alta (confirmar con el contador o un abogado).
+- **Estado (17/10):** ✅ hecho en local. Migración `va150_registro_de_consumo` (`CreditLot` y `ListingFunding`; el saldo existente pasó a lotes LAUNCH/LEGACY). 13 casos OK con Mercado Pago simulado (`scripts/verify-withdrawal.ts`). Regla de suscripciones en `WITHDRAWAL_SUBSCRIPTION_SCOPE` = solo el primer cobro, hasta que se confirme. Falta probarlo en el Preview con pagos de prueba.
+
+### VA-149 · Categorías de aviones: dibujos blancos con línea roja y azul, y orden nuevo
+- **Orden:** Monomotor → Bimotor → Experimental / LSA → Agrícola → Helicóptero → Proyecto → Otros. Se aplica en la Home, en el filtro de `/planes` y en el formulario. "Experimental / Avión ligero" pasa a llamarse "Experimental / LSA".
+- **Dibujos:** los 7 de `public/aircraft-types/` pasan de azul a **blanco con la línea roja y azul**, con el mismo encuadre. Primero se intenta recolorearlos con un script, con antes y después; si no queda prolijo, se frena y el socio pasa imágenes nuevas.
+- **Estado (17/10):** ✅ hecho. Orden y nombre (migración de datos `va149_experimental_lsa`); dibujos nuevos del socio en `public/aircraft-types/` (el recoloreo por script no quedó prolijo y se descartó).
+
+### VA-148 · Íconos nuevos para las categorías de repuestos
+- Usar los íconos de `categories-icons/ventas-aeronauticas-icons/src/icons/`, pasados a componentes TypeScript del proyecto.
+- Reemplazar los actuales en la Home, en el menú de Repuestos, en los filtros y en el admin.
+- Mostrar la tabla categoría → ícono antes de aplicarla, y no sumar peso de JavaScript a la Home.
+- **Estado (17/10):** ✅ hecho. Los 14 íconos ya eran componentes propios desde VA-70; ahora el admin elige entre ellos, los nombres viejos se migraron (`va148_iconos_categorias`, tabla aprobada por el socio) y se quitó `react-icons`. Sin íconos sin usar en el código: Gps, Combustible, Hélice y Frenos quedan disponibles en el selector. JS de la Home igual (801 KB).
+
+### VA-151 · Métricas de la cuenta VA (primer nivel) — detalle en `docs/specs/VA-151-metricas-cuenta-va.md`
+- **Reemplaza la parte "avanzada" de VA-98.** Pocas métricas a propósito: lo avanzado queda para una futura **cuenta empresarial**.
+- **Quién lo ve:** un interruptor nuevo en el plan, `includesSellerMetrics`, prendido en "Suscripción VA" (cortesías incluidas). Quien no tiene cuenta VA ve lo básico más una línea discreta hacia `/plans`.
+- **Pestaña "Métricas" del perfil propio, últimos 7 o 30 días:**
+  - 4 tarjetas con variación contra el período anterior: vistas, contactos, favoritos nuevos y visitas a la Página VA (evento `PROFILE_VIEW`, nuevo si no existe);
+  - gráfico de vistas por día;
+  - contactos por canal (WhatsApp, teléfono, email y formulario);
+  - tabla por aviso con vistas, contactos, favoritos y tasa de contacto, marcando el más visto y el de mejor tasa.
+- **Reglas de los datos:** no cuentan el dueño, los admins ni los bots; solo totales, nunca quién vio; retención mínima de 60 días; consultas agregadas con caché.
+- **Al desplegar:** sumar "Métricas de tus avisos" a la tarjeta de la Suscripción VA en `/plans`.
+- **Prioridad:** después de VA-148 a VA-150. Preguntar si sale en el lanzamiento o queda oculto.

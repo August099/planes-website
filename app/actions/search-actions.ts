@@ -13,12 +13,14 @@ export interface SearchResultItem {
 }
 
 export type SearchType = "Aeronave" | "Repuesto";
+// VA-137: el buscador del celular no tiene selector de tipo: busca en los dos.
+type SearchScope = SearchType | "Todos";
 
 // Sugerencias del buscador del header (se llama mientras se escribe). No registra analytics: la
 // búsqueda se registra recién cuando la persona la envía o elige un resultado (logSearch, VA-15).
 export async function searchGlobal(
   query: string,
-  searchType: SearchType = "Aeronave"
+  searchType: SearchScope = "Aeronave"
 ): Promise<SearchResultItem[]> {
   const cleanQuery = query.trim().toLowerCase();
 
@@ -36,7 +38,7 @@ export async function searchGlobal(
   // ============================================================
   // BÚSQUEDA DE AERONAVES
   // ============================================================
-  if (searchType === "Aeronave") {
+  if (searchType === "Aeronave" || searchType === "Todos") {
     const aircrafts = await prisma.aircraft.findMany({
       where: {
         ...activeListingWhere(),
@@ -79,7 +81,7 @@ export async function searchGlobal(
       take: 5,
     });
 
-    results = aircrafts.map((a) => ({
+    results = results.concat(aircrafts.map((a): SearchResultItem => ({
       id: a.id,
       title: a.title,
       type: "Aeronave",
@@ -89,13 +91,13 @@ export async function searchGlobal(
         formatPrice(a.price)
       }`,
       url: `/planes/plane-details/${a.id}`,
-    }));
+    })));
   }
 
   // ============================================================
   // BÚSQUEDA DE REPUESTOS
   // ============================================================
-  if (searchType === "Repuesto") {
+  if (searchType === "Repuesto" || searchType === "Todos") {
     const spareParts = await prisma.sparePart.findMany({
       where: {
         ...activeListingWhere(),
@@ -127,7 +129,7 @@ export async function searchGlobal(
       take: 5,
     });
 
-    results = spareParts.map((s) => ({
+    results = results.concat(spareParts.map((s): SearchResultItem => ({
       id: s.id,
       title: s.title,
       type: "Repuesto",
@@ -135,7 +137,7 @@ export async function searchGlobal(
         formatPrice(s.price, { inPesos: s.inPesos })
       }`,
       url: `/spareparts/sparepart-details/${s.id}`,
-    }));
+    })));
   }
 
   return results;

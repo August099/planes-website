@@ -2,6 +2,8 @@ import "server-only";
 import type { InvoiceStatus, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withdrawalUntil } from "@/lib/payments/withdrawal";
+import { preapprovalOf } from "@/lib/payments/subscription-reversal";
+import { pendingPaymentExpired } from "@/lib/payments/pending";
 
 // VA-92 · Etapa 5: "Mis compras" del perfil. Une las compras de pago único (Purchase) y los cobros de
 // la suscripción (Payment con subscriptionId), con el estado del pago y de la factura.
@@ -54,6 +56,7 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
         finalPrice: true,
         paymentStatus: true,
         activatedAt: true,
+        updatedAt: true,
         payments: {
           where: { status: "approved" },
           select: {
@@ -80,6 +83,8 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
         amount: true,
         refundedAmount: true,
         withdrawalRequestedAt: true,
+        // VA-150: para saber si es el primer cobro de su débito (WITHDRAWAL_SUBSCRIPTION_SCOPE).
+        raw: true,
         subscription: { select: { id: true, plan: { select: { name: true, billingInterval: true } } } },
         invoices: { where: { kind: "FACTURA_C" }, select: { id: true, status: true, pdfPath: true } },
       },
@@ -95,7 +100,12 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
       description: p.description || "Compra",
       amount,
       // Un cupón del 100% no pasa por Mercado Pago: se muestra como "Sin cargo".
-      payment: amount === 0 && p.activatedAt ? { key: "FREE", label: "Sin cargo", tone: "ok" } : PAYMENT[p.paymentStatus],
+      payment:
+        amount === 0 && p.activatedAt
+          ? { key: "FREE", label: "Sin cargo", tone: "ok" }
+          : pendingPaymentExpired(p) // VA-140
+            ? { key: "EXPIRED", label: "Cancelado (no se pagó)", tone: "muted" }
+            : PAYMENT[p.paymentStatus],
       // VA-105 1.2: sin cargo (cupón del 100%) → no corresponde factura.
       invoice:
         amount === 0 && p.activatedAt
@@ -125,7 +135,11 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
             : PAYMENT.IN_PROCESS,
       invoice: approved ? invoiceCell(pay.invoices[0]) ?? { label: "En preparación", downloadHref: null } : null,
       href: null,
-      withdrawal: withdrawalFor(pay),
+      withdrawal: withdrawalFor(pay, {
+        laterSubscriptionCharge: subscriptionPayments.some(
+          (o) => o.id !== pay.id && o.subscription?.id === sub.id && o.approvedAt && pay.approvedAt && o.approvedAt < pay.approvedAt && preapprovalOf(o.raw) === preapprovalOf(pay.raw)
+        ),
+      }),
     });
   }
 
@@ -133,9 +147,10 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
 }
 
 function withdrawalFor(
-  pay: { id: string; status: string; amount: unknown; refundedAmount: unknown; approvedAt: Date | null; withdrawalRequestedAt: Date | null } | undefined
+  pay: { id: string; status: string; amount: unknown; refundedAmount: unknown; approvedAt: Date | null; withdrawalRequestedAt: Date | null } | undefined,
+  opts: { laterSubscriptionCharge?: boolean } = {}
 ): PurchaseRow["withdrawal"] {
   if (!pay) return null;
-  const until = withdrawalUntil(pay);
+  const until = withdrawalUntil(pay, new Date(), opts);
   return until ? { paymentId: pay.id, until: until.toISOString() } : null;
 }

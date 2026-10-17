@@ -5,65 +5,58 @@ import { SectionTitle } from "@/components/ui/home/SectionTitle";
 // "Explorá por tipo de aeronave" (VA-86). Server component, sin JS de cliente. Ajuste del socio
 // (10/10): en celular, grilla de 2 por fila (la séptima sola y centrada); imágenes y textos un 15 %
 // más chicos que la primera versión. Correspondencia con AircraftCategory confirmada por el socio (10/10):
-// Monomotor = MP + MT, Bimotor = BP + BT, Experimental / Avión ligero = E, Agrícola = A,
-// Helicóptero = H, Proyecto = PR, Otros = S/C.
+// Monomotor = MP + MT, Bimotor = BP + BT, Experimental / LSA = E, Agrícola = A,
+// Helicóptero = H, Proyecto = PR, Otros = S/C. VA-149 (17/10): orden y nombre como en lib/aircraft-categories.ts.
 const TYPES = [
   {
     name: "Monomotor",
     image: "monomotor",
-    width: 402,
-    height: 158,
+    width: 484,
+    height: 196,
     categories: ["MP", "MT"],
-    description: "Un motor a pistón, de ala alta o baja. El avión privado por excelencia.",
   },
   {
     name: "Bimotor",
     image: "bimotor",
-    width: 386,
-    height: 166,
+    width: 484,
+    height: 212,
     categories: ["BP", "BT"],
-    description: "Dos motores para viajar más lejos, más rápido y con más redundancia.",
+  },
+  {
+    name: "Experimental / LSA",
+    image: "avion-ligero",
+    width: 494,
+    height: 176,
+    categories: ["E"],
   },
   {
     name: "Agrícola",
     image: "agricola",
-    width: 396,
-    height: 147,
+    width: 496,
+    height: 180,
     categories: ["A"],
-    description: "Aeroaplicadores listos para trabajar, con su equipo de aplicación.",
   },
   {
     name: "Helicóptero",
     image: "helicoptero",
-    width: 372,
-    height: 171,
+    width: 502,
+    height: 224,
     categories: ["H"],
-    description: "Helicópteros civiles para trabajo aéreo, traslados y uso privado.",
-  },
-  {
-    name: "Experimental / Avión ligero",
-    image: "avion-ligero",
-    width: 417,
-    height: 147,
-    categories: ["E"],
-    description: "Livianos y económicos de operar, ideales para instrucción y recreación.",
   },
   {
     name: "Proyecto",
     image: "proyecto",
-    width: 308,
-    height: 146,
+    width: 486,
+    height: 238,
     categories: ["PR"],
-    description: "En restauración, fuera de servicio o incompletos, para ponerlos de nuevo en el aire.",
   },
   {
     name: "Otros",
     image: "otros",
-    width: 435,
-    height: 162,
+    width: 494,
+    height: 188,
     categories: ["S/C"],
     // Ajustado (10/10): los turbohélices tienen categoría propia (MT y BT).
-    description: "Jets y todo lo que no entra en las categorías anteriores.",
   },
 ];
 
@@ -101,7 +94,6 @@ export function AircraftTypesSection({ counts }: { counts: Record<string, number
                   <h3 className="mt-3 text-[0.95rem] leading-snug font-bold text-[#001F58] decoration-[#E70F1F] decoration-2 underline-offset-4 group-hover:underline group-focus-visible:underline">
                     {type.name}
                   </h3>
-                  <p className="mx-auto mt-1 max-w-[15rem] text-xs leading-relaxed text-slate-600">{type.description}</p>
                   <p
                     className={`mt-2 text-[0.6rem] font-semibold uppercase tracking-[0.14em] tabular-nums ${
                       total > 0 ? "text-[#001F58]" : "text-slate-500"

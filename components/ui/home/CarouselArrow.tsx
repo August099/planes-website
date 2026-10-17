@@ -18,3 +18,15 @@ export function CarouselArrow({ id, direction, className = "" }: { id: string; d
     </button>
   );
 }
+
+// VA-139: puntos debajo de los carruseles de la Home, en todos los tamaños. En celular, donde no hay
+// flechas, son la señal de que hay más (junto con la tarjeta siguiente que se asoma). Swiper los
+// dibuja dentro de este contenedor (pagination.el) con las clases va-dot / va-dot-active
+// (app/globals.css).
+export function CarouselDots({ id }: { id: string }) {
+  return <div id={id} className="va-dots mt-4 flex flex-wrap justify-center gap-1.5" />;
+}
+
+export function carouselPagination(id: string) {
+  return { el: `#${id}`, clickable: true, bulletClass: "va-dot", bulletActiveClass: "va-dot-active" };
+}

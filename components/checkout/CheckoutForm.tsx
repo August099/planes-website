@@ -274,7 +274,8 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
         )}
       </section>
 
-      <aside className="self-start rounded-lg border border-[#001F58]/12 bg-white">
+      {/* VA-132: en celular el resumen (con el cupón) va primero; en escritorio sigue a la derecha. */}
+      <aside className="order-first self-start rounded-lg border border-[#001F58]/12 bg-white md:order-none">
         <p className={`border-b border-[#001F58]/10 px-5 py-3 ${LABEL}`}>Elegiste</p>
         <dl className="divide-y divide-[#001F58]/10 text-sm">
           <div className="px-5 py-3">

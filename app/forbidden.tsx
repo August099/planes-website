@@ -29,7 +29,7 @@ export default function Forbidden() {
             href="/"
             className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#001F58] hover:bg-[#001F58]/90 text-white font-medium text-sm transition-all shadow-md active:scale-[0.98]"
           >
-            ✈️ Volver a la Base (Inicio)
+            Volver a la Base (Inicio)
           </Link>
 
           <Link

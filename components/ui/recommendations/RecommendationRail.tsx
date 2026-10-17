@@ -16,6 +16,7 @@ type Props =
 export function RecommendationRail(props: Props) {
   const { block, action, id } = props;
   const headingId = id ? `${id}-title` : undefined;
+  // VA-141: solo el título, sin el subtítulo explicativo (block.subtitle queda sin usar).
   return (
     <section id={id} aria-labelledby={headingId} className="space-y-4 print:hidden">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -23,7 +24,6 @@ export function RecommendationRail(props: Props) {
           <h2 id={headingId} className="text-xl sm:text-2xl font-bold text-[#001F58]">
             {block.title}
           </h2>
-          {block.subtitle && <p className="mt-1 text-sm text-slate-600">{block.subtitle}</p>}
         </div>
         {action}
       </div>
