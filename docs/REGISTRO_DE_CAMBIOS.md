@@ -291,6 +291,7 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 | VA-149 (orden) | Orden de categorías de aviones en la Home, el filtro, el formulario y el admin: Monomotor → Bimotor → Experimental / LSA → Agrícola → Helicóptero → Proyecto → Otros. "Experimental / Avión Ligero (LSA)" pasa a "Experimental / LSA". Dibujos: el recoloreo por script no quedó prolijo; se esperan las imágenes nuevas. | `/` · `/planes` · `/publish` |
 | VA-149 (dibujos) | Dibujos blancos con la línea roja y azul (los pasó el socio) en "Explorá por tipo de aeronave", con sus medidas reales. | `/` |
 | VA-148 | Íconos de las categorías de repuestos: el admin elige entre los 14 íconos propios (con vista previa) en vez de escribir un nombre de react-icons; los nombres guardados se migraron (`va148_iconos_categorias`) y se quitó la dependencia `react-icons`. JS de la Home: 801,3 → 801,2 KB. | `/admin/taxonomy` · Home |
+| VA-97 | **Perfil con una sola grilla de publicaciones**: interruptores Aeronaves · Repuestos (combinables) y, en el panel propio, filtros por estado con contadores (activos, pausados, pendientes de pago, vencidos y vendidos), todo en la URL. El dueño ve el estado de cada aviso y, si está pendiente de pago, el botón "Pagar" (VA-150). VA-95 no se hace y VA-100 se descarta (socio, 17/10). | Perfil → Publicaciones |
 
 ## Pruebas de pagos (16/10/2026)
 

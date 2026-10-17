@@ -940,15 +940,15 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - [ ] **Textos del socio:** FAQ, términos y `/about` sin `[COMPLETAR]`.
 
 ### 2. Se decide
-- [ ] **VA-95 · Destacados pagos:** ¿salen en el lanzamiento? Si sí, se arma el plan (compra, días y precio, orden en listados, Home, vencimiento y arrepentimiento con VA-150).
-- [ ] **VA-150:** ¿arrepentimiento solo en el primer cobro de la suscripción o en cada cobro? Hoy: solo el primero (`WITHDRAWAL_SUBSCRIPTION_SCOPE`). Confirmar con el contador o un abogado.
-- [ ] **VA-97** (grilla del perfil) y **VA-100** (color del footer): ¿antes del lanzamiento?
-- [ ] **VA-151 · Métricas de la cuenta VA:** ¿se muestra en el lanzamiento o queda oculta? (Spec en `docs/specs/VA-151-metricas-cuenta-va.md`.)
+- [x] **VA-95 · Destacados pagos:** ❌ no se hacen (socio, 17/10).
+- [ ] **VA-150 (lo confirma el socio más adelante):** ¿arrepentimiento solo en el primer cobro de la suscripción o en cada cobro? Hoy: solo el primero (`WITHDRAWAL_SUBSCRIPTION_SCOPE`). Confirmar con el contador o un abogado.
+- [x] **VA-97** (grilla del perfil): ✅ sí, antes del lanzamiento (hecho el 17/10). **VA-100** (color del footer): ❌ descartada (socio, 17/10).
+- [x] **VA-151 · Métricas de la cuenta VA:** ✅ se hace (socio, 17/10). Spec en `docs/specs/VA-151-metricas-cuenta-va.md`; falta el OK del SQL de la migración.
 - [ ] **VA-136** (header blanco al recargar la Home): no se reproduce; hace falta una captura y el dispositivo y navegador donde pasa.
-- [ ] **VA-96 · Renombrar a `aircraft`:** propuesto dejarlo para después del lanzamiento o no hacerlo.
+- [x] **VA-96 · Renombrar a `aircraft`:** ✅ se hace (socio, 17/10). Antes, la lista completa de renombres para el OK.
 
 ### 3. Después del lanzamiento
-- VA-96 (si se hace), VA-98 avanzado, VA-99, VA-102, VA-103 (banners, en standby), VA-104 y el resto de hangares.
+- VA-98 avanzado (lo reemplaza VA-151), VA-99, VA-102, VA-103 (banners, en standby), VA-104 y el resto de hangares.
 - Admin en celular (la barra lateral deja poco espacio a 375 px).
 - Avatar y logo de marca con subida directa a Storage (hoy pasan por la función: límite de 4,5 MB).
 - `SellerCta`: un `<Button>` dentro de un link (HTML inválido).
