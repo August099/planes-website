@@ -878,18 +878,18 @@ Notas para cuando se encare, a partir de lo que ya existe:
 | D5 | Campos nuevos del avión | VA-54 | ✅ Según la composición. DURG = SMOH |
 | D6 | Imágenes | VA-40, 51, 52, 56 | Footer: parece listo. Logo: borrador generado. Fondos: usar los de `public/` según la tabla de VA-56 |
 | D7 | ¿Es obligatorio el teléfono para publicar? | VA-46 | ✅ Sí, se bloquea publicar sin teléfono (se puede cargar en el mismo `/publish`). La foto de perfil es opcional (9/10) |
-| D8 | Máximo de imágenes por publicación | VA-07 | Pendiente (sugerido 20) |
+| D8 | Máximo de imágenes por publicación | VA-07 | ✅ 15 fotos (VA-126) |
 | D9 | Interpretación de los menús desplegables | VA-45, VA-48 | VA-45 ✅ confirmado en vivo. VA-48: se eligió el desplegable en el header, pero el socio después pidió sacarlo (descartado, 9/10) |
 | D10 | Teléfono real del footer | VA-50 | ✅ +54 9 3456 44-5758 (9/10) |
 | D11 | Publicaciones de prueba | VA-27 | ✅ No importan, no se borran |
-| D14 | Hosting | VA-30, VA-70 | ✅ Vercel (límite de 4,5 MB por request). Falta confirmar la región de las funciones vs. la de Supabase |
+| D14 | Hosting | VA-30, VA-70 | ⏳ Abierta: Vercel (límite de 4,5 MB por request). Falta confirmar la región de las funciones contra la de Supabase (ca-central-1, Montreal) y medir la latencia (ver el checklist de lanzamiento) |
 | D12 | Modelos marcados `(PR)` en la composición: ¿"Proyecto" o "para más adelante"? | VA-43 | ✅ 8/10: "para más adelante". Las variantes heredan la categoría del modelo; Aero Commander 500 → `BP`, Turbo Commander 680 → `BT` |
 | D15 | `S/C` "Sin categoría asignada" (VA-43 ítem 7) | VA-43 | ✅ 8/10: se renombra a "Otros" |
 | D16 | ¿TBO obligatorio en Proyecto? (VA-44) | VA-44 | ✅ 8/10: opcional en `PR`, obligatorio en el resto |
-| D13 | ¿Se muestra la matrícula públicamente? | VA-54 | Pendiente |
+| D13 | ¿Se muestra la matrícula públicamente? | VA-54 | ✅ 14/10: no va en "Datos de la aeronave"; sí en la ficha (VA-113) |
 | D17 | Saldo de lanzamiento: fecha de corte y cuentas existentes | VA-89 | ✅ 14/10: 2/12/2026 23:59 hora Argentina inclusive, sin mostrar la fecha; las existentes con al menos 1 / 1 |
 | D18 | ¿Publicar descuenta del saldo? | VA-89 | ✅ Sí (VA-92: suscripción → saldo → pago). El saldo de lanzamiento **reemplaza al cupón LANZAMIENTO** (socio, 14/10) |
-| D19 | Motor obligatorio: ¿también en Proyecto (`PR`)? ¿Bimotor exige 2 motores? | VA-90 | Pendiente (sugerido: Proyecto opcional; Bimotor 2) |
+| D19 | Motor obligatorio: ¿también en Proyecto (`PR`)? ¿Bimotor exige 2 motores? | VA-90 | ✅ 14/10: opcional en Proyecto y dos obligatorios en Bimotor (VA-112) |
 | D20 | "Aeronaves destacadas" | VA-110 | ✅ 14/10: 6 al azar entre las recientes hasta que se apliquen los destacados pagos (VA-95) |
 
 ## 9. Checklist final antes de lanzar
@@ -916,6 +916,45 @@ Notas para cuando se encare, a partir de lo que ya existe:
 
 
 ---
+
+---
+
+## Checklist de lanzamiento oficial (armado el 17/10)
+
+> Una sola lista de lo que falta, en tres grupos. Se actualiza al cerrar cada punto. El detalle de cada paso está en `docs/PRUEBAS_PREVIEW.md` (Preview) y `docs/PASE_A_PRODUCCION.md` (producción).
+
+### 1. Bloquea el lanzamiento
+- [ ] **Migraciones nuevas en el Preview:** al menos las del 17/10 (`va150_registro_de_consumo`, `va149_experimental_lsa` y `va148_iconos_categorias`). Se confirma con `npx prisma migrate status` y se aplican con `npx prisma migrate deploy` (lo corre el socio).
+- [ ] **Pruebas en el Preview:**
+  - [ ] Webhook: el pago se activa solo y la página pasa sola a "¡Pago acreditado!", con vuelta automática al sitio.
+  - [ ] Suscripción mensual: alta con la cuenta compradora de prueba y "Cambiar a este plan" (VA-121). La cancelación ya está probada.
+  - [ ] VA-150 con pagos de prueba: los casos de la tabla que se puedan probar con Mercado Pago de prueba.
+  - [ ] Registro y login con Google reales: saldo de lanzamiento 1/1 y ventana de bienvenida una sola vez (VA-89, VA-111, VA-135).
+- [ ] **Celular real:** las 6 pruebas de VA-30, el QR del PDF, filtros con "Aplicar" visible y carruseles de la Home.
+- [ ] **Rendimiento (VA-76):** PageSpeed Insights sobre el Preview (Home, `/planes` y un detalle, en celular): Lighthouse ≥ 85 y menos de 1 MB de JavaScript en la Home.
+- [ ] **D14:** región de las funciones de Vercel contra Supabase (Montreal), con latencia antes y después si conviene moverlas.
+- [ ] **Fuera del código** (`docs/PASE_A_PRODUCCION.md`, sección 6): Google OAuth publicado, dominio en Resend, webhook de producción, `www` → sin `www`, bucket `documents` privado y Search Console/Bing.
+- [ ] **Runbook actualizado** (`docs/PASE_A_PRODUCCION.md`) contra el estado actual: migraciones, variables y scripts de datos base.
+- [ ] **Limpieza de producción** con `scripts/prod-cleanup-report.ts` (solo informe) y decisión sobre los fundadores asignados a cuentas de prueba.
+- [ ] **Testeo final en producción:** webhook real, pago real de AR$ 100, arrepentimiento, archivar el "Pago de prueba" y recién ahí `TUSFACTURAS_MODE=production` y `BILLING_ENABLED=true` (solo en Production).
+- [ ] **Textos del socio:** FAQ, términos y `/about` sin `[COMPLETAR]`.
+
+### 2. Se decide
+- [ ] **VA-95 · Destacados pagos:** ¿salen en el lanzamiento? Si sí, se arma el plan (compra, días y precio, orden en listados, Home, vencimiento y arrepentimiento con VA-150).
+- [ ] **VA-150:** ¿arrepentimiento solo en el primer cobro de la suscripción o en cada cobro? Hoy: solo el primero (`WITHDRAWAL_SUBSCRIPTION_SCOPE`). Confirmar con el contador o un abogado.
+- [ ] **VA-97** (grilla del perfil) y **VA-100** (color del footer): ¿antes del lanzamiento?
+- [ ] **VA-151 · Métricas de la cuenta VA:** ¿se muestra en el lanzamiento o queda oculta? (Spec en `docs/specs/VA-151-metricas-cuenta-va.md`.)
+- [ ] **VA-136** (header blanco al recargar la Home): no se reproduce; hace falta una captura y el dispositivo y navegador donde pasa.
+- [ ] **VA-96 · Renombrar a `aircraft`:** propuesto dejarlo para después del lanzamiento o no hacerlo.
+
+### 3. Después del lanzamiento
+- VA-96 (si se hace), VA-98 avanzado, VA-99, VA-102, VA-103 (banners, en standby), VA-104 y el resto de hangares.
+- Admin en celular (la barra lateral deja poco espacio a 375 px).
+- Avatar y logo de marca con subida directa a Storage (hoy pasan por la función: límite de 4,5 MB).
+- `SellerCta`: un `<Button>` dentro de un link (HTML inválido).
+- Hélices cargadas antes del 8/10 con la marca dentro del modelo (dato viejo).
+- Favicon cuadrado (hoy 148×256; lo maneja el socio).
+- Huérfanos en Storage (`scripts/storage-orphans.mjs`, primero sin `--delete`).
 
 ## Anexo A — Resumen de la "Composición de VA" relevante para el código
 

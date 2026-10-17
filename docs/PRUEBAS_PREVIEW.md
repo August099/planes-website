@@ -113,10 +113,10 @@ Marcar cada punto. Celular real para los que dicen 📱.
 
 ### Cuentas y lanzamiento
 - [ ] Registro con email: llega el mail de verificación y el link abre el Preview (no localhost).
-- [ ] Login con Google.
+- [x] Login en el Preview (confirmado por el socio, 17/10). Falta confirmar que fue **con Google** y probar el registro de una cuenta nueva con Google.
 - [ ] "Olvidé mi contraseña": llega el mail y el link funciona.
 - [ ] Ventana de bienvenida del lanzamiento: sale **una sola vez** por cuenta nueva.
-- [ ] Publicar un avión y un repuesto **gratis** con el saldo de lanzamiento (sin pasar por Mercado Pago); el segundo avión ya pide pago.
+- [x] Publicar en el Preview (confirmado por el socio, 17/10). Falta confirmar: un avión y un repuesto **gratis** con el saldo de lanzamiento (sin pasar por Mercado Pago); el segundo avión ya pide pago.
 
 ### Publicar y ver
 - [ ] Formulario de avión: motor opcional en Proyecto, dos obligatorios en Bimotor; texto de fotos (máx. 15).
@@ -131,8 +131,8 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Pago **rechazado** (titular `OTHE`): la página dice que no se pudo cobrar y no se activa nada.
 - [ ] **Suscripción mensual**: en el checkout, el email de la **cuenta compradora de prueba**; se activa sola y aparece en el perfil.
 - [ ] `/plans` con la suscripción activa: "Cancelar" en la actual y "Cambiar a este plan" en las otras; probar el cambio (inmediato).
-- [ ] Cancelar la suscripción: queda activa hasta el fin del período.
-- [ ] **Arrepentimiento** de un pago único desde Mis compras: se devuelve y se revierte lo comprado.
+- [x] Cancelar la suscripción: queda activa hasta el fin del período (confirmado por el socio, 17/10).
+- [x] **Arrepentimiento** de un pago único desde Mis compras: se devuelve y se revierte lo comprado (probado con dinero real, 16/10). Con VA-150 hay que repetirlo con los casos nuevos.
 
 ### Páginas y mails
 - [ ] `/about`: el formulario de sugerencias guarda y llega el mail a `SUPPORT_EMAIL`; aparece en `/admin/suggestions`.

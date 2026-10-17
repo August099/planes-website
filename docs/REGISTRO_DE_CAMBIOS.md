@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso (14/10):** VA-89 a VA-91 y VA-106 a VA-125 hechas en local (pedidos del 14/10). **Antes:** 73 de 74 tareas cerradas (72 hechas + VA-48 descartada): VA-01 a VA-17, VA-20 a VA-34, VA-40 a VA-47, VA-48 (descartada), VA-49 a VA-63, VA-70 a VA-75 y VA-77 a VA-87 (VA-80 sin Mercado Pago ni facturación, que quedan para la Fase 6). Falta 1: VA-76 (parcial: PageSpeed en pre-production, Speed Insights en Vercel y el TBT de la Home). Nota del 10/10: el conteo anterior tenía un error de uno (la lista sumaba 69, no 68) (el 8/10 se sumaron VA-17, VA-31 y VA-58, y el 9/10 VA-32, VA-33, VA-34, VA-59, VA-77 a VA-80, pedidos del socio; VA-80 no es del MVP). La Fase 6 (Mercado Pago) no está numerada y no entra en la cuenta.
+**Progreso (17/10):** hechas en local todas las tareas hasta VA-150, salvo las que siguen abiertas o para después (ver "Checklist de lanzamiento oficial" en el plan). **Abiertas:** VA-76 (PageSpeed en el Preview y D14), VA-95 (destacados: se decide si salen), VA-97 y VA-100 (se decide si van antes), VA-136 (no se reproduce) y VA-151 (métricas de la cuenta VA, nueva). **Para después del lanzamiento:** VA-96, VA-98 avanzado, VA-99, VA-102, VA-103 (standby) y VA-104. **Antes (14/10):** VA-89 a VA-91 y VA-106 a VA-125; hasta el 10/10, VA-01 a VA-87 menos VA-48 (descartada) y VA-76 (parcial).
 
 ---
 
@@ -347,26 +347,32 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 
 ## Hallazgos pendientes (anotados, sin tocar)
 
-- **"Vistas" en el perfil** usa `_count.analyticsEvents`, que cuenta todos los eventos de la publicación (contactos, altas, etc.), no solo las vistas. Filtrar por `AIRCRAFT_VIEW` / `SPARE_PART_VIEW` (relacionado con VA-15/VA-17).
-- En `SellerCta` el link envuelve un `<Button>` (HTML inválido: botón dentro de link). Usar `asChild` o un `Link` con estilos de botón.
-- **`/plans` → `/checkout` da 404.** `/plans` está en el footer y en el sitemap; sus botones llevan a `/checkout`, que no existe. Es de la Fase 6 (Mercado Pago): decidir si se esconde `/plans` hasta entonces.
-- **Código que no se usa** (para VA-61): `app/profile/[id]/profile-client.tsx` (con links a `/publicacion` y `/editar-publicacion`), `components/ui/HeroCarousel.tsx` (link a `/aviones`, que no existe), `components/ui/animated-search.tsx`, `lib/aircraft-service.ts`.
-- **Quitar un admin** tarda hasta 5 minutos en aplicarse (VA-13: `isAdmin` se revalida cada 5 min en el `jwt`).
-- **`lib/aircraft-service.ts`** no se importa en ningún lado (código muerto, para VA-61).
-- **Favoritos** (`/favs`) puede seguir mostrando publicaciones vencidas que el usuario guardó; no estaba en VA-14. Decidir si se ocultan o se marcan como "no disponible".
-- **Fundadores en producción:** hay 6 asignados automáticamente por el registro viejo, entre ellos cuentas de prueba (`augusto@gmail.com`, `delivered@resend.dev` en la copia local). Revisarlos en `/admin/users` cuando se despliegue VA-58.
-- **Panel admin en celular:** la barra lateral fija de 256 px deja ~120 px de contenido a 375 px. Afecta a todo `/admin` (candidato para VA-60).
-- **Vistas de anónimos:** con VA-17, un anónimo que abre la misma publicación en otra pestaña suma otra vista; se resuelve con la cookie `va_anon` de VA-15.
-- **Producción:** antes de desplegar, hacer el `resolve` de la baseline y después `npm run migrate:deploy` (comandos en el plan, debajo de VA-10).
+> Revisado el 17/10 contra el código: quedan solo los abiertos. Los resueltos están tachados abajo, con dónde se resolvieron.
+
+**Siguen abiertos** (también en el "Checklist de lanzamiento oficial" del plan):
+- **Fundadores en producción:** hay asignados por el registro viejo, entre ellos cuentas de prueba (`augusto@gmail.com`, `delivered@resend.dev`). Se listan con `scripts/prod-cleanup-report.ts` y se deciden en `/admin/users`.
+- **Bucket `documents`:** el código ya no lo publica (VA-105 · 5.7, link firmado); falta pasarlo a privado en Supabase (paso del socio en el runbook).
 - **Huérfanos en Storage:** correr `scripts/storage-orphans.mjs` contra producción (primero sin `--delete`).
-- Hay otro aviso de prueba de un PC-12 cargado como Helicóptero (H); no se tocó.
-- Después de cada `prisma migrate` o `prisma generate`, reiniciá `npm run dev`: el servidor de desarrollo sigue usando el cliente de Prisma viejo, que tenía cargado en memoria, y falla con errores como "Argument `category` is missing".
-- El banner "Ir a mi perfil" del detalle apunta a `/profile`, que no existe (la ruta es `/profile/<id>`).
-- `/faq` tiene preguntas de ejemplo y apunta a `/bkg-faq.jpg`, pero el archivo en `public/` es `.png`.
-- `favicon.ico` mide 148×256, no es cuadrado.
-- Avatar y logo de marca todavía suben a través de la función (límite de 4,5 MB en Vercel).
-- **No existe "olvidé mi contraseña"** para las cuentas con email y contraseña (no está en el plan; anotarlo como pendiente para el lanzamiento).
-- El bucket `documents` es público aunque el formulario dice "Documentación (solo privado)".
-- VA-54 ❓: unificar el label de `RECORRIDO` (hoy "Recorrido") con el que use el socio ("Overholeado" en la composición).
+- **Panel admin en celular:** la barra lateral fija de 256 px deja ~120 px de contenido a 375 px (para después).
+- **Avatar y logo de marca** todavía suben a través de la función (límite de 4,5 MB en Vercel).
+- En `SellerCta` el link envuelve un `<Button>` (botón dentro de link).
+- `favicon.ico` mide 148×256, no es cuadrado (archivo del socio).
 - VA-54: las hélices cargadas antes del 8/10 tienen la marca dentro de `model`.
-- VA-41 (orden de bloques en celular) sigue pendiente: hoy la descripción va antes que las características.
+- Hay un aviso de prueba de un PC-12 cargado como Helicóptero (H); no se tocó.
+
+**Notas (comportamiento esperado, no son pendientes):**
+- Quitar un admin tarda hasta 5 minutos en aplicarse (VA-13: `isAdmin` se revalida cada 5 min en el `jwt`).
+- Después de cada `prisma migrate` o `prisma generate`, reiniciar `npm run dev` (el cliente de Prisma queda en memoria).
+
+**Resueltos (17/10):**
+- ~~"Vistas" en el perfil cuenta todos los eventos~~ → solo vistas (VA-105 · 5.1, VA-118).
+- ~~`/plans` → `/checkout` da 404~~ → checkout de Mercado Pago (VA-92).
+- ~~Código que no se usa (`profile-client.tsx`, `HeroCarousel`, `animated-search`, `lib/aircraft-service.ts`)~~ → ya no existe (VA-61).
+- ~~Favoritos vencidos~~ → grisados y al final, con "Quitar de favoritos" (VA-105 · 5.3).
+- ~~Vistas de anónimos en otra pestaña~~ → se deduplican con la cookie `va_anon` (VA-15/VA-17).
+- ~~`resolve` de la baseline antes de desplegar~~ → está en `docs/PASE_A_PRODUCCION.md`, paso 2.
+- ~~Banner "Ir a mi perfil" a `/profile`~~ → `/profile/<id>` (VA-105 · 5.2).
+- ~~`/faq` con preguntas de ejemplo y `/bkg-faq.jpg`~~ → FAQ completo (VA-123).
+- ~~No existe "olvidé mi contraseña"~~ → hecho (VA-105 · 3).
+- ~~Label de `RECORRIDO`~~ → "Overholeado / Recorrido" en el formulario.
+- ~~VA-41 (orden de bloques en celular)~~ → hecho (`bbb3f74`).
