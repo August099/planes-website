@@ -1498,9 +1498,16 @@ Probados en celular; verificar también en escritorio.
 ## Pedidos del socio del 17/10 (segunda tanda) — de la más sencilla a la más compleja
 
 ### VA-141 · Recomendaciones del detalle sin subtítulo
+**Estado (17/10/2026):** ✅ hecho. `RecommendationRail` muestra solo el título.
 ### VA-142 · "Categorías de aviones" de la Home sin subtítulos
+**Estado (17/10/2026):** ✅ hecho. Cada tipo queda con la imagen, el nombre y la cantidad de avisos.
 ### VA-143 · Guías en la Home: solo el título y el enlace (sin el índice)
+**Estado (17/10/2026):** ✅ hecho. Título "Guías para comprar y vender" y "Ver todas las guías →".
 ### VA-144 · Servicios: "En proceso" en vez de "Próximamente"
+**Estado (17/10/2026):** ✅ hecho en la tarjeta de la Home. La página /services sigue con su sección "Próximamente / En camino" (no se pidió).
 ### VA-145 · Formularios: el campo Año no deja borrar el cero
+**Estado (17/10/2026):** ✅ hecho. Vacío se guarda como 0 y se muestra vacío; la validación sigue pidiendo un año entre 1900 y el actual.
 ### VA-146 · Buscador: si había algo escrito y se cambia de pestaña/ventana, la búsqueda se repite (revisar si sigue)
+**Estado (17/10/2026):** ✅ reproducido y arreglado. Cambiar de pestaña del navegador no repetía nada; lo que pasaba era al cambiar de página: el texto quedaba, el cambio de sección cambiaba el tipo y la búsqueda se repetía y abría los resultados en la página nueva. Ahora el buscador se limpia al cambiar de página.
 ### VA-147 · Nuevo orden de la Home: hero, categorías de aviones, destacados, últimas publicaciones, repuestos por categoría, explorá por fabricante, mapa, CTA de vendedores, cómo funciona, guías, secciones
+**Estado (17/10/2026):** ✅ hecho. Fabricantes no se ve en local porque las marcas de la base local no tienen logo (en el Preview sí).

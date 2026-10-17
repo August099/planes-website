@@ -276,6 +276,18 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 | VA-139 | Carruseles de la Home con puntos y la tarjeta siguiente asomada en celular. | `/` |
 | VA-140 | Compra pendiente de pago cancelada a los 5 minutos; sin efectivo ni cajero. | Mis compras · página de estado |
 
+## Pedidos del socio del 17/10, segunda tanda (VA-141 a VA-147)
+
+| Tarea | Qué cambió | Dónde verlo |
+|---|---|---|
+| VA-141 | Recomendaciones del detalle sin subtítulo. | Detalle de un aviso → abajo |
+| VA-142 | "Explorá por tipo de aeronave" sin las descripciones. | `/` |
+| VA-143 | Guías de la Home: solo título y enlace. | `/` |
+| VA-144 | Servicios "En proceso" en la tarjeta de la Home. | `/` → secciones |
+| VA-145 | El Año del formulario se puede borrar. | `/publish` → paso 2 |
+| VA-146 | El buscador se limpia al cambiar de página (no repite la búsqueda). | Buscador del header |
+| VA-147 | Nuevo orden de la Home. | `/` |
+
 ## Pruebas de pagos (16/10/2026)
 
 **Hecho, con plata real y las credenciales de producción (cuenta del socio), en local:**
