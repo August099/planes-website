@@ -41,27 +41,55 @@ export default function MobileHeaderSearchBar() {
     if (!hasQuery) return;
 
     const timer = setTimeout(async () => {
-      const res = await searchGlobal(query);
+      const res = await searchGlobal(query, "Todos");
       setFetched({ query, items: res });
     }, 350);
 
     return () => clearTimeout(timer);
   }, [query, hasQuery]);
 
+  // VA-137: la pantalla de búsqueda ocupa una entrada del historial, así el "atrás" del celular la
+  // cierra en vez de volver a la página anterior (antes llevaba, por ejemplo, a Repuestos).
+  useEffect(() => {
+    if (!isOpen) return;
+    const onPop = () => {
+      setIsOpen(false);
+      setQuery("");
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [isOpen]);
+
+  const open = () => {
+    window.history.pushState({ ...window.history.state, vaSearch: true }, "");
+    setIsOpen(true);
+  };
+
+  const close = () => {
+    if (window.history.state?.vaSearch) window.history.back(); // dispara popstate y cierra
+    else {
+      setIsOpen(false);
+      setQuery("");
+    }
+  };
+
+  // Al ir a un resultado se reemplaza la entrada de la búsqueda (atrás vuelve a la página de antes).
+  const go = (url: string) => {
+    setIsOpen(false);
+    setQuery("");
+    if (window.history.state?.vaSearch) router.replace(url);
+    else router.push(url);
+  };
+
   const handleSelect = (url: string) => {
     // VA-15: la búsqueda se registra al elegir un resultado (no en cada tecla).
     ensureAnalyticsCookies();
     void logSearch(query, results.length, "HEADER_RESULT_CLICK");
-    setIsOpen(false);
-    setQuery("");
-    router.push(url);
+    go(url);
   };
 
   const handleSearchSubmit = () => {
-    if (query.trim().length >= 2) {
-      setIsOpen(false);
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
-    }
+    if (query.trim().length >= 2) go(`/search?q=${encodeURIComponent(query.trim())}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -75,7 +103,7 @@ export default function MobileHeaderSearchBar() {
       {/* Botón Lupa con color dinámico: blanco en Home, azul en el resto */}
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={open}
         className={`p-2 transition-colors md:hidden outline-none cursor-pointer ${
           isHome
             ? "text-white hover:text-white/80"
@@ -93,10 +121,8 @@ export default function MobileHeaderSearchBar() {
           <div className="flex items-center gap-2 p-3 border-b border-slate-200 bg-white">
             <button
               type="button"
-              onClick={() => {
-                setIsOpen(false);
-                setQuery("");
-              }}
+              onClick={close}
+              aria-label="Cerrar buscador"
               className="p-2 text-slate-600 hover:text-slate-900 rounded-full"
             >
               <ArrowLeft className="w-5 h-5" />
