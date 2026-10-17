@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { User, Menu, ShieldCheck } from "lucide-react";
+import { User, Menu, ShieldCheck, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,23 +90,17 @@ export function MobileDropdown({ userId, isAdmin, hasUnanswered, loading, partCa
         {hasUnanswered && <PendingDot className="absolute top-1.5 right-1.5 h-2.5 w-2.5 border border-white" />}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 bg-white text-slate-900 p-2 space-y-1">
-        {NAV.map((item) => [
-          <DropdownMenuItem key={item.href} className="p-0">
-            <Link href={item.href} className="w-full px-2 py-1.5 text-sm font-medium">
-              {item.label}
-            </Link>
-          </DropdownMenuItem>,
-          ...(item.href === "/spareparts"
-            ? partCategories.map((c) => ({ href: `/spareparts?category=${encodeURIComponent(c.id)}`, label: c.name }))
-            : []
-          ).map((s) => (
-            <DropdownMenuItem key={s.href} className="p-0">
-              <Link href={s.href} className="w-full border-l-2 border-[#001F58]/15 py-1 pl-4 pr-2 text-sm text-slate-600">
-                {s.label}
+        {NAV.map((item) =>
+          item.href === "/spareparts" && partCategories.length > 0 ? (
+            <SparePartsGroup key={item.href} label={item.label} categories={partCategories} />
+          ) : (
+            <DropdownMenuItem key={item.href} className="p-0">
+              <Link href={item.href} className="w-full px-2 py-1.5 text-sm font-medium">
+                {item.label}
               </Link>
             </DropdownMenuItem>
-          )),
-        ])}
+          )
+        )}
 
         <DropdownMenuSeparator />
 
@@ -162,5 +157,42 @@ export function MobileDropdown({ userId, isAdmin, hasUnanswered, loading, partCa
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+// VA-133: en el menú del celular, "Repuestos" abre el listado y la flecha despliega sus categorías
+// (cerradas al abrir el menú, para que la lista no tape el resto de las opciones).
+function SparePartsGroup({ label, categories }: { label: string; categories: NonNullable<MenuUser["partCategories"]> }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <div className="flex items-center">
+        <DropdownMenuItem className="flex-1 p-0">
+          <Link href="/spareparts" className="w-full px-2 py-1.5 text-sm font-medium">
+            {label}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          closeOnClick={false}
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={open ? "Ocultar categorías de repuestos" : "Ver categorías de repuestos"}
+          className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center p-0"
+        >
+          <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+        </DropdownMenuItem>
+      </div>
+      {open &&
+        categories.map((c) => (
+          <DropdownMenuItem key={c.id} className="p-0">
+            <Link
+              href={`/spareparts?category=${encodeURIComponent(c.id)}`}
+              className="w-full border-l-2 border-[#001F58]/15 py-1 pl-4 pr-2 text-sm text-slate-600"
+            >
+              {c.name}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+    </>
   );
 }
