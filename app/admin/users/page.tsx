@@ -65,6 +65,17 @@ export default async function AdminUsersPage({ searchParams }: Props) {
     orderBy: [{ isActive: "desc" }, { sortOrder: "asc" }],
     select: { id: true, name: true, isActive: true },
   });
+  // VA-150: arrepentimientos por usuario (solo informativo: el derecho no se puede negar).
+  const userIds = users.map((u) => u.id);
+  const withdrawalRows = await prisma.payment.findMany({
+    where: { withdrawalRequestedAt: { not: null }, OR: [{ purchase: { userId: { in: userIds } } }, { subscription: { userId: { in: userIds } } }] },
+    select: { purchase: { select: { userId: true } }, subscription: { select: { userId: true } } },
+  });
+  const withdrawalsByUser = new Map<string, number>();
+  for (const w of withdrawalRows) {
+    const id = w.purchase?.userId ?? w.subscription?.userId;
+    if (id) withdrawalsByUser.set(id, (withdrawalsByUser.get(id) ?? 0) + 1);
+  }
   const planOptions = subscriptionPlans.map((p) => ({ id: p.id, name: p.isActive ? p.name : `${p.name} (no visible en /plans)` }));
   const now = new Date();
 
@@ -125,6 +136,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
               <th className="px-4 py-3">Ingreso</th>
               <th className="px-4 py-3 text-center">Avisos</th>
               <th className="px-4 py-3 text-center" title="Avisos disponibles: avión / repuesto (VA-89)">Saldo</th>
+              <th className="px-4 py-3 text-center" title="Pagos con pedido de arrepentimiento (VA-150). Solo informativo.">Arrepent.</th>
               <th className="px-4 py-3">Tipo de cuenta</th>
               <th className="px-4 py-3">Miembro fundador</th>
               <th className="px-4 py-3">Plan</th>
@@ -133,7 +145,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
           <tbody className="divide-y divide-slate-100">
             {users.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
+                <td colSpan={9} className="px-4 py-10 text-center text-slate-500">
                   No hay usuarios con esa búsqueda.
                 </td>
               </tr>
@@ -165,6 +177,9 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                     <span title="Avión">{u.aircraftListingsBalance}</span>
                     <span className="text-slate-400"> / </span>
                     <span title="Repuesto">{u.sparePartsListingsBalance}</span>
+                  </td>
+                  <td className={`px-4 py-3 text-center tabular-nums ${(withdrawalsByUser.get(u.id) ?? 0) >= 2 ? "font-semibold text-red-700" : "text-slate-600"}`}>
+                    {withdrawalsByUser.get(u.id) ?? 0}
                   </td>
                   <td className="px-4 py-3">
                     <UserTypeSelect userId={u.id} userType={u.userType} confirmed={u.userTypeConfirmed} />

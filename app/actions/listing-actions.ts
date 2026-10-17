@@ -3,6 +3,8 @@
 import { revalidatePath, updateTag } from "next/cache";
 import { RECOMMENDATIONS_TAG } from "@/lib/recommendations";
 import { renewalPrice, renewedExpiry } from "@/lib/renewal";
+import { recordFunding } from "@/lib/balances";
+import { currentSubscriptionWhere } from "@/lib/subscriptions";
 import { prisma } from "@/lib/prisma";
 import { assertListingOwner } from "@/lib/listing-auth";
 import { pathFromPublicUrl, removeUploads } from "@/lib/listing-uploads";
@@ -43,6 +45,14 @@ export async function renewListingAction(
     const data = { status: "ACTIVE" as const, listingExpiresAt: price.covered ? null : renewedExpiry(current.listingExpiresAt) };
     if (type === "aircraft") await prisma.aircraft.update({ where: { id }, data });
     else await prisma.sparePart.update({ where: { id }, data });
+    // VA-150: renovación gracias a la suscripción: se guarda el vencimiento anterior (si se arrepiente
+    // de ese cobro, vuelve a él).
+    if (price.covered) {
+      const sub = await prisma.subscription.findFirst({ where: currentSubscriptionWhere(current.sellerId), select: { id: true } });
+      if (sub) {
+        await recordFunding(prisma, { userId: current.sellerId, kind, listingId: id, reason: "RENEWAL", funding: { source: "SUBSCRIPTION", subscriptionId: sub.id }, previousExpiresAt: current.listingExpiresAt });
+      }
+    }
 
     revalidatePath(type === "aircraft" ? "/planes" : "/spareparts");
     revalidatePath(type === "aircraft" ? `/planes/plane-details/${id}` : `/spareparts/sparepart-details/${id}`);

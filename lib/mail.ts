@@ -122,3 +122,22 @@ export async function sendSuggestionEmail(input: { message: string; name: string
   });
   if (error) throw new Error(error.message);
 }
+
+// VA-150: confirmación del arrepentimiento, con el monto y lo que se retiró.
+export async function sendWithdrawalEmail(input: { to: string; name: string | null; amount: number; description: string; lines: string[] }) {
+  const money = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 2 }).format(input.amount);
+  const { error } = await resend.emails.send({
+    from: EMAIL_FROM,
+    to: input.to,
+    subject: "Recibimos tu pedido de arrepentimiento",
+    html: `
+      <div style="font-family: sans-serif; padding: 20px; color: #001F58;">
+        <h2>Pedido de arrepentimiento</h2>
+        <p>Hola${input.name ? ` ${escapeHtml(input.name)}` : ""}: te devolvemos <strong>AR$ ${money}</strong> por Mercado Pago de <strong>${escapeHtml(input.description)}</strong>. Según el medio de pago, puede tardar unos días en verse.</p>
+        ${input.lines.length ? `<ul>${input.lines.map((l) => `<li>${escapeHtml(l)}</li>`).join("")}</ul>` : ""}
+        <p style="font-size: 12px; color: #666;">Si querés volver a publicar un aviso que quedó "pendiente de pago", lo encontrás en tu perfil con el botón "Pagar".</p>
+      </div>
+    `,
+  });
+  if (error) throw new Error(error.message);
+}

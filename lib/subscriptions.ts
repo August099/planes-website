@@ -76,11 +76,25 @@ export async function syncListingExpiry(userId: string, now = new Date()) {
   const kinds = await noExpiryKinds(userId, now);
   const restoreAt = new Date(now.getTime() + LISTING_DAYS_MS);
   const base = { sellerId: userId, status: "ACTIVE" as const };
-  const sync = <T extends { updateMany: (args: { where: object; data: object }) => Promise<unknown> }>(model: T, kind: ListingKind) =>
-    kinds.has(kind)
-      ? model.updateMany({ where: { ...base, listingExpiresAt: { not: null } }, data: { listingExpiresAt: null } })
-      : model.updateMany({ where: { ...base, listingExpiresAt: null }, data: { listingExpiresAt: restoreAt } });
-  await Promise.all([sync(prisma.aircraft, "AIRCRAFT"), sync(prisma.sparePart, "SPARE_PART"), sync(prisma.hangar, "HANGAR")]);
+  // VA-150: lo que la suscripción deja sin vencimiento queda registrado con su vencimiento anterior:
+  // si se arrepiente de ese cobro, vuelve a él (y no a 45 días desde ese momento).
+  const sub = kinds.size ? await prisma.subscription.findFirst({ where: currentSubscriptionWhere(userId, now), select: { id: true } }) : null;
+  const models = { AIRCRAFT: prisma.aircraft, SPARE_PART: prisma.sparePart, HANGAR: prisma.hangar } as unknown as Record<ListingKind, typeof prisma.aircraft>;
+  for (const kind of ["AIRCRAFT", "SPARE_PART", "HANGAR"] as const) {
+    const model = models[kind];
+    if (kinds.has(kind)) {
+      const dated = await model.findMany({ where: { ...base, listingExpiresAt: { not: null } }, select: { id: true, listingExpiresAt: true } });
+      if (!dated.length) continue;
+      if (sub) {
+        await prisma.listingFunding.createMany({
+          data: dated.map((l) => ({ userId, listingKind: kind, listingId: l.id, reason: "RENEWAL" as const, source: "SUBSCRIPTION" as const, subscriptionId: sub.id, previousExpiresAt: l.listingExpiresAt })),
+        });
+      }
+      await model.updateMany({ where: { id: { in: dated.map((l) => l.id) } }, data: { listingExpiresAt: null } });
+    } else {
+      await model.updateMany({ where: { ...base, listingExpiresAt: null }, data: { listingExpiresAt: restoreAt } });
+    }
+  }
 }
 
 /** VA-80: suscripción del usuario (vigente o no) para mostrar en su perfil. */

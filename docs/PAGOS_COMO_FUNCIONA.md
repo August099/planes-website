@@ -212,6 +212,49 @@ pendiente) y después se descarta desde el admin.
 
 ---
 
+## 8b. Botón de arrepentimiento (VA-125 y VA-150)
+
+**Qué es:** dentro de los **10 días** del pago, el usuario toca **"Arrepentirme"** en "Mis compras" y le
+devolvemos el total por Mercado Pago en el momento. Se devuelve **aunque ya lo haya usado**, pero **todo
+lo que obtuvo con ese pago se retira** en ese mismo momento.
+
+**Con qué se pagó cada aviso.** Desde VA-150 queda registrado (`ListingFunding`), y el saldo se guarda por
+lotes (`CreditLot`: lanzamiento, packs, admin). Al publicar se usa siempre este orden:
+1. la suscripción vigente que cubre ese tipo de aviso;
+2. el saldo de lanzamiento (y el saldo que ya existía antes de VA-150);
+3. el saldo que dio un admin;
+4. los packs, del más viejo al más nuevo.
+
+**Qué se retira:**
+
+| Compra | Al arrepentirse |
+|---|---|
+| Aviso suelto | Vuelve a "pendiente de pago" (no se borra) y deja de verse. Puede volver a pagarlo |
+| Pack | Se descuentan los créditos que no usó; los avisos publicados con ese pack pasan a "pendiente de pago" |
+| Renovación | Vuelve al vencimiento que tenía antes; si ya pasó, queda vencido |
+| Destacado | Se quita el destacado (todavía no se venden: queda listo) |
+| Suscripción | Termina en el momento y se cancela el débito. Los avisos publicados o renovados gracias a ella desde ese cobro pasan a "pendiente de pago" o vuelven a su vencimiento anterior. Lo de otro origen queda como estaba |
+| Cambio de plan | Arrepentirse del primer cobro del plan nuevo termina la suscripción (la regla de arriba) |
+
+- **Cobros siguientes de una suscripción:** por ahora el botón aparece **solo en el primer cobro** de cada
+  débito (el alta, o el primero del plan nuevo en un cambio de plan). Es una constante
+  (`WITHDRAWAL_SUBSCRIPTION_SCOPE` en `lib/payments/withdrawal.ts`): falta confirmarlo con el contador o un
+  abogado.
+- **Mismo camino** para el botón, un reembolso hecho a mano desde el panel de Mercado Pago y un
+  contracargo (`lib/payments/reversal.ts`). Nunca se revierte dos veces (doble clic, reenvíos del webhook).
+- **Cupón** usado en ese pago: se libera el uso. **Factura:** emitida → nota de crédito; pendiente o
+  simulada → se descarta.
+- **Pagos de $0** (cupón del 100%, cortesía, saldo de lanzamiento): sin botón; lo publicado con ellos no
+  se toca. Un aviso en "pendiente de pago" solo se reactiva pagándolo (no editándolo ni renovándolo).
+- **El usuario** ve, antes de confirmar, la lista de lo que se va a retirar, y después recibe un mail con
+  el monto y lo retirado.
+- **El admin** ve el filtro **"Arrepentimientos"** en "Pagos y facturas", "Lo que se revirtió" en el
+  detalle de cada pago y la columna **"Arrepent."** en `/admin/users` (solo informativa: el derecho no se
+  puede negar).
+- Verificación: `scripts/verify-withdrawal.ts` (13 casos con Mercado Pago simulado).
+
+---
+
 ## 9. Lo que ve el usuario en su perfil
 
 - **Mis compras:** fecha, concepto, monto, estado del pago (Pagado, Pendiente de pago, Rechazado, Sin

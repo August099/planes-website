@@ -39,6 +39,17 @@ async function main() {
   const started = new Date();
   await prisma.user.upsert({ where: { id: U2 }, create: { id: U2, email: `${U2}@ventasaeronauticas.test`, name: "Segundo usuario de prueba" }, update: {} });
 
+  // Los packs "plan-aircraft-3" y "plan-parts-5" se borraron al cargar los planes reales (VA-105):
+  // el script crea los suyos (mismos ids y precios) y los borra al final.
+  const tempPlans: string[] = [];
+  for (const p of [
+    { id: "plan-aircraft-3", name: "Pack 3 aviones (verificación)", type: "AIRCRAFT_PACK" as const, price: 72000, aircraftListingsCount: 3 },
+    { id: "plan-parts-5", name: "Pack 5 repuestos (verificación)", type: "SPARE_PART_PACK" as const, price: 50000, sparePartsListingsCount: 5 },
+  ]) {
+    if (await prisma.plan.findUnique({ where: { id: p.id } })) continue;
+    await prisma.plan.create({ data: { ...p, isActive: true, billingType: "ONE_TIME" } });
+    tempPlans.push(p.id);
+  }
   try {
     // 1) Guardado ≠ usado: lo guarda en el perfil (uso sin compra) y lo puede usar igual con límite 1.
     const c1 = await coupon({ code: "GUARDA", perUser: 1 });
@@ -121,13 +132,22 @@ async function main() {
     });
     check("9. El admin ve cuántos usos y de quién", "1 uso · Segundo usuario de prueba", `${withUsages.currentUses} uso · ${withUsages.usages.map((u) => u.User.name).join(", ")}`);
   } finally {
+    const cleanupPlans = async () => {
+      await prisma.creditLot.deleteMany({ where: { purchase: { planId: { in: tempPlans } } } });
+      await prisma.plan.deleteMany({ where: { id: { in: tempPlans } } });
+    };
     const purchases = await prisma.purchase.findMany({ where: { userId: { in: [U1, U2] }, createdAt: { gte: started } }, select: { id: true } });
     const ids = purchases.map((p) => p.id);
     await prisma.couponUsage.deleteMany({ where: { OR: [{ purchaseId: { in: ids } }, { Coupon: { code: { startsWith: PREFIX } } }] } });
+    await prisma.creditLot.deleteMany({ where: { purchaseId: { in: ids } } });
+    await prisma.listingFunding.deleteMany({ where: { purchaseId: { in: ids } } });
     await prisma.purchase.deleteMany({ where: { id: { in: ids } } });
+    await cleanupPlans();
     await prisma.coupon.deleteMany({ where: { code: { startsWith: PREFIX } } });
     await prisma.billingProfile.deleteMany({ where: { userId: { in: [U1, U2] } } });
-    await prisma.user.update({ where: { id: U1 }, data: { aircraftListingsBalance: 0, sparePartsListingsBalance: 0 } });
+    // VA-150: el saldo vuelve a ser la suma de los lotes que quedan (el de lanzamiento, si lo tenía).
+    const lotSum = async (kind: "AIRCRAFT" | "SPARE_PART") => (await prisma.creditLot.aggregate({ where: { userId: U1, kind, revokedAt: null }, _sum: { remaining: true } }))._sum.remaining ?? 0;
+    await prisma.user.update({ where: { id: U1 }, data: { aircraftListingsBalance: await lotSum("AIRCRAFT"), sparePartsListingsBalance: await lotSum("SPARE_PART") } });
     await prisma.user.delete({ where: { id: U2 } });
     await prisma.$disconnect();
   }

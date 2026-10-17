@@ -9,6 +9,7 @@ import { processInvoice } from "@/lib/billing/issue";
 import { isTestPayment } from "@/lib/billing/guard";
 import { mpAccountIsTest } from "@/lib/payments/mp-account";
 import { handleSubscriptionTopic } from "@/lib/payments/subscriptions";
+import { revertSubscriptionCharge } from "@/lib/payments/subscription-reversal";
 
 // VA-92 · Etapa 3: procesamiento de un WebhookEvent ya guardado. Nunca se confía en el payload:
 // con el id recibido se consulta el pago a la API de Mercado Pago y se actúa según lo que devuelve.
@@ -101,9 +102,22 @@ export async function handlePayment(mpPaymentId: string): Promise<Outcome> {
     isTest,
     raw: JSON.parse(JSON.stringify(mp)) as Prisma.InputJsonValue,
   };
+  // VA-150: un cobro de suscripción guarda en raw el authorized_payment (con el preapproval, que
+  // distingue el primer cobro de los siguientes): no se pisa, se le suma el pago.
+  const existing = await prisma.payment.findUnique({ where: { mpPaymentId: String(mp.id ?? mpPaymentId) }, select: { subscriptionId: true, raw: true } });
+  if (existing?.subscriptionId && existing.raw && typeof existing.raw === "object") {
+    data.raw = { ...(existing.raw as Record<string, unknown>), payment: JSON.parse(JSON.stringify(mp)) } as Prisma.InputJsonValue;
+  }
   const payment = await upsertPayment(String(mp.id ?? mpPaymentId), data);
 
   if (!purchase) {
+    // VA-150: reembolso a mano desde el panel de Mercado Pago o contracargo de un cobro de suscripción:
+    // el mismo camino que el botón de arrepentimiento (idempotente).
+    if (payment.subscriptionId && (status === "refunded" || status === "charged_back")) {
+      const summary = await revertSubscriptionCharge(payment.id);
+      const note = await handleRefunds(payment.id, mp.refunds ?? [], amount, refunded || amount);
+      return { status: "PROCESSED", note: `Cobro de suscripción ${mpPaymentId} reembolsado: suscripción terminada, ${summary?.toPending.length ?? 0} avisos a pendiente; ${note}` };
+    }
     return { status: "IGNORED", note: `Pago ${mpPaymentId} sin compra asociada (external_reference: ${mp.external_reference ?? "—"})` };
   }
 
@@ -128,7 +142,7 @@ export async function handlePayment(mpPaymentId: string): Promise<Outcome> {
     notes.push(await invoiceNote(payment.id));
     if (refunded > 0) notes.push(await handleRefunds(payment.id, mp.refunds ?? [], amount, refunded));
   } else if (purchaseStatus === "REFUNDED") {
-    const revoked = await revokePurchase(purchase.id);
+    const revoked = await revokePurchase(purchase.id, payment.id);
     notes.push(revoked ? "compra revertida" : "la compra ya estaba revertida o no se había activado");
     if (!revoked) await setStatusIfNotActivated(purchase.id, "REFUNDED");
     notes.push(await handleRefunds(payment.id, mp.refunds ?? [], amount, refunded || amount));
@@ -165,6 +179,11 @@ export async function handleRefunds(paymentId: string, refunds: Array<{ id?: num
           : { total: new Prisma.Decimal(remaining) },
     });
     return remaining <= 0 ? "factura descartada (reembolso total antes de emitir)" : `factura ajustada a ${remaining} (reembolso parcial)`;
+  }
+  // VA-150: una factura simulada (pruebas) no lleva nota de crédito: se descarta.
+  if (original.status === "ISSUED_SIMULATED" && refundedTotal >= amount) {
+    await prisma.invoice.update({ where: { id: original.id }, data: { status: "SKIPPED", skippedAt: new Date(), errors: "Reembolsada: la factura simulada se descarta (no hay nota de crédito)." } });
+    return "factura simulada descartada (reembolso total)";
   }
   if (original.status !== "ISSUED" && original.status !== "ISSUED_SIMULATED") return `reembolso: factura ${original.status}`;
   let created = 0;

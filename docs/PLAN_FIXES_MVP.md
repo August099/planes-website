@@ -1511,3 +1511,29 @@ Probados en celular; verificar también en escritorio.
 **Estado (17/10/2026):** ✅ reproducido y arreglado. Cambiar de pestaña del navegador no repetía nada; lo que pasaba era al cambiar de página: el texto quedaba, el cambio de sección cambiaba el tipo y la búsqueda se repetía y abría los resultados en la página nueva. Ahora el buscador se limpia al cambiar de página.
 ### VA-147 · Nuevo orden de la Home: hero, categorías de aviones, destacados, últimas publicaciones, repuestos por categoría, explorá por fabricante, mapa, CTA de vendedores, cómo funciona, guías, secciones
 **Estado (17/10/2026):** ✅ hecho. Fabricantes no se ve en local porque las marcas de la base local no tienen logo (en el Preview sí).
+
+## Pedidos del socio del 17/10 (tercera tanda) — ordenados por prioridad · detalle en `docs/specs/VA-148-a-VA-150-lote-17-10.md`
+
+> Ya se probaron en el Preview pagos con dinero real (con factura de prueba) y el botón de arrepentimiento. Todo lo que falta se prueba en el Preview y después va el testeo final en producción.
+
+### VA-150 · Arrepentimiento: cubrir todos los casos para que no se pueda usar gratis lo comprado (prioridad alta)
+- **Problema:** el reembolso no retira lo ya usado. Por ejemplo, un pack con el que ya se publicó: el saldo no queda negativo y el aviso sigue gratis. O una suscripción con avisos publicados: los avisos quedan activos.
+- **Hacer:**
+  - registro de con qué se pagó cada aviso, con un orden de consumo único (suscripción → saldo de lanzamiento → packs del más viejo al más nuevo);
+  - reversión por tipo de compra (aviso suelto, pack, renovación, destacado, suscripción, cambio de plan): lo obtenido con ese pago vuelve a "pendiente de pago" o se revierte;
+  - el mismo camino para el botón, los reembolsos manuales desde Mercado Pago y los contracargos;
+  - el diálogo muestra qué se retira, más un mail de confirmación;
+  - en el admin, los arrepentimientos por usuario;
+  - 13 tests.
+- ❓ **Decisión:** ¿arrepentimiento solo en el alta de la suscripción o en cada cobro mensual? Sugerido: solo en el alta (confirmar con el contador o un abogado).
+- **Estado (17/10):** ✅ hecho en local. Migración `va150_registro_de_consumo` (`CreditLot` y `ListingFunding`; el saldo existente pasó a lotes LAUNCH/LEGACY). 13 casos OK con Mercado Pago simulado (`scripts/verify-withdrawal.ts`). Regla de suscripciones en `WITHDRAWAL_SUBSCRIPTION_SCOPE` = solo el primer cobro, hasta que se confirme. Falta probarlo en el Preview con pagos de prueba.
+
+### VA-149 · Categorías de aviones: dibujos blancos con línea roja y azul, y orden nuevo
+- **Orden:** Monomotor → Bimotor → Experimental / LSA → Agrícola → Helicóptero → Proyecto → Otros. Se aplica en la Home, en el filtro de `/planes` y en el formulario. "Experimental / Avión ligero" pasa a llamarse "Experimental / LSA".
+- **Dibujos:** los 7 de `public/aircraft-types/` pasan de azul a **blanco con la línea roja y azul**, con el mismo encuadre. Primero se intenta recolorearlos con un script, con antes y después; si no queda prolijo, se frena y el socio pasa imágenes nuevas.
+- **Estado (17/10):** orden y nombre ✅ (migración de datos `va149_experimental_lsa`). Dibujos: el recoloreo por script no quedó prolijo (grises, bordes dentados, franja azul casi invisible) → se esperan las imágenes nuevas.
+
+### VA-148 · Íconos nuevos para las categorías de repuestos
+- Usar los íconos de `categories-icons/ventas-aeronauticas-icons/src/icons/`, pasados a componentes TypeScript del proyecto.
+- Reemplazar los actuales en la Home, en el menú de Repuestos, en los filtros y en el admin.
+- Mostrar la tabla categoría → ícono antes de aplicarla, y no sumar peso de JavaScript a la Home.
