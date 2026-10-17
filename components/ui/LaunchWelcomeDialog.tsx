@@ -11,9 +11,9 @@ import {
 // Pantallas del flujo de cuenta y de pago: ahí no se interrumpe; la ventana sale en la próxima página.
 const SKIP_PREFIXES = ["/login", "/register", "/verify-email", "/forgot-password", "/reset-password", "/onboarding", "/checkout", "/payment"];
 
-// VA-111: ventana de bienvenida del lanzamiento. Aparece una sola vez por cuenta, la primera vez que
-// alguien con el saldo de lanzamiento (VA-89) vuelve a la web con la sesión iniciada: cuentas nuevas
-// (email o Google) y las que ya existían. Se consulta una vez por carga de la página.
+// VA-111 / VA-135: ventana de bienvenida del lanzamiento. Aparece una sola vez, en la primera página
+// que ve una cuenta recién registrada (email o Google) con el saldo de lanzamiento (VA-89). El
+// servidor la marca como vista al mostrarla. Se consulta una vez por carga de la página.
 export function LaunchWelcomeDialog() {
   const pathname = usePathname();
   const router = useRouter();
