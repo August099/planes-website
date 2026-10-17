@@ -24,7 +24,7 @@ export default function HomeServicesCards() {
     },
     {
       title: "SERVICIOS",
-      status: "Próximamente",
+      status: "En proceso", // VA-144
       isAvailable: false,
       image: "/cards/services.webp",
       href: "/services",
