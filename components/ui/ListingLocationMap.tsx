@@ -21,6 +21,8 @@ type Props = {
 const VIEW_ASPECT = 1.6;
 // Lado mínimo del encuadre, en unidades del SVG (~110 km): CABA y provincias chicas no quedan ampliadas de más.
 const MIN_SIDE = 20;
+// Centro de CABA, para encuadrarla cuando el aviso no tiene coordenadas.
+const CABA_CENTER = { lon: -58.44, lat: -34.61 };
 
 function frame(box: BBox): { x: number; y: number; w: number; h: number } {
   const pad = Math.max(box.maxX - box.minX, box.maxY - box.minY) * 0.12 + 4;
@@ -34,24 +36,26 @@ function frame(box: BBox): { x: number; y: number; w: number; h: number } {
 }
 
 export function ListingLocationMap({ latitude, longitude, city, province, title = "Zona", className = "" }: Props) {
-  if (latitude == null || longitude == null) return null;
-  const place = [city, province].filter(Boolean).join(", ");
   const slug = provinceByName(province)?.slug ?? null;
-  const point = projectToMap(longitude, latitude);
+  // VA-138: sin coordenadas (avisos viejos o si Georef no respondió al publicar) igual se muestra la
+  // provincia resaltada, sin el punto. Sin coordenadas ni provincia conocida, no hay mapa.
+  const point = latitude != null && longitude != null ? projectToMap(longitude, latitude) : null;
+  const center = point ?? (slug === "caba" ? projectToMap(CABA_CENTER.lon, CABA_CENTER.lat) : null);
+  const base = (slug && slug !== "caba" ? provinceBBox(slug) : null) ?? (center ? { minX: center.x, minY: center.y, maxX: center.x, maxY: center.y } : null);
+  if (!base) return null;
+  const place = [city, province].filter(Boolean).join(", ");
 
   // Encuadre: la provincia del aviso (CABA se ve dentro de su zona), siempre incluyendo el punto.
-  const box: BBox = (slug && slug !== "caba" && provinceBBox(slug)) || {
-    minX: point.x,
-    minY: point.y,
-    maxX: point.x,
-    maxY: point.y,
-  };
-  const view = frame({
-    minX: Math.min(box.minX, point.x),
-    minY: Math.min(box.minY, point.y),
-    maxX: Math.max(box.maxX, point.x),
-    maxY: Math.max(box.maxY, point.y),
-  });
+  const view = frame(
+    point
+      ? {
+          minX: Math.min(base.minX, point.x),
+          minY: Math.min(base.minY, point.y),
+          maxX: Math.max(base.maxX, point.x),
+          maxY: Math.max(base.maxY, point.y),
+        }
+      : base
+  );
   const dot = view.w * 0.012;
   const label = `Mapa de la zona aproximada${place ? `: ${place}` : ""}`;
 
@@ -75,8 +79,12 @@ export function ListingLocationMap({ latitude, longitude, city, province, title 
               vectorEffect="non-scaling-stroke"
             />
           ))}
-          <circle cx={point.x} cy={point.y} r={dot * 3} className="fill-[#E70F1F]/15" />
-          <circle cx={point.x} cy={point.y} r={dot} className="fill-[#E70F1F] stroke-white" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+          {point && (
+            <>
+              <circle cx={point.x} cy={point.y} r={dot * 3} className="fill-[#E70F1F]/15" />
+              <circle cx={point.x} cy={point.y} r={dot} className="fill-[#E70F1F] stroke-white" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+            </>
+          )}
         </svg>
 
         {/* Ubicación de la provincia en el país (decorativo: la zona ya está dicha en el pie). */}
