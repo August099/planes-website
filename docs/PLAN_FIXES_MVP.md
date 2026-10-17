@@ -1494,3 +1494,13 @@ Probados en celular; verificar también en escritorio.
 **Estado (17/10/2026):** ✅ hecho. Destacadas, Últimas publicaciones y Categorías: puntos debajo en todos los tamaños; en celular (sin flechas) se asoma la tarjeta siguiente; en escritorio siguen las flechas.
 ### VA-140 · Pago pendiente: cancelarlo a los 5 minutos
 **Estado (17/10/2026):** ✅ hecho. El link de Mercado Pago vence a los 5 minutos; pasado ese tiempo la compra sin pagar figura "Cancelado (no se pagó)" en Mis compras y la página de estado ofrece reintentar. Se excluyen efectivo y cajero (quedaban pendientes días). Los pagos "en proceso" no se tocan. Test en `tests/pending.test.ts`.
+
+## Pedidos del socio del 17/10 (segunda tanda) — de la más sencilla a la más compleja
+
+### VA-141 · Recomendaciones del detalle sin subtítulo
+### VA-142 · "Categorías de aviones" de la Home sin subtítulos
+### VA-143 · Guías en la Home: solo el título y el enlace (sin el índice)
+### VA-144 · Servicios: "En proceso" en vez de "Próximamente"
+### VA-145 · Formularios: el campo Año no deja borrar el cero
+### VA-146 · Buscador: si había algo escrito y se cambia de pestaña/ventana, la búsqueda se repite (revisar si sigue)
+### VA-147 · Nuevo orden de la Home: hero, categorías de aviones, destacados, últimas publicaciones, repuestos por categoría, explorá por fabricante, mapa, CTA de vendedores, cómo funciona, guías, secciones
