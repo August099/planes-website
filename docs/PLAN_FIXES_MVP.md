@@ -1466,3 +1466,20 @@ Los planes de banner se crean en el admin de planes (tipo `AD_BANNER`), pero se 
 
 **Estado (14/10/2026):** ✅ hecho (commit `fix(VA-129)`). `components/ui/ListingLocationMap.tsx` ahora es de servidor (sin JS ni pedidos a terceros); `lib/argentina-map.ts` ubica longitud/latitud con la misma proyección del mapa (`scripts/verify-argentina-projection.ts` la compara con d3: 0 px de diferencia). Se quitan `leaflet`, `LeafletZoneMap.tsx`, `NEXT_PUBLIC_STADIA_API_KEY` y Stadia de la política de privacidad. **Ya no hace falta** cuenta ni dominio en Stadia.
 
+
+
+## Pedidos del socio del 17/10 (probando el Preview en celular) — de la más sencilla a la más compleja
+
+Probados en celular; verificar también en escritorio.
+
+### VA-130 · 404 sin el ícono de "Volver a la Base"
+### VA-131 · Detalle de avión: grilla "General" con Marca, Modelo, Año, Hs totales, Categoría y Estado; "Datos de la aeronave" sin Categoría (ya está el link arriba)
+### VA-132 · Checkout: el resumen (con el cupón) antes de la sección de pago
+### VA-133 · Menú desplegable de Repuestos: categorías colapsables (celular)
+### VA-134 · Favoritos sin sesión: llevar al login (y el error que da dentro de un detalle)
+### VA-135 · Ventana de bienvenida del lanzamiento: solo después de registrarse, no en cada inicio de sesión
+### VA-136 · Header de la Home: al recargar queda blanco en vez de transparente
+### VA-137 · Buscador: solo muestra aeronaves y al salir redirige a repuestos
+### VA-138 · Mapa de zona: no aparece en el detalle de aviones ni de repuestos
+### VA-139 · Carruseles de la Home: que se note que hay más (indicadores) y flechas que funcionen en celular, con un solo criterio
+### VA-140 · Pago pendiente: cancelarlo a los 5 minutos
