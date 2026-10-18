@@ -145,9 +145,6 @@ async function main() {
     await cleanupPlans();
     await prisma.coupon.deleteMany({ where: { code: { startsWith: PREFIX } } });
     await prisma.billingProfile.deleteMany({ where: { userId: { in: [U1, U2] } } });
-    // VA-150: el saldo vuelve a ser la suma de los lotes que quedan (el de lanzamiento, si lo tenía).
-    const lotSum = async (kind: "AIRCRAFT" | "SPARE_PART") => (await prisma.creditLot.aggregate({ where: { userId: U1, kind, revokedAt: null }, _sum: { remaining: true } }))._sum.remaining ?? 0;
-    await prisma.user.update({ where: { id: U1 }, data: { aircraftListingsBalance: await lotSum("AIRCRAFT"), sparePartsListingsBalance: await lotSum("SPARE_PART") } });
     await prisma.user.delete({ where: { id: U2 } });
     await prisma.$disconnect();
   }

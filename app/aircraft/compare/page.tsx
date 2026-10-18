@@ -25,7 +25,6 @@ export default async function ComparePage({ searchParams }: Props) {
   const wanted = [...new Set(ids.split(",").map((s) => s.trim()).filter(Boolean))].slice(0, 3);
   const found = (await Promise.all(wanted.map((id) => getAircraftDetail(id)))).filter((a) => a !== null);
 
-  const now = new Date();
   const columns: CompareColumn[] = found.map((a) => ({
     id: a.id,
     title: a.title,
@@ -33,7 +32,7 @@ export default async function ComparePage({ searchParams }: Props) {
     image: a.images[0]?.url ?? PLACEHOLDER_IMAGE,
     price: formatPrice(a.price, { fallback: "Precio a consultar" }),
     location: [a.city, a.province].filter(Boolean).join(", "),
-    active: isListingActive(a, now),
+    active: isListingActive(a),
   }));
   // Los avisos que ya no están disponibles no aportan datos a la comparación.
   const sections = buildCompareSections(found.map((a, i) => (columns[i].active ? a : null)));

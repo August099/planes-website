@@ -55,6 +55,21 @@ pago. **No** alcanza con mover la carpeta.
 
 ---
 
+## Cupones (VA-152, decisión del socio del 18/10)
+
+| | |
+|---|---|
+| Ruta oculta | `app/admin/_cupones/page.tsx` (antes `/admin/coupons`) → **404** |
+| Quitado | La pestaña "Mis cupones" del perfil y el link "Cupones" del admin |
+| Se mantiene | `Coupon` y `CouponUsage`, `lib/coupons.ts` (validación, reserva de usos, cupón del 100%), `app/actions/coupons-actions.ts`, `app/actions/coupon-validation.ts` y el campo del checkout (solo para pagos únicos) |
+
+**Para volver a publicarlo:** mover `app/admin/_cupones` a `app/admin/coupons`, sumar "Cupones" a
+`components/admin/AdminNav.tsx` y, si se quiere el reclamo desde el perfil, recuperar la pestaña de
+`ProfileView` (commit de VA-152). Las suscripciones no aceptan cupones: Mercado Pago no permite un primer
+cobro distinto en el débito automático (primer mes gratis o descuento por varios meses).
+
+---
+
 ## Sin código todavía (solo "Próximamente" en `/services`, sin link)
 
 - Herramientas (VA-91), foro (VA-86), pilotos y profesionales, talleres, eventos y empresas.

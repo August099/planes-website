@@ -2,20 +2,17 @@ import "server-only";
 import { PaymentRefund, Payment as MpPayment } from "mercadopago";
 import { prisma } from "@/lib/prisma";
 import { mpClient } from "@/lib/mercadopago";
-import { handlePayment, handleRefunds } from "@/lib/payments/process";
-import { previewReversal, describeReversal, type ReversalSummary } from "@/lib/payments/reversal";
+import { handleRefunds } from "@/lib/payments/process";
 import { isLaterSubscriptionCharge, previewSubscriptionReversal, revertSubscriptionCharge } from "@/lib/payments/subscription-reversal";
 import { sendWithdrawalEmail } from "@/lib/mail";
+import { describePaused, type QuotaKind } from "@/lib/quota";
 
 // VA-125: botón de arrepentimiento (Ley 24.240 y Resolución 424/2020). Dentro de los 10 días corridos
 // desde el pago, el usuario pide la devolución desde "Mis compras": se reembolsa el total por Mercado
-// Pago en el momento y se retira lo obtenido con ese pago (decisión del socio, 14/10: aunque ya lo
-// haya usado). VA-150: qué se retira, en lib/payments/reversal.ts (mismo camino que un reembolso a
-// mano o un contracargo).
-// - Compra única (aviso suelto, pack, renovación, destacado): el reembolso pasa por handlePayment,
-//   el mismo camino que el webhook (revokePurchase + nota de crédito o factura descartada).
-// - Cobro de una suscripción: revertSubscriptionCharge (avisos de la suscripción a pendiente, débito
-//   cancelado y suscripción terminada).
+// Pago en el momento. VA-152: solo para suscripciones (no se venden avisos sueltos ni packs). La
+// suscripción termina, se cancela el débito y la cuenta vuelve al cupo Gratis: si tiene más avisos
+// activos, se pausan los más nuevos (lib/payments/subscription-reversal.ts, el mismo camino que un
+// reembolso a mano o un contracargo).
 
 export const WITHDRAWAL_DAYS = 10;
 
@@ -58,8 +55,8 @@ async function loadOwnedPayment(userId: string, paymentId: string) {
       subscription: { select: { id: true, userId: true, mpSubscriptionId: true, mpStatus: true, plan: { select: { name: true } } } },
     },
   });
-  const ownerId = payment?.purchase?.userId ?? payment?.subscription?.userId;
-  if (!payment || ownerId !== userId) return null;
+  // VA-152: solo cobros de suscripción.
+  if (!payment?.subscription || payment.subscription.userId !== userId) return null;
   const later = payment.subscription ? await isLaterSubscriptionCharge(payment) : false;
   return { payment, later };
 }
@@ -70,16 +67,17 @@ export async function withdrawalPreview(userId: string, paymentId: string): Prom
   if (!loaded) return { ok: false, error: "No encontramos ese pago." };
   const { payment, later } = loaded;
   if (!withdrawalUntil(payment, new Date(), { laterSubscriptionCharge: later })) return { ok: false, error: "Este pago ya no se puede devolver con el botón de arrepentimiento." };
-  const summary = payment.subscription
-    ? await previewSubscriptionReversal(payment.id)
-    : payment.purchase
-      ? await previewReversal({ purchaseId: payment.purchase.id })
-      : null;
-  const lines = describeReversal(summary ?? EMPTY, { subscriptionEnds: !!payment.subscription });
+  const lines = withdrawalLines(await previewSubscriptionReversal(payment.id));
   return { ok: true, amount: Number(payment.amount), lines };
 }
 
-const EMPTY: ReversalSummary = { toPending: [], renewalsReverted: [], featuredRemoved: [], creditsRemoved: {}, couponReleased: false };
+/** Qué pasa al arrepentirse, en el diálogo y en el mail. */
+function withdrawalLines(paused: Record<QuotaKind, number> | null): string[] {
+  const lines = ["Tu suscripción termina en el momento y se cancela el débito automático. Volvés al plan Gratis."];
+  const p = paused && describePaused(paused);
+  if (p) lines.push(p);
+  return lines;
+}
 
 export async function requestWithdrawal(userId: string, paymentId: string): Promise<WithdrawalResult> {
   const loaded = await loadOwnedPayment(userId, paymentId);
@@ -89,7 +87,7 @@ export async function requestWithdrawal(userId: string, paymentId: string): Prom
     return { ok: false, error: `Este pago ya no se puede devolver con el botón de arrepentimiento (son ${WITHDRAWAL_DAYS} días desde el pago).` };
   }
   // Lo que se va a retirar, para el mail (se calcula antes de aplicarlo).
-  const preview = payment.subscription ? await previewSubscriptionReversal(payment.id) : payment.purchase ? await previewReversal({ purchaseId: payment.purchase.id }) : null;
+  const preview = await previewSubscriptionReversal(payment.id);
 
   // Un solo pedido por pago, aunque se aprete dos veces.
   const claimed = await prisma.payment.updateMany({
@@ -111,16 +109,12 @@ export async function requestWithdrawal(userId: string, paymentId: string): Prom
 
   // El reembolso ya está hecho: lo que sigue refleja el cambio (si falla, lo completa el webhook).
   try {
-    if (payment.subscription) {
-      await revertSubscriptionCharge(payment.id);
-      const mp = await new MpPayment(mpClient()).get({ id: payment.mpPaymentId });
-      const amount = Number(mp.transaction_amount ?? payment.amount);
-      const refunded = Number(mp.transaction_amount_refunded ?? amount);
-      await prisma.payment.update({ where: { id: payment.id }, data: { status: mp.status ?? "refunded", refundedAmount: refunded } });
-      await handleRefunds(payment.id, mp.refunds ?? [], amount, refunded);
-    } else {
-      await handlePayment(payment.mpPaymentId);
-    }
+    await revertSubscriptionCharge(payment.id);
+    const mp = await new MpPayment(mpClient()).get({ id: payment.mpPaymentId });
+    const amount = Number(mp.transaction_amount ?? payment.amount);
+    const refunded = Number(mp.transaction_amount_refunded ?? amount);
+    await prisma.payment.update({ where: { id: payment.id }, data: { status: mp.status ?? "refunded", refundedAmount: refunded } });
+    await handleRefunds(payment.id, mp.refunds ?? [], amount, refunded);
   } catch (error) {
     console.error(`[arrepentimiento] reembolso hecho, pero no se pudo reflejar en la base (${payment.id}):`, error);
   }
@@ -132,8 +126,8 @@ export async function requestWithdrawal(userId: string, paymentId: string): Prom
         to: user.email,
         name: user.name,
         amount: Number(payment.amount),
-        description: payment.purchase?.description ?? `Suscripción – Plan ${payment.subscription?.plan.name ?? ""}`,
-        lines: describeReversal(preview ?? EMPTY, { subscriptionEnds: !!payment.subscription }),
+        description: `Suscripción – Plan ${payment.subscription?.plan.name ?? ""}`,
+        lines: withdrawalLines(preview),
       });
     }
   } catch (error) {

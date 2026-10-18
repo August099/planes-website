@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Banknote,
   CreditCard,
   BookOpen,
   Layers,
@@ -15,7 +14,6 @@ import {
   ListFilter,
   Menu,
   Plane,
-  Receipt,
   Search,
   ShieldAlert,
   Tag,
@@ -32,10 +30,10 @@ export const NAV_ITEMS = [
   { label: "Métricas", href: "/admin/kpi", icon: ListFilter },
   { label: "Reportes", href: "/admin/report", icon: FileWarning },
   { label: "Añadir taxonomía", href: "/admin/taxonomy", icon: Tag },
-  { label: "Cupones", href: "/admin/coupons", icon: Receipt },
-  { label: "Precios", href: "/admin/prices", icon: Banknote },
   { label: "Pagos y facturas", href: "/admin/payments", icon: CreditCard },
-  { label: "Planes", href: "/admin/plans", icon: Layers },
+  // VA-152: planes y precios en una sola sección. Los cupones quedan en el código, sin pantalla
+  // (app/admin/_cupones es una carpeta privada: no genera la ruta).
+  { label: "Planes y precios", href: "/admin/plans", icon: Layers },
   { label: "Guías", href: "/admin/guides", icon: BookOpen },
   { label: "Sugerencias", href: "/admin/suggestions", icon: Lightbulb },
 ];

@@ -11,7 +11,6 @@ import {
   Prisma,
   AircraftStatus,
   SparePartStatus,
-  PaymentStatus,
   SubscriptionStatus
 } from "@prisma/client";
 
@@ -60,8 +59,8 @@ const CONTACT_TYPES_SQL = sqlTypeList(CONTACT_TYPES);
 const SEARCH_TERM_SQL = Prisma.sql`lower(btrim(coalesce("metadata"->>'query', "metadata"->>'searchQuery', "metadata"->>'term', '')))`;
 
 // Mismo criterio que activeListingWhere() (lib/listing-filters.ts), para consultas en SQL.
-const activeListingSql = (now: Date) =>
-  Prisma.sql`"status" = 'ACTIVE' AND ("listingExpiresAt" IS NULL OR "listingExpiresAt" >= ${now})`;
+const activeListingSql = () =>
+  Prisma.sql`"status" = 'ACTIVE'`;
 
 const DIRECT_TRAFFIC_LABEL = "Tráfico Directo / App";
 
@@ -100,8 +99,8 @@ export async function getDashboardMetrics() {
   const [
     usdArs,
     activeSubscriptions,
-    thisMonthPurchases,
-    lastMonthPurchases,
+    thisMonthCharges,
+    lastMonthCharges,
     mauRows,
     activeAircrafts,
     activeSpareParts,
@@ -111,28 +110,29 @@ export async function getDashboardMetrics() {
     soldSpareParts,
   ] = await Promise.all([
     getUsdArsRate(),
+    // VA-152: los ingresos son solo suscripciones pagas (sin cortesías, VA-92), en pesos.
     prisma.subscription.findMany({
-      where: { status: SubscriptionStatus.ACTIVE },
+      where: { status: SubscriptionStatus.ACTIVE, source: "MERCADOPAGO", currentPeriodEnd: { gt: now } },
       select: { plan: { select: { price: true, billingInterval: true } } },
     }),
-    prisma.purchase.aggregate({
-      where: { paymentStatus: PaymentStatus.APPROVED, createdAt: { gte: startOfThisMonth } },
-      _sum: { finalPrice: true },
+    prisma.payment.aggregate({
+      where: { subscriptionId: { not: null }, status: "approved", isTest: false, approvedAt: { gte: startOfThisMonth } },
+      _sum: { amount: true },
     }),
-    prisma.purchase.aggregate({
-      where: { paymentStatus: PaymentStatus.APPROVED, createdAt: { gte: startOfLastMonth, lt: startOfThisMonth } },
-      _sum: { finalPrice: true },
+    prisma.payment.aggregate({
+      where: { subscriptionId: { not: null }, status: "approved", isTest: false, approvedAt: { gte: startOfLastMonth, lt: startOfThisMonth } },
+      _sum: { amount: true },
     }),
     prisma.$queryRaw<{ n: number }[]>`
       SELECT COUNT(DISTINCT "userId")::int AS n FROM "AnalyticsEvent"
       WHERE "createdAt" >= ${thirtyDaysAgo} AND "userId" IS NOT NULL`,
-    prisma.aircraft.count({ where: activeListingWhere(now) }),
-    prisma.sparePart.count({ where: activeListingWhere(now) }),
+    prisma.aircraft.count({ where: activeListingWhere() }),
+    prisma.sparePart.count({ where: activeListingWhere() }),
     prisma.$queryRaw<{ n: number }[]>`
       SELECT COUNT(DISTINCT "sellerId")::int AS n FROM (
-        SELECT "sellerId" FROM "Aircraft" WHERE ${activeListingSql(now)}
+        SELECT "sellerId" FROM "Aircraft" WHERE ${activeListingSql()}
         UNION ALL
-        SELECT "sellerId" FROM "SparePart" WHERE ${activeListingSql(now)}
+        SELECT "sellerId" FROM "SparePart" WHERE ${activeListingSql()}
       ) t`,
     prisma.analyticsEvent.count({
       where: { eventType: { in: [...CONTACT_TYPES, AnalyticsEventType.CONTACT_SELLER] } },
@@ -146,17 +146,18 @@ export async function getDashboardMetrics() {
     }),
   ]);
 
-  // Los planes y las compras están en dólares: sin cotización no se pueden pasar a pesos.
+  // Los precios de los avisos vendidos en dólares (GMV) se pasan a pesos con la cotización.
   const toPesos = (usd: number) => (usdArs === null ? null : usd * usdArs);
 
-  let mrrUsd = 0;
+  // VA-152: los planes están en pesos (antes se los trataba como dólares).
+  let mrr = 0;
   activeSubscriptions.forEach((sub) => {
     const price = Number(sub.plan.price) || 0;
-    mrrUsd += sub.plan.billingInterval === "YEARLY" ? price / 12 : price;
+    mrr += sub.plan.billingInterval === "YEARLY" ? price / 12 : price;
   });
 
-  const revThisMonth = Number(thisMonthPurchases._sum.finalPrice) || 0;
-  const revLastMonth = Number(lastMonthPurchases._sum.finalPrice) || 0;
+  const revThisMonth = Number(thisMonthCharges._sum.amount) || 0;
+  const revLastMonth = Number(lastMonthCharges._sum.amount) || 0;
   const revenueGrowth = revLastMonth > 0 ? ((revThisMonth - revLastMonth) / revLastMonth) * 100 : 0;
 
   // GMV: aviones siempre en dólares; repuestos en pesos o dólares según `inPesos`.
@@ -170,11 +171,10 @@ export async function getDashboardMetrics() {
     soldSparePartsCount += group._count;
   });
   const gmvUsdInPesos = toPesos(gmvUsd);
-  const mrr = toPesos(mrrUsd);
 
   return {
     mrr,
-    arr: mrr === null ? null : mrr * 12,
+    arr: mrr * 12,
     revenueGrowth: Number(revenueGrowth.toFixed(1)),
     mau: mauRows[0]?.n ?? 0,
     activePublishers: publisherRows[0]?.n ?? 0,
@@ -769,7 +769,6 @@ export async function getOpportunitiesAnalytics(period: PeriodFilter = "30d", ra
   await requireAdmin();
 
   const { start, end } = resolveDateRange(period, range);
-  const now = new Date();
 
   const [highDemandNoSupply, itemRows, activeAircraft, activeParts] = await Promise.all([
     // Búsquedas sin oferta: términos de más de 2 letras que no aparecen en el título de ninguna
@@ -785,10 +784,10 @@ export async function getOpportunitiesAnalytics(period: PeriodFilter = "30d", ra
       )
       SELECT "term", "count" FROM "terms" t
       WHERE NOT EXISTS (
-          SELECT 1 FROM "Aircraft" a WHERE ${activeListingSql(now)} AND strpos(lower(a."title"), t."term") > 0
+          SELECT 1 FROM "Aircraft" a WHERE ${activeListingSql()} AND strpos(lower(a."title"), t."term") > 0
         )
         AND NOT EXISTS (
-          SELECT 1 FROM "SparePart" p WHERE ${activeListingSql(now)} AND strpos(lower(p."title"), t."term") > 0
+          SELECT 1 FROM "SparePart" p WHERE ${activeListingSql()} AND strpos(lower(p."title"), t."term") > 0
         )
       ORDER BY "count" DESC, "term"
       LIMIT 5`,
@@ -802,8 +801,8 @@ export async function getOpportunitiesAnalytics(period: PeriodFilter = "30d", ra
         AND ("aircraftId" IS NOT NULL OR "sparePartId" IS NOT NULL)
         AND ("eventType" IN ${VIEW_TYPES_SQL} OR "eventType" IN ${CONTACT_TYPES_SQL})
       GROUP BY 1`,
-    prisma.aircraft.findMany({ where: activeListingWhere(now), select: { id: true, title: true } }),
-    prisma.sparePart.findMany({ where: activeListingWhere(now), select: { id: true, title: true } }),
+    prisma.aircraft.findMany({ where: activeListingWhere(), select: { id: true, title: true } }),
+    prisma.sparePart.findMany({ where: activeListingWhere(), select: { id: true, title: true } }),
   ]);
 
   const itemMetrics = new Map<string, { views: number; contacts: number }>(

@@ -7,7 +7,8 @@ import { appUrl, mpClient } from "@/lib/mercadopago";
 import { billingSnapshot, parseBilling } from "@/lib/billing-rules";
 import { getBillingSettings } from "@/lib/billing-settings";
 import { queueInvoice, receiverFromProfile } from "@/lib/payments/invoices";
-import { isSubscriptionCurrent, syncListingExpiry } from "@/lib/subscriptions";
+import { isSubscriptionCurrent } from "@/lib/subscriptions";
+import { enforceQuota } from "@/lib/quota";
 import { sendSubscriptionPaymentFailedEmail } from "@/lib/mail";
 import { processInvoice } from "@/lib/billing/issue";
 import { isTestPayment } from "@/lib/billing/guard";
@@ -109,7 +110,6 @@ export async function startSubscription(input: { userId: string; planId: string;
     graceUntil: null,
     grantedById: null,
     note: null,
-    featuredCredits: 0,
     pendingPlanId: null,
     pendingMpSubscriptionId: null,
   };
@@ -236,12 +236,9 @@ async function handleAuthorizedPayment(authorizedPaymentId: string): Promise<Out
         currentPeriodEnd: end,
         graceUntil: null,
         lastPaymentAt: approvedAt,
-        // Los destacados del plan se reponen cada período y no se acumulan (VA-95).
-        featuredCredits: sub.plan.featuredPerMonth,
       },
     });
-    // VA-105: los avisos de los tipos que el plan tiene ilimitados dejan de vencer.
-    await syncListingExpiry(sub.userId);
+    await enforceQuota(sub.userId); // VA-152: si el plan nuevo tiene menos cupo, se pausan los más nuevos
     await queueInvoice({
       paymentId: claimed.id,
       amount,
@@ -379,7 +376,7 @@ export async function resumeSubscription(userId: string): Promise<{ ok: true } |
  * - PAST_DUE con la gracia vencida → EXPIRED (y se cancela el débito en MP).
  * - ACTIVE con cancelAtPeriodEnd y el período terminado → CANCELLED (y se cancela en MP).
  * - ACTIVE con el período terminado sin cobro nuevo (cortesía vencida, cobro que no llegó) → EXPIRED.
- * - Los avisos sin vencimiento de quien ya no tiene un plan "sin vencimiento" vuelven a vencer en 45 días.
+ * - VA-152: con el plan terminado, si quedan más avisos activos que el cupo Gratis, se pausan los más nuevos.
  */
 export async function runSubscriptionMaintenance(now = new Date()) {
   const ended = await prisma.subscription.findMany({
@@ -411,8 +408,7 @@ export async function runSubscriptionMaintenance(now = new Date()) {
     if (moved.count === 1) {
       if (finalStatus === "CANCELLED") cancelled++;
       else expired++;
-      // VA-105: lo que el plan dejaba sin vencimiento vuelve a vencer en 45 días.
-      await syncListingExpiry(s.userId, now);
+      await enforceQuota(s.userId, now); // VA-152: vuelve al cupo Gratis
     }
   }
   return { expired, cancelled };

@@ -9,7 +9,6 @@ import { prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 import { profileCompletenessTag } from "@/lib/cached-data";
 import { isValidPasswordChangeProof } from "@/lib/password-proof";
-import { grantLaunchBalance } from "@/lib/launch-balance";
 
 // En Auth.js v5 un throw común en authorize() llega al cliente como "CredentialsSignin".
 // Con CredentialsSignin + code, el login recibe res.code === "EmailNotVerified" (VA-20).
@@ -86,16 +85,6 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   // VA-87: después del primer login con Google, elegir el tipo de cuenta una sola vez.
   pages: { newUser: "/onboarding/account-type" },
   events: {
-    // VA-89: las cuentas que crea Auth.js (primer login con Google) reciben el saldo de lanzamiento.
-    // Vincular Google a una cuenta que ya existía no pasa por acá (no es una cuenta nueva).
-    async createUser({ user }) {
-      if (!user?.id) return;
-      try {
-        await grantLaunchBalance(user.id);
-      } catch (error) {
-        console.error("[VA-89] No se pudo asignar el saldo de lanzamiento", user.id, error);
-      }
-    },
     // VA-87 · Causa del falso "email no verificado": Auth.js crea los usuarios de OAuth con
     // emailVerified: null (ignora lo que devuelve profile()) y, al vincular Google a una cuenta que
     // ya existía, no toca el usuario. Si Google confirma el email, se guarda acá, en los dos casos.

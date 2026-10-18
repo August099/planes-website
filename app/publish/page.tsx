@@ -5,8 +5,7 @@ import Link from "next/link";
 import PublishForm from "@/components/ui/PublishForm";
 import { loadListingForEdit } from "@/lib/listing-edit";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { getListingPrices } from "@/lib/listing-prices";
-import { secondListingHint } from "@/lib/plan-offers";
+import { getQuotaUsage } from "@/lib/quota";
 
 export const dynamic = "force-dynamic";
 
@@ -34,16 +33,15 @@ export default async function PublishPage({ searchParams }: Props) {
     );
   }
 
-  const listingPrices = await getListingPrices();
-  // VA-94: CTA del 2.º aviso sin plan (solo al crear).
-  const packHints = edit
-    ? undefined
-    : { aircraft: await secondListingHint(user.id, "AIRCRAFT"), parts: await secondListingHint(user.id, "SPARE_PART") };
+  // VA-152: cupo de la cuenta (solo al crear) y si hay planes pagos para ofrecer.
+  const [usage, plansAvailable] = edit
+    ? [null, false]
+    : await Promise.all([getQuotaUsage(user.id), prisma.plan.count({ where: { tier: { not: null }, isActive: true, archivedAt: null } }).then((n) => n > 0)]);
 
   // VA-46: sin teléfono el formulario pide cargarlo antes de publicar.
   const sellerPhone = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { phone: true, userTypeConfirmed: true, aircraftListingsBalance: true, sparePartsListingsBalance: true, launchBalanceGrantedAt: true },
+    select: { phone: true, userTypeConfirmed: true },
   });
 
   // VA-33: el filtro "Publica" depende del tipo de cuenta; si nunca se confirmó (cuentas de Google
@@ -107,14 +105,17 @@ export default async function PublishPage({ searchParams }: Props) {
         spareCategoriesData={JSON.parse(JSON.stringify(rawSpareCategories))}
         editListing={editListing ?? undefined}
         needsPhone={!sellerPhone?.phone?.trim()}
-        listingPrices={{ aircraft: listingPrices.AIRCRAFT.label, sparePart: listingPrices.SPARE_PART.label }}
-        packHints={packHints}
-        freeBalance={
-          // VA-111: saldo gratis del lanzamiento (VA-89); se descuenta solo al publicar.
-          sellerPhone?.launchBalanceGrantedAt
-            ? { aircraft: sellerPhone.aircraftListingsBalance, parts: sellerPhone.sparePartsListingsBalance }
+        quota={
+          usage
+            ? {
+                tier: usage.tier,
+                planName: usage.planName,
+                aircraft: { used: usage.used.AIRCRAFT, limit: usage.limits.AIRCRAFT },
+                parts: { used: usage.used.SPARE_PART, limit: usage.limits.SPARE_PART },
+              }
             : undefined
         }
+        plansAvailable={plansAvailable}
       />
     </main>
   );

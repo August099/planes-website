@@ -58,27 +58,27 @@ export function LaunchWelcomeDialog() {
       <div className="border-l-4 border-[#E70F1F] p-6 space-y-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Lanzamiento <span className="text-[#E70F1F]">{"//"}</span> Ventas Aeronáuticas
+            Bienvenida <span className="text-[#E70F1F]">{"//"}</span> Ventas Aeronáuticas
           </p>
           <h2 id="launch-welcome-title" className="mt-1 font-heading text-xl font-bold text-[#001F58]">
-            Gracias por acompañarnos desde el inicio
+            Tu cuenta ya está lista
           </h2>
         </div>
         <p className="text-sm text-slate-600">
-          Por apoyar a Ventas Aeronáuticas desde su lanzamiento, tu cuenta ya tiene publicaciones gratis. Se usan solas
-          al publicar: no tenés que cargar ningún cupón ni pagar nada.
+          {welcome.text} Tus avisos quedan publicados hasta que los pauses o los marques como vendidos. Si necesitás
+          publicar más, mirá los planes.
         </p>
         <dl className="divide-y divide-[#001F58]/10 rounded-lg border border-[#001F58]/12 bg-white text-sm">
           <div className="flex items-center justify-between px-4 py-3">
-            <dt className="text-slate-500">Aviso de avión</dt>
+            <dt className="text-slate-500">Aviones activos</dt>
             <dd className="font-semibold tabular-nums text-[#001F58]">
-              {welcome.aircraft} gratis
+              {welcome.aircraft ?? "Ilimitados"}
             </dd>
           </div>
           <div className="flex items-center justify-between px-4 py-3">
-            <dt className="text-slate-500">Aviso de repuesto</dt>
+            <dt className="text-slate-500">Repuestos activos</dt>
             <dd className="font-semibold tabular-nums text-[#001F58]">
-              {welcome.spareParts} gratis
+              {welcome.spareParts ?? "Ilimitados"}
             </dd>
           </div>
         </dl>

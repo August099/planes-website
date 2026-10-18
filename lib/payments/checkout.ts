@@ -1,8 +1,7 @@
 import "server-only";
 import { Preference } from "mercadopago";
-import { Prisma, type CouponScope, type ListingKind } from "@prisma/client";
+import { Prisma, type CouponScope } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getListingPrices } from "@/lib/listing-prices";
 import { defaultUsageText } from "@/lib/plan-rules";
 import { CouponUnavailableError, evaluateCoupon, withCouponReservation } from "@/lib/coupons";
 import { PENDING_PAYMENT_MINUTES } from "@/lib/payments/pending";
@@ -11,22 +10,12 @@ import { appUrl, mpClient, notificationUrl } from "@/lib/mercadopago";
 import { activatePurchase } from "@/lib/payments/activation";
 import { getBillingSettings } from "@/lib/billing-settings";
 import { startSubscription } from "@/lib/payments/subscriptions";
-import { renewalPrice, RENEWAL_DAYS } from "@/lib/renewal";
 
-// VA-92 · Etapa 1: compra de pago único con Checkout Pro. No hay planes de 1 publicación: una
-// publicación suelta se paga desde su aviso "pendiente de pago" al precio de ListingPrice. El producto y el precio se resuelven
-// siempre en el servidor a partir de un "producto" que viaja en la URL (?planId=… o ?listing=…).
-// La compra queda PENDING y la activa el webhook; con un cupón del 100% se activa acá, sin pasar
-// por Mercado Pago ni facturar.
-
-export type ListingType = "aircraft" | "parts" | "hangar";
-
-const LISTING_KIND: Record<ListingType, ListingKind> = { aircraft: "AIRCRAFT", parts: "SPARE_PART", hangar: "HANGAR" };
-const KIND_TEXT: Record<ListingKind, { one: string; detail: (id: string) => string }> = {
-  AIRCRAFT: { one: "Publicación de aeronave", detail: (id) => `/aircraft/${id}` },
-  SPARE_PART: { one: "Publicación de repuesto", detail: (id) => `/spareparts/sparepart-details/${id}` },
-  HANGAR: { one: "Publicación de hangar", detail: (id) => `/services/hangars/hangar-details/${id}` },
-};
+// VA-92: el producto y el precio se resuelven siempre en el servidor a partir de un "producto" que
+// viaja en la URL (?planId=…). Las suscripciones van por débito automático (lib/payments/subscriptions);
+// un plan de pago único (hoy no hay; queda para banners, VA-103) usa Checkout Pro: la compra queda
+// PENDING y la activa el webhook; con un cupón del 100% se activa acá, sin pasar por Mercado Pago.
+// VA-152: ya no se cobra por aviso, pack ni renovación.
 const PACK_TEXT: Record<string, string> = {
   AIRCRAFT_PACK: "Publicación de aeronaves",
   SPARE_PART_PACK: "Publicación de repuestos",
@@ -55,79 +44,12 @@ export type CheckoutProduct = {
   recurring: boolean;
   billingPer: "mes" | "año";
   planId: string | null;
-  listingKind: ListingKind | null;
-  listing: { type: ListingType; id: string; title: string; href: string } | null;
-  /** VA-105: renovación paga de un aviso vencido (no es un aviso pendiente de pago). */
-  renewal: { kind: ListingKind; id: string } | null;
 };
 
-export type ProductQuery = { planId?: string; listing?: string; renew?: string };
+export type ProductQuery = { planId?: string };
 
-/** Resuelve el producto a cobrar. Los avisos tienen que ser del usuario y estar pendientes de pago. */
+/** Resuelve el producto a cobrar. VA-152: solo planes (ya no se paga por aviso, pack ni renovación). */
 export async function resolveProduct(userId: string, q: ProductQuery): Promise<CheckoutProduct | { error: string }> {
-  const prices = await getListingPrices();
-
-  // VA-105 (14/10): renovar un aviso (45 días más) al porcentaje del precio suelto de /admin/prices.
-  if (q.renew) {
-    const [type, id] = q.renew.split(":") as [ListingType, string];
-    const kind = LISTING_KIND[type];
-    if (!kind || kind === "HANGAR" || !id) return { error: "No encontramos el aviso a renovar." };
-    const where = { id, sellerId: userId };
-    const select = { id: true, title: true, status: true } as const;
-    const listing = kind === "AIRCRAFT" ? await prisma.aircraft.findFirst({ where, select }) : await prisma.sparePart.findFirst({ where, select });
-    if (!listing) return { error: "No encontramos el aviso a renovar." };
-    if (listing.status === "SOLD" || listing.status === "PENDING_PAYMENT") return { error: "Este aviso no se puede renovar." };
-    const price = await renewalPrice(userId, kind);
-    if (price.covered || price.amount <= 0) return { error: "Este aviso se renueva sin cargo desde tu perfil." };
-    const text = KIND_TEXT[kind];
-    return {
-      key: `renew:${type}:${id}`,
-      name: "Renovación de publicación",
-      description: `Renovación – ${text.one} – ${listing.title}`.slice(0, 250),
-      includes: `Tu aviso “${listing.title}”, ${RENEWAL_DAYS} días más`,
-      price: price.amount,
-      currency: "ARS",
-      scope: kind,
-      recurring: false,
-      billingPer: "mes",
-      planId: null,
-      listingKind: kind,
-      listing: null,
-      renewal: { kind, id },
-    };
-  }
-
-  if (q.listing) {
-    const [type, id] = q.listing.split(":") as [ListingType, string];
-    const kind = LISTING_KIND[type];
-    if (!kind || !id) return { error: "No encontramos el aviso a pagar." };
-    const where = { id, sellerId: userId };
-    const listing =
-      kind === "AIRCRAFT"
-        ? await prisma.aircraft.findFirst({ where, select: { id: true, title: true, status: true } })
-        : kind === "SPARE_PART"
-          ? await prisma.sparePart.findFirst({ where, select: { id: true, title: true, status: true } })
-          : await prisma.hangar.findFirst({ where, select: { id: true, title: true, status: true } });
-    if (!listing) return { error: "No encontramos el aviso a pagar." };
-    if (listing.status !== "PENDING_PAYMENT") return { error: "Este aviso ya no está pendiente de pago." };
-    const text = KIND_TEXT[kind];
-    return {
-      key: `listing:${type}:${id}`,
-      name: "Publicación individual",
-      description: `${text.one} – ${listing.title}`.slice(0, 250),
-      includes: `Tu aviso “${listing.title}”, visible 45 días`,
-      price: prices[kind].amount,
-      currency: "ARS",
-      scope: kind,
-      recurring: false,
-      billingPer: "mes",
-      planId: null,
-      listingKind: kind,
-      listing: { type, id, title: listing.title, href: text.detail(id) },
-      renewal: null,
-    };
-  }
-
   const planId = q.planId ?? "";
   if (!planId) return { error: "Elegí un plan para continuar." };
   const plan = await prisma.plan.findFirst({ where: { id: planId, isActive: true, archivedAt: null } });
@@ -143,16 +65,11 @@ export async function resolveProduct(userId: string, q: ProductQuery): Promise<C
     recurring: plan.billingType === "SUBSCRIPTION",
     billingPer: plan.billingInterval === "YEARLY" ? "año" : "mes",
     planId: plan.id,
-    listingKind: null,
-    listing: null,
-    renewal: null,
   };
 }
 
 export function productQueryFromKey(key: string): ProductQuery {
-  if (key.startsWith("listing:")) return { listing: key.slice("listing:".length) };
   if (key.startsWith("plan:")) return { planId: key.slice("plan:".length) };
-  if (key.startsWith("renew:")) return { renew: key.slice("renew:".length) };
   return {};
 }
 
@@ -202,7 +119,7 @@ export async function startCheckout(input: {
     // VA-105 · 2.4: con cupón, la compra se guarda reservando un uso (fila del cupón bloqueada).
     try {
       purchaseId = await withCouponReservation(
-        { couponId, userId: input.userId, reusePurchaseId: await openPurchaseId(input.userId, product) },
+        { couponId, userId: input.userId, reusePurchaseId: null },
         (tx) => upsertPurchase(tx, input.userId, product, money)
       );
     } catch (error) {
@@ -275,26 +192,6 @@ async function saveBillingProfile(userId: string, data: BillingData) {
   await prisma.billingProfile.upsert({ where: { userId }, create: { userId, ...fields }, update: fields });
 }
 
-/**
- * Un aviso pendiente de pago tiene una sola compra abierta: si el usuario vuelve a intentar, se
- * actualiza esa (precio, cupón, datos) en vez de crear otra. Así, pague la preferencia que pague,
- * el webhook activa el mismo aviso.
- */
-/** Compra abierta (sin activar) del aviso pendiente, si la hay: se reutiliza al reintentar. */
-async function openPurchaseId(userId: string, product: CheckoutProduct): Promise<string | null> {
-  if (product.renewal) return (await openRenewalPurchase(prisma, userId, product.renewal.id))?.id ?? null;
-  if (!product.listing) return null;
-  const { type, id } = product.listing;
-  const select = { purchase: { select: { id: true, activatedAt: true, userId: true } } };
-  const current =
-    type === "aircraft"
-      ? await prisma.aircraft.findUnique({ where: { id }, select })
-      : type === "parts"
-        ? await prisma.sparePart.findUnique({ where: { id }, select })
-        : await prisma.hangar.findUnique({ where: { id }, select });
-  return current?.purchase && !current.purchase.activatedAt && current.purchase.userId === userId ? current.purchase.id : null;
-}
-
 async function upsertPurchase(
   db: Prisma.TransactionClient | typeof prisma,
   userId: string,
@@ -312,52 +209,10 @@ async function upsertPurchase(
     paymentStatus: "PENDING" as const,
   };
 
-  // VA-105: una renovación tiene una sola compra abierta por aviso (se reutiliza al reintentar).
-  if (product.renewal) {
-    const open = await openRenewalPurchase(db, userId, product.renewal.id);
-    if (open) {
-      await db.purchase.update({ where: { id: open.id }, data });
-      return open.id;
-    }
-    const created = await db.purchase.create({
-      data: { userId, listingKind: product.listingKind, renewalKind: product.renewal.kind, renewalListingId: product.renewal.id, ...data },
-      select: { id: true },
-    });
-    return created.id;
-  }
-
-  if (product.listing) {
-    const { type, id } = product.listing;
-    const current =
-      type === "aircraft"
-        ? await db.aircraft.findUnique({ where: { id }, select: { purchase: { select: { id: true, activatedAt: true, userId: true } } } })
-        : type === "parts"
-          ? await db.sparePart.findUnique({ where: { id }, select: { purchase: { select: { id: true, activatedAt: true, userId: true } } } })
-          : await db.hangar.findUnique({ where: { id }, select: { purchase: { select: { id: true, activatedAt: true, userId: true } } } });
-    const open = current?.purchase && !current.purchase.activatedAt && current.purchase.userId === userId ? current.purchase : null;
-    if (open) {
-      await db.purchase.update({ where: { id: open.id }, data });
-      return open.id;
-    }
-    const created = await db.purchase.create({ data: { userId, listingKind: product.listingKind, ...data }, select: { id: true } });
-    const link = { where: { id }, data: { purchaseId: created.id } };
-    if (type === "aircraft") await db.aircraft.update(link);
-    else if (type === "parts") await db.sparePart.update(link);
-    else await db.hangar.update(link);
-    return created.id;
-  }
-
   const created = await db.purchase.create({
-    data: { userId, planId: product.planId, listingKind: product.listingKind, ...data },
+    data: { userId, planId: product.planId, ...data },
     select: { id: true },
   });
   return created.id;
 }
 
-function openRenewalPurchase(db: Prisma.TransactionClient | typeof prisma, userId: string, listingId: string) {
-  return db.purchase.findFirst({
-    where: { userId, renewalListingId: listingId, activatedAt: null, paymentStatus: { in: ["PENDING", "REJECTED", "CANCELLED"] } },
-    orderBy: { createdAt: "desc" },
-    select: { id: true },
-  });
-}

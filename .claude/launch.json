@@ -26,7 +26,7 @@
       "runtimeExecutable": "node",
       "runtimeArgs": [
         "-e",
-        "process.env.NEXT_DIST_DIR=\".next-local\";process.argv=[process.argv[0],\"next\",\"start\",\"-p\",\"3001\"];require(\"next/dist/bin/next\")"
+        "process.env.NEXT_DIST_DIR=\".next-local\";process.env.AUTH_TRUST_HOST=\"true\";process.argv=[process.argv[0],\"next\",\"start\",\"-p\",\"3001\"];require(\"next/dist/bin/next\")"
       ],
       "port": 3001
     }

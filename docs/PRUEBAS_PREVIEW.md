@@ -18,9 +18,12 @@ Anotar cada resultado en `docs/REGISTRO_DE_CAMBIOS.md` → "Pruebas de pagos" (y
 1. Supabase: un proyecto aparte para el Preview (base + storage). Si ya existe, usarlo.
 2. En ese proyecto, Storage: crear los buckets que usa la web, igual que en producción:
    `listings`, `avatars` y `brands` (públicos) y `documents` e `invoices` (privados).
-3. Migraciones, desde la PC (PowerShell, sin tocar `.env`):
+3. Migraciones, desde la PC (PowerShell, sin tocar `.env`). **VA-152:** antes de migrar, el informe
+   (solo lee; mandarle la salida a Code):
    ```powershell
    $env:DATABASE_URL = "<conexión directa de la base del Preview>"
+   $env:RUNTIME_DATABASE_URL = $env:DATABASE_URL
+   npx tsx scripts/va152-report.ts
    npx prisma migrate deploy
    npx prisma migrate status        # "Database schema is up to date!"
    ```
@@ -30,14 +33,16 @@ Anotar cada resultado en `docs/REGISTRO_DE_CAMBIOS.md` → "Pruebas de pagos" (y
    npx tsx prisma/seed-taxonomy.ts
    npx tsx prisma/seed.ts                # solo si la base está vacía (crea datos de ejemplo)
    npx tsx scripts/seed-guides.ts --allow-remote --apply
-   npx tsx --require ./scripts/stub-server-only.cjs scripts/seed-real-plans.ts --confirm-production --apply
+   npx tsx scripts/va152-migrate-data.ts --confirm-production            # informe
+   npx tsx scripts/va152-migrate-data.ts --confirm-production --apply    # planes y cupos (VA-152)
    Remove-Item Env:DATABASE_URL; Remove-Item Env:RUNTIME_DATABASE_URL
    ```
-   (`seed-real-plans` pide `--confirm-production` cuando la base no es local; acá es la del Preview.)
+   (`va152-migrate-data` pide `--confirm-production` cuando la base no es local; acá es la del Preview.)
 5. Hacerse admin: registrarse en el Preview y, en el SQL Editor de Supabase,
    `update "User" set "isAdmin" = true where email = '<tu email>';`
-6. En `/admin/prices` cargar los precios sueltos (avión, repuesto, renovación) y en
-   `/admin/payments` → Configuración los datos de facturación.
+6. En `/admin/plans` ("Planes y precios") cargar el precio de Pro y de las 3 opciones del Empresarial
+   (para probar, montos de prueba) y marcarlos activos; en `/admin/payments` → Configuración los datos
+   de facturación.
 
 ---
 
@@ -115,8 +120,16 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Registro con email: llega el mail de verificación y el link abre el Preview (no localhost).
 - [x] Login en el Preview (confirmado por el socio, 17/10). Falta confirmar que fue **con Google** y probar el registro de una cuenta nueva con Google.
 - [ ] "Olvidé mi contraseña": llega el mail y el link funciona.
-- [ ] Ventana de bienvenida del lanzamiento: sale **una sola vez** por cuenta nueva.
-- [x] Publicar en el Preview (confirmado por el socio, 17/10). Falta confirmar: un avión y un repuesto **gratis** con el saldo de lanzamiento (sin pasar por Mercado Pago); el segundo avión ya pide pago.
+- [ ] Ventana de bienvenida: sale **una sola vez** por cuenta nueva y dice "Publicá gratis 1 avión y 5 repuestos. Sin vencimiento".
+- [x] Publicar en el Preview (confirmado por el socio, 17/10).
+
+### Cupos (VA-152)
+- [ ] Cuenta nueva: publica 1 avión y 5 repuestos sin pagar nada. Al entrar a publicar el 2.º avión, el formulario avisa **al empezar** ("Ya tenés 1 avión activo…") con "Pausar uno de mis avisos", "Pasarme a Pro" y "Guardar como pausado".
+- [ ] "Guardar como pausado": el aviso queda pausado y no se ve en el sitio.
+- [ ] Perfil → Mis publicaciones: arriba "Plan Gratis · Aviones 1/1 · Repuestos 5/5". Pausar el avión activo y activar el otro funciona; activar sin lugar muestra el mensaje y no lo activa.
+- [ ] "Vendido": el aviso deja de verse y no cuenta en el cupo.
+- [ ] `/plans`: Gratis, Pro y Empresarial; en el Empresarial, las casillas cambian el precio y el cupo.
+- [ ] Ningún texto del sitio habla de vencimiento, renovación, packs ni "pendiente de pago" (Home, `/howtopublish`, `/faq`, `/terms`, perfil, detalle).
 
 ### Publicar y ver
 - [ ] Formulario de avión: motor opcional en Proyecto, dos obligatorios en Bimotor; texto de fotos (máx. 15).
@@ -126,13 +139,12 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Comparador: la X vacía la bandeja.
 
 ### Pagos (cuenta compradora de prueba)
-- [ ] **Pago único** (por ejemplo el "Pago de prueba" o un aviso suelto): al pagar, vuelve **solo** al sitio y la página pasa sola a "¡Pago acreditado!" (webhook, sin script).
-- [ ] `/admin/payments`: el pago aprobado y la factura **pendiente** (no simulada como emitida).
+- [ ] **Suscripción al Pro**: en el checkout, el email de la **cuenta compradora de prueba**; vuelve solo al sitio, se activa sola, aparece en el perfil y el cupo pasa a 3 / 15.
+- [ ] `/admin/payments`: el cobro aprobado y la factura **pendiente** (no simulada como emitida).
 - [ ] Pago **rechazado** (titular `OTHE`): la página dice que no se pudo cobrar y no se activa nada.
-- [ ] **Suscripción mensual**: en el checkout, el email de la **cuenta compradora de prueba**; se activa sola y aparece en el perfil.
-- [ ] `/plans` con la suscripción activa: "Cancelar" en la actual y "Cambiar a este plan" en las otras; probar el cambio (inmediato).
+- [ ] `/plans` con el Pro activo: "Cancelar" en el Pro y "Cambiar a este plan" en el Empresarial; probar el cambio (inmediato) y un cambio de opción del Empresarial.
 - [x] Cancelar la suscripción: queda activa hasta el fin del período (confirmado por el socio, 17/10).
-- [x] **Arrepentimiento** de un pago único desde Mis compras: se devuelve y se revierte lo comprado (probado con dinero real, 16/10). Con VA-150 hay que repetirlo con los casos nuevos.
+- [ ] **Baja con más avisos que el cupo:** con 3 aviones activos en el Pro, arrepentirse del alta (Mis compras → "Arrepentirme"): se devuelve el pago, la suscripción termina y se pausan los 2 aviones más nuevos.
 
 ### Páginas y mails
 - [ ] `/about`: el formulario de sugerencias guarda y llega el mail a `SUPPORT_EMAIL`; aparece en `/admin/suggestions`.
@@ -145,4 +157,5 @@ Marcar cada punto. Celular real para los que dicen 📱.
 ## 6. Después
 
 Con todo en verde: pasar a producción con `docs/PASE_A_PRODUCCION.md` (ahí van las credenciales
-reales, el webhook de producción, el pago real de AR$ 100 y recién después la facturación).
+reales, el webhook de producción, el pago real de prueba (a redefinir con VA-152) y recién después la
+facturación).

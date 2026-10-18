@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
-import { LAUNCH_PROMO, isLaunchPromoActive } from "@/lib/promo";
+import { FREE_QUOTA_PROMO } from "@/lib/promo";
 import { useViewerStatus } from "@/components/ui/FavoriteIdsProvider";
 
 const STORAGE_KEY = "va_launch_promo";
@@ -31,19 +31,18 @@ function writeState(state: PromoState) {
   }
 }
 
-// Cartel de la Home para visitantes sin cuenta (VA-47). Se ve como mucho LAUNCH_PROMO.maxViews
+// Cartel de la Home para visitantes sin cuenta (VA-47; VA-152: cupo Gratis). Se ve como mucho FREE_QUOTA_PROMO.maxViews
 // veces por navegador, o hasta que lo cierren. Nada de ventanas emergentes.
 // VA-76: la Home es estática, así que "sin cuenta" se sabe en el navegador (FavoriteIdsProvider);
 // solo cuenta una vista cuando se confirma que no hay sesión.
-export function LaunchPromoBanner() {
+export function LaunchPromoBanner({ text }: { text: string }) {
   const [visible, setVisible] = useState(false);
   const viewer = useViewerStatus();
 
   useEffect(() => {
-    if (!isLaunchPromoActive()) return;
     if (viewer !== null && viewer !== "anonymous") return;
     const state = readState();
-    if (state.dismissed || state.views >= LAUNCH_PROMO.maxViews) return;
+    if (state.dismissed || state.views >= FREE_QUOTA_PROMO.maxViews) return;
     writeState({ ...state, views: state.views + 1 });
     // eslint-disable-next-line react-hooks/set-state-in-effect -- el estado depende de localStorage, que solo existe en el navegador
     setVisible(true);
@@ -57,12 +56,12 @@ export function LaunchPromoBanner() {
   };
 
   return (
-    <section aria-label={LAUNCH_PROMO.title} className="container mx-auto px-4 pt-8">
+    <section aria-label={FREE_QUOTA_PROMO.title} className="container mx-auto px-4 pt-8">
       <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border-l-4 border-[#E70F1F] bg-[#001F58] px-5 py-5 pr-14 text-white">
         <div className="flex-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-[#FF5A64]">{LAUNCH_PROMO.title}</p>
-          <p className="text-lg sm:text-xl font-bold">{LAUNCH_PROMO.text}</p>
-          <p className="mt-1 text-sm text-white/80">{LAUNCH_PROMO.detail}</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-[#FF5A64]">{FREE_QUOTA_PROMO.title}</p>
+          <p className="text-lg sm:text-xl font-bold">{text}</p>
+          <p className="mt-1 text-sm text-white/80">Creá tu cuenta y publicá en minutos.</p>
         </div>
         <Link
           href="/register"
@@ -73,7 +72,7 @@ export function LaunchPromoBanner() {
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Cerrar aviso de promoción"
+          aria-label="Cerrar aviso"
           className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 cursor-pointer"
         >
           <X className="h-5 w-5" />

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: Promise<{ planId?: string; listing?: string; renew?: string; coupon?: string }>;
+  searchParams: Promise<{ planId?: string; coupon?: string }>;
 }
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
@@ -31,7 +31,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
     redirect(`/login?callbackUrl=${encodeURIComponent(`/checkout?${query}`)}`);
   }
 
-  const product = await resolveProduct(user.id, { planId: params.planId, listing: params.listing, renew: params.renew });
+  const product = await resolveProduct(user.id, { planId: params.planId });
   const crumbs = [{ label: "Planes", href: "/plans" }, { label: "Pago" }];
 
   if ("error" in product) {
@@ -73,23 +73,13 @@ export default async function CheckoutPage({ searchParams }: Props) {
     : { kind: "CONSUMIDOR_FINAL", name: user.name ?? "", docNumber: "", ivaCondition: "", address: "", email: user.email ?? "" };
 
   return (
-    <Shell crumbs={product.listing ? [{ label: product.listing.title, href: product.listing.href }, { label: "Pago" }] : crumbs}>
-      {product.listing && (
-        <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Tu aviso <strong>“{product.listing.title}”</strong> quedó guardado y se publica cuando se acredite el pago.
-        </p>
-      )}
+    <Shell crumbs={crumbs}>
       {changingFrom && (
         <p className="mb-4 border-l-2 border-[#E70F1F] bg-white px-4 py-3 text-sm text-slate-700">
           <strong className="text-[#001F58]">Cambio de plan:</strong> este plan reemplaza a <strong>{changingFrom}</strong> apenas se
           apruebe el primer pago, y se deja de cobrar el anterior. Lo que queda del período actual no se devuelve. Si no completás el
-          pago, seguís con tu plan de siempre.
-        </p>
-      )}
-      {/* VA-105: renovación paga de un aviso. */}
-      {product.renewal && (
-        <p className="mb-4 rounded-md border border-[#001F58]/15 bg-white px-4 py-3 text-sm text-slate-700">
-          Renovar tu aviso cuesta un porcentaje del precio de publicar. Cuando se acredite el pago, suma 45 días más.
+          pago, seguís con tu plan de siempre. Si el plan nuevo tiene menos cupo y tenés más avisos activos, se pausan los más nuevos
+          (después elegís cuáles quedan activos).
         </p>
       )}
       <CheckoutForm

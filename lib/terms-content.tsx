@@ -47,14 +47,14 @@ export function TermsContent() {
         <h3 className="font-heading font-semibold text-[#001F58] text-base">
           3. Planes de Publicación y Condiciones de Pago
         </h3>
-        <p>Publicar anuncios requiere pagar cada publicación o contratar un plan, bajo las siguientes reglas:</p>
+        <p>Toda cuenta puede publicar gratis dentro de un cupo; para publicar más, se contrata un plan, bajo las siguientes reglas:</p>
         <ul className="list-disc pl-5 space-y-1.5">
           <li><strong>Procesamiento de Pagos:</strong> Todos los cargos se expresan y facturan en Pesos Argentinos y se cobran a través de Mercado Pago. Las suscripciones se debitan en forma mensual hasta que el usuario las cancele.</li>
-          <li><strong>Vencimiento y Renovación:</strong> Una publicación individual tiene una vigencia de 45 días y puede renovarse antes de vencer. Las publicaciones cubiertas por un plan con publicaciones ilimitadas no vencen mientras el plan esté vigente.</li>
+          <li><strong>Cupos y Vigencia:</strong> Cada plan permite una cantidad de publicaciones activas al mismo tiempo, por tipo (aeronaves y repuestos); el plan Gratis tiene el cupo que se informa en la plataforma. Las publicaciones no vencen: siguen activas hasta que el usuario las pause, las marque como vendidas o las elimine. Las pausadas y vendidas no cuentan en el cupo.</li>
+          <li><strong>Baja o Cambio de Plan:</strong> Si el plan termina o se cambia por uno con menos cupo y el usuario tiene más publicaciones activas que el cupo nuevo, se pausan las más recientes; el usuario puede luego elegir cuáles quedan activas.</li>
           <li><strong>Cancelación de Suscripciones:</strong> El usuario puede cancelar su suscripción en cualquier momento desde su perfil o desde la página de planes; no se realizan nuevos débitos y el plan se mantiene hasta el fin del período pagado.</li>
-          <li><strong>Promoción de Lanzamiento:</strong> Las cuentas creadas durante el período de lanzamiento reciben, sin costo, publicaciones gratuitas cuya cantidad se informa en la plataforma. No son canjeables por dinero.</li>
-          <li><strong>Derecho de Arrepentimiento:</strong> Conforme al artículo 34 de la Ley 24.240 de Defensa del Consumidor y a la Resolución 424/2020, el usuario puede revocar la compra dentro de los 10 (diez) días corridos desde el pago, sin costo ni responsabilidad, mediante el &quot;Botón de arrepentimiento&quot; disponible en el pie de todas las páginas y en &quot;Mis compras&quot;. Se reintegra el total abonado por el mismo medio de pago y se da de baja lo contratado.</li>
-          <li><strong>Otros Reembolsos:</strong> Fuera del plazo de arrepentimiento no se realizan reembolsos por publicaciones o planes ya utilizados, salvo error de cobro imputable a Ventas Aeronáuticas.</li>
+          <li><strong>Derecho de Arrepentimiento:</strong> Conforme al artículo 34 de la Ley 24.240 de Defensa del Consumidor y a la Resolución 424/2020, el usuario puede revocar la contratación de una suscripción dentro de los 10 (diez) días corridos desde el pago, sin costo ni responsabilidad, mediante el &quot;Botón de arrepentimiento&quot; disponible en el pie de todas las páginas y en &quot;Mis compras&quot;. Se reintegra el total abonado por el mismo medio de pago, la suscripción termina y la cuenta vuelve al plan Gratis.</li>
+          <li><strong>Otros Reembolsos:</strong> Fuera del plazo de arrepentimiento no se realizan reembolsos por períodos de suscripción ya utilizados, salvo error de cobro imputable a Ventas Aeronáuticas.</li>
         </ul>
       </div>
 

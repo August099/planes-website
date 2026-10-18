@@ -1,9 +1,8 @@
-import { getPlanCards } from "@/lib/plans";
+import { getPlansPage } from "@/lib/plans";
 import { PlansClient } from "./PlansClient";
 
-// VA-59 / VA-80: precios por aviso y planes salen de la base (cacheados con tags); la página sigue
-// estática y se regenera cuando el admin cambia un precio o un plan.
+// VA-152: Gratis, Pro y Empresarial salen de la base (cacheados con tags); la página sigue estática
+// y se regenera cuando el admin cambia un plan o el cupo Gratis.
 export default async function PlansPage() {
-  const { plans, single } = await getPlanCards();
-  return <PlansClient plans={plans} single={single} />;
+  return <PlansClient data={await getPlansPage()} />;
 }

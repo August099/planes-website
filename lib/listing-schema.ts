@@ -220,9 +220,10 @@ export function toFieldErrors(error: z.ZodError): FieldErrors {
 }
 
 export type ListingResult =
-  // VA-92: checkoutUrl si el aviso quedó "pendiente de pago" (sin saldo ni suscripción).
-  | { ok: true; id: string; url: string; checkoutUrl?: string }
-  | { ok: false; error: string; fieldErrors?: FieldErrors };
+  // VA-152: paused si se guardó pausado porque no quedaba cupo (lo pidió el usuario).
+  | { ok: true; id: string; url: string; paused?: boolean }
+  // VA-152: quotaFull si no hay cupo y no eligió "Guardar como pausado".
+  | { ok: false; error: string; fieldErrors?: FieldErrors; quotaFull?: boolean };
 
 // Publicación existente cargada en el formulario para editarla (/publish?edit=<id>).
 // Los valores van como los maneja el formulario (números como texto).

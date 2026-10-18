@@ -11,11 +11,10 @@ import { UnavailableFavoriteCard } from "@/components/ui/UnavailableFavoriteCard
 import { isListingActive } from "@/lib/listing-filters";
 
 // VA-105 · 5.3: por qué un favorito ya no está disponible.
-function unavailableReason(listing: { status: string; listingExpiresAt: Date | null }) {
+function unavailableReason(listing: { status: string }) {
   if (listing.status === "SOLD") return "Se vendió.";
   if (listing.status === "PAUSED") return "El vendedor la pausó.";
-  if (listing.status === "PENDING_PAYMENT") return "La publicación no está activa.";
-  return "La publicación venció.";
+  return "La publicación no está activa.";
 }
 
 export default async function FavoritesPage() {
@@ -44,10 +43,9 @@ export default async function FavoritesPage() {
   });
 
   // VA-105 · 5.3: los que ya no están disponibles van al final, grisados (no se borran solos).
-  const now = new Date();
   const isAvailable = (f: (typeof favorites)[number]) => {
     const listing = f.aircraft ?? f.sparePart;
-    return listing ? isListingActive(listing, now) : false;
+    return listing ? isListingActive(listing) : false;
   };
   const sorted = [...favorites.filter(isAvailable), ...favorites.filter((f) => !isAvailable(f))];
 

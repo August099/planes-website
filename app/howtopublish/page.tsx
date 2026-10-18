@@ -4,16 +4,16 @@ import { PageBackground } from "@/components/ui/PageBackground";
 import { 
     UserPlus, 
     ListPlus, 
-    CreditCard, 
+    Gauge, 
     Megaphone, 
     HelpCircle, 
     ArrowRight, 
-    Ticket,
     ShieldCheck
 } from "lucide-react";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { LaunchPromoNote } from "@/components/ui/LaunchPromoNote";
-import { getListingPrices } from "@/lib/listing-prices";
+import { FreeQuotaNote } from "@/components/ui/FreeQuotaNote";
+import { getCachedFreeQuota } from "@/lib/quota";
+import { freeQuotaText } from "@/lib/promo";
 
 export const metadata: Metadata = {
   title: "Cómo publicar tu avión o repuesto",
@@ -22,8 +22,8 @@ export const metadata: Metadata = {
 };
 
 export default async function HowToPublishPage() {
-  // VA-59: precio vigente de publicar, editable desde /admin/prices.
-  const prices = await getListingPrices();
+  // VA-152: cupo Gratis vigente (se edita en /admin/plans).
+  const free = await getCachedFreeQuota();
     return (
         <main className="relative isolate overflow-hidden min-h-screen">
             <PageBackground page="howtopublish" />
@@ -41,8 +41,8 @@ export default async function HowToPublishPage() {
                     </p>
                 </div>
 
-                {/* VA-111: promoción de lanzamiento (se apaga sola en el corte) */}
-                <LaunchPromoNote showLink className="mx-auto -mt-8 mb-12 max-w-2xl bg-white/80 py-3 pr-4" />
+                {/* VA-152: cupo Gratis */}
+                <FreeQuotaNote text={freeQuotaText(free)} showLink className="mx-auto -mt-8 mb-12 max-w-2xl bg-white/80 py-3 pr-4" />
 
                 {/* Pasos a seguir (Diseño Lineal para máxima claridad) */}
                 <div className="space-y-6 mb-16">
@@ -78,37 +78,31 @@ export default async function HowToPublishPage() {
                         </div>
                     </div>
 
-                    {/* Paso 3 (Destacado porque involucra pago) */}
+                    {/* Paso 3: el cupo (VA-152, sin pago por aviso) */}
                     <div className="bg-[#001F58] rounded-2xl p-6 sm:p-8 border border-[#001F58] shadow-xl flex flex-col sm:flex-row gap-6 items-start sm:items-center text-white relative overflow-hidden">
-                        <div className="absolute -right-10 -top-10 opacity-10 pointer-events-none">
-                            <CreditCard className="w-48 h-48" />
-                        </div>
-                        <div className="flex-shrink-0 bg-white/10 w-16 h-16 flex items-center justify-center rounded-2xl border border-white/20 backdrop-blur-md relative z-10">
-                            <CreditCard className="w-8 h-8 text-white" />
+                        <div className="flex-shrink-0 bg-white/10 w-16 h-16 flex items-center justify-center rounded-2xl border border-white/20 relative z-10">
+                            <Gauge className="w-8 h-8 text-white" />
                         </div>
                         <div className="flex-1 relative z-10">
-                            <div className="flex items-center gap-3 mb-2">
-                                <h2 className="text-2xl font-bold text-white">3. Pago y Cupón de Descuento</h2>
-                            </div>
+                            <h2 className="text-2xl font-bold text-white mb-2">3. Publicás gratis, sin vencimiento</h2>
                             <p className="text-lg text-blue-100 mb-4">
-                                Antes de que el anuncio se haga público, el sistema te pedirá abonar el costo de la publicación mediante nuestra pasarela de pago segura. 
+                                Toda cuenta tiene un cupo de avisos activos al mismo tiempo. Tus avisos no vencen: si pausás o marcás como
+                                vendido uno, liberás su lugar.
                             </p>
                             <dl className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-white/20 bg-white/20 tabular-nums">
                                 <div className="bg-[#001F58] px-4 py-3">
-                                    <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-200">Un avión</dt>
-                                    <dd className="mt-0.5 text-xl font-bold text-white">{prices.AIRCRAFT.label}</dd>
+                                    <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-200">Aviones activos</dt>
+                                    <dd className="mt-0.5 text-xl font-bold text-white">{free.AIRCRAFT ?? "Ilimitados"}</dd>
                                 </div>
                                 <div className="bg-[#001F58] px-4 py-3">
-                                    <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-200">Un repuesto</dt>
-                                    <dd className="mt-0.5 text-xl font-bold text-white">{prices.SPARE_PART.label}</dd>
+                                    <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-200">Repuestos activos</dt>
+                                    <dd className="mt-0.5 text-xl font-bold text-white">{free.SPARE_PART ?? "Ilimitados"}</dd>
                                 </div>
                             </dl>
-                            <div className="bg-white/10 border border-white/20 p-4 rounded-xl flex items-start gap-3">
-                                <Ticket className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
-                                <p className="text-base text-white font-medium">
-                                    ¿Tenés un código promocional? ¡No te olvides de ingresarlo en este paso para aplicar tu descuento antes de pagar!
-                                </p>
-                            </div>
+                            <p className="text-base text-blue-100">
+                                ¿Necesitás más? Con los planes Pro y Empresarial publicás más avisos a la vez.{" "}
+                                <Link href="/plans" className="font-semibold text-white underline underline-offset-2">Ver planes</Link>
+                            </p>
                         </div>
                     </div>
 
@@ -120,7 +114,7 @@ export default async function HowToPublishPage() {
                         <div className="flex-1">
                             <h2 className="text-2xl font-bold text-[#001F58] mb-2">4. ¡Publicación activa!</h2>
                             <p className="text-lg text-slate-600">
-                                Una vez confirmado el pago, tu producto estará visible inmediatamente. Los compradores interesados te contactarán de forma directa y sin intermediarios.
+                                Al terminar el formulario, tu aviso queda visible al momento y sigue publicado hasta que lo pauses o lo marques como vendido. Los compradores interesados te contactan de forma directa y sin intermediarios.
                             </p>
                         </div>
                     </div>

@@ -11,6 +11,8 @@ import { FeaturedAircraftCarousel } from "@/components/ui/FeaturedAircraftCarous
 import { LatestAircraft, ListingItem } from "@/components/ui/LatestListings";
 import { HeroBanner } from "@/components/ui/hero-banner";
 import { LaunchPromoBanner } from "@/components/ui/LaunchPromoBanner";
+import { getCachedFreeQuota } from "@/lib/quota";
+import { freeQuotaText } from "@/lib/promo";
 import { FavoriteIdsProvider } from "@/components/ui/FavoriteIdsProvider";
 import HomeServicesCards from "@/components/ui/HomeServiceCards";
 import { FeaturedBrands } from "@/components/ui/FeaturedBrands";
@@ -171,7 +173,7 @@ export default async function HomePage() {
         <div className="home-zone home-zone-1">
           <div aria-hidden className="home-zone-bg" />
           {/* VA-47: invitación a registrarse, solo para visitantes sin cuenta (se decide en el navegador) */}
-          <LaunchPromoBanner />
+          <LaunchPromoBanner text={freeQuotaText(await getCachedFreeQuota())} />
           <AircraftTypesSection counts={categoryCounts} />
           <div className="container mx-auto px-4 pb-12">
             <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />

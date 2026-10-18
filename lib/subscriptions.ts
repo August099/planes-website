@@ -24,86 +24,31 @@ export function isSubscriptionCurrent(
   return false;
 }
 
-// Beneficios de suscripción (VA-87): "Página personalizada" con un plan que la incluye. Si vence, el
-// perfil vuelve al diseño común sin borrar los datos cargados.
-export async function hasCustomPage(userId: string): Promise<boolean> {
-  const sub = await prisma.subscription.findFirst({
-    where: { ...currentSubscriptionWhere(userId), plan: { includesCustomPage: true } },
-    select: { id: true },
-  });
-  return !!sub;
+// Beneficios del plan (VA-87, VA-151). VA-152: solo el Empresarial los incluye (interruptores del
+// plan), y los admins los tienen siempre (mismos atributos que una cuenta Empresarial). Si la
+// suscripción termina, el perfil vuelve al diseño común sin borrar los datos cargados.
+type PlanFlag = "includesCustomPage" | "includesSellerMetrics" | "includesVerifiedBadge";
+async function hasPlanFlag(userId: string, flag: PlanFlag): Promise<boolean> {
+  const [user, sub] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { isAdmin: true } }),
+    prisma.subscription.findFirst({ where: { ...currentSubscriptionWhere(userId), plan: { [flag]: true } }, select: { id: true } }),
+  ]);
+  return !!user?.isAdmin || !!sub;
 }
 
-/** VA-151: panel de métricas de vendedor (plan con includesSellerMetrics, también de cortesía). */
+/** "Página VA" en /profile/[id]. */
+export async function hasCustomPage(userId: string): Promise<boolean> {
+  return hasPlanFlag(userId, "includesCustomPage");
+}
+
+/** VA-151: panel de métricas de vendedor. */
 export async function hasSellerMetrics(userId: string): Promise<boolean> {
-  const sub = await prisma.subscription.findFirst({
-    where: { ...currentSubscriptionWhere(userId), plan: { includesSellerMetrics: true } },
-    select: { id: true },
-  });
-  return !!sub;
+  return hasPlanFlag(userId, "includesSellerMetrics");
 }
 
 /** VA-105 (14/10): "Cuenta verificada" sale del plan (includesVerifiedBadge), no de la Página VA. */
 export async function hasVerifiedBadge(userId: string): Promise<boolean> {
-  const sub = await prisma.subscription.findFirst({
-    where: { ...currentSubscriptionWhere(userId), plan: { includesVerifiedBadge: true } },
-    select: { id: true },
-  });
-  return !!sub;
-}
-
-export type ListingKind = "AIRCRAFT" | "SPARE_PART" | "HANGAR";
-const LISTING_DAYS_MS = 45 * 24 * 60 * 60 * 1000;
-
-/**
- * VA-80 / VA-105 (14/10): tipos de aviso que no vencen con el plan vigente. "Sin vencimiento" vale
- * solo para lo que el plan tiene ilimitado: el Plan Repuestos no frena el vencimiento de los aviones.
- */
-export async function noExpiryKinds(userId: string, now = new Date()): Promise<Set<ListingKind>> {
-  const sub = await prisma.subscription.findFirst({
-    where: { ...currentSubscriptionWhere(userId, now), plan: { noExpiry: true } },
-    select: { plan: { select: { isUnlimitedAircraft: true, isUnlimitedSpareParts: true, isUnlimitedHangars: true } } },
-  });
-  const kinds = new Set<ListingKind>();
-  if (sub?.plan.isUnlimitedAircraft) kinds.add("AIRCRAFT");
-  if (sub?.plan.isUnlimitedSpareParts) kinds.add("SPARE_PART");
-  if (sub?.plan.isUnlimitedHangars) kinds.add("HANGAR");
-  return kinds;
-}
-
-/** El plan vigente hace que los avisos de este tipo no venzan (ni haya que renovarlos). */
-export async function hasNoExpiryPlan(userId: string, kind: ListingKind): Promise<boolean> {
-  return (await noExpiryKinds(userId)).has(kind);
-}
-
-/**
- * VA-105: alinea las fechas de vencimiento con el plan vigente. Lo cubierto queda sin fecha (también
- * lo vencido que seguía ACTIVE: no hace falta renovarlo); lo no cubierto que no tenía fecha vuelve a
- * vencer en 45 días. Se llama al activar, cambiar o terminar una suscripción o cortesía.
- */
-export async function syncListingExpiry(userId: string, now = new Date()) {
-  const kinds = await noExpiryKinds(userId, now);
-  const restoreAt = new Date(now.getTime() + LISTING_DAYS_MS);
-  const base = { sellerId: userId, status: "ACTIVE" as const };
-  // VA-150: lo que la suscripción deja sin vencimiento queda registrado con su vencimiento anterior:
-  // si se arrepiente de ese cobro, vuelve a él (y no a 45 días desde ese momento).
-  const sub = kinds.size ? await prisma.subscription.findFirst({ where: currentSubscriptionWhere(userId, now), select: { id: true } }) : null;
-  const models = { AIRCRAFT: prisma.aircraft, SPARE_PART: prisma.sparePart, HANGAR: prisma.hangar } as unknown as Record<ListingKind, typeof prisma.aircraft>;
-  for (const kind of ["AIRCRAFT", "SPARE_PART", "HANGAR"] as const) {
-    const model = models[kind];
-    if (kinds.has(kind)) {
-      const dated = await model.findMany({ where: { ...base, listingExpiresAt: { not: null } }, select: { id: true, listingExpiresAt: true } });
-      if (!dated.length) continue;
-      if (sub) {
-        await prisma.listingFunding.createMany({
-          data: dated.map((l) => ({ userId, listingKind: kind, listingId: l.id, reason: "RENEWAL" as const, source: "SUBSCRIPTION" as const, subscriptionId: sub.id, previousExpiresAt: l.listingExpiresAt })),
-        });
-      }
-      await model.updateMany({ where: { id: { in: dated.map((l) => l.id) } }, data: { listingExpiresAt: null } });
-    } else {
-      await model.updateMany({ where: { ...base, listingExpiresAt: null }, data: { listingExpiresAt: restoreAt } });
-    }
-  }
+  return hasPlanFlag(userId, "includesVerifiedBadge");
 }
 
 /** VA-80: suscripción del usuario (vigente o no) para mostrar en su perfil. */
@@ -118,20 +63,15 @@ export async function getSubscriptionSummary(userId: string) {
       graceUntil: true,
       mpSubscriptionId: true,
       planId: true,
-      plan: { select: { name: true, price: true, billingInterval: true, noExpiry: true, isUnlimitedAircraft: true, isUnlimitedSpareParts: true } },
+      plan: { select: { name: true, price: true, billingInterval: true, tier: true } },
     },
   });
   if (!sub) return null;
-  // VA-105: qué avisos no vencen (solo lo que el plan tiene ilimitado).
-  const { isUnlimitedAircraft: a, isUnlimitedSpareParts: r } = sub.plan;
-  const noExpiry = sub.plan.noExpiry && (a || r);
-  const noExpiryLabel = a && r ? "tus avisos" : a ? "tus avisos de aviones" : "tus avisos de repuestos";
   return {
     planName: sub.plan.name,
     price: Number(sub.plan.price),
     interval: sub.plan.billingInterval,
-    noExpiry,
-    noExpiryLabel,
+    tier: sub.plan.tier,
     status: sub.status,
     active: isSubscriptionCurrent(sub),
     // VA-92: cobro rechazado, en gracia hasta esta fecha (sigue con los beneficios).

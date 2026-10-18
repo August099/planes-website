@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { isSubscriptionCurrent, syncListingExpiry } from "@/lib/subscriptions";
+import { isSubscriptionCurrent } from "@/lib/subscriptions";
+import { enforceQuota } from "@/lib/quota";
 
 // VA-92: plan de cortesía (suscripción MANUAL). Lo asigna un admin a un usuario hasta una fecha:
 // sin Mercado Pago (mpSubscriptionId vacío), no se cobra ni se renueva, y no cuenta en ingresos ni
@@ -27,7 +28,7 @@ export async function grantCourtesyPlan(input: {
   if (input.until > max) return { ok: false, error: `Hasta ${MAX_YEARS} años.` };
 
   const [plan, user, current] = await Promise.all([
-    prisma.plan.findUnique({ where: { id: input.planId }, select: { billingType: true, archivedAt: true, featuredPerMonth: true } }),
+    prisma.plan.findUnique({ where: { id: input.planId }, select: { billingType: true, archivedAt: true } }),
     prisma.user.findUnique({ where: { id: input.userId }, select: { id: true } }),
     prisma.subscription.findUnique({ where: { userId: input.userId }, select: { source: true, status: true, currentPeriodEnd: true, graceUntil: true } }),
   ]);
@@ -52,10 +53,9 @@ export async function grantCourtesyPlan(input: {
     graceUntil: null,
     grantedById: input.adminId,
     note: input.note?.trim().slice(0, 200) || null,
-    featuredCredits: plan.featuredPerMonth,
   };
   await prisma.subscription.upsert({ where: { userId: input.userId }, create: { userId: input.userId, ...data }, update: data });
-  await syncListingExpiry(input.userId); // VA-105
+  await enforceQuota(input.userId); // VA-152: si el plan nuevo tiene menos cupo, se pausan los más nuevos
   return { ok: true };
 }
 
@@ -64,6 +64,6 @@ export async function revokeCourtesyPlan(userId: string): Promise<CourtesyResult
   const sub = await prisma.subscription.findUnique({ where: { userId }, select: { source: true } });
   if (!sub || sub.source !== "MANUAL") return { ok: false, error: "No tiene un plan de cortesía." };
   await prisma.subscription.update({ where: { userId }, data: { status: "CANCELLED", currentPeriodEnd: new Date() } });
-  await syncListingExpiry(userId); // VA-105
+  await enforceQuota(userId); // VA-152: si el plan nuevo tiene menos cupo, se pausan los más nuevos
   return { ok: true };
 }

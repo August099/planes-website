@@ -8,6 +8,7 @@ import { FOUNDING_MEMBER_LIMIT } from "@/lib/constants";
 import { FoundingMemberToggle } from "@/components/ui/FoundingMemberToggle";
 import { UserTypeSelect } from "@/components/admin/UserTypeSelect";
 import { CourtesyPlanControl } from "@/components/admin/CourtesyPlanControl";
+import { getQuotaUsage } from "@/lib/quota";
 
 const PAGE_SIZE = 50;
 
@@ -50,8 +51,6 @@ export default async function AdminUsersPage({ searchParams }: Props) {
         isFoundingMember: true,
         userType: true,
         userTypeConfirmed: true,
-        aircraftListingsBalance: true,
-        sparePartsListingsBalance: true,
         _count: { select: { aircrafts: true, spareParts: true, accounts: true } },
         Subscription: { select: { source: true, status: true, currentPeriodEnd: true, plan: { select: { name: true } } } },
       },
@@ -59,9 +58,10 @@ export default async function AdminUsersPage({ searchParams }: Props) {
     prisma.user.count({ where }),
     prisma.user.count({ where: { isFoundingMember: true } }),
   ]);
-  // VA-92: planes de suscripción para "Asignar plan de cortesía" (también inactivos, no archivados).
+  // VA-92: planes para "Asignar plan de cortesía" (también inactivos, no archivados). VA-152: Pro o
+  // una opción del Empresarial.
   const subscriptionPlans = await prisma.plan.findMany({
-    where: { billingType: "SUBSCRIPTION", archivedAt: null },
+    where: { billingType: "SUBSCRIPTION", archivedAt: null, tier: { not: null } },
     orderBy: [{ isActive: "desc" }, { sortOrder: "asc" }],
     select: { id: true, name: true, isActive: true },
   });
@@ -78,6 +78,8 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   }
   const planOptions = subscriptionPlans.map((p) => ({ id: p.id, name: p.isActive ? p.name : `${p.name} (no visible en /plans)` }));
   const now = new Date();
+  // VA-152: plan efectivo y cupo usado/total de cada cuenta de la página.
+  const usages = new Map(await Promise.all(users.map(async (u) => [u.id, await getQuotaUsage(u.id)] as const)));
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const pageUrl = (n: number) => {
@@ -135,7 +137,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
               <th className="px-4 py-3">Alta</th>
               <th className="px-4 py-3">Ingreso</th>
               <th className="px-4 py-3 text-center">Avisos</th>
-              <th className="px-4 py-3 text-center" title="Avisos disponibles: avión / repuesto (VA-89)">Saldo</th>
+              <th className="px-4 py-3" title="Avisos activos / cupo, por tipo (VA-152)">Cupo</th>
               <th className="px-4 py-3 text-center" title="Pagos con pedido de arrepentimiento (VA-150). Solo informativo.">Arrepent.</th>
               <th className="px-4 py-3">Tipo de cuenta</th>
               <th className="px-4 py-3">Miembro fundador</th>
@@ -173,10 +175,25 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td className="px-4 py-3 text-center text-slate-600">{u._count.aircrafts + u._count.spareParts}</td>
-                  <td className="px-4 py-3 text-center whitespace-nowrap text-slate-600 tabular-nums">
-                    <span title="Avión">{u.aircraftListingsBalance}</span>
-                    <span className="text-slate-400"> / </span>
-                    <span title="Repuesto">{u.sparePartsListingsBalance}</span>
+                  <td className="px-4 py-3 whitespace-nowrap text-slate-600 tabular-nums">
+                    {(() => {
+                      const q = usages.get(u.id);
+                      if (!q) return "—";
+                      const over = (k: "AIRCRAFT" | "SPARE_PART") => q.limits[k] !== null && q.used[k] > q.limits[k]!;
+                      const cell = (k: "AIRCRAFT" | "SPARE_PART", label: string) => (
+                        <span className={over(k) ? "font-semibold text-amber-700" : ""} title={over(k) ? "Por encima del cupo" : undefined}>
+                          {label} {q.used[k]}/{q.limits[k] ?? "∞"}
+                        </span>
+                      );
+                      return (
+                        <>
+                          <p className="text-xs font-semibold text-[#001F58]">{q.planName}</p>
+                          <p className="text-xs">
+                            {cell("AIRCRAFT", "Av.")} · {cell("SPARE_PART", "Rep.")}
+                          </p>
+                        </>
+                      );
+                    })()}
                   </td>
                   <td className={`px-4 py-3 text-center tabular-nums ${(withdrawalsByUser.get(u.id) ?? 0) >= 2 ? "font-semibold text-red-700" : "text-slate-600"}`}>
                     {withdrawalsByUser.get(u.id) ?? 0}

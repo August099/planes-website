@@ -1,4 +1,5 @@
 // VA-152 · Informe previo al cambio de modelo (cupos fijos sin vencimiento). SOLO LEE: no escribe nada.
+// Se corre ANTES de prisma migrate deploy: lee columnas que la migración va152_limpieza borra.
 //
 //   npx tsx --env-file=.env scripts/va152-report.ts        → base local (va_dev)
 //

@@ -102,7 +102,6 @@ const AIRCRAFT_CARD_SELECT = {
   brandId: true,
   modelId: true,
   createdAt: true,
-  listingExpiresAt: true,
   category: { select: { id: true, name: true } },
   images: { orderBy: { order: "asc" as const }, take: 5, select: { id: true, aircraftId: true, order: true, url: true } },
 } satisfies Prisma.AircraftSelect;
@@ -117,7 +116,6 @@ const SPARE_PART_CARD_SELECT = {
   province: true,
   brand: true,
   createdAt: true,
-  listingExpiresAt: true,
   category: { select: { name: true } },
   images: { orderBy: { order: "asc" as const }, take: 1, select: { url: true } },
 } satisfies Prisma.SparePartSelect;
@@ -136,7 +134,6 @@ export type AircraftRec = {
   city: string;
   province: string;
   category: { id: string; name: string };
-  expiresAt: string | null;
   images: { id: string; aircraftId: string; order: number; url: string }[];
 };
 export type SparePartRec = {
@@ -148,7 +145,6 @@ export type SparePartRec = {
   city: string;
   province: string;
   category: { name: string };
-  expiresAt: string | null;
   imageUrl: string | null;
 };
 
@@ -162,7 +158,6 @@ const toAircraftRec = (a: AircraftRow): AircraftRec => ({
   city: a.city,
   province: a.province,
   category: a.category,
-  expiresAt: a.listingExpiresAt?.toISOString() ?? null,
   images: a.images,
 });
 const toSparePartRec = (s: SparePartRow): SparePartRec => ({
@@ -174,19 +169,15 @@ const toSparePartRec = (s: SparePartRow): SparePartRec => ({
   city: s.city,
   province: s.province,
   category: s.category,
-  expiresAt: s.listingExpiresAt?.toISOString() ?? null,
   imageUrl: s.images[0]?.url ?? null,
 });
 
 export type RecommendationBlock<T> = { title: string; subtitle?: string; items: T[] };
 
-// El bloque se cachea ~10 minutos: lo que venció en ese rato se saca al mostrarlo (y si quedan
-// menos de 2, el bloque no se muestra). Pausas, ediciones y bajas invalidan el tag al momento.
-function stillVisible<T extends { expiresAt: string | null }>(block: RecommendationBlock<T> | null) {
-  if (!block) return null;
-  const now = Date.now();
-  const items = block.items.filter((i) => !i.expiresAt || new Date(i.expiresAt).getTime() >= now);
-  return items.length >= MIN_ITEMS ? { ...block, items } : null;
+// El bloque se cachea ~10 minutos; pausas, ediciones y bajas invalidan el tag al momento (VA-152: los
+// avisos no vencen). Con menos de 2 avisos, el bloque no se muestra.
+function stillVisible<T>(block: RecommendationBlock<T> | null) {
+  return block && block.items.length >= MIN_ITEMS ? block : null;
 }
 
 const CANDIDATES = 60; // por nivel; después se ordena por puntaje en memoria
