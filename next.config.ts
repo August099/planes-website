@@ -39,6 +39,13 @@ const nextConfig = {
     },
   },
   staticPageGenerationTimeout: 120,
+  // Temporal (18/10/2026): la base de producción ya tiene el esquema nuevo (VA-150 a VA-158) y este
+  // código es el anterior: toda página que lee la base daba error. Hasta el lanzamiento, todo lo que no
+  // es la Home ("Próximamente"), un archivo (tiene punto), /_next o /api vuelve a la Home. 307: se
+  // quita al mergear el sitio nuevo.
+  async redirects() {
+    return [{ source: "/:path((?!_next|api)[^.]+)", destination: "/", permanent: false }];
+  },
 };
 
 module.exports = nextConfig;
