@@ -114,16 +114,13 @@ export function AircraftActionsHeader({ title, aircraftId, isFavoriteInitial = f
           </button>
         </div>
 
-        {/* Reportar */}
+        {/* VA-161: "Reportar" siempre a la vista (antes solo aparecía al pasar el mouse). */}
         <a
           href={type === "AIRCRAFT" ? `/report?aircraftId=${aircraftId}` : `/report?sparePartId=${aircraftId}`}
-          aria-label="Reportar publicación"
-          className="group flex items-center justify-center min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 select-none"
+          className="group flex items-center justify-center gap-1.5 min-h-11 sm:min-h-0 select-none text-xs font-semibold text-slate-700 hover:text-amber-700"
         >
-          <span className="mr-0 max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 ease-out group-hover:mr-2 group-hover:max-w-40 group-hover:opacity-100 text-xs font-semibold text-slate-700">
-            Reportar
-          </span>
-          <TriangleAlert className="text-primary cursor-pointer hover:text-amber-600 transition-colors" />
+          <TriangleAlert className="h-5 w-5 text-primary transition-colors group-hover:text-amber-600" aria-hidden />
+          Reportar
         </a>
       </div>
 

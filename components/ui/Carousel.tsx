@@ -1,17 +1,17 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Autoplay, Parallax, Zoom, Thumbs, Keyboard } from "swiper/modules";
+import { Autoplay, Parallax, Zoom, Thumbs, Keyboard } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 
 import "swiper/css";
-import "swiper/css/navigation";
 import "swiper/css/parallax";
 import "swiper/css/thumbs";
 import "swiper/css/zoom";
 
 import { AppImage } from "@/components/ui/AppImage";
 import { X, Maximize } from "lucide-react";
+import { CarouselArrow } from "@/components/ui/home/CarouselArrow";
 
 type GalleryProps = {
   images: { url: string; alt?: string | null }[];
@@ -27,6 +27,8 @@ export function AircraftGallery({ images, title }: GalleryProps) {
   const photoAlt = (image: { alt?: string | null }, index: number) => image.alt || `${title} – foto ${index + 1}`;
 
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
+  // VA-160: flechas propias (las mismas de la Home) en vez de las de Swiper.
+  const mainSwiperRef = useRef<SwiperType | null>(null);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
@@ -87,20 +89,17 @@ export function AircraftGallery({ images, title }: GalleryProps) {
       <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white">
         {/* Carrusel principal. Tocar o hacer clic en la foto abre la pantalla completa (VA-42):
             Swiper solo dispara onClick si no hubo arrastre, así que deslizar no la abre. */}
+        <div className="relative">
         <Swiper
-          onClick={(swiper, event) => {
-            const target = event.target as HTMLElement | null;
-            if (target?.closest(".swiper-button-prev, .swiper-button-next")) return;
-            handleOpenFullscreen(swiper.activeIndex);
-          }}
-          modules={[Navigation, Autoplay, Parallax, Thumbs]}
+          onSwiper={(swiper) => (mainSwiperRef.current = swiper)}
+          onClick={(swiper) => handleOpenFullscreen(swiper.activeIndex)}
+          modules={[Autoplay, Parallax, Thumbs]}
           spaceBetween={10}
           slidesOffsetBefore={10}
           slidesOffsetAfter={10}
           speed={500}
           rewind
           parallax
-          navigation
           autoplay={{ delay: 5000, pauseOnMouseEnter: true }}
           thumbs={{ swiper: thumbsSwiper }}
           className="w-full aspect-[4/3] max-h-[520px]"
@@ -134,6 +133,13 @@ export function AircraftGallery({ images, title }: GalleryProps) {
             </SwiperSlide>
           ))}
         </Swiper>
+        {images.length > 1 && (
+          <>
+            <CarouselArrow direction="prev" placement="inside" onClick={() => mainSwiperRef.current?.slidePrev()} />
+            <CarouselArrow direction="next" placement="inside" onClick={() => mainSwiperRef.current?.slideNext()} />
+          </>
+        )}
+        </div>
 
         {/* Miniaturas */}
         {images.length > 1 && (
@@ -206,8 +212,7 @@ export function AircraftGallery({ images, title }: GalleryProps) {
                 setLightboxCurrentZoom(scale);
               }}
               onSlideChange={(swiper) => setActiveImageIndex(swiper.activeIndex)}
-              modules={[Navigation, Zoom, Keyboard]}
-              navigation
+              modules={[Zoom, Keyboard]}
               keyboard={{ enabled: true }}
               zoom={{ maxRatio: MAX_ZOOM, minRatio: MIN_ZOOM, toggle: true }}
               initialSlide={activeImageIndex}
@@ -227,6 +232,12 @@ export function AircraftGallery({ images, title }: GalleryProps) {
                 </SwiperSlide>
               ))}
             </Swiper>
+            {images.length > 1 && (
+              <>
+                <CarouselArrow direction="prev" placement="inside" onClick={() => lightboxSwiperRef.current?.slidePrev()} />
+                <CarouselArrow direction="next" placement="inside" onClick={() => lightboxSwiperRef.current?.slideNext()} />
+              </>
+            )}
           </div>
         </div>
       )}

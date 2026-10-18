@@ -33,9 +33,10 @@ export const AIRCRAFT_SECTIONS: { key: AircraftSectionKey; title: string }[] = [
   { key: "helice", title: "Hélice" },
   { key: "avionica", title: "Aviónica / Equipamiento / Radio" },
   { key: "equipamiento", title: "Equipamiento adicional" },
+  // VA-159: si el avión tiene implementos agrícolas, van antes de "Exterior" (web, PDF y comparador).
+  { key: "implementos", title: "Implementos agrícolas" },
   { key: "exterior", title: "Exterior" },
   { key: "interior", title: "Interior" },
-  { key: "implementos", title: "Implementos agrícolas" },
   { key: "documentacion", title: "Documentación" },
   { key: "venta", title: "Condiciones de venta" },
 ];

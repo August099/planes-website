@@ -96,7 +96,7 @@ export function ReportContent() {
   if (submitted) {
     return (
       <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
-      <Breadcrumbs items={[{ label: "Reportar publicación" }]} className="absolute inset-x-0 top-0 container mx-auto px-4 pt-3" />
+      <Breadcrumbs items={[{ label: "Reportar" }]} className="absolute inset-x-0 top-0 container mx-auto px-4 pt-3" />
         <PageBackground page="report" />
 
         <div className="container mx-auto px-4 max-w-md">
@@ -122,14 +122,14 @@ export function ReportContent() {
 
   return (
     <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
-      <Breadcrumbs items={[{ label: "Reportar publicación" }]} className="absolute inset-x-0 top-0 container mx-auto px-4 pt-3" />
+      <Breadcrumbs items={[{ label: "Reportar" }]} className="absolute inset-x-0 top-0 container mx-auto px-4 pt-3" />
       <PageBackground page="report" />
 
       <div className="container mx-auto px-4 max-w-lg">
         <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl space-y-6">
           <div className="text-center space-y-1.5">
             <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#001F58] uppercase">
-              Reportar Publicación
+              Reportar
             </h1>
             <p className="text-xs sm:text-sm text-[#001F58]/70">
               Informa sobre contenido inapropiado o irregularidades en la plataforma

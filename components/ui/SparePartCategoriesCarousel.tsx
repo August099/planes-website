@@ -29,7 +29,8 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
         </div>
         <Link
           href="/spareparts"
-          className="text-sm font-medium text-[#C20D1A] hover:underline hidden sm:block"
+          // VA-162: el mismo azul que los demás links de la Home ("Ver Aviones →").
+          className="text-sm font-semibold text-[#001F58] hover:underline hidden sm:block"
         >
           Ver todo el catálogo →
         </Link>
