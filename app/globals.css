@@ -296,3 +296,9 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
 @media (prefers-reduced-motion: reduce) {
   .va-dot { transition: none; }
 }
+
+/* VA-156: atribución del mapa del detalle (OpenFreeMap, OpenMapTiles, OpenStreetMap) visible pero chica. */
+.maplibregl-ctrl.maplibregl-ctrl-attrib {
+  font-size: 10px;
+  line-height: 14px;
+}

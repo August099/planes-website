@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // VA-114: builds locales de verificación (NEXT_DIST_DIR, commit 961f3d7).
     ".next-local/**",
+    // VA-156: MapLibre copiado al construir (scripts/vendor-maplibre.mjs): código de terceros minificado.
+    "public/vendor/**",
   ]),
 ]);
 

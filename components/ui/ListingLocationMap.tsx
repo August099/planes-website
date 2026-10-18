@@ -1,11 +1,14 @@
 import { ARGENTINA_VIEWBOX, PROVINCE_PATHS } from "@/components/ui/argentina-map/paths";
 import { projectToMap, provinceBBox, type BBox } from "@/lib/argentina-map";
 import { PROVINCES, provinceByName } from "@/lib/provinces";
+import { ZoneMapEnhancer } from "@/components/ui/ZoneMapEnhancer";
 
 // VA-83 / VA-129: mapa de zona aproximada de un aviso (y, más adelante, de hangares y pistas).
 // Es el mismo mapa de provincias de la Home (SVG propio, sin teselas de terceros ni costo): se
 // encuadra la provincia del aviso, se resalta y se marca la localidad con un punto. Nunca muestra un
-// punto exacto: las coordenadas son las del centro de la localidad. Componente de servidor, sin JS.
+// punto exacto: las coordenadas son las del centro de la localidad. Componente de servidor.
+// VA-156: con coordenadas, encima va el mapa real (ZoneMapEnhancer: MapLibre + OpenFreeMap, cargado al
+// entrar en pantalla); este SVG queda de fondo mientras carga y de respaldo sin WebGL o si falla.
 
 type Props = {
   latitude: number | null | undefined;
@@ -87,11 +90,14 @@ export function ListingLocationMap({ latitude, longitude, city, province, title 
           )}
         </svg>
 
-        {/* Ubicación de la provincia en el país (decorativo: la zona ya está dicha en el pie). */}
+        {point && latitude != null && longitude != null && <ZoneMapEnhancer latitude={latitude} longitude={longitude} label={label} />}
+
+        {/* Ubicación de la provincia en el país (decorativo: la zona ya está dicha en el pie). Arriba a la
+            derecha: abajo va la atribución del mapa (VA-156). */}
         <svg
           viewBox={ARGENTINA_VIEWBOX}
           aria-hidden
-          className="absolute bottom-2 right-2 h-[38%] w-auto rounded-md border border-[#001F58]/10 bg-white/85 p-1"
+          className="pointer-events-none absolute right-2 top-2 h-[38%] w-auto rounded-md border border-[#001F58]/10 bg-white/85 p-1"
         >
           {PROVINCES.filter((p) => PROVINCE_PATHS[p.slug]).map((p) => (
             <path

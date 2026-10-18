@@ -51,3 +51,6 @@ next-env.d.ts
 
 # Capturas de verificación (pesadas; se mandan por chat, no van al repo)
 docs/capturas/
+
+# VA-156: MapLibre copiado al construir (scripts/vendor-maplibre.mjs)
+/public/vendor/

@@ -125,6 +125,7 @@ export default function PrivacidadPage() {
                   <li><strong>Vercel:</strong> alojamiento del sitio y medición anónima de su rendimiento.</li>
                   <li><strong>Resend:</strong> envío de los correos del sitio (verificación, contraseña, pagos).</li>
                   <li><strong>TusFacturas:</strong> emisión de las facturas electrónicas ante ARCA.</li>
+                  <li><strong>OpenFreeMap:</strong> el mapa de zona del detalle de un aviso descarga las teselas (imágenes del mapa) de sus servidores, que reciben la dirección IP del navegador como cualquier sitio. No usa cookies y no recibe datos tuyos ni del aviso: el mapa muestra solo una zona aproximada.</li>
                 </ul>
                 <p>Algunos de estos proveedores pueden almacenar datos fuera de la Argentina; en todos los casos se usan solo para prestar el servicio. También podemos compartir datos cuando lo exija una autoridad competente.</p>
               </div>
