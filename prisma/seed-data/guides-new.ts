@@ -81,7 +81,7 @@ export const NEW_GUIDES: GuideSeed[] = [
         links: [{ label: "Checklist para comprar un avión usado", href: guidePath(BUYING_CHECKLIST) }],
       },
     ],
-    cta: [{ label: "Ver aeronaves en venta", href: "/planes" }],
+    cta: [{ label: "Ver aeronaves en venta", href: "/aircraft" }],
   },
   {
     slug: FIRST,
@@ -139,7 +139,7 @@ export const NEW_GUIDES: GuideSeed[] = [
         links: [{ label: "Checklist de pre-compra", href: guidePath(BUYING_CHECKLIST) }],
       },
     ],
-    cta: [{ label: "Explorar por tipo de aeronave", href: "/planes" }],
+    cta: [{ label: "Explorar por tipo de aeronave", href: "/aircraft" }],
   },
   {
     slug: LICENSE,
@@ -199,7 +199,7 @@ export const NEW_GUIDES: GuideSeed[] = [
         links: [{ label: "Requisitos para cada licencia (ANAC)", href: ANAC_LICENSE_PDF }],
       },
     ],
-    cta: [{ label: "Ver aviones de entrenamiento", href: "/planes?category=E" }],
+    cta: [{ label: "Ver aviones de entrenamiento", href: "/aircraft?category=E" }],
   },
   {
     slug: PARTS_BUY,

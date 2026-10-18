@@ -36,6 +36,7 @@ export default async function EditPlanPage({ params }: Props) {
           noExpiry: p.noExpiry,
           includesVerifiedBadge: p.includesVerifiedBadge,
           includesCustomPage: p.includesCustomPage,
+          includesSellerMetrics: p.includesSellerMetrics,
           featuredPerMonth: p.featuredPerMonth,
           usageDescription: p.usageDescription ?? "",
           description: p.description ?? "",

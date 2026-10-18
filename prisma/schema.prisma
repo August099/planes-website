@@ -40,7 +40,9 @@ model User {
   accounts                  Account[]
   adBanners                 AdBanner[]
   aircrafts                 Aircraft[]
-  analyticsEvents           AnalyticsEvent[]
+  analyticsEvents           AnalyticsEvent[]     @relation("AnalyticsEventUser")
+  // VA-151: visitas a su perfil (Página VA), sin datos del visitante.
+  profileViews              AnalyticsEvent[]     @relation("AnalyticsEventProfile")
   couponUsages              CouponUsage[]
   favorites                 Favorite[]
   purchases                 Purchase[]
@@ -133,6 +135,8 @@ model Plan {
   includesVerifiedBadge   Boolean          @default(false)
   // VA-87: el plan da "Página personalizada" en /profile/[id].
   includesCustomPage      Boolean          @default(false)
+  // VA-151: panel de métricas de vendedor en el perfil (Suscripción VA).
+  includesSellerMetrics   Boolean          @default(false)
   isActive                Boolean          @default(true)
   aircraftListingsCount   Int              @default(0)
   sparePartsListingsCount Int              @default(0)
@@ -727,6 +731,8 @@ model Favorite {
   hangarId    String?
   hangar      Hangar?    @relation(fields: [hangarId], references: [id], onDelete: Cascade)
   user        User       @relation(fields: [userId], references: [id])
+  // VA-151: para "Favoritos nuevos" del panel de métricas. Los anteriores quedan con 1/1/2026.
+  createdAt   DateTime   @default(now())
 
   // VA-16: el unique de 3 columnas no evitaba duplicados (en Postgres NULL <> NULL, y siempre
   // una de las dos columnas es NULL). Con dos índices de 2 columnas, los NULL no chocan entre sí
@@ -784,26 +790,30 @@ model Question {
 }
 
 model AnalyticsEvent {
-  id          String             @id @default(cuid())
-  eventType   AnalyticsEventType
-  userId      String?
-  anonymousId String?
-  aircraftId  String?
-  sparePartId String?
-  metadata    Json               @default("{}")
-  referrer    String?
-  utmSource   String?
-  utmMedium   String?
-  utmCampaign String?
-  createdAt   DateTime           @default(now())
-  aircraft    Aircraft?          @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
-  sparePart   SparePart?         @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+  id            String             @id @default(cuid())
+  eventType     AnalyticsEventType
+  userId        String?
+  anonymousId   String?
+  aircraftId    String?
+  sparePartId   String?
+  metadata      Json               @default("{}")
+  referrer      String?
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  createdAt     DateTime           @default(now())
+  aircraft      Aircraft?          @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+  sparePart     SparePart?         @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
   // VA-84
-  hangarId    String?
-  hangar      Hangar?            @relation(fields: [hangarId], references: [id], onDelete: Cascade)
-  user        User?              @relation(fields: [userId], references: [id])
+  hangarId      String?
+  hangar        Hangar?            @relation(fields: [hangarId], references: [id], onDelete: Cascade)
+  user          User?              @relation("AnalyticsEventUser", fields: [userId], references: [id])
+  // VA-151: perfil visitado (evento PROFILE_VIEW).
+  profileUserId String?
+  profileUser   User?              @relation("AnalyticsEventProfile", fields: [profileUserId], references: [id], onDelete: Cascade)
 
   @@index([eventType, createdAt])
+  @@index([profileUserId, eventType, createdAt])
   @@index([aircraftId, eventType])
   @@index([sparePartId, eventType])
   @@index([hangarId, eventType])
@@ -1065,6 +1075,8 @@ enum AnalyticsEventType {
 
   // Users
   USER_REGISTERED
+  // VA-151: visita al perfil de un vendedor (Página VA)
+  PROFILE_VIEW
 }
 
 // --------------------------------------------------------------------------- VA-92 · Pagos y facturación

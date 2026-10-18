@@ -940,15 +940,15 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - [ ] **Textos del socio:** FAQ, términos y `/about` sin `[COMPLETAR]`.
 
 ### 2. Se decide
-- [ ] **VA-95 · Destacados pagos:** ¿salen en el lanzamiento? Si sí, se arma el plan (compra, días y precio, orden en listados, Home, vencimiento y arrepentimiento con VA-150).
-- [ ] **VA-150:** ¿arrepentimiento solo en el primer cobro de la suscripción o en cada cobro? Hoy: solo el primero (`WITHDRAWAL_SUBSCRIPTION_SCOPE`). Confirmar con el contador o un abogado.
-- [ ] **VA-97** (grilla del perfil) y **VA-100** (color del footer): ¿antes del lanzamiento?
-- [ ] **VA-151 · Métricas de la cuenta VA:** ¿se muestra en el lanzamiento o queda oculta? (Spec en `docs/specs/VA-151-metricas-cuenta-va.md`.)
+- [x] **VA-95 · Destacados pagos:** ❌ no se hacen (socio, 17/10).
+- [ ] **VA-150 (lo confirma el socio más adelante):** ¿arrepentimiento solo en el primer cobro de la suscripción o en cada cobro? Hoy: solo el primero (`WITHDRAWAL_SUBSCRIPTION_SCOPE`). Confirmar con el contador o un abogado.
+- [x] **VA-97** (grilla del perfil): ✅ sí, antes del lanzamiento (hecho el 17/10). **VA-100** (color del footer): ❌ descartada (socio, 17/10).
+- [x] **VA-151 · Métricas de la cuenta VA:** ✅ se hace (socio, 17/10). Spec en `docs/specs/VA-151-metricas-cuenta-va.md`; falta el OK del SQL de la migración.
 - [ ] **VA-136** (header blanco al recargar la Home): no se reproduce; hace falta una captura y el dispositivo y navegador donde pasa.
-- [ ] **VA-96 · Renombrar a `aircraft`:** propuesto dejarlo para después del lanzamiento o no hacerlo.
+- [x] **VA-96 · Renombrar a `aircraft`:** ✅ se hace (socio, 17/10). Antes, la lista completa de renombres para el OK.
 
 ### 3. Después del lanzamiento
-- VA-96 (si se hace), VA-98 avanzado, VA-99, VA-102, VA-103 (banners, en standby), VA-104 y el resto de hangares.
+- VA-98 avanzado (lo reemplaza VA-151), VA-99, VA-102, VA-103 (banners, en standby), VA-104 y el resto de hangares.
 - Admin en celular (la barra lateral deja poco espacio a 375 px).
 - Avatar y logo de marca con subida directa a Storage (hoy pasan por la función: límite de 4,5 MB).
 - `SellerCta`: un `<Button>` dentro de un link (HTML inválido).
@@ -1278,7 +1278,7 @@ Detalle completo y decisiones confirmadas en **`docs/specs/VA-93-a-VA-102-lote-1
 | VA-93 | Servicios: solo Guías y Comparador visibles. Hangares, herramientas, foro y demás se mueven a una carpeta privada que no se publica (`app/_proximamente/`), sin accesos públicos. Documentar en `docs/FUNCIONES_OCULTAS.md` |
 | VA-94 | `/plans` con los planes reales del admin + link "Planes y precios" en Explorar (footer) + CTAs en 4 lugares |
 | VA-95 | Destacados pagos: primero en búsquedas; en la Home, si hay más de 2, 2 destacados al azar; días y precio junto a los precios individuales; destacados incluidos por mes en las suscripciones |
-| VA-96 | Unificar a `aircraft` en código, base y carpetas (rutas con redirects 308; RENAME en la base). Mostrar la lista de renombres antes de hacerlo |
+| VA-96 | Unificar a `aircraft` en código, base y carpetas (rutas con redirects 308; RENAME en la base). Mostrar la lista de renombres antes de hacerlo · **✅ 17/10** (rama `milton/va96-aircraft`; sin RENAME porque la base ya usaba `Aircraft*`) |
 | VA-97 | Perfil: una sola grilla con interruptores por tipo + filtros por estado en el panel propio |
 | VA-98 | Métricas: básicas para todos; avanzadas (7/30/90 días, gráficos, favoritos, comparador, visitas del perfil) para Pro. Corregir el conteo de "Vistas" |
 | VA-99 | Carga masiva de repuestos (Pro): plantilla xlsx/csv, zip de fotos por P/N (o carga manual), borradores, "Publicar todos" |
@@ -1579,6 +1579,7 @@ Probados en celular; verificar también en escritorio.
 - **Estado (17/10):** ✅ hecho. Los 14 íconos ya eran componentes propios desde VA-70; ahora el admin elige entre ellos, los nombres viejos se migraron (`va148_iconos_categorias`, tabla aprobada por el socio) y se quitó `react-icons`. Sin íconos sin usar en el código: Gps, Combustible, Hélice y Frenos quedan disponibles en el selector. JS de la Home igual (801 KB).
 
 ### VA-151 · Métricas de la cuenta VA (primer nivel) — detalle en `docs/specs/VA-151-metricas-cuenta-va.md`
+- **Estado (17/10):** ✅ hecho en local. Migraciones `va151_metricas_vendedor` (evento `PROFILE_VIEW`, perfil visitado e interruptor `includesSellerMetrics`, prendido en la Suscripción VA) y `va151_favoritos_fecha` (`Favorite.createdAt`; los anteriores quedaron con 1/1/2026). Contactos = clics de WhatsApp, teléfono y email + preguntas del aviso (el formulario `Lead` no se usa). Retención actual: 90 días (botón del admin). 16 números verificados contra SQL (`scripts/verify-seller-metrics.ts`). En producción, el ítem "Métricas de tus avisos" de `/plans` llega al correr `scripts/seed-real-plans.ts --apply` después del deploy.
 - **Reemplaza la parte "avanzada" de VA-98.** Pocas métricas a propósito: lo avanzado queda para una futura **cuenta empresarial**.
 - **Quién lo ve:** un interruptor nuevo en el plan, `includesSellerMetrics`, prendido en "Suscripción VA" (cortesías incluidas). Quien no tiene cuenta VA ve lo básico más una línea discreta hacia `/plans`.
 - **Pestaña "Métricas" del perfil propio, últimos 7 o 30 días:**

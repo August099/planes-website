@@ -1,8 +1,8 @@
 import type { ComponentType } from "react";
 import type { CategoryIconProps } from "./CategoryIconBase";
 import { AceiteraIcon } from "./AceiteraIcon";
-import { AvionAgricolaIcon } from "./AvionAgricolaIcon";
-import { AvionIcon } from "./AvionIcon";
+import { AgriculturalAircraftIcon } from "./AgriculturalAircraftIcon";
+import { AircraftIcon } from "./AircraftIcon";
 import { CombustibleIcon } from "./CombustibleIcon";
 import { FrenosIcon } from "./FrenosIcon";
 import { GpsIcon } from "./GpsIcon";
@@ -23,8 +23,8 @@ type CategoryIcon = ComponentType<CategoryIconProps>;
 // la lista (lib/category-icon-names.ts) y se guarda su nombre (por ejemplo "MotorIcon").
 export const CATEGORY_ICONS: Record<string, CategoryIcon> = {
   AceiteraIcon,
-  AvionAgricolaIcon,
-  AvionIcon,
+  AgriculturalAircraftIcon,
+  AircraftIcon,
   CombustibleIcon,
   FrenosIcon,
   GpsIcon,

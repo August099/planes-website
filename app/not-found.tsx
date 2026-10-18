@@ -33,7 +33,7 @@ export default function NotFound() {
           </Link>
 
           <Link
-            href="/planes"
+            href="/aircraft"
             className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/80 hover:bg-white border border-[#001F58]/20 text-[#001F58] font-medium text-sm transition-all shadow-sm"
           >
             Ver Catálogo

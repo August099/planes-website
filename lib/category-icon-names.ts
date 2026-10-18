@@ -3,8 +3,8 @@
 // lo usan el cliente (selector del admin) y el servidor (validación).
 export const CATEGORY_ICON_OPTIONS = [
   { value: "AceiteraIcon", label: "Aceitera" },
-  { value: "AvionIcon", label: "Avión" },
-  { value: "AvionAgricolaIcon", label: "Avión agrícola" },
+  { value: "AircraftIcon", label: "Avión" },
+  { value: "AgriculturalAircraftIcon", label: "Avión agrícola" },
   { value: "CombustibleIcon", label: "Combustible" },
   { value: "FrenosIcon", label: "Frenos" },
   { value: "GpsIcon", label: "GPS" },

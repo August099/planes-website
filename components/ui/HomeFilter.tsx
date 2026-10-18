@@ -11,7 +11,7 @@ import {
 
 type Option = { id: string; name: string };
 
-// Rangos del selector de precio → parámetros que entiende /planes (VA-31).
+// Rangos del selector de precio → parámetros que entiende /aircraft (VA-31).
 const PRICE_RANGES: Record<string, { minPrice?: string; maxPrice?: string }> = {
   "0-100k": { maxPrice: "100000" },
   "100k-300k": { minPrice: "100000", maxPrice: "300000" },
@@ -65,7 +65,7 @@ export default function HomeHeroFilter() {
     if (range?.maxPrice) params.set("maxPrice", range.maxPrice);
 
     const queryString = params.toString();
-    router.push(`/planes${queryString ? `?${queryString}` : ""}`);
+    router.push(`/aircraft${queryString ? `?${queryString}` : ""}`);
   };
 
   return (

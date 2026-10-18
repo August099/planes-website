@@ -62,4 +62,4 @@ pago. **No** alcanza con mover la carpeta.
 
 ## Visible en Servicios
 
-- **Guías** (`/services/guides`) y el **Comparador** (`/planes/compare`).
+- **Guías** (`/services/guides`) y el **Comparador** (`/aircraft/compare`).

@@ -3,8 +3,14 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AircraftCard } from "@/components/ui/AircraftCard";
-import { SparePartCard } from "@/components/ui/SparePartCard";
+import { ProfileListings } from "@/components/ui/profile/ProfileListings";
+import dynamic from "next/dynamic";
+
+// VA-151: el panel (y su gráfico) se descarga solo al abrir la pestaña "Métricas".
+const SellerMetricsPanel = dynamic(() => import("@/components/ui/profile/SellerMetricsPanel"), {
+  ssr: false,
+  loading: () => <p className="text-sm text-slate-500">Cargando métricas…</p>,
+});
 import {
   updateProfileAction,
   updateAvatarAction,
@@ -13,19 +19,15 @@ import {
 } from "@/app/actions/profile-actions";
 import { claimCouponToProfile } from "@/app/actions/coupon-validation";
 import { deleteListingAction, renewListingAction } from "@/app/actions/listing-actions";
-import { RefreshCw, Lock } from "lucide-react";
-import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { Lock } from "lucide-react";
 import {
+  BarChart3,
   MapPin,
   Calendar,
   Phone,
   Mail,
   Edit,
   Plane,
-  Wrench,
-  Eye,
-  Heart,
-  MessageSquare,
   Loader2,
   CheckCircle2,
   Camera,
@@ -34,7 +36,6 @@ import {
   Receipt,
   Plus,
   Star,
-  Clock,
 } from "lucide-react";
 import { PROFILE_FIELD_LABELS, type ProfileField } from "@/lib/profile";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
@@ -76,6 +77,9 @@ type ProfileListing = {
   category: { id: string; name: string } | null;
   images: { url: string }[];
   listingExpiresAt: string | null;
+  // VA-97: estado y fecha de alta (filtros por estado y orden de la grilla).
+  status?: string;
+  createdAt?: string;
   // Solo para el dueño.
   _count?: { favorites: number; questions: number; analyticsEvents: number };
 };
@@ -124,28 +128,8 @@ interface Props {
   // VA-105 · 3: "Cambiar contraseña" solo para cuentas con contraseña (las de Google la crean con
   // "Olvidé mi contraseña").
   hasPassword?: boolean;
-}
-
-/** Helper para calcular los días restantes de una publicación */
-function getRemainingDaysText(expiresAt: Date | string | null | undefined): { text: string; isExpired: boolean; isWarning: boolean } {
-  if (!expiresAt) {
-    return { text: "Publicación activa", isExpired: false, isWarning: false };
-  }
-
-  const now = new Date();
-  const expDate = new Date(expiresAt);
-  const diffInMs = expDate.getTime() - now.getTime();
-  const daysLeft = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
-
-  if (daysLeft <= 0) {
-    return { text: "Pausada (Vencida)", isExpired: true, isWarning: false };
-  }
-
-  if (daysLeft <= 7) {
-    return { text: `Vence en ${daysLeft} ${daysLeft === 1 ? "día" : "días"}`, isExpired: false, isWarning: true };
-  }
-
-  return { text: `Vence en ${daysLeft} días`, isExpired: false, isWarning: false };
+  // VA-151: el plan vigente incluye el panel de métricas (solo se pasa al dueño).
+  hasSellerMetrics?: boolean;
 }
 
 export function ProfileView({
@@ -159,6 +143,7 @@ export function ProfileView({
   purchases = [],
   billingProfile = null,
   hasPassword = false,
+  hasSellerMetrics = false,
   initialTab,
 }: Props) {
   const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
@@ -166,7 +151,7 @@ export function ProfileView({
     isMissing(field) ? (
       <span className="ml-1 inline-block w-2 h-2 rounded-full bg-red-600 align-middle" aria-label="Falta completar" />
     ) : null;
-  const [activeTab, setActiveTab] = useState<"aircrafts" | "spareparts" | "coupons" | "purchases" | "edit">(initialTab ?? "aircrafts");
+  const [activeTab, setActiveTab] = useState<"listings" | "coupons" | "purchases" | "metrics" | "edit">(initialTab ?? "listings");
   const [loadingSave, setLoadingSave] = useState(false);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -538,27 +523,15 @@ export function ProfileView({
       {/* En celular las pestañas van en grilla de 2 columnas: con scroll horizontal "Ajustes" quedaba escondida (VA-60) */}
       <div className="grid grid-cols-2 gap-x-4 border-b border-slate-200 sm:flex sm:gap-6 sm:overflow-x-auto scrollbar-none">
         <button
-          onClick={() => setActiveTab("aircrafts")}
+          onClick={() => setActiveTab("listings")}
           className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === "aircrafts"
+            activeTab === "listings"
               ? "border-[#001F58] text-[#001F58]"
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
           <Plane className="w-4 h-4" />
-          Aeronaves ({profileUser.aircrafts?.length || 0})
-        </button>
-
-        <button
-          onClick={() => setActiveTab("spareparts")}
-          className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-            activeTab === "spareparts"
-              ? "border-[#001F58] text-[#001F58]"
-              : "border-transparent text-slate-400 hover:text-slate-600"
-          }`}
-        >
-          <Wrench className="w-4 h-4" />
-          Repuestos ({profileUser.spareParts?.length || 0})
+          Publicaciones ({(profileUser.aircrafts?.length || 0) + (profileUser.spareParts?.length || 0)})
         </button>
 
         {isOwner && (
@@ -589,6 +562,21 @@ export function ProfileView({
           </button>
         )}
 
+        {/* VA-151: métricas de la cuenta VA (solo el dueño con el plan). */}
+        {isOwner && hasSellerMetrics && (
+          <button
+            onClick={() => setActiveTab("metrics")}
+            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+              activeTab === "metrics"
+                ? "border-[#001F58] text-[#001F58]"
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" />
+            Métricas
+          </button>
+        )}
+
         {isOwner && (
           <button
             onClick={() => setActiveTab("edit")}
@@ -607,232 +595,36 @@ export function ProfileView({
         )}
       </div>
 
-      {/* Pestaña Aeronaves */}
-      {activeTab === "aircrafts" && (
+      {/* VA-97: una sola grilla de publicaciones con interruptores por tipo y filtros por estado. */}
+      {activeTab === "listings" && (
         <>
-        {/* VA-94: CTA en "Mis publicaciones" para el dueño sin plan. */}
-        {isOwner && !subscription?.active && (
-          <p className="mb-4 text-sm text-slate-600">
-            Con un plan publicás más y pagás menos.{" "}
-            <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
-              Ver planes
-            </Link>
-          </p>
-        )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-          {profileUser.aircrafts?.map((item) => {
-            const remainingStatus = getRemainingDaysText(item.listingExpiresAt);
-
-            return (
-              <div key={item.id} className="flex flex-col h-full justify-between space-y-2">
-                <AircraftCard
-                  id={item.id}
-                  title={item.title}
-                  price={item.price ? Number(item.price) : null}
-                  year={item.year}
-                  category={item.category}
-                  totalTimeHours={item.totalTimeHours}
-                  city={item.city}
-                  province={item.province}
-                  imageUrl={item.images[0]?.url ?? PLACEHOLDER_IMAGE}
-                  isFavoriteInitial={currentUserFavIds.includes(item.id)}
-                />
-
-                {isOwner && (
-                  <div className="p-3 bg-white/90 rounded-xl border border-slate-200/80 text-[11px] space-y-2 text-slate-600 shadow-2xs">
-                    {/* FECHA DE VENCIMIENTO Y BOTÓN DE RENOVAR */}
-                    <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 gap-2">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span
-                          className={`font-bold px-2 py-0.5 rounded-md text-[10px] ${
-                            remainingStatus.isExpired
-                              ? "bg-red-100 text-red-700"
-                              : remainingStatus.isWarning
-                              ? "bg-amber-100 text-amber-800"
-                              : "bg-emerald-50 text-emerald-700"
-                          }`}
-                        >
-                          {remainingStatus.text}
-                        </span>
-                      </div>
-
-                      {/* BOTÓN RENOVAR */}
-                      <button
-                        type="button"
-                        onClick={() => handleRenew(item.id, "aircraft")}
-                        disabled={loadingRenewId === item.id}
-                        className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-3 sm:px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-xs sm:text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
-                        title="Renovar 45 días más (sin cargo con un plan que lo incluya)"
-                      >
-                        {loadingRenewId === item.id ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <>
-                            <RefreshCw className="w-3 h-3" />
-                            Renovar
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    {/* METRICAS DE INTERACCIÓN Y BOTONES EDITAR/ELIMINAR */}
-                    <div className="flex items-center justify-between gap-1">
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-0.5" title="Vistas">
-                          <Eye className="w-3.5 h-3.5 text-slate-400" />
-                          {item._count?.analyticsEvents || 0}
-                        </span>
-                        <span className="flex items-center gap-0.5" title="Favoritos">
-                          <Heart className="w-3.5 h-3.5 text-red-500" />
-                          {item._count?.favorites || 0}
-                        </span>
-                        <span className="flex items-center gap-0.5" title="Consultas">
-                          <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
-                          {item._count?.questions || 0}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1 border-l pl-2 border-slate-200">
-                        <Link
-                          href={`/publish?edit=${item.id}&type=aircraft`}
-                          className="p-3 sm:p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
-                          aria-label="Editar publicación"
-                          title="Editar Publicación"
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(item.id, "aircraft")}
-                          className="p-3 sm:p-1 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
-                          aria-label="Eliminar publicación"
-                          title="Eliminar Publicación"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        </>
-      )}
-
-      {/* Pestaña Repuestos */}
-      {activeTab === "spareparts" && (
-        <>
-        {/* VA-94: CTA en "Mis publicaciones" para el dueño sin plan. */}
-        {isOwner && !subscription?.active && (
-          <p className="mb-4 text-sm text-slate-600">
-            Con un plan publicás más y pagás menos.{" "}
-            <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
-              Ver planes
-            </Link>
-          </p>
-        )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-          {profileUser.spareParts?.map((item) => {
-            const remainingStatus = getRemainingDaysText(item.listingExpiresAt);
-
-            return (
-              <div key={item.id} className="flex flex-col h-full justify-between space-y-2">
-                <SparePartCard
-                  id={item.id}
-                  title={item.title}
-                  price={item.price ? Number(item.price) : null}
-                  inPesos={item.inPesos}
-                  category={item.category}
-                  city={item.city}
-                  province={item.province}
-                  imageUrl={item.images[0]?.url ?? PLACEHOLDER_IMAGE}
-                  isFavoriteInitial={currentUserFavIds.includes(item.id)}
-                />
-
-                {isOwner && (
-                  <div className="p-3 bg-white/90 rounded-xl border border-slate-200/80 text-[11px] space-y-2 text-slate-600 shadow-2xs">
-                    {/* FECHA DE VENCIMIENTO Y BOTÓN DE RENOVAR */}
-                    <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 gap-2">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span
-                          className={`font-bold px-2 py-0.5 rounded-md text-[10px] ${
-                            remainingStatus.isExpired
-                              ? "bg-red-100 text-red-700"
-                              : remainingStatus.isWarning
-                              ? "bg-amber-100 text-amber-800"
-                              : "bg-emerald-50 text-emerald-700"
-                          }`}
-                        >
-                          {remainingStatus.text}
-                        </span>
-                      </div>
-
-                      {/* BOTÓN RENOVAR (+45 DÍAS) */}
-                      <button
-                        type="button"
-                        onClick={() => handleRenew(item.id, "sparepart")}
-                        disabled={loadingRenewId === item.id}
-                        className="inline-flex items-center gap-1 min-h-11 sm:min-h-0 px-3 sm:px-2.5 py-1 bg-[#001F58] hover:bg-blue-900 text-white font-semibold rounded-lg text-xs sm:text-[10px] transition-colors cursor-pointer shrink-0 disabled:opacity-50"
-                        title="Renovar 45 días más (sin cargo con un plan que lo incluya)"
-                      >
-                        {loadingRenewId === item.id ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <>
-                            <RefreshCw className="w-3 h-3" />
-                            Renovar
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    {/* METRICAS DE INTERACCIÓN Y ACCIONES EDITAR/ELIMINAR */}
-                    <div className="flex items-center justify-between gap-1">
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-0.5" title="Vistas">
-                          <Eye className="w-3.5 h-3.5 text-slate-400" />
-                          {item._count?.analyticsEvents || 0}
-                        </span>
-                        <span className="flex items-center gap-0.5" title="Favoritos">
-                          <Heart className="w-3.5 h-3.5 text-red-500" />
-                          {item._count?.favorites || 0}
-                        </span>
-                        <span className="flex items-center gap-0.5" title="Consultas">
-                          <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
-                          {item._count?.questions || 0}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1 border-l pl-2 border-slate-200">
-                        <Link
-                          href={`/publish?edit=${item.id}&type=parts`}
-                          className="p-3 sm:p-1 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer"
-                          aria-label="Editar publicación"
-                          title="Editar Publicación"
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(item.id, "sparepart")}
-                          className="p-3 sm:p-1 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
-                          aria-label="Eliminar publicación"
-                          title="Eliminar Publicación"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+          {/* VA-94: CTA en "Mis publicaciones" para el dueño sin plan. */}
+          {isOwner && !subscription?.active && (
+            <p className="mb-4 text-sm text-slate-600">
+              Con un plan publicás más y pagás menos.{" "}
+              <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+                Ver planes
+              </Link>
+            </p>
+          )}
+          {/* VA-151: línea discreta para quien no tiene las métricas (sin bloquear nada). */}
+          {isOwner && !hasSellerMetrics && (
+            <p className="mb-4 text-sm text-slate-600">
+              Con la cuenta VA ves la evolución de tus avisos y de dónde llegan tus contactos.{" "}
+              <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+                Ver la cuenta VA
+              </Link>
+            </p>
+          )}
+          <ProfileListings
+            aircrafts={profileUser.aircrafts ?? []}
+            spareParts={profileUser.spareParts ?? []}
+            isOwner={isOwner}
+            favIds={currentUserFavIds}
+            onRenew={handleRenew}
+            onDelete={handleDelete}
+            loadingRenewId={loadingRenewId}
+          />
         </>
       )}
 
@@ -942,6 +734,8 @@ export function ProfileView({
 
       {/* VA-92: Pestaña Mis compras */}
       {isOwner && activeTab === "purchases" && <PurchasesPanel rows={purchases} />}
+
+      {isOwner && hasSellerMetrics && activeTab === "metrics" && <SellerMetricsPanel />}
 
       {/* Pestaña Ajustes */}
       {isOwner && activeTab === "edit" && (

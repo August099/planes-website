@@ -61,7 +61,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
   const currency = currencyParam ?? (minPrice !== undefined || maxPrice !== undefined ? "USD" : null);
   const province = provinceBySlug(typeof params.province === "string" ? params.province : null);
 
-  // Orden (VA-45): mismas opciones que /planes (SortDropdown).
+  // Orden (VA-45): mismas opciones que /aircraft (SortDropdown).
   const sort = typeof params.sort === "string" ? params.sort : "recent";
   const orderByMap: Record<string, Prisma.SparePartOrderByWithRelationInput> = {
     price_desc: { price: "desc" },
@@ -204,7 +204,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
     <main className="mx-auto px-4 py-8">
       <PageBackground page="spareparts" />
       <Breadcrumbs items={[{ label: "Repuestos" }]} className="-mt-4 mb-2" />
-      {/* Misma disposición que /planes (VA-45): en celular, "Filtros" (panel lateral) y "Ordenar"
+      {/* Misma disposición que /aircraft (VA-45): en celular, "Filtros" (panel lateral) y "Ordenar"
           lado a lado; desde lg, barra lateral + grilla. */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-2xl font-medium">

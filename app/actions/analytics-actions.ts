@@ -60,7 +60,8 @@ export async function logListingView(entityType: "AIRCRAFT" | "SPARE_PART", enti
       ? await prisma.aircraft.findFirst({ where, select: { sellerId: true } })
       : await prisma.sparePart.findFirst({ where, select: { sellerId: true } });
 
-    if (!listing || listing.sellerId === userId) return;
+    // VA-151: tampoco cuentan las vistas de los admins (ni las del dueño).
+    if (!listing || listing.sellerId === userId || session?.user?.isAdmin) return;
 
     const eventType = isAircraft ? AnalyticsEventType.AIRCRAFT_VIEW : AnalyticsEventType.SPARE_PART_VIEW;
     const target = isAircraft ? { aircraftId: entityId } : { sparePartId: entityId };
@@ -107,5 +108,30 @@ export async function logSearch(query: string, resultsCount: number, origin: Sea
     });
   } catch (error) {
     console.error("Error al registrar la búsqueda:", error);
+  }
+}
+
+// VA-151: visita al perfil de un vendedor (Página VA). Misma regla que las vistas de avisos: una por
+// pestaña (la marca la pone el cliente), sin contar al dueño ni a los admins, y sin repetir la del
+// mismo usuario o visitante anónimo dentro de 30 minutos. Solo se guarda el total, nunca quién.
+export async function logProfileView(profileUserId: string) {
+  if (!validId(profileUserId)) return;
+  try {
+    const [session, context] = await Promise.all([auth(), getAnalyticsContext()]);
+    const userId = session?.user?.id ?? null;
+    if (userId === profileUserId || session?.user?.isAdmin) return;
+    const exists = await prisma.user.findUnique({ where: { id: profileUserId }, select: { id: true } });
+    if (!exists) return;
+    const who = userId ? { userId } : context.anonymousId ? { anonymousId: context.anonymousId } : null;
+    if (who) {
+      const recent = await prisma.analyticsEvent.findFirst({
+        where: { eventType: AnalyticsEventType.PROFILE_VIEW, profileUserId, ...who, createdAt: { gte: new Date(Date.now() - VIEW_DEDUP_MS) } },
+        select: { id: true },
+      });
+      if (recent) return;
+    }
+    await prisma.analyticsEvent.create({ data: { eventType: AnalyticsEventType.PROFILE_VIEW, userId, ...context, profileUserId } });
+  } catch (error) {
+    console.error("Error al registrar la visita al perfil:", error);
   }
 }

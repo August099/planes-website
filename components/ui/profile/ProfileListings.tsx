@@ -1,0 +1,298 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Clock, Edit, Eye, Heart, Loader2, MessageSquare, RefreshCw, Trash2 } from "lucide-react";
+import { AircraftCard } from "@/components/ui/AircraftCard";
+import { SparePartCard } from "@/components/ui/SparePartCard";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+
+// VA-97: una sola grilla de publicaciones en el perfil (antes, una pestaña por tipo). Arriba,
+// interruptores por tipo (combinables, todos prendidos por defecto) y, en el panel propio, filtros por
+// estado con contadores. Todo queda en la URL (?tipo=…&estado=…) para compartir o volver.
+// Las tarjetas son las mismas de los listados; el dueño ve debajo el estado, el vencimiento, las
+// métricas y las acciones (VA-150: "Pendiente de pago" con "Pagar").
+
+type Listing = {
+  id: string;
+  title: string;
+  price: number | null;
+  city: string;
+  province: string;
+  category: { id: string; name: string } | null;
+  images: { url: string }[];
+  listingExpiresAt: string | null;
+  status?: string;
+  createdAt?: string;
+  _count?: { favorites: number; questions: number; analyticsEvents: number };
+};
+type AircraftListing = Listing & { year: number; totalTimeHours: number | null };
+type PartListing = Listing & { inPesos: boolean };
+
+type Kind = "aeronaves" | "repuestos";
+type StatusKey = "activos" | "pausados" | "pendientes" | "vencidos" | "vendidos";
+
+const KINDS: { key: Kind; label: string }[] = [
+  { key: "aeronaves", label: "Aeronaves" },
+  { key: "repuestos", label: "Repuestos" },
+];
+const STATUSES: { key: StatusKey; label: string }[] = [
+  { key: "activos", label: "Activos" },
+  { key: "pausados", label: "Pausados" },
+  { key: "pendientes", label: "Pendientes de pago" },
+  { key: "vencidos", label: "Vencidos" },
+  { key: "vendidos", label: "Vendidos" },
+];
+
+function statusOf(l: Listing, now: number): StatusKey {
+  if (l.status === "SOLD") return "vendidos";
+  if (l.status === "PAUSED") return "pausados";
+  if (l.status === "PENDING_PAYMENT") return "pendientes";
+  if (l.status === "EXPIRED" || (l.listingExpiresAt && new Date(l.listingExpiresAt).getTime() <= now)) return "vencidos";
+  return "activos";
+}
+
+function expiryText(expiresAt: string | null, now: number): { text: string; tone: string } {
+  if (!expiresAt) return { text: "Sin vencimiento", tone: "bg-emerald-50 text-emerald-700" };
+  const days = Math.ceil((new Date(expiresAt).getTime() - now) / 86_400_000);
+  if (days <= 0) return { text: "Vencida", tone: "bg-red-100 text-red-700" };
+  if (days <= 7) return { text: `Vence en ${days} ${days === 1 ? "día" : "días"}`, tone: "bg-amber-100 text-amber-800" };
+  return { text: `Vence en ${days} días`, tone: "bg-emerald-50 text-emerald-700" };
+}
+
+const CHIP = "inline-flex min-h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold transition-colors cursor-pointer";
+const CHIP_ON = "border-[#001F58] bg-[#001F58] text-white";
+const CHIP_OFF = "border-[#001F58]/20 bg-white text-[#001F58] hover:border-[#001F58]/50";
+
+export function ProfileListings({
+  aircrafts,
+  spareParts,
+  isOwner,
+  favIds,
+  onRenew,
+  onDelete,
+  loadingRenewId,
+}: {
+  aircrafts: AircraftListing[];
+  spareParts: PartListing[];
+  isOwner: boolean;
+  favIds: string[];
+  onRenew: (id: string, type: "aircraft" | "sparepart") => void;
+  onDelete: (id: string, type: "aircraft" | "sparepart") => void;
+  loadingRenewId: string | null;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  // eslint-disable-next-line react-hooks/purity -- la fecha solo decide etiquetas de vencimiento
+  const now = Date.now();
+
+  const kindsParam = params.get("tipo");
+  const kinds = new Set<Kind>(kindsParam ? (kindsParam.split(",").filter((k) => k === "aeronaves" || k === "repuestos") as Kind[]) : ["aeronaves", "repuestos"]);
+  if (kinds.size === 0) KINDS.forEach((k) => kinds.add(k.key));
+  const statusParam = params.get("estado");
+  const status = isOwner && STATUSES.some((s) => s.key === statusParam) ? (statusParam as StatusKey) : null;
+
+  const setParam = (key: string, value: string | null) => {
+    const next = new URLSearchParams(params.toString());
+    if (value) next.set(key, value);
+    else next.delete(key);
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+  const toggleKind = (k: Kind) => {
+    const next = new Set(kinds);
+    if (next.has(k)) next.delete(k);
+    else next.add(k);
+    // Apagar el último deja los dos prendidos (no hay grilla vacía por accidente).
+    const value = next.size === 0 || next.size === KINDS.length ? null : [...next].join(",");
+    setParam("tipo", value);
+  };
+
+  const all = [
+    ...aircrafts.map((l) => ({ kind: "aeronaves" as const, l })),
+    ...spareParts.map((l) => ({ kind: "repuestos" as const, l })),
+  ].sort((a, b) => (b.l.createdAt ?? "").localeCompare(a.l.createdAt ?? ""));
+  const ofKind = all.filter((x) => kinds.has(x.kind));
+  const counts = Object.fromEntries(STATUSES.map((s) => [s.key, ofKind.filter((x) => statusOf(x.l, now) === s.key).length])) as Record<StatusKey, number>;
+  const shown = status ? ofKind.filter((x) => statusOf(x.l, now) === status) : ofKind;
+
+  return (
+    <div className="space-y-5">
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Tipo de publicación">
+          {KINDS.map((k) => {
+            const on = kinds.has(k.key);
+            const n = k.key === "aeronaves" ? aircrafts.length : spareParts.length;
+            return (
+              <button key={k.key} type="button" aria-pressed={on} onClick={() => toggleKind(k.key)} className={`${CHIP} ${on ? CHIP_ON : CHIP_OFF}`}>
+                {k.label} <span className="tabular-nums opacity-80">({n})</span>
+              </button>
+            );
+          })}
+        </div>
+        {isOwner && (
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Estado de la publicación">
+            <button type="button" aria-pressed={!status} onClick={() => setParam("estado", null)} className={`${CHIP} ${!status ? CHIP_ON : CHIP_OFF}`}>
+              Todos <span className="tabular-nums opacity-80">({ofKind.length})</span>
+            </button>
+            {STATUSES.map((s) => (
+              <button key={s.key} type="button" aria-pressed={status === s.key} onClick={() => setParam("estado", status === s.key ? null : s.key)} className={`${CHIP} ${status === s.key ? CHIP_ON : CHIP_OFF}`}>
+                {s.label} <span className="tabular-nums opacity-80">({counts[s.key]})</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {shown.length === 0 ? (
+        <p className="rounded-lg border border-[#001F58]/12 bg-white px-5 py-8 text-center text-sm text-slate-600">
+          {all.length === 0 ? (isOwner ? "Todavía no publicaste nada." : "Este vendedor no tiene publicaciones activas.") : "No hay publicaciones con estos filtros."}
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {shown.map(({ kind, l }) => {
+            const type = kind === "aeronaves" ? "aircraft" : "sparepart";
+            const st = statusOf(l, now);
+            return (
+              <div key={`${kind}-${l.id}`} className="flex h-full flex-col justify-between space-y-2">
+                {kind === "aeronaves" ? (
+                  <AircraftCard
+                    id={l.id}
+                    title={l.title}
+                    price={l.price}
+                    year={(l as AircraftListing).year}
+                    category={l.category}
+                    totalTimeHours={(l as AircraftListing).totalTimeHours}
+                    city={l.city}
+                    province={l.province}
+                    imageUrl={l.images[0]?.url ?? PLACEHOLDER_IMAGE}
+                    isFavoriteInitial={favIds.includes(l.id)}
+                  />
+                ) : (
+                  <SparePartCard
+                    id={l.id}
+                    title={l.title}
+                    price={l.price}
+                    inPesos={(l as PartListing).inPesos}
+                    category={l.category}
+                    city={l.city}
+                    province={l.province}
+                    imageUrl={l.images[0]?.url ?? PLACEHOLDER_IMAGE}
+                    isFavoriteInitial={favIds.includes(l.id)}
+                  />
+                )}
+
+                {isOwner && <OwnerPanel l={l} type={type} st={st} now={now} onRenew={onRenew} onDelete={onDelete} loadingRenewId={loadingRenewId} />}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OwnerPanel({
+  l,
+  type,
+  st,
+  now,
+  onRenew,
+  onDelete,
+  loadingRenewId,
+}: {
+  l: Listing;
+  type: "aircraft" | "sparepart";
+  st: StatusKey;
+  now: number;
+  onRenew: (id: string, type: "aircraft" | "sparepart") => void;
+  onDelete: (id: string, type: "aircraft" | "sparepart") => void;
+  loadingRenewId: string | null;
+}) {
+  const expiry = expiryText(l.listingExpiresAt, now);
+  const badge =
+    st === "pendientes"
+      ? { text: "Pendiente de pago", tone: "bg-amber-100 text-amber-800" }
+      : st === "vendidos"
+        ? { text: "Vendido", tone: "bg-slate-100 text-slate-700" }
+        : st === "pausados"
+          ? { text: "Pausado", tone: "bg-slate-100 text-slate-700" }
+          : expiry;
+  const checkoutType = type === "aircraft" ? "aircraft" : "parts";
+
+  return (
+    <div className="space-y-2 rounded-xl border border-slate-200/80 bg-white/90 p-3 text-[11px] text-slate-600 shadow-2xs">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-1.5">
+        <div className="flex items-center gap-1">
+          <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+          <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${badge.tone}`}>{badge.text}</span>
+        </div>
+
+        {st === "pendientes" ? (
+          // VA-150: un aviso pendiente (también por arrepentimiento) solo se reactiva pagándolo.
+          <Link
+            href={`/checkout?listing=${checkoutType}:${l.id}`}
+            className="inline-flex min-h-11 shrink-0 items-center rounded-lg bg-[#E70F1F] px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-[#C20D1A] sm:min-h-0 sm:px-2.5 sm:text-[10px]"
+          >
+            Pagar
+          </Link>
+        ) : st !== "vendidos" ? (
+          <button
+            type="button"
+            onClick={() => onRenew(l.id, type)}
+            disabled={loadingRenewId === l.id}
+            className="inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-1 rounded-lg bg-[#001F58] px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-blue-900 disabled:opacity-50 sm:min-h-0 sm:px-2.5 sm:text-[10px]"
+            title="Renovar 45 días más (sin cargo con un plan que lo incluya)"
+          >
+            {loadingRenewId === l.id ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <>
+                <RefreshCw className="h-3 w-3" />
+                Renovar
+              </>
+            )}
+          </button>
+        ) : null}
+      </div>
+
+      <div className="flex items-center justify-between gap-1">
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-0.5" title="Vistas">
+            <Eye className="h-3.5 w-3.5 text-slate-400" />
+            {l._count?.analyticsEvents || 0}
+          </span>
+          <span className="flex items-center gap-0.5" title="Favoritos">
+            <Heart className="h-3.5 w-3.5 text-red-500" />
+            {l._count?.favorites || 0}
+          </span>
+          <span className="flex items-center gap-0.5" title="Consultas">
+            <MessageSquare className="h-3.5 w-3.5 text-blue-500" />
+            {l._count?.questions || 0}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
+          <Link
+            href={`/publish?edit=${l.id}&type=${type === "aircraft" ? "aircraft" : "parts"}`}
+            className="cursor-pointer rounded-lg p-3 text-blue-600 hover:bg-blue-50 sm:p-1"
+            aria-label="Editar publicación"
+            title="Editar publicación"
+          >
+            <Edit className="h-3.5 w-3.5" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => onDelete(l.id, type)}
+            className="cursor-pointer rounded-lg p-3 text-red-600 hover:bg-red-50 sm:p-1"
+            aria-label="Eliminar publicación"
+            title="Eliminar publicación"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -9,7 +9,7 @@ import { AppImage } from "@/components/ui/AppImage";
 import { CARD_IMAGE_SIZES, type ImageCarouselImage } from "@/components/ui/CardImageCarousel";
 
 // Carrusel de fotos de una card (VA-76): se carga aparte con next/dynamic y se monta recién cuando
-// el usuario interactúa con la card, así /planes no inicializa 21 Swipers al hidratar.
+// el usuario interactúa con la card, así /aircraft no inicializa 21 Swipers al hidratar.
 export default function CardImageSwiper({
   images,
   alt,

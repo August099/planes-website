@@ -18,7 +18,7 @@ const SOURCES = [
   "bkg-home2.png", // hero de la Home, escritorio (VA-62)
   "bkg-home-mobile.png", // hero de la Home, celular (VA-62)
   "bkg-login.jpg",
-  "bkg-planes.png",
+  "bkg-aircraft-list.png",
   "bkg-plans.jpg",
   "bkg-privacidad.jpg",
   "bkg-profile.jpg",

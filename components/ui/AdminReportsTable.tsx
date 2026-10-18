@@ -97,7 +97,7 @@ export function AdminReportsTable({ reports }: { reports: ReportItem[] }) {
                 {filteredReports.map((r) => {
                   const targetTitle = r.aircraft?.title || r.sparePart?.title;
                   const targetUrl = r.aircraft
-                    ? `/planes/plane-details/${r.aircraft.id}`
+                    ? `/aircraft/${r.aircraft.id}`
                     : r.sparePart
                     ? `/spareparts/sparepart-details/${r.sparePart.id}`
                     : null;

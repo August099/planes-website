@@ -46,7 +46,7 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
   if (!purchase || (purchase.userId !== user.id && !user.isAdmin)) notFound();
 
   const listing =
-    (purchase.aircrafts[0] && { ...purchase.aircrafts[0], href: `/planes/plane-details/${purchase.aircrafts[0].id}`, type: "aircraft" }) ||
+    (purchase.aircrafts[0] && { ...purchase.aircrafts[0], href: `/aircraft/${purchase.aircrafts[0].id}`, type: "aircraft" }) ||
     (purchase.spareParts[0] && { ...purchase.spareParts[0], href: `/spareparts/sparepart-details/${purchase.spareParts[0].id}`, type: "parts" }) ||
     (purchase.hangars[0] && { ...purchase.hangars[0], href: `/services/hangars/hangar-details/${purchase.hangars[0].id}`, type: "hangar" }) ||
     null;

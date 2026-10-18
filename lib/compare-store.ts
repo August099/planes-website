@@ -96,5 +96,5 @@ export function setCompare(items: CompareItem[]) {
 }
 
 export function compareUrl(ids: string[]) {
-  return `/planes/compare?ids=${ids.map(encodeURIComponent).join(",")}`;
+  return `/aircraft/compare?ids=${ids.map(encodeURIComponent).join(",")}`;
 }

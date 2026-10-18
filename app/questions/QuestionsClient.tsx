@@ -119,7 +119,7 @@ export function QuestionsClient({
               const item = q.aircraft || q.sparePart;
               // Una pregunta siempre es de un avión o de un repuesto; si faltaran los dos, no rompe la página.
               const detailsUrl = q.aircraft
-                ? `/planes/plane-details/${q.aircraft.id}`
+                ? `/aircraft/${q.aircraft.id}`
                 : q.sparePart
                   ? `/spareparts/sparepart-details/${q.sparePart.id}`
                   : "/questions";
@@ -244,7 +244,7 @@ export function QuestionsClient({
               const item = q.aircraft || q.sparePart;
               // Una pregunta siempre es de un avión o de un repuesto; si faltaran los dos, no rompe la página.
               const detailsUrl = q.aircraft
-                ? `/planes/plane-details/${q.aircraft.id}`
+                ? `/aircraft/${q.aircraft.id}`
                 : q.sparePart
                   ? `/spareparts/sparepart-details/${q.sparePart.id}`
                   : "/questions";

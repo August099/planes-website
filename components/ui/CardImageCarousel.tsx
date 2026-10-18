@@ -32,7 +32,7 @@ export function ImageCarousel({
   const swiperRef = useRef<SwiperType | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   // VA-74: en el HTML inicial va solo la primera foto de cada card. VA-76: tampoco se monta Swiper
-  // hasta que el usuario interactúa (mouse encima, toque o foco): antes /planes inicializaba 21
+  // hasta que el usuario interactúa (mouse encima, toque o foco): antes /aircraft inicializaba 21
   // carruseles al hidratar y era lo que más pesaba en el TBT. En celular, el primer deslizamiento
   // monta el carrusel y el siguiente ya cambia de foto.
   const [revealed, setRevealed] = useState(false);

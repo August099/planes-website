@@ -123,11 +123,11 @@ export function AircraftCard({
     setIsShareModalOpen(true);
   };
 
-  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/planes/plane-details/${id}` : "";
+  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/aircraft/${id}` : "";
 
   return (
     <>
-      <Link href={`/planes/plane-details/${id}`} className="group block h-full">
+      <Link href={`/aircraft/${id}`} className="group block h-full">
         <Card data-card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <div className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100">
             <ImageCarousel

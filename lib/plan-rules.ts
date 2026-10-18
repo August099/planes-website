@@ -37,6 +37,8 @@ export const planInputSchema = z
     noExpiry: z.boolean(),
     includesVerifiedBadge: z.boolean(),
     includesCustomPage: z.boolean(),
+    // VA-151: panel de métricas de vendedor (solo suscripciones).
+    includesSellerMetrics: z.boolean().default(false),
     // VA-95: destacados incluidos por mes (solo suscripciones).
     featuredPerMonth: z.coerce.number().int("Tiene que ser un número entero.").min(0).max(100, "Hasta 100.").default(0),
     usageDescription: z.string().trim().max(60, "Hasta 60 caracteres.").optional().default(""),
@@ -89,6 +91,7 @@ export function planRecordFromInput(p: PlanData) {
     noExpiry: p.noExpiry,
     includesVerifiedBadge: p.includesVerifiedBadge,
     includesCustomPage: p.includesCustomPage,
+    includesSellerMetrics: p.type === "SUBSCRIPTION" && p.includesSellerMetrics,
     featuredPerMonth: isSubscription ? p.featuredPerMonth : 0,
     usageDescription: p.usageDescription || null,
     description: p.description || null,

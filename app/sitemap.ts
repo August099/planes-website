@@ -10,7 +10,7 @@ export const revalidate = 3600;
 
 const STATIC_PAGES: { path: string; changeFrequency: "daily" | "weekly" | "monthly"; priority: number }[] = [
   { path: "/", changeFrequency: "daily", priority: 1 },
-  { path: "/planes", changeFrequency: "daily", priority: 0.9 },
+  { path: "/aircraft", changeFrequency: "daily", priority: 0.9 },
   { path: "/spareparts", changeFrequency: "daily", priority: 0.9 },
   { path: "/howtopublish", changeFrequency: "monthly", priority: 0.5 },
   { path: "/plans", changeFrequency: "monthly", priority: 0.5 },
@@ -45,7 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     })),
     ...aircrafts.map((a) => ({
-      url: absoluteUrl(`/planes/plane-details/${a.id}`),
+      url: absoluteUrl(`/aircraft/${a.id}`),
       lastModified: a.updatedAt,
       changeFrequency: "weekly" as const,
       priority: 0.8,

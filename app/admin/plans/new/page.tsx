@@ -16,6 +16,7 @@ const EMPTY: PlanFormValues = {
   noExpiry: false,
   includesVerifiedBadge: false,
   includesCustomPage: false,
+  includesSellerMetrics: false,
   featuredPerMonth: 0,
   usageDescription: "",
   description: "",

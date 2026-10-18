@@ -18,7 +18,7 @@ interface Props {
   compareImage?: string | null;
 }
 
-export function PlaneActionsHeader({ title, aircraftId, isFavoriteInitial = false, type = "AIRCRAFT", compareImage = null }: Props) {
+export function AircraftActionsHeader({ title, aircraftId, isFavoriteInitial = false, type = "AIRCRAFT", compareImage = null }: Props) {
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(isFavoriteInitial);
   const [isPending, setIsPending] = useState(false);

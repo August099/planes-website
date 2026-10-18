@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 import { ProfileView, type ProfileCoupon } from "@/components/ui/ProfileView";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { getMissingProfileFieldsCached } from "@/lib/cached-data";
-import { getSubscriptionSummary, hasCustomPage, hasVerifiedBadge } from "@/lib/subscriptions";
+import { getSubscriptionSummary, hasCustomPage, hasSellerMetrics, hasVerifiedBadge } from "@/lib/subscriptions";
+import { TrackProfileView } from "@/components/ui/profile/TrackProfileView";
 import { getUserPurchases } from "@/lib/purchases";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
@@ -164,6 +165,8 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       <PageBackground page="profile" />
       <Breadcrumbs items={[{ label: "Perfil" }, { label: rawProfileUser.name ?? "Usuario" }]} className="-mt-4 mb-2" />
 
+      {/* VA-151: visitas a la Página VA (no cuenta al dueño ni a los admins). */}
+      {!isOwner && <TrackProfileView profileUserId={id} />}
       <ProfileView
         initialTab={tab === "compras" && isOwner ? "purchases" : undefined}
         profileUser={profileUser}
@@ -176,6 +179,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         purchases={isOwner ? await getUserPurchases(id) : []}
         billingProfile={isOwner ? await ownerBillingProfile(id, rawProfileUser.name, rawProfileUser.email) : null}
         hasPassword={isOwner ? Boolean((await prisma.user.findUnique({ where: { id }, select: { passwordHash: true } }))?.passwordHash) : false}
+        hasSellerMetrics={isOwner ? await hasSellerMetrics(id) : false}
       />
     </main>
   );

@@ -10,7 +10,7 @@ export const META_MAX = 155;
 
 const link = z.object({
   label: z.string().trim().min(1, "Falta el texto del link.").max(160),
-  // Interno ("/planes", "/services/guides/x#ancla") o externo (https://…).
+  // Interno ("/aircraft", "/services/guides/x#ancla") o externo (https://…).
   href: z
     .string()
     .trim()
