@@ -5,8 +5,7 @@ import { Header } from "@/components/ui/Header";
 import { Footer } from "@/components/ui/Footer";
 import { AnalyticsBootstrap } from "@/components/analytics/AnalyticsBootstrap";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { CompareTray } from "@/components/ui/compare/CompareTray";
-import { LaunchWelcomeDialog } from "@/components/ui/LaunchWelcomeDialog";
+import { DeferredWidgets } from "@/components/ui/DeferredWidgets";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 // Fuentes de marca (VA-72): Montserrat para títulos e IBM Plex Sans para el cuerpo, servidas
@@ -58,10 +57,8 @@ export default function RootLayout({
           <div className="flex-1">{children}</div>
         <Footer />
         <AnalyticsBootstrap />
-        {/* VA-83: bandeja de comparación de aeronaves (aparece al agregar la primera) */}
-        <CompareTray />
-        {/* VA-111: bienvenida del lanzamiento (una vez por cuenta, con el saldo gratis de VA-89) */}
-        <LaunchWelcomeDialog />
+        {/* Bandeja del comparador y bienvenida del lanzamiento, cargadas después de la página */}
+        <DeferredWidgets />
         {/* VA-76: métricas reales de los usuarios (LCP, INP, CLS) en el panel de Vercel. */}
         <SpeedInsights />
       </body>
