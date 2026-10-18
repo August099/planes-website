@@ -5,6 +5,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { AIRCRAFT_GROUPS, ENGINE_LABELS, categoryDef } from "@/lib/aircraft-categories";
+import { modelInCategories } from "@/lib/aircraft-taxonomy";
 import { FilterShell, FilterSection, AppliedFilterChips, ProvinceFilterSelect } from "@/components/ui/filters/FilterShell";
 import { provinceBySlug, provinceShortName } from "@/lib/provinces";
 
@@ -76,11 +77,13 @@ function FiltersSidebarForm({ categories, brands }: Props) {
   const [expandedBrands, setExpandedBrands] = useState<string[]>(() => searchParams.getAll("brand"));
   const [showAllBrands, setShowAllBrands] = useState(false);
 
-  // Las marcas aplicadas (URL) van primero, para que no queden escondidas en la lista.
+  // Las marcas aplicadas (URL) van primero, para que no queden escondidas en la lista. VA-153: con
+  // categorías tildadas, el resto se acota a las marcas que tienen modelos de esas categorías.
   const sortedBrands = useMemo(() => {
     const applied = new Set(searchParams.getAll("brand"));
-    return [...brands.filter((b) => applied.has(b.id)), ...brands.filter((b) => !applied.has(b.id))];
-  }, [brands, searchParams]);
+    const inCategories = (b: Brand) => b.models.some((m) => modelInCategories(m, categoryIds));
+    return [...brands.filter((b) => applied.has(b.id)), ...brands.filter((b) => !applied.has(b.id) && inCategories(b))];
+  }, [brands, searchParams, categoryIds]);
   // De entrada se ven 6 (o todas las aplicadas, si son más); "Ver todas (N)" muestra el resto.
   const visibleBrands = showAllBrands
     ? sortedBrands
@@ -351,7 +354,7 @@ function FiltersSidebarForm({ categories, brands }: Props) {
 
                 {isSelected && isExpanded && (
                   <div className="ml-6 mt-1 flex flex-col border-l pl-3">
-                    {brand.models.map((model) => {
+                    {brand.models.filter((m) => modelIds.includes(m.id) || modelInCategories(m, categoryIds)).map((model) => {
                       const modelSelected = modelIds.includes(model.id);
                       return (
                         <div key={model.id} className="flex flex-col">

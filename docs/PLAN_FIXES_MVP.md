@@ -926,7 +926,9 @@ Notas para cuando se encare, a partir de lo que ya existe:
 > Una sola lista de lo que falta, en tres grupos. Se actualiza al cerrar cada punto. El detalle de cada paso está en `docs/PRUEBAS_PREVIEW.md` (Preview) y `docs/PASE_A_PRODUCCION.md` (producción).
 
 ### 1. Bloquea el lanzamiento
-- [ ] **Migraciones nuevas en el Preview** (lo corre el socio): primero `scripts/va152-report.ts` (informe, antes de migrar), después `npx prisma migrate deploy` (las del 17/10 y 18/10: `va150_registro_de_consumo`, `va149_experimental_lsa`, `va148_iconos_categorias`, `va151_metricas_vendedor`, `va151_favoritos_fecha`, `va96_rutas_aircraft`, `va152_cupos` y `va152_limpieza`) y `scripts/va152-migrate-data.ts` (planes y cupos). Sin las migraciones, Vercel no puede construir el Preview.
+- [x] **Migraciones en la base de Supabase (la usan el Preview y el sitio de `main`)** — 18/10, con OK del socio: backup (`C:UserspcDocumentsa-backupsackup-prod-20261018-1840.dump`), informe de VA-152, las 11 migraciones pendientes (VA-150 a VA-158) y `va152-migrate-data.ts` (cupo Gratis, Pro y Empresarial sin precio, planes viejos borrados y "Plan de Prueba" archivado, 29 lotes de saldo borrados). Sin suscripciones en esa base; compras, pagos y facturas intactos.
+- [ ] **Coordenadas de los avisos** (`geocode-listings.ts --apply`): 51 de 80 avisos se resuelven; falta el OK para escribirlas. Los otros 29 tienen la ciudad mal cargada (datos de prueba).
+- [ ] **`main` quedó con código viejo sobre la base migrada:** `/planes` da 500 (lee columnas que ya no existen). Se arregla desplegando el código nuevo en `main` o con un cambio puntual; lo decide el socio.
 - [ ] **Lote del 18/10 (VA-152 a VA-163):** ver la tabla al final del plan. VA-152 hecho en local el 18/10.
 - [ ] **Montos de Pro y del Empresarial** (los definen los socios; se cargan en `/admin/plans`).
 - [ ] **Pruebas en el Preview:**
@@ -1633,7 +1635,17 @@ Probados en celular; verificar también en escritorio.
   `scripts/va152-migrate-data.ts` y `scripts/verify-quota.ts` (23/23). Informe:
   `docs/VA-152_INFORME_IMPACTO.md`. Textos de FAQ, términos, `/howtopublish`, `/arrepentimiento` y la
   bienvenida: borrador para que los revisen los socios.
-- **VA-153:** en espera de los datos del socio (la planilla está en `docs/planillas/`).
+- **VA-153 (18/10/2026):** ✅ hecho en local. La lista del socio (`docs/planillas/VA-153_categorias_socio.txt`)
+  coincidía con la taxonomía cargada salvo lo que decidió el socio: PC-12 Bimotor Turbohélice, Duke Bimotor
+  Pistón, C-425 Conquest Bimotor Turbohélice; S/C = "Otros"; los submodelos heredan siempre la categoría del
+  modelo; Aero Commander 500 y Turbo Commander 680 quedan como están (BP y BT); Zenith y Mitsubishi sin
+  modelos por ahora. Script `scripts/va153-import-categorias.ts` (informe / `--apply`): 3 cambios. Formulario
+  guiado: el tipo (opcional, primero) acota marcas, modelos y variantes; un modelo de la lista fija el tipo con
+  "¿La categoría no es correcta? Avisanos"; marca o modelo propios, tipo a mano. El servidor rechaza un modelo
+  de otra marca o un submodelo de otro modelo. También acotan por categoría el buscador de la Home y la lista
+  de marcas de `/aircraft`; en `/admin/taxonomy` cada modelo tiene su selector de categoría. Sin migración
+  (las columnas ya existían). Informe: 25 avisos con categoría distinta a la de su modelo, todos "(Mock N)" de
+  prueba; no se tocan. **Falta aplicar el script en producción** (OK del socio).
 - **VA-159 a VA-163 (18/10/2026):** ✅ hechos (un commit cada uno): implementos agrícolas antes de
   "Exterior", flechas de la galería del detalle, "Reportar", "Ver todo el catálogo" en azul y 404/403 con
   "Inicio" y "Página anterior".

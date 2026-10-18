@@ -38,20 +38,37 @@ export default function HomeHeroFilter() {
     getBrands().then(setBrands);
   }, []);
 
-  // Al seleccionar/cambiar marca, traer todos los modelos de esa marca
-  const handleBrandChange = async (bId: string) => {
-    setSelectedBrand(bId);
-    setSelectedModel(""); // Resetea el modelo anterior
-
+  // Al seleccionar/cambiar marca, traer los modelos de esa marca (de la categoría elegida, si hay).
+  const loadModels = async (bId: string, categoryId: string) => {
     if (!bId) {
       setModels([]);
       return;
     }
-
     setLoadingModels(true);
-    const availableModels = await getModelsByBrand(bId);
-    setModels(availableModels);
+    setModels(await getModelsByBrand(bId, categoryId || undefined));
     setLoadingModels(false);
+  };
+
+  const handleBrandChange = async (bId: string) => {
+    setSelectedBrand(bId);
+    setSelectedModel(""); // Resetea el modelo anterior
+    await loadModels(bId, selectedCategory);
+  };
+
+  // VA-153: la categoría acota las marcas y los modelos; si la marca elegida no tiene, se limpia.
+  const handleCategoryChange = async (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    const available = await getBrands(categoryId || undefined);
+    setBrands(available);
+    if (selectedBrand && !available.some((b) => b.id === selectedBrand)) {
+      setSelectedBrand("");
+      setSelectedModel("");
+      setModels([]);
+      return;
+    }
+    const models = selectedBrand ? await getModelsByBrand(selectedBrand, categoryId || undefined) : [];
+    setModels(models);
+    if (selectedModel && !models.some((m) => m.id === selectedModel)) setSelectedModel("");
   };
 
   const handleSearch = () => {
@@ -75,7 +92,7 @@ export default function HomeHeroFilter() {
         <div className="relative">
           <select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={(e) => void handleCategoryChange(e.target.value)}
             className="w-full h-11 px-4 pr-8 bg-white text-slate-700 text-xs sm:text-sm rounded-xl appearance-none font-medium focus:outline-none cursor-pointer border border-slate-100 shadow-sm"
           >
             <option value="">Categoría</option>

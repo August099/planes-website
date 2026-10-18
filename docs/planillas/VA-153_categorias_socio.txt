@@ -1,0 +1,297 @@
+# VA-153 · Categoría de cada modelo y submodelo (pasada por el socio el 18/10/2026).
+# Formato: marca sin sangría; modelo con 4 espacios; submodelo (variante) con 8 espacios; el código
+# entre paréntesis al final. Lo lee scripts/va153-import-categorias.ts.
+# MP = Monomotor Pistón · MT = Monomotor Turbohélice · BP = Bimotor Pistón · BT = Bimotor Turbohélice
+# A = Agrícola · H = Helicóptero · E = Experimental / LSA · S/C = Otros
+# PR (decisión 18/10): en un submodelo, hereda la categoría del modelo; en un modelo, se deja como está
+# (Aero Commander 500 y Turbo Commander 680 quedan BP y BT). Correcciones: Duke BP, C-425 Conquest BT;
+# "Citation (JET)" y "Aero Commander (PISTÓN Y TURBOHÉLICE)" son los modelos "Citation" y "Aero Commander".
+
+CESSNA
+    C-140 (MP)
+    C-150 (MP)
+    C-152 (MP)
+    C-170 (MP)
+    C-172 (MP)
+    C-172 RG (MP)
+    C-177 Cardinal (MP)
+    C-177 RG (MP)
+    C-180 (MP)
+    C-182 (MP)
+    C-182 RG (MP)
+    C-185 (MP)
+    C-188 (A)
+        C-188 AgPickUp (PR)
+        C-188 AgWagon (PR)
+        C-188 AgTruck (PR)
+        C-188 AgHusky (PR)
+    C-190 (MP)
+    C-195 (MP)
+    C-205 (MP)
+    C-206 (MP)
+    C-207 (MP)
+    Caravan / Gran Caravan (MT)
+    C-210 Centurion (MP)
+    C-310 (BP)
+    C-320 (BP)
+    C-337 Skymaster (BP)
+    C-340 (BP)
+    C-401 (BP)
+    C-402 (BP)
+    C-421 (BP)
+    C-425 Conquest (BT)
+    Citation (S/C)
+
+PIPER
+    J-3 Cub (MP)
+    PA-11 (MP)
+    PA-12 (MP)
+    PA-18 Super Cub (MP)
+    PA-20 Pacer (MP)
+    PA-21 Tripacer (MP)
+    PA-23 Apache (BP)
+    PA-23 Azteca (BP)
+    PA-24 Comanche (MP)
+    PA-25 Pawnee (A)
+    PA-28 (MP)
+        PA-28 Cherokee (PR)
+        PA-28 Arrow (PR)
+        PA-28 Cherokee 140 (PR)
+        PA-28 Warrior (PR)
+        PA-28-161 Warrior II / Warrior III (PR)
+        PA-28-180 Cherokee C (PR)
+        PA-28-181 Archer II / Archer III (PR)
+        PA-28-235 Cherokee Pathfinder (PR)
+        PA-28-236 Dakota (PR)
+    PA-30 Twin Comanche (BP)
+    PA-31 Navajo (BP)
+        PA-31-350 Chieftain (PR)
+    PA-31T Cheyenne (BT)
+    PA-32 Cherokee Six (MP)
+    PA-32R Saratoga (MP)
+    PA-32 Lance (MP)
+    PA-34 Seneca (BP)
+    PA-36 Brave (A)
+    PA-38 Tomahawk (MP)
+    PA-39 Twin Comanche (BP)
+    PA-42 Cheyenne III / Cheyenne IV (BT)
+    PA-44 Seminole (BP)
+    PA-46 Malibu (MP)
+    PA-46 350P Mirage (MP)
+    PA-46 500TP Meridian (MT)
+
+BEECHCRAFT
+    Model 18 (BP)
+    Musketeer (MP)
+    T-34 Mentor (MP)
+    Debonair (MP)
+    Bonanza (MP)
+        Bonanza 33 (PR)
+        Bonanza 35 V Tail (PR)
+        Bonanza 36 (PR)
+    Twin Bonanza (BP)
+    Baron 55 (BP)
+        Baron 55T (PR)
+    Baron 58 (BP)
+        Baron 58T (PR)
+    Duke (BP)
+    Queen Air (BP)
+    King Air (BT)
+        King Air 90 (PR)
+        King Air 200 (PR)
+        King Air 350 (PR)
+        King Air 360 (PR)
+    T-6 Texan (MP)
+
+AIR TRACTOR
+    AT-401 (A)
+    AT-402 (A)
+        AT-402 A (PR)
+        AT-402 B (PR)
+    AT-502 (A)
+        AT-502 A (PR)
+        AT-502 B (PR)
+        AT-502 XP (A)
+    AT-504 (A)
+    AT-602 (A)
+    AT-802 (A)
+        AT-802 A (PR)
+        AT-802 F (PR)
+        AT-802 FIRE BOSS (A)
+
+GRUMMAN
+    Ag-Cat (A)
+        Ag-Cat G164A (PR)
+        Ag-Cat G164B (PR)
+        Ag-Cat G164C (PR)
+
+THRUSH
+    510 (A)
+        510 P2 (PR)
+        510 P2+ (PR)
+    710 (A)
+        710 P (PR)
+        710 P FIRE BIRD (PR)
+    S2R (A)
+    AYRES S-2R (A)
+
+EMBRAER
+    Ipanema (A)
+        202 (PR)
+        203 (PR)
+
+LAVIASA
+    PA-25 Puelche (A)
+        PUELCHE 1 PA-25 (PR)
+        PUELCHE 2 PA-25 (PR)
+        PUELCHE 3 PA-25 (PR)
+    Puelche Biplaza (MP)
+
+AERO BOERO
+    AB-95 (MP)
+    AB-115 (MP)
+    AB-150 (MP)
+    AB-180 (MP)
+
+CIRRUS
+    SR-20 (MP)
+    SR-22 (MP)
+        SR-22T (PR)
+    Vision Jet (S/C)
+
+TECNAM
+    P92 (MP)
+    P2002 (MP)
+    P2004 (MP)
+    P2008 (MP)
+    P2010 (MP)
+    P-Mentor (MP)
+    P2006T (BP)
+    P2012 (BP)
+        P2012 STOL (PR)
+
+MOONEY
+    M20 (MP)
+
+WEATHERLY
+    620B (A)
+
+PZL
+    M-18 Dromader (A)
+
+ANTONOV
+    AN-2 (MP)
+
+BELLANCA
+    Champ (MP)
+    Citabria (MP)
+    Decathlon (MP)
+    Scout (MP)
+
+AERONCA
+    7 Champion (MP)
+    11 Chief (MP)
+
+PITTS
+    S-2 (MP)
+
+BOYERO
+    IA-20 (MP)
+
+COMMANDER
+    Aero Commander 100 (MP)
+    Aero Commander (BP)
+    Aero Commander 500 (PR)
+    Turbo Commander 680 (PR)
+
+ERCOUPE
+    415-C (MP)
+
+LUSCOMBE
+    Model 8 (MP)
+
+PIPISTREL
+    Virus (MP)
+    Explorer (MP)
+    Panthera (MP)
+    Alpha Trainer (MP)
+
+RANS
+    S-6 Coyote (E)
+    S-9 Chaos (E)
+    S-12 Airaile (E)
+    S-19 Venterra (E)
+
+VANS
+    RV-3 (E)
+    RV-4 (E)
+    RV-6 (E)
+    RV-7 (E)
+    RV-8 (E)
+    RV-9 (E)
+    RV-10 (E)
+    RV-12 (E)
+    RV-14 (E)
+
+ZENITH
+
+BRISTELL
+    Bristell RG (MP)
+    B23 (MP)
+
+MITSUBISHI
+
+PILATUS
+    PC-6 (MT)
+    PC-12 (BT)
+        PC-12/45 (PR)
+        PC-12/47 (PR)
+        PC-12 NG (PR)
+        PC-12 NGX (PR)
+
+AIRBUS
+    H125 (H)
+    H130 (H)
+    H135 (H)
+    H145 (H)
+    H155 (H)
+    H160 (H)
+    H225 (H)
+
+BELL
+    206 / 206 L (H)
+    222 (H)
+    230 (H)
+    407 (H)
+    412 (H)
+    427 (H)
+    429 (H)
+    430 (H)
+    505 Jet Ranger (H)
+
+CICARE
+    CH-7 (H)
+    CH-8 (H)
+    CH-12 (H)
+
+ROBINSON
+    R-22 (H)
+    R-44 (H)
+    R-66 (H)
+
+EUROCOPTER
+    EC130 (H)
+    EC135 (H)
+    EC155 (H)
+    EC175 (H)
+    EC225 (H)
+    AS350 (H)
+    AS355 (H)
+    AS365 (H)
+    BO105 (H)
+    BK117 (H)
+
+SIKORSKY
+    S-76 (H)
+    UH-60 (H)
+    S-92 (H)

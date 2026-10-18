@@ -34,21 +34,27 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 // La categoría por defecto del modelo o de la variante tiene prioridad (igual que en el
 // formulario). Si la categoría resultante no existe, se rechaza (VA-22: antes se usaba
 // la primera categoría que existiera).
+// VA-153: además, el modelo tiene que ser de esa marca y el submodelo de ese modelo (el formulario solo
+// ofrece combinaciones que existen; esto frena un pedido armado a mano). null si algo no corresponde.
 async function resolveAircraftCategory(data: AircraftListing): Promise<string | null> {
   let categoryId = data.categoryId;
+  if (data.modelId) {
+    const model = await prisma.aircraftModel.findUnique({
+      where: { id: data.modelId },
+      select: { brandId: true, defaultCategoryId: true },
+    });
+    if (!model || model.brandId !== data.brandId) return null;
+    if (model.defaultCategoryId) categoryId = model.defaultCategoryId;
+  } else if (data.subModelId) {
+    return null;
+  }
   if (data.subModelId) {
     const subModel = await prisma.aircraftSubModel.findUnique({
       where: { id: data.subModelId },
-      select: { categoryOverride: true, model: { select: { defaultCategoryId: true } } },
+      select: { modelId: true, categoryOverride: true },
     });
-    if (subModel?.categoryOverride) categoryId = subModel.categoryOverride;
-    else if (subModel?.model?.defaultCategoryId) categoryId = subModel.model.defaultCategoryId;
-  } else if (data.modelId) {
-    const model = await prisma.aircraftModel.findUnique({
-      where: { id: data.modelId },
-      select: { defaultCategoryId: true },
-    });
-    if (model?.defaultCategoryId) categoryId = model.defaultCategoryId;
+    if (!subModel || subModel.modelId !== data.modelId) return null;
+    if (subModel.categoryOverride) categoryId = subModel.categoryOverride;
   }
   const category = await prisma.aircraftCategory.findUnique({ where: { id: categoryId }, select: { id: true } });
   return category?.id ?? null;
@@ -236,7 +242,7 @@ export async function createListing(input: ListingInput, opts: { saveAsPaused?: 
   // Las categorías se validan antes de mirar el cupo.
   const aircraftCategoryId = data.listingType === "aircraft" ? await resolveAircraftCategory(data) : null;
   if (data.listingType === "aircraft" && !aircraftCategoryId) {
-    return fail({ ok: false, error: "Seleccioná una categoría válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });
+    return fail({ ok: false, error: "Revisá la marca, el modelo y la categoría: la combinación no es válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });
   }
   if (data.listingType === "parts" && !(await isValidSparePartCategory(data.categoryId))) {
     const msg = "Seleccioná la categoría más específica.";
@@ -413,7 +419,7 @@ export async function updateListing(id: string, input: ListingInput): Promise<Li
     if (data.listingType === "aircraft") {
       const categoryId = await resolveAircraftCategory(data);
       if (!categoryId) {
-        return fail({ ok: false, error: "Seleccioná una categoría válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });
+        return fail({ ok: false, error: "Revisá la marca, el modelo y la categoría: la combinación no es válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });
       }
       const keptDocs = data.documents.filter((d) => currentDocs.has(d.path)).map((d) => d.path);
       const removedDocs = [...currentDocs].filter((url) => !keptDocs.includes(url));

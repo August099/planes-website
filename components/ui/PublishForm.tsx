@@ -13,6 +13,7 @@ import {
     resolveCategoryId,
     type EngineKind,
 } from "@/lib/aircraft-categories";
+import { brandsInCategories, effectiveCategory, modelInCategories, modelsInCategories, variantsInCategories } from "@/lib/aircraft-taxonomy";
 import { isRequired, minEngines, requiredMark } from "@/lib/aircraft-rules";
 import { discardUploaded, uploadListingFiles } from "@/lib/listing-upload-client";
 import { listingSchema, toFieldErrors, MAX_LISTING_IMAGES, type EditListingData, type FieldErrors, type ListingInput } from "@/lib/listing-schema";
@@ -165,15 +166,6 @@ export default function PublishForm({
     // Marca inicial: la de la publicación que se edita o, si no hay, la primera de la lista.
     // Antes se completaba en un efecto después del primer render (VA-63).
     const initialBrandId = editListing?.aircraft?.brandId || brandsData[0]?.id || "";
-    const [selectedBrandModels, setSelectedBrandModels] = useState<ModelOption[]>(
-        () => brandsData.find((b) => b.id === initialBrandId)?.models ?? []
-    );
-    const [selectedModelVariants, setSelectedModelVariants] = useState<SubModelOption[]>(
-        () =>
-            brandsData
-                .find((b) => b.id === editListing?.aircraft?.brandId)
-                ?.models.find((m) => m.id === editListing?.aircraft?.modelId)?.variants ?? []
-    );
     const [selectedParentCategoryId, setSelectedParentCategoryId] = useState<string>(editListing?.parts?.parentCategoryId ?? "");
     const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string>(editListing?.parts?.subCategoryId ?? "");
 
@@ -229,11 +221,17 @@ export default function PublishForm({
     const currentYear = new Date().getFullYear();
 
     // Solo los modelos del año en curso pueden ser "Nuevo"; la marca vacía toma la inicial.
-    const withInitialFixes = <T extends { year: number; condition: "USADO" | "NUEVO"; brandId: string }>(form: T): T => ({
-        ...form,
-        brandId: form.brandId || initialBrandId,
-        condition: form.year === currentYear ? form.condition : "USADO",
-    });
+    // VA-153: si el modelo (o submodelo) tiene categoría, manda esa (igual que en el servidor).
+    const withInitialFixes = <T extends { year: number; condition: "USADO" | "NUEVO"; brandId: string; modelId: string; subModelId: string; categoryId: string }>(form: T): T => {
+        const model = brandsData.find((b) => b.id === form.brandId)?.models.find((m) => m.id === form.modelId);
+        const variant = model?.variants?.find((v) => v.id === form.subModelId);
+        return {
+            ...form,
+            brandId: form.brandId || initialBrandId,
+            condition: form.year === currentYear ? form.condition : "USADO",
+            categoryId: effectiveCategory(model, variant) ?? form.categoryId,
+        };
+    };
 
     // ESTADO: Formulario de aeronaves
     const [aircraftForm, setAircraftForm] = useState(() => withInitialFixes(editListing?.aircraft ?? {
@@ -271,11 +269,27 @@ export default function PublishForm({
         description: "",
     }));
 
+    // VA-153: marca, modelo y submodelo de la lista, y la categoría que les corresponde. Si el modelo
+    // (o el submodelo) tiene categoría, esa queda fija; si no, o con marca/modelo propios, se elige a mano.
+    const brandModels = useMemo(() => brandsData.find((b) => b.id === aircraftForm.brandId)?.models ?? [], [brandsData, aircraftForm.brandId]);
+    const currentModel = brandModels.find((m) => m.id === aircraftForm.modelId);
+    const currentVariant = currentModel?.variants?.find((v) => v.id === aircraftForm.subModelId);
+    const lockedCategory = effectiveCategory(currentModel, currentVariant);
+
     // VA-43: "Tipo de aeronave" + "Motorización" resuelven la categoría (MP/MT/BP/BT/...).
-    // pendingGroup guarda el tipo elegido mientras todavía falta la motorización.
+    // pendingGroup guarda el tipo elegido mientras todavía falta la motorización; pickedCategoryId, la
+    // categoría elegida a mano (VA-153: filtra las marcas y los modelos que se ofrecen).
     const [pendingGroup, setPendingGroup] = useState("");
+    const [pickedCategoryId, setPickedCategoryId] = useState(() => (lockedCategory ? "" : aircraftForm.categoryId));
     const selectedGroup = categoryDef(aircraftForm.categoryId)?.group ?? pendingGroup;
     const selectedEngine = categoryDef(aircraftForm.categoryId)?.engine ?? null;
+
+    const filterFor = (group: string, categoryId: string) =>
+        categoryId ? [categoryId] : group ? categoriesInGroup(group).map((c) => c.id) : [];
+    const categoryFilter = filterFor(categoryDef(pickedCategoryId)?.group ?? pendingGroup, pickedCategoryId);
+    const brandOptions = brandsInCategories(brandsData, categoryFilter);
+    const modelOptions = modelsInCategories(brandModels, categoryFilter);
+    const variantOptions = currentModel ? variantsInCategories(currentModel, categoryFilter) : [];
 
     // Nueva categoría + limpieza de "Implementos agrícolas" si deja de ser Agrícola (VA-54).
     const withCategory = <T extends { categoryId: string; agEquipment: string }>(prev: T, categoryId: string): T => ({
@@ -284,15 +298,27 @@ export default function PublishForm({
         agEquipment: categoryId === "A" ? prev.agEquipment : "",
     });
 
-    const handleGroupChange = (group: string) => {
+    // Categoría elegida a mano: si la marca o el modelo ya elegidos no tienen nada de esa categoría, se limpian.
+    const pickCategory = (group: string, categoryId: string) => {
         setPendingGroup(group);
-        // Monomotor/Bimotor: se conserva la motorización si ya estaba elegida.
-        setAircraftForm((prev) => withCategory(prev, resolveCategoryId(group, categoryDef(prev.categoryId)?.engine)));
+        setPickedCategoryId(categoryId);
+        const filter = filterFor(group, categoryId);
+        setAircraftForm((prev) => {
+            const next = withCategory(prev, categoryId);
+            const brand = brandsData.find((b) => b.id === prev.brandId);
+            if (brand && brandsInCategories([brand], filter).length === 0) {
+                return { ...next, brandId: "", modelId: "", subModelId: "", customModel: "" };
+            }
+            const model = brand?.models.find((m) => m.id === prev.modelId);
+            if (model && !modelInCategories(model, filter)) return { ...next, modelId: "", subModelId: "", customModel: "" };
+            return next;
+        });
     };
 
-    const handleEngineChange = (engine: EngineKind) => {
-        setAircraftForm((prev) => withCategory(prev, resolveCategoryId(selectedGroup, engine)));
-    };
+    // Monomotor/Bimotor: se conserva la motorización si ya estaba elegida.
+    const handleGroupChange = (group: string) => pickCategory(group, resolveCategoryId(group, selectedEngine));
+
+    const handleEngineChange = (engine: EngineKind) => pickCategory(selectedGroup, resolveCategoryId(selectedGroup, engine));
 
     // VA-90: el alta arranca con un motor vacío, así no hay que buscar "Agregar Motor".
     const [engines, setEngines] = useState<EngineInput[]>(editListing?.engines ?? [{ ...EMPTY_ENGINE }]);
@@ -329,31 +355,22 @@ export default function PublishForm({
       }, 100);
     };
 
+    // Al cambiar marca o modelo, la categoría vuelve a la elegida a mano hasta que haya un modelo con categoría.
     const handleBrandChange = (brandId: string) => {
-        const foundBrand = brandsData.find((b) => b.id === brandId);
         setAircraftForm((prev) => ({
-            ...prev,
+            ...withCategory(prev, pickedCategoryId),
             brandId,
             customBrand: "",
             modelId: "",
             subModelId: "",
             customModel: "",
         }));
-        setSelectedBrandModels(foundBrand?.models || []);
-        setSelectedModelVariants([]);
     };
 
     const handleModelChange = (modelId: string) => {
-      if (modelId === "CUSTOM_MODEL") {
-        setSelectedModelVariants([]);
-        setAircraftForm((prev) => ({ ...prev, modelId: "CUSTOM_MODEL", subModelId: "", customModel: "" }));
-        return;
-      }
-      const foundModel = selectedBrandModels.find((m) => m.id === modelId);
-      const targetCategory = foundModel?.defaultCategoryId || aircraftForm.categoryId;
-      setSelectedModelVariants(foundModel?.variants || []);
+      const foundModel = brandModels.find((m) => m.id === modelId);
       setAircraftForm((prev) => ({
-        ...withCategory(prev, targetCategory),
+        ...withCategory(prev, effectiveCategory(foundModel) ?? pickedCategoryId),
         modelId,
         subModelId: "",
         customModel: "",
@@ -361,11 +378,9 @@ export default function PublishForm({
     };
 
     const handleSubModelChange = (subModelId: string) => {
-      const foundVariant = selectedModelVariants.find((v) => v.id === subModelId);
-      const currentModel = selectedBrandModels.find((m) => m.id === aircraftForm.modelId);
-      const targetCategory = foundVariant?.categoryOverride || currentModel?.defaultCategoryId || aircraftForm.categoryId;
+      const foundVariant = currentModel?.variants?.find((v) => v.id === subModelId);
       setAircraftForm((prev) => ({
-        ...withCategory(prev, targetCategory),
+        ...withCategory(prev, effectiveCategory(currentModel, foundVariant) ?? pickedCategoryId),
         subModelId,
       }));
     };
@@ -937,42 +952,27 @@ export default function PublishForm({
                                                 <FieldError message={fieldErrors.totalTimeHours} />
                                             </div>
 
-                                            <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Marca *</label>
-                                                <select value={aircraftForm.brandId} onChange={(e) => handleBrandChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
-                                                    <option value="">Seleccionar Marca</option>
-                                                    {brandsData.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                                    <option value="CUSTOM">Otra Marca...</option>
-                                                </select>
-                                                {aircraftForm.brandId === "CUSTOM" && <input type="text" placeholder="Escribí la marca" value={aircraftForm.customBrand} onChange={e => setAircraftForm({...aircraftForm, customBrand: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white" />}
-                                                <FieldError message={fieldErrors.brandId} />
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Modelo/Submodelo *</label>
-                                                <select value={aircraftForm.modelId} onChange={(e) => handleModelChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
-                                                    <option value="">Seleccionar Modelo</option>
-                                                    {selectedBrandModels.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                                                    <option value="CUSTOM_MODEL">Otro modelo...</option>
-                                                </select>
-                                                {aircraftForm.modelId === "CUSTOM_MODEL" && <input type="text" placeholder="Escribí el modelo" value={aircraftForm.customModel} onChange={e => setAircraftForm({...aircraftForm, customModel: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white" />}
-                                                <FieldError message={fieldErrors.modelId} />
-                                                
-                                                {selectedModelVariants.length > 0 && aircraftForm.modelId !== "CUSTOM_MODEL" && (
-                                                    <select value={aircraftForm.subModelId} onChange={(e) => handleSubModelChange(e.target.value)} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white">
-                                                        <option value="">(Opcional) Variante específica</option>
-                                                        {selectedModelVariants.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                                                    </select>
-                                                )}
-                                            </div>
-
+                                            {/* VA-153: primero el tipo (opcional): acota las marcas y los modelos. Con un modelo de
+                                                la lista que tiene categoría, el tipo sale del modelo y queda fijo. */}
                                             <div className="sm:col-span-2">
                                                 <label className="block text-xs font-bold uppercase mb-1">Tipo de aeronave *</label>
-                                                <select value={selectedGroup} onChange={e => handleGroupChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 font-medium bg-white">
+                                                <select value={selectedGroup} onChange={e => handleGroupChange(e.target.value)} disabled={!!lockedCategory} className="w-full p-2.5 rounded-xl border border-slate-300 font-medium bg-white disabled:bg-slate-100 disabled:text-slate-600">
                                                     <option value="">-- Seleccionar tipo --</option>
                                                     {AIRCRAFT_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
                                                 </select>
-                                                <p className="text-[10px] text-slate-400 mt-1">Si el modelo elegido tiene un tipo sugerido, se completa solo. Podés cambiarlo.</p>
+                                                {lockedCategory ? (
+                                                    <p className="text-[11px] text-slate-500 mt-1">
+                                                        Corresponde al modelo elegido. Para cambiarlo, elegí otro modelo.{" "}
+                                                        <a
+                                                            href={`mailto:aeronauticasventas@gmail.com?subject=${encodeURIComponent(`Categoría de ${brandsData.find(b => b.id === aircraftForm.brandId)?.name ?? ""} ${currentVariant?.name ?? currentModel?.name ?? ""}`.trim())}`}
+                                                            className="font-semibold text-[#001F58] underline hover:text-[#C20D1A]"
+                                                        >
+                                                            ¿La categoría no es correcta? Avisanos
+                                                        </a>
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-[11px] text-slate-500 mt-1">Elegilo primero para ver solo las marcas y los modelos de ese tipo, o elegí directamente el modelo y se completa solo.</p>
+                                                )}
                                                 <FieldError message={fieldErrors.categoryId} />
                                             </div>
 
@@ -983,14 +983,43 @@ export default function PublishForm({
                                                 </label>
                                                 <div className="flex gap-6 text-sm font-medium">
                                                     {categoriesInGroup(selectedGroup).map(c => c.engine && (
-                                                        <label key={c.id} className="flex items-center gap-2 cursor-pointer">
-                                                            <input type="radio" name="engine" checked={selectedEngine === c.engine} onChange={() => handleEngineChange(c.engine!)} className="w-4 h-4 text-[#001F58]" />
+                                                        <label key={c.id} className={`flex items-center gap-2 ${lockedCategory ? "text-slate-500" : "cursor-pointer"}`}>
+                                                            <input type="radio" name="engine" checked={selectedEngine === c.engine} disabled={!!lockedCategory} onChange={() => handleEngineChange(c.engine!)} className="w-4 h-4 text-[#001F58]" />
                                                             {ENGINE_LABELS[c.engine]}
                                                         </label>
                                                     ))}
                                                 </div>
                                             </div>
                                             )}
+
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase mb-1">Marca *</label>
+                                                <select value={aircraftForm.brandId} onChange={(e) => handleBrandChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
+                                                    <option value="">Seleccionar Marca</option>
+                                                    {brandOptions.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                                    <option value="CUSTOM">Otra Marca...</option>
+                                                </select>
+                                                {aircraftForm.brandId === "CUSTOM" && <input type="text" placeholder="Escribí la marca" value={aircraftForm.customBrand} onChange={e => setAircraftForm({...aircraftForm, customBrand: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white" />}
+                                                <FieldError message={fieldErrors.brandId} />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase mb-1">Modelo/Submodelo *</label>
+                                                <select value={aircraftForm.modelId} onChange={(e) => handleModelChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
+                                                    <option value="">Seleccionar Modelo</option>
+                                                    {modelOptions.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                                                    <option value="CUSTOM_MODEL">Otro modelo...</option>
+                                                </select>
+                                                {aircraftForm.modelId === "CUSTOM_MODEL" && <input type="text" placeholder="Escribí el modelo" value={aircraftForm.customModel} onChange={e => setAircraftForm({...aircraftForm, customModel: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white" />}
+                                                <FieldError message={fieldErrors.modelId} />
+
+                                                {variantOptions.length > 0 && (
+                                                    <select value={aircraftForm.subModelId} onChange={(e) => handleSubModelChange(e.target.value)} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white">
+                                                        <option value="">(Opcional) Variante específica</option>
+                                                        {variantOptions.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                                                    </select>
+                                                )}
+                                            </div>
 
                                             <div className="sm:col-span-2 pt-4 border-t border-slate-100">
                                                 <label className="block text-xs font-bold uppercase mb-2">Opciones de Negociación</label>

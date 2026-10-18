@@ -11,6 +11,7 @@ import {
   deleteAircraftBrandAction,
   createAircraftModelAction,
   updateAircraftModelAction,
+  setAircraftModelCategoryAction,
   deleteAircraftModelAction,
   createAircraftSubModelAction,
   updateAircraftSubModelAction,
@@ -38,6 +39,7 @@ interface SubModel {
 interface Model {
   id: string;
   name: string;
+  defaultCategoryId: string | null;
   subModels: SubModel[];
 }
 
@@ -257,6 +259,16 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       showFeedback("Modelo actualizado");
     } catch {
       alert("Error al actualizar el modelo");
+    }
+  };
+
+  // VA-153: la categoría del modelo (la heredan sus submodelos; el formulario de publicar la fija).
+  const handleModelCategory = async (id: string, categoryId: string) => {
+    try {
+      await setAircraftModelCategoryAction(id, categoryId || null);
+      showFeedback("Categoría del modelo actualizada");
+    } catch {
+      alert("Error al cambiar la categoría");
     }
   };
 
@@ -815,6 +827,17 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                     <>
                       <span className="font-medium text-slate-700">{model.name}</span>
                       <div className="flex items-center gap-2">
+                        <select
+                          value={model.defaultCategoryId ?? ""}
+                          onChange={(e) => handleModelCategory(model.id, e.target.value)}
+                          aria-label={`Categoría de ${model.name}`}
+                          className="max-w-36 px-1.5 py-1 text-[11px] border rounded-lg bg-white"
+                        >
+                          <option value="">Sin categoría</option>
+                          {aircraftCategories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                          ))}
+                        </select>
                         <button onClick={() => startEditing(model.id, model.name)} className="text-slate-400 hover:text-blue-600">
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
