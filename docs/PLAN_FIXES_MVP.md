@@ -1634,3 +1634,8 @@ Probados en celular; verificar también en escritorio.
   `docs/VA-152_INFORME_IMPACTO.md`. Textos de FAQ, términos, `/howtopublish`, `/arrepentimiento` y la
   bienvenida: borrador para que los revisen los socios.
 - **VA-153:** en espera de los datos del socio (la planilla está en `docs/planillas/`).
+- **VA-159 a VA-163 (18/10/2026):** ✅ hechos (un commit cada uno): implementos agrícolas antes de
+  "Exterior", flechas de la galería del detalle, "Reportar", "Ver todo el catálogo" en azul y 404/403 con
+  "Inicio" y "Página anterior".
+- **VA-154:** modelo de datos y SQL propuestos (migración `va154_moderacion`, sin aplicar): estado
+  `MODERATED` en aviones y repuestos y tabla `ModerationAction` (historial). Esperando el OK.

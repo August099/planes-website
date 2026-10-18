@@ -301,6 +301,11 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 | Tarea | Commit | Qué cambió | Dónde verlo |
 |---|---|---|---|
 | VA-152 | ver git log | **Cupos fijos sin vencimiento** (cambio de modelo): se deja de cobrar por publicación. Cupo = avisos activos al mismo tiempo: Gratis 1 avión / 5 repuestos (editable), Pro 3 / 15 y Empresarial con aviones, repuestos o todo ilimitado (lo otro, el cupo Gratis); admins sin límite. Toda la regla en `lib/quota.ts`, con la fila del usuario bloqueada al publicar o activar. Formulario: aviso de cupo al empezar con "Pausar uno de mis avisos", "Pasarme a Pro" o "Guardar como pausado". Perfil: uso del cupo y Pausar / Activar / Vendido (antes no existían). `/plans` con Gratis, Pro y Empresarial configurable. Admin: "Planes y precios" en un solo lugar (fuera `/admin/prices`), cupo en `/admin/users`, ingresos solo de suscripciones y en pesos (antes se trataban como dólares). Baja de plan: se pausan en el momento los más nuevos. Arrepentimiento solo para suscripciones. Fuera: aviso suelto, packs, renovación, vencimiento, "pendiente de pago", saldo de lanzamiento (la promo pasa a "Publicá gratis 1 avión y 5 repuestos"), pestaña de cupones y su página del admin (la lógica queda). Migraciones `va152_cupos` y `va152_limpieza`; scripts `va152-report.ts`, `va152-migrate-data.ts` y `verify-quota.ts` (23/23). | `/plans`, `/publish`, Perfil → Mis publicaciones, `/admin/plans` |
+| VA-159 | `43caf82` | "Implementos agrícolas" antes de "Exterior" (detalle, PDF y comparador usan la misma lista). | Detalle de un avión agrícola |
+| VA-160 | `1dd1a9d` | Galería del detalle con las flechas de los carruseles de la Home (`CarouselArrow`, también en pantalla completa); en celular se desliza con el dedo. | Detalle de un aviso con varias fotos |
+| VA-161 | `effef07` | "Reportar" siempre a la vista en el detalle (antes solo al pasar el mouse) y como título de la pantalla de reporte. | Detalle → Reportar |
+| VA-162 | `9bd6e6a` | "Ver todo el catálogo" (Home) en el azul de los demás links. | Home → Buscar Repuestos por Categoría |
+| VA-163 | `8aa9658` | 404 y 403 con "Inicio" y "Página anterior" (sin historial, lleva al inicio). | Cualquier URL que no existe |
 
 ## Pruebas de pagos (16/10/2026)
 
