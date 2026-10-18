@@ -141,3 +141,51 @@ export async function sendWithdrawalEmail(input: { to: string; name: string | nu
   });
   if (error) throw new Error(error.message);
 }
+
+// VA-154: moderación de un aviso (pausa desde un reporte, reactivación o "se mantiene pausado").
+export async function sendModerationEmail(input: {
+  to: string;
+  name: string | null;
+  listingTitle: string;
+  kind: "PAUSE" | "REACTIVATE" | "KEEP_PAUSED";
+  message: string | null;
+  reactivatedAs?: "ACTIVE" | "PAUSED";
+  profileUrl: string;
+}) {
+  const title = escapeHtml(input.listingTitle);
+  const subject =
+    input.kind === "PAUSE"
+      ? `Pausamos tu aviso "${input.listingTitle}"`
+      : input.kind === "REACTIVATE"
+        ? `Revisamos tu aviso "${input.listingTitle}"`
+        : `Tu aviso "${input.listingTitle}" sigue pausado`;
+  const lead =
+    input.kind === "PAUSE"
+      ? `Pausamos tu aviso <strong>${title}</strong> después de revisar un reporte. No se ve en el sitio hasta que lo revisemos de nuevo.`
+      : input.kind === "REACTIVATE"
+        ? input.reactivatedAs === "ACTIVE"
+          ? `Revisamos tu aviso <strong>${title}</strong> y ya está publicado de nuevo.`
+          : `Revisamos tu aviso <strong>${title}</strong> y lo levantamos, pero quedó <strong>pausado</strong> porque no te queda cupo: activalo desde tu perfil cuando tengas lugar.`
+        : `Revisamos tu aviso <strong>${title}</strong> y por ahora sigue pausado.`;
+  const next =
+    input.kind === "REACTIVATE"
+      ? ""
+      : `<p>Podés editarlo desde tu perfil y, cuando esté corregido, tocar <strong>"Pedir revisión"</strong>.</p>`;
+  const { error } = await resend.emails.send({
+    from: EMAIL_FROM,
+    to: input.to,
+    subject,
+    html: `
+      <div style="font-family: sans-serif; padding: 20px; color: #001F58;">
+        <p>Hola${input.name ? ` ${escapeHtml(input.name)}` : ""}:</p>
+        <p>${lead}</p>
+        ${input.message ? `<p><strong>${input.kind === "PAUSE" ? "Motivo" : "Mensaje"}:</strong> ${escapeHtml(input.message)}</p>` : ""}
+        ${next}
+        <div style="margin: 24px 0;">
+          <a href="${input.profileUrl}" style="padding: 12px 24px; background-color: #001F58; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">Ir a mis publicaciones</a>
+        </div>
+      </div>
+    `,
+  });
+  if (error) throw new Error(error.message);
+}

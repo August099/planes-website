@@ -1637,5 +1637,6 @@ Probados en celular; verificar también en escritorio.
 - **VA-159 a VA-163 (18/10/2026):** ✅ hechos (un commit cada uno): implementos agrícolas antes de
   "Exterior", flechas de la galería del detalle, "Reportar", "Ver todo el catálogo" en azul y 404/403 con
   "Inicio" y "Página anterior".
-- **VA-154:** modelo de datos y SQL propuestos (migración `va154_moderacion`, sin aplicar): estado
-  `MODERATED` en aviones y repuestos y tabla `ModerationAction` (historial). Esperando el OK.
+- **VA-154 (18/10/2026):** ✅ hecho en local (OK del SQL del socio). Estado `MODERATED` y tabla
+  `ModerationAction`; pausa con motivo desde el reporte, ventana y mail al dueño, "Pedir revisión",
+  cola "Revisiones pendientes" (reactivar o mantener) e historial. `scripts/verify-moderation.ts` 26/26.

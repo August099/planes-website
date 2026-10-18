@@ -28,6 +28,8 @@ export const AIRCRAFT_STATUS_LABELS: Record<string, string> = {
   SOLD: "Vendida",
   EXPIRED: "Expirada",
   PENDING_PAYMENT: "Pendiente de pago",
+  // VA-154
+  MODERATED: "Pausada por moderación",
 };
 
 export const AIRCRAFT_CATEGORY_LABELS: Record<string, string> = {

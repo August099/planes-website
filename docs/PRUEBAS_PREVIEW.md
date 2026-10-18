@@ -138,6 +138,11 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
+### Moderación (VA-154)
+- [ ] Reportar un aviso de otra cuenta; en `/admin/report` → "Pausar indefinidamente" con un motivo: el aviso deja de verse (listado, búsqueda, Home) y el detalle dice "no disponible".
+- [ ] El dueño entra al sitio: ve la ventana con el motivo una vez (y le llega el mail). En Mis publicaciones: "Pausado por moderación", el motivo y "Pedir revisión"; no puede activarlo.
+- [ ] Editar y "Pedir revisión": aparece en "Revisiones pendientes". "Mantener pausado" con mensaje → ventana y mail nuevos; "Reactivar" → vuelve a verse (o queda pausado si no tiene cupo).
+
 ### Pagos (cuenta compradora de prueba)
 - [ ] **Suscripción al Pro**: en el checkout, el email de la **cuenta compradora de prueba**; vuelve solo al sitio, se activa sola, aparece en el perfil y el cupo pasa a 3 / 15.
 - [ ] `/admin/payments`: el cobro aprobado y la factura **pendiente** (no simulada como emitida).

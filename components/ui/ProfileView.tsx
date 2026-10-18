@@ -3,7 +3,8 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ProfileListings, type ProfileQuota, type StatusTarget } from "@/components/ui/profile/ProfileListings";
+import { ProfileListings, type ModerationMap, type ProfileQuota, type StatusTarget } from "@/components/ui/profile/ProfileListings";
+import { requestReviewAction } from "@/app/actions/moderation-actions";
 import dynamic from "next/dynamic";
 
 // VA-151: el panel (y su gráfico) se descarga solo al abrir la pestaña "Métricas".
@@ -118,6 +119,8 @@ interface Props {
   hasSellerMetrics?: boolean;
   // VA-152: uso del cupo (solo el dueño).
   quota?: ProfileQuota | null;
+  // VA-154: avisos pausados por moderación (motivo y si pidió revisión), solo el dueño.
+  moderation?: ModerationMap;
 }
 
 export function ProfileView({
@@ -132,6 +135,7 @@ export function ProfileView({
   hasPassword = false,
   hasSellerMetrics = false,
   quota = null,
+  moderation = {},
   initialTab,
 }: Props) {
   const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
@@ -164,6 +168,20 @@ export function ProfileView({
     try {
       const res = await setListingStatusAction(id, type, to);
       if (!res.success) alert(res.error);
+    } catch {
+      alert("Error de conexión. Probá de nuevo.");
+    } finally {
+      setLoadingStatusId(null);
+    }
+  };
+
+  // VA-154: "Pedir revisión" de un aviso pausado por moderación (después de editarlo).
+  const handleRequestReview = async (id: string, type: "aircraft" | "sparepart") => {
+    if (!confirm("¿Ya corregiste el aviso? Vamos a revisarlo y te avisamos por mail.")) return;
+    setLoadingStatusId(id);
+    try {
+      const res = await requestReviewAction({ kind: type === "aircraft" ? "AIRCRAFT" : "SPARE_PART", id });
+      if (!res.ok) alert(res.error);
     } catch {
       alert("Error de conexión. Probá de nuevo.");
     } finally {
@@ -559,7 +577,9 @@ export function ProfileView({
             isOwner={isOwner}
             favIds={currentUserFavIds}
             quota={quota}
+            moderation={moderation}
             onStatus={handleStatus}
+            onRequestReview={handleRequestReview}
             onDelete={handleDelete}
             loadingId={loadingStatusId}
           />

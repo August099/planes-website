@@ -34,6 +34,8 @@ type StatusKey = "activos" | "pausados" | "vendidos";
 export type StatusTarget = "ACTIVE" | "PAUSED" | "SOLD";
 type QuotaLine = { used: number; limit: number | null };
 export type ProfileQuota = { planName: string; aircraft: QuotaLine; parts: QuotaLine };
+// VA-154: motivo de la pausa por moderación y si el dueño ya pidió revisión (por id de aviso).
+export type ModerationMap = Record<string, { reason: string | null; reviewRequested: boolean }>;
 
 const KINDS: { key: Kind; label: string }[] = [
   { key: "aeronaves", label: "Aeronaves" },
@@ -45,7 +47,7 @@ const STATUSES: { key: StatusKey; label: string }[] = [
   { key: "vendidos", label: "Vendidos" },
 ];
 
-// Los estados viejos (vencido, pendiente de pago) se muestran como pausados (VA-152).
+// Los estados viejos (vencido, pendiente de pago) y el moderado (VA-154) se cuentan como pausados.
 function statusOf(l: Listing): StatusKey {
   if (l.status === "SOLD") return "vendidos";
   if (l.status === "ACTIVE") return "activos";
@@ -72,7 +74,9 @@ export function ProfileListings({
   isOwner,
   favIds,
   quota,
+  moderation = {},
   onStatus,
+  onRequestReview,
   onDelete,
   loadingId,
 }: {
@@ -81,7 +85,9 @@ export function ProfileListings({
   isOwner: boolean;
   favIds: string[];
   quota?: ProfileQuota | null;
+  moderation?: ModerationMap;
   onStatus: (id: string, type: "aircraft" | "sparepart", to: StatusTarget) => void;
+  onRequestReview: (id: string, type: "aircraft" | "sparepart") => void;
   onDelete: (id: string, type: "aircraft" | "sparepart") => void;
   loadingId: string | null;
 }) {
@@ -201,7 +207,18 @@ export function ProfileListings({
                   />
                 )}
 
-                {isOwner && <OwnerPanel l={l} type={type} st={st} onStatus={onStatus} onDelete={onDelete} loadingId={loadingId} />}
+                {isOwner && (
+                  <OwnerPanel
+                    l={l}
+                    type={type}
+                    st={st}
+                    moderation={l.status === "MODERATED" ? moderation[l.id] ?? { reason: null, reviewRequested: false } : null}
+                    onStatus={onStatus}
+                    onRequestReview={onRequestReview}
+                    onDelete={onDelete}
+                    loadingId={loadingId}
+                  />
+                )}
               </div>
             );
           })}
@@ -218,18 +235,22 @@ function OwnerPanel({
   l,
   type,
   st,
+  moderation,
   onStatus,
+  onRequestReview,
   onDelete,
   loadingId,
 }: {
   l: Listing;
   type: "aircraft" | "sparepart";
   st: StatusKey;
+  moderation: { reason: string | null; reviewRequested: boolean } | null;
   onStatus: (id: string, type: "aircraft" | "sparepart", to: StatusTarget) => void;
+  onRequestReview: (id: string, type: "aircraft" | "sparepart") => void;
   onDelete: (id: string, type: "aircraft" | "sparepart") => void;
   loadingId: string | null;
 }) {
-  const badge = BADGE[st];
+  const badge = moderation ? { text: "Pausado por moderación", tone: "bg-red-50 text-red-700" } : BADGE[st];
   const busy = loadingId === l.id;
 
   return (
@@ -238,19 +259,30 @@ function OwnerPanel({
         <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${badge.tone}`}>{badge.text}</span>
         <div className="flex items-center gap-1">
           {busy && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" aria-label="Guardando" />}
-          {st === "activos" && (
+          {moderation && (
+            <button
+              type="button"
+              disabled={busy || moderation.reviewRequested}
+              onClick={() => onRequestReview(l.id, type)}
+              className={`${ACTION} bg-[#001F58] text-white hover:bg-blue-900`}
+              title="Editalo primero y después pedí que lo revisemos"
+            >
+              {moderation.reviewRequested ? "Revisión pedida" : "Pedir revisión"}
+            </button>
+          )}
+          {!moderation && st === "activos" && (
             <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "PAUSED")} className={`${ACTION} border border-[#001F58]/20 text-[#001F58] hover:border-[#001F58]`}>
               <Pause className="h-3 w-3" />
               Pausar
             </button>
           )}
-          {st !== "activos" && (
+          {!moderation && st !== "activos" && (
             <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "ACTIVE")} className={`${ACTION} bg-[#001F58] text-white hover:bg-blue-900`}>
               <Play className="h-3 w-3" />
               {st === "vendidos" ? "Volver a publicar" : "Activar"}
             </button>
           )}
-          {st !== "vendidos" && (
+          {!moderation && st !== "vendidos" && (
             <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "SOLD")} className={`${ACTION} border border-[#001F58]/20 text-[#001F58] hover:border-[#001F58]`}>
               <CheckCircle2 className="h-3 w-3" />
               Vendido
@@ -258,6 +290,11 @@ function OwnerPanel({
           )}
         </div>
       </div>
+      {moderation?.reason && (
+        <p className="border-l-2 border-[#E70F1F] pl-2 text-[11px] leading-snug text-slate-700">
+          <span className="font-semibold text-[#001F58]">Motivo:</span> {moderation.reason}
+        </p>
+      )}
 
       <div className="flex items-center justify-between gap-1">
         <div className="flex items-center gap-2">

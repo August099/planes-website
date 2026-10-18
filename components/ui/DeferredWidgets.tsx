@@ -13,6 +13,12 @@ const LaunchWelcomeDialog = dynamic(
   { ssr: false }
 );
 
+// VA-154: ventana de moderación para el dueño de un aviso pausado por un reporte.
+const ModerationNoticeDialog = dynamic(
+  () => import("@/components/ui/ModerationNoticeDialog").then((m) => m.ModerationNoticeDialog),
+  { ssr: false }
+);
+
 export function DeferredWidgets() {
   return (
     <>
@@ -20,6 +26,7 @@ export function DeferredWidgets() {
       <CompareTray />
       {/* VA-111: bienvenida del lanzamiento (una vez por cuenta, con el saldo gratis de VA-89) */}
       <LaunchWelcomeDialog />
+      <ModerationNoticeDialog />
     </>
   );
 }

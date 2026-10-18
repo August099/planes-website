@@ -60,6 +60,9 @@ model User {
   // VA-150: lotes de saldo y registro de con qué se pagó cada aviso.
   creditLots                CreditLot[]
   listingFundings           ListingFunding[]
+  // VA-154: historial de moderación de sus avisos (como dueño) y de las acciones que hizo (como admin).
+  moderationActions         ModerationAction[]   @relation("ModerationOwner")
+  moderationDone            ModerationAction[]   @relation("ModerationAdmin")
 }
 
 model Account {
@@ -1006,12 +1009,14 @@ enum SparepartCondition {
   REPARAR
 }
 
+// VA-154: MODERATED = pausado por moderación (desde un reporte). Solo el admin lo reactiva.
 enum AircraftStatus {
   ACTIVE
   PAUSED
   SOLD
   EXPIRED
   PENDING_PAYMENT
+  MODERATED
 }
 
 enum SparePartStatus {
@@ -1019,6 +1024,8 @@ enum SparePartStatus {
   SOLD
   // VA-152: pausado por el dueño (o por el sistema al bajar de plan). No cuenta en el cupo.
   PAUSED
+  // VA-154: pausado por moderación (desde un reporte). Solo el admin lo reactiva; no cuenta en el cupo.
+  MODERATED
 }
 
 enum FilterType {
@@ -1360,4 +1367,45 @@ model QuotaSettings {
   freeSparePartQuota Int      @default(5)
   updatedById        String?
   updatedAt          DateTime @default(now()) @updatedAt
+}
+
+// VA-154: acciones de moderación sobre un aviso.
+enum ModerationActionType {
+  // El admin lo pausa indefinidamente (desde un reporte), con motivo.
+  PAUSE
+  // El dueño lo editó y pide revisión.
+  REVIEW_REQUESTED
+  // El admin lo reactiva (activo si hay cupo; si no, pausado común).
+  REACTIVATE
+  // El admin lo mantiene pausado, con un mensaje nuevo.
+  KEEP_PAUSED
+}
+
+// VA-154: historial de moderación por aviso (quién, cuándo, motivo). La pausa vigente es la última
+// acción de un aviso MODERATED; la cola "Revisiones pendientes" son los MODERATED cuya última acción es
+// REVIEW_REQUESTED. La ventana flotante del dueño sale para las acciones del admin (PAUSE, REACTIVATE,
+// KEEP_PAUSED) sin ownerAcknowledgedAt: una vez por acción, y vuelve si no la cierra.
+model ModerationAction {
+  id                  String               @id @default(cuid())
+  listingKind         ListingKind
+  listingId           String
+  action              ModerationActionType
+  // Motivo (PAUSE), mensaje (KEEP_PAUSED / REACTIVATE) o comentario del dueño (REVIEW_REQUESTED).
+  message             String?
+  ownerId             String
+  // Admin que actuó (null en REVIEW_REQUESTED, que lo pide el dueño).
+  adminId             String?
+  // Reporte que originó la pausa, si vino de uno.
+  reportId            String?
+  // El dueño cerró la ventana ("Entendido" o "Editar aviso").
+  ownerAcknowledgedAt DateTime?
+  // Se mandó el mail al dueño.
+  emailSentAt         DateTime?
+  createdAt           DateTime             @default(now())
+  owner               User                 @relation("ModerationOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  admin               User?                @relation("ModerationAdmin", fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([listingKind, listingId, createdAt])
+  @@index([ownerId, ownerAcknowledgedAt])
+  @@index([action, createdAt])
 }
