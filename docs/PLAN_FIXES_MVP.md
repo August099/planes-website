@@ -1635,7 +1635,17 @@ Probados en celular; verificar también en escritorio.
   `scripts/va152-migrate-data.ts` y `scripts/verify-quota.ts` (23/23). Informe:
   `docs/VA-152_INFORME_IMPACTO.md`. Textos de FAQ, términos, `/howtopublish`, `/arrepentimiento` y la
   bienvenida: borrador para que los revisen los socios.
-- **VA-153:** en espera de los datos del socio (la planilla está en `docs/planillas/`).
+- **VA-153 (18/10/2026):** ✅ hecho en local. La lista del socio (`docs/planillas/VA-153_categorias_socio.txt`)
+  coincidía con la taxonomía cargada salvo lo que decidió el socio: PC-12 Bimotor Turbohélice, Duke Bimotor
+  Pistón, C-425 Conquest Bimotor Turbohélice; S/C = "Otros"; los submodelos heredan siempre la categoría del
+  modelo; Aero Commander 500 y Turbo Commander 680 quedan como están (BP y BT); Zenith y Mitsubishi sin
+  modelos por ahora. Script `scripts/va153-import-categorias.ts` (informe / `--apply`): 3 cambios. Formulario
+  guiado: el tipo (opcional, primero) acota marcas, modelos y variantes; un modelo de la lista fija el tipo con
+  "¿La categoría no es correcta? Avisanos"; marca o modelo propios, tipo a mano. El servidor rechaza un modelo
+  de otra marca o un submodelo de otro modelo. También acotan por categoría el buscador de la Home y la lista
+  de marcas de `/aircraft`; en `/admin/taxonomy` cada modelo tiene su selector de categoría. Sin migración
+  (las columnas ya existían). Informe: 25 avisos con categoría distinta a la de su modelo, todos "(Mock N)" de
+  prueba; no se tocan. **Falta aplicar el script en producción** (OK del socio).
 - **VA-159 a VA-163 (18/10/2026):** ✅ hechos (un commit cada uno): implementos agrícolas antes de
   "Exterior", flechas de la galería del detalle, "Reportar", "Ver todo el catálogo" en azul y 404/403 con
   "Inicio" y "Página anterior".
