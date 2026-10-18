@@ -50,7 +50,7 @@ export function OverlayAircraftCard({
   const formattedPrice = formatPrice(price, { fallback: "Consultar" });
 
   return (
-    <Link href={`/planes/plane-details/${id}`} className="group block h-full">
+    <Link href={`/aircraft/${id}`} className="group block h-full">
       <Card className="relative w-full aspect-[4/3] sm:aspect-[16/11] overflow-hidden rounded-2xl border-0 shadow-lg group-hover:shadow-2xl transition-all duration-300 bg-slate-900">
         {/* BADGE DESTACADO */}
         <div className="absolute top-3 right-3 z-10">

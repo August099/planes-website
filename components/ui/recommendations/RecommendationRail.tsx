@@ -72,7 +72,7 @@ export function CompareSimilarLink({ currentId, items }: { currentId: string; it
   const ids = [currentId, ...items.slice(0, 2).map((i) => i.id)];
   return (
     <Link
-      href={`/planes/compare?ids=${ids.map(encodeURIComponent).join(",")}`}
+      href={`/aircraft/compare?ids=${ids.map(encodeURIComponent).join(",")}`}
       className="inline-flex min-h-11 items-center rounded-md bg-[#001F58] px-4 text-sm font-semibold text-white hover:bg-[#00133A]"
     >
       Comparar estas aeronaves

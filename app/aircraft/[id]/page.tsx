@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { AircraftGallery } from "../../../../components/ui/Carousel";
+import { AircraftGallery } from "@/components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
 import { FileText, AlertTriangle } from "lucide-react";
 import { QnaSection } from "@/components/ui/QnaSection";
-import { PlaneActionsHeader } from "@/components/ui/PlaneActionsHeader";
+import { AircraftActionsHeader } from "@/components/ui/AircraftActionsHeader";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = aircraftSeoTitle(aircraft);
   const description = aircraftSeoDescription(aircraft);
-  const url = `/planes/plane-details/${aircraft.id}`;
+  const url = `/aircraft/${aircraft.id}`;
   const cover = aircraft.images[0]?.url;
 
   return {
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function PlaneDetailsPage({
+export default async function AircraftDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -75,7 +75,7 @@ export default async function PlaneDetailsPage({
   const isInactive = !isListingActive(aircraft);
 
   if (isInactive && !isOwner) {
-    return <InactiveListingNotice backHref="/planes" backLabel="Ver otros aviones" background="planeDetail" />;
+    return <InactiveListingNotice backHref="/aircraft" backLabel="Ver otros aviones" background="aircraftDetail" />;
   }
 
   const seller = aircraft.seller;
@@ -243,8 +243,8 @@ export default async function PlaneDetailsPage({
           descripción → ficha técnica → documentos. Desde lg: izquierda (fotos, descripción, ficha) y
           derecha (resumen, vendedor, documentos). */}
       <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
-        <PageBackground page="planeDetail" />
-        <Breadcrumbs items={[{ label: "Aviones", href: "/planes" }, { label: aircraft.title }]} jsonLd={false} className="-mt-4 -mb-6" />
+        <PageBackground page="aircraftDetail" />
+        <Breadcrumbs items={[{ label: "Aviones", href: "/aircraft" }, { label: aircraft.title }]} jsonLd={false} className="-mt-4 -mb-6" />
         <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
           <div className="contents lg:flex lg:w-2/3 lg:flex-col lg:gap-8">
             <div className="order-1 lg:order-none">
@@ -268,12 +268,12 @@ export default async function PlaneDetailsPage({
             {/* Resumen: título, precio, acciones y datos clave */}
             <div className="order-2 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
               <PublishedLine createdAt={aircraft.createdAt} location={listingLocation} />
-              <PlaneActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url} />
+              <AircraftActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url} />
               <Separator />
               <div>
                 <h1 className="text-2xl font-bold text-[#001F58] break-words">{aircraft.title}</h1>
                 {aircraft.category && (
-                  <CategoryLinks items={[{ label: aircraft.category.name, href: `/planes?category=${encodeURIComponent(aircraft.category.id)}` }]} />
+                  <CategoryLinks items={[{ label: aircraft.category.name, href: `/aircraft?category=${encodeURIComponent(aircraft.category.id)}` }]} />
                 )}
                 <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
               </div>

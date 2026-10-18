@@ -1278,7 +1278,7 @@ Detalle completo y decisiones confirmadas en **`docs/specs/VA-93-a-VA-102-lote-1
 | VA-93 | Servicios: solo Guías y Comparador visibles. Hangares, herramientas, foro y demás se mueven a una carpeta privada que no se publica (`app/_proximamente/`), sin accesos públicos. Documentar en `docs/FUNCIONES_OCULTAS.md` |
 | VA-94 | `/plans` con los planes reales del admin + link "Planes y precios" en Explorar (footer) + CTAs en 4 lugares |
 | VA-95 | Destacados pagos: primero en búsquedas; en la Home, si hay más de 2, 2 destacados al azar; días y precio junto a los precios individuales; destacados incluidos por mes en las suscripciones |
-| VA-96 | Unificar a `aircraft` en código, base y carpetas (rutas con redirects 308; RENAME en la base). Mostrar la lista de renombres antes de hacerlo |
+| VA-96 | Unificar a `aircraft` en código, base y carpetas (rutas con redirects 308; RENAME en la base). Mostrar la lista de renombres antes de hacerlo · **✅ 17/10** (rama `milton/va96-aircraft`; sin RENAME porque la base ya usaba `Aircraft*`) |
 | VA-97 | Perfil: una sola grilla con interruptores por tipo + filtros por estado en el panel propio |
 | VA-98 | Métricas: básicas para todos; avanzadas (7/30/90 días, gráficos, favoritos, comparador, visitas del perfil) para Pro. Corregir el conteo de "Vistas" |
 | VA-99 | Carga masiva de repuestos (Pro): plantilla xlsx/csv, zip de fotos por P/N (o carga manual), borradores, "Publicar todos" |

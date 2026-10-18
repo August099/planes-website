@@ -3,7 +3,7 @@ import { AIRCRAFT_CONDITION_LABELS } from "@/lib/constants";
 import { formatPrice } from "@/lib/format";
 
 // VA-83: única lista de campos de una aeronave, con sus etiquetas y sección. La usan el detalle
-// (lib/listing-detail.ts, web e impresión) y el comparador (/planes/compare). Un campo nuevo del
+// (lib/listing-detail.ts, web e impresión) y el comparador (/aircraft/compare). Un campo nuevo del
 // formulario de publicar se agrega acá y aparece en los dos lugares.
 //
 // - value: el texto para mostrar; undefined = sin dato ("—" en el comparador, se omite en el detalle).

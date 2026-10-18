@@ -8,7 +8,7 @@ import zlib from "node:zlib";
 const base = process.argv[2] ?? "http://localhost:3001";
 const pages = process.argv.slice(3).length
   ? process.argv.slice(3)
-  : ["/", "/planes", "/spareparts", "/planes/plane-details/cmuzv34o7000058v7vknurgc8", "/terms", "/faq"];
+  : ["/", "/aircraft", "/spareparts", "/aircraft/cmuzv34o7000058v7vknurgc8", "/terms", "/faq"];
 
 function get(url) {
   return new Promise((resolve, reject) => {

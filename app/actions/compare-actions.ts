@@ -6,8 +6,8 @@ import { formatPrice } from "@/lib/format";
 
 export type CompareSearchResult = { id: string; title: string; image: string | null; subtitle: string };
 
-// VA-83: buscador de "+ Agregar aeronave" en /planes/compare. Solo avisos visibles (mismo
-// criterio que /planes), por título, marca o modelo.
+// VA-83: buscador de "+ Agregar aeronave" en /aircraft/compare. Solo avisos visibles (mismo
+// criterio que /aircraft), por título, marca o modelo.
 export async function searchAircraftForCompare(query: string, excludeIds: string[] = []): Promise<CompareSearchResult[]> {
   const q = typeof query === "string" ? query.trim().slice(0, 60) : "";
   if (q.length < 2) return [];

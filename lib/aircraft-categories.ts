@@ -1,5 +1,5 @@
 // Mapa único de categorías de aeronaves (VA-43). Lo usan el formulario de publicación,
-// los filtros de /planes y el servidor (para derivar engineType de la categoría).
+// los filtros de /aircraft y el servidor (para derivar engineType de la categoría).
 // Los ids son los de la tabla AircraftCategory.
 
 export type EngineKind = "PISTON" | "TURBOPROP";
@@ -15,7 +15,7 @@ export const ENGINE_LABELS: Record<EngineKind, string> = {
   TURBOPROP: "Turbohélice",
 };
 
-// VA-149 (socio, 17/10): el mismo orden en todo el sitio (Home, filtro de /planes y formulario):
+// VA-149 (socio, 17/10): el mismo orden en todo el sitio (Home, filtro de /aircraft y formulario):
 // Monomotor → Bimotor → Experimental / LSA → Agrícola → Helicóptero → Proyecto → Otros, y dentro de
 // Monomotor y Bimotor, Pistón antes que Turbohélice.
 export const AIRCRAFT_CATEGORIES: AircraftCategoryDef[] = [

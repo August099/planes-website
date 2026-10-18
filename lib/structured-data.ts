@@ -77,7 +77,7 @@ function breadcrumbs(items: { name: string; path: string }[]) {
 }
 
 export function aircraftJsonLd(aircraft: AircraftDetail) {
-  const path = `/planes/plane-details/${aircraft.id}`;
+  const path = `/aircraft/${aircraft.id}`;
   const brand = aircraft.brand?.name || aircraft.customBrand;
   const model = aircraft.model?.name || aircraft.customModel;
 
@@ -96,8 +96,8 @@ export function aircraftJsonLd(aircraft: AircraftDetail) {
 
   const trail = [
     { name: "Inicio", path: "/" },
-    { name: "Aviones", path: "/planes" },
-    ...(aircraft.category ? [{ name: aircraft.category.name, path: `/planes?category=${aircraft.category.id}` }] : []),
+    { name: "Aviones", path: "/aircraft" },
+    ...(aircraft.category ? [{ name: aircraft.category.name, path: `/aircraft?category=${aircraft.category.id}` }] : []),
     { name: aircraft.title, path },
   ];
 

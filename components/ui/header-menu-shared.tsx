@@ -15,7 +15,7 @@ export function PendingDot({ className = "" }: { className?: string }) {
 // repuestos van debajo de "Repuestos" (llegan del Header).
 export const NAV: { href: string; label: string }[] = [
   { href: "/", label: "Inicio" },
-  { href: "/planes", label: "Aviones" },
+  { href: "/aircraft", label: "Aviones" },
   { href: "/spareparts", label: "Repuestos" },
   { href: "/services", label: "Servicios" },
   { href: "/publish", label: "Vender" },

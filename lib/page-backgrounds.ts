@@ -4,8 +4,8 @@
 // La Home no usa fondo estándar: tiene su propio hero.
 
 export const PAGE_BACKGROUNDS = {
-  planes: "/backgrounds/planes.webp",
-  planeDetail: "/backgrounds/aircraft.webp",
+  aircraftList: "/backgrounds/aircraft-list.webp",
+  aircraftDetail: "/backgrounds/aircraft.webp",
   spareparts: "/backgrounds/spareparts.webp",
   publish: "/backgrounds/publish.webp",
   howtopublish: "/backgrounds/banner.webp",

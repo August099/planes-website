@@ -34,7 +34,7 @@ export async function Header() {
             <Link href="/" className={linkClass}>
               Inicio
             </Link>
-            <Link href="/planes" className={linkClass}>
+            <Link href="/aircraft" className={linkClass}>
               Aviones
             </Link>
             {/* VA-120: Repuestos abre un panel con las categorías; VA-116: Servicios es un link simple */}

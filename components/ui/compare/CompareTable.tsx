@@ -145,7 +145,7 @@ export function CompareTable({ columns, sections }: { columns: CompareColumn[]; 
 
   const remove = (id: string) => {
     const rest = ids.filter((x) => x !== id);
-    router.push(rest.length ? compareUrl(rest) : "/planes/compare");
+    router.push(rest.length ? compareUrl(rest) : "/aircraft/compare");
   };
 
   const activeCount = columns.filter((c) => c.active).length;

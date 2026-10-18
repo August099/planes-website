@@ -79,7 +79,7 @@ async function findRecentDuplicate(listingType: ListingType, sellerId: string, t
 }
 
 const listingUrl = (listingType: ListingType, id: string) =>
-  listingType === "aircraft" ? `/planes/plane-details/${id}` : `/spareparts/sparepart-details/${id}`;
+  listingType === "aircraft" ? `/aircraft/${id}` : `/spareparts/sparepart-details/${id}`;
 
 // Campos propios (sin relaciones ni estado/vigencia), iguales en el alta y en la edición.
 function aircraftFields(data: AircraftListing, categoryId: string) {
@@ -320,7 +320,7 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
     }
 
     revalidatePath("/");
-    revalidatePath(listingType === "aircraft" ? "/planes" : "/spareparts");
+    revalidatePath(listingType === "aircraft" ? "/aircraft" : "/spareparts");
     updateTag(RECOMMENDATIONS_TAG); // VA-88
     return {
       ok: true,
@@ -457,8 +457,8 @@ export async function updateListing(id: string, input: ListingInput): Promise<Li
         removedImages.map((url) => pathFromPublicUrl("image", url)).filter((p): p is string => !!p),
         removedDocs.map((url) => pathFromPublicUrl("document", url)).filter((p): p is string => !!p)
       );
-      revalidatePath(`/planes/plane-details/${id}`);
-      revalidatePath("/planes");
+      revalidatePath(`/aircraft/${id}`);
+      revalidatePath("/aircraft");
     } else {
       if (!(await isValidSparePartCategory(data.categoryId))) {
         const msg = "Seleccioná la categoría más específica.";

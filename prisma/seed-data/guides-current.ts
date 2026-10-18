@@ -83,7 +83,7 @@ export const CURRENT_GUIDES: GuideSeed[] = [
         links: [{ label: "Cómo es la transferencia ante ANAC", href: guidePath(TRANSFER_SLUG) }],
       },
     ],
-    cta: [{ label: "Ver aeronaves en venta", href: "/planes" }],
+    cta: [{ label: "Ver aeronaves en venta", href: "/aircraft" }],
   }),
   guide({
     slug: SELLING_SLUG,
@@ -130,7 +130,7 @@ export const CURRENT_GUIDES: GuideSeed[] = [
       {
         heading: "Poné un precio realista",
         paragraphs: ["Compará con avisos similares de la web antes de publicar."],
-        links: [{ label: "Ver aviones publicados", href: "/planes" }],
+        links: [{ label: "Ver aviones publicados", href: "/aircraft" }],
       },
       {
         heading: "Respondé rápido",
@@ -194,7 +194,7 @@ export const CURRENT_GUIDES: GuideSeed[] = [
         paragraphs: ["Si no conocés el trámite, conviene hacerlo con un gestor o un escribano."],
       },
     ],
-    cta: [{ label: "Ver aeronaves en venta", href: "/planes" }],
+    cta: [{ label: "Ver aeronaves en venta", href: "/aircraft" }],
   }),
   guide({
     slug: GLOSSARY_SLUG,
@@ -230,6 +230,6 @@ export const CURRENT_GUIDES: GuideSeed[] = [
       { id: "tsn", heading: "TSN", paragraphs: ["Tiempo desde nuevo: las horas acumuladas desde que el motor, la hélice o la pieza se fabricó."] },
       { id: "tt", heading: "TT / TTAF", paragraphs: ["Tiempo total de la célula: todas las horas que voló la aeronave desde nueva (total time airframe)."] },
     ],
-    cta: [{ label: "Ver aeronaves en venta", href: "/planes" }],
+    cta: [{ label: "Ver aeronaves en venta", href: "/aircraft" }],
   }),
 ];

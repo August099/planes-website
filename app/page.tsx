@@ -71,11 +71,11 @@ export default async function HomePage() {
     getAircraftTaxonomy().then(({ brands }) =>
       brands.filter((b) => b.logoUrl !== null).map(({ id, name, logoUrl }) => ({ id, name, logoUrl }))
     ),
-    // VA-77: avisos visibles por provincia (mismo criterio que /planes y /spareparts). Dinámico,
+    // VA-77: avisos visibles por provincia (mismo criterio que /aircraft y /spareparts). Dinámico,
     // como el resto de la Home, para que coincida siempre con los listados.
     prisma.aircraft.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
     prisma.sparePart.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
-    // VA-86: avisos visibles por categoría de aeronave (mismo criterio que /planes).
+    // VA-86: avisos visibles por categoría de aeronave (mismo criterio que /aircraft).
     prisma.aircraft.groupBy({ by: ["categoryId"], where: activeListingWhere(), _count: { _all: true } }),
   ]);
   const categoryCounts: Record<string, number> = Object.fromEntries(

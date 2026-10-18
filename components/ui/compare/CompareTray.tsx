@@ -30,7 +30,7 @@ export function CompareTray() {
     };
   }, []);
 
-  if (items.length === 0 || pathname.startsWith("/planes/compare") || pathname.startsWith("/admin")) return null;
+  if (items.length === 0 || pathname.startsWith("/aircraft/compare") || pathname.startsWith("/admin")) return null;
 
   const ready = items.length >= 2;
   const href = compareUrl(items.map((i) => i.id));
