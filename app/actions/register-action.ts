@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { UserType } from "@prisma/client";
 import { issueVerificationEmail } from "@/lib/verification";
 import { parseSelectableUserType } from "@/lib/user-types";
-import { launchBalanceCreateData } from "@/lib/launch-balance";
 
 export async function registerUserAction(formData: FormData) {
   try {
@@ -59,8 +58,6 @@ export async function registerUserAction(formData: FormData) {
         passwordHash,
         userType,
         userTypeConfirmed: true,
-        // VA-89: 1 aviso de avión y 1 de repuesto gratis si se registra antes del corte.
-        ...launchBalanceCreateData(),
       },
     });
 

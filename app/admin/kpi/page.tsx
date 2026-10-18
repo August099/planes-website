@@ -15,10 +15,10 @@ import {
 
 // DICCIONARIO DE DESCRIPCIONES DE LAS MÉTRICAS
 const METRIC_DESCRIPTIONS: Record<string, string> = {
-  "Ingresos Mensuales (MRR)": "Revenue recurrente mensual generado por suscripciones activas y paquetes en la plataforma.",
+  "Ingresos Mensuales (MRR)": "Ingreso recurrente mensual de las suscripciones pagas vigentes (Pro y Empresarial; sin cortesías).",
   "Ingresos Anuales (ARR)": "Proyección anualizada de los ingresos recurrentes (MRR × 12).",
   "Margen EBITDA": "Porcentaje de rentabilidad operativa antes de intereses, impuestos, depreciación y amortización. Todavía no se calcula: el sistema no tiene cargados los costos.",
-  "Crecimiento (Mes/Año)": "Porcentaje de variación de ingresos comparando el mes actual respecto al mes anterior.",
+  "Crecimiento (Mes/Año)": "Variación de lo cobrado en suscripciones este mes respecto del mes anterior (sin pagos de prueba).",
   "Usuarios Activos (MAU)": "Cantidad de usuarios únicos que interactuaron con la plataforma en los últimos 30 días.",
   "Publicadores Activos": "Número de vendedores que tienen al menos una publicación activa en el catálogo.",
   "Publicaciones Activas": "Inventario total disponible actualmente entre aeronaves y repuestos activos.",

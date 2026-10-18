@@ -116,7 +116,8 @@ export async function handlePayment(mpPaymentId: string): Promise<Outcome> {
     if (payment.subscriptionId && (status === "refunded" || status === "charged_back")) {
       const summary = await revertSubscriptionCharge(payment.id);
       const note = await handleRefunds(payment.id, mp.refunds ?? [], amount, refunded || amount);
-      return { status: "PROCESSED", note: `Cobro de suscripción ${mpPaymentId} reembolsado: suscripción terminada, ${summary?.toPending.length ?? 0} avisos a pendiente; ${note}` };
+      const ended = summary ? `suscripción terminada, ${summary.AIRCRAFT} aviones y ${summary.SPARE_PART} repuestos pausados` : "suscripción sin cambios (débito anterior o inexistente)";
+      return { status: "PROCESSED", note: `Cobro de suscripción ${mpPaymentId} reembolsado: ${ended}; ${note}` };
     }
     return { status: "IGNORED", note: `Pago ${mpPaymentId} sin compra asociada (external_reference: ${mp.external_reference ?? "—"})` };
   }
@@ -142,7 +143,7 @@ export async function handlePayment(mpPaymentId: string): Promise<Outcome> {
     notes.push(await invoiceNote(payment.id));
     if (refunded > 0) notes.push(await handleRefunds(payment.id, mp.refunds ?? [], amount, refunded));
   } else if (purchaseStatus === "REFUNDED") {
-    const revoked = await revokePurchase(purchase.id, payment.id);
+    const revoked = await revokePurchase(purchase.id);
     notes.push(revoked ? "compra revertida" : "la compra ya estaba revertida o no se había activado");
     if (!revoked) await setStatusIfNotActivated(purchase.id, "REFUNDED");
     notes.push(await handleRefunds(payment.id, mp.refunds ?? [], amount, refunded || amount));

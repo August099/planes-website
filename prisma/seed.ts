@@ -54,8 +54,6 @@ async function main() {
   const randomBoolean = () => Math.random() < 0.5;
 
   const now = new Date();
-  const futureDate = new Date();
-  futureDate.setDate(now.getDate() + 45); // 45 días de vigencia
 
   // 2. Crear 10 Publicaciones de Aviones
   console.log('Creando 10 publicaciones de aviones con campos avanzados...');
@@ -107,7 +105,6 @@ async function main() {
         province: seller.province || 'Provincia',
         status: AircraftStatus.ACTIVE,
         listingStartsAt: now,
-        listingExpiresAt: futureDate,
 
         // Creación de Motores (1 motor random)
         engines: {
@@ -172,7 +169,6 @@ async function main() {
         province: seller.province || 'Provincia',
         status: SparePartStatus.ACTIVE,
         listingStartsAt: now,
-        listingExpiresAt: futureDate,
         
         // Imágenes reales de maquinaria o partes
         images: {

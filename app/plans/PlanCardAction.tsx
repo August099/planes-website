@@ -7,19 +7,20 @@ import { ArrowRight } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { cancelSubscriptionAction, resumeSubscriptionAction } from "@/app/actions/subscription-actions";
 import type { MyPlanState } from "@/app/actions/plan-state-actions";
-import type { PlanCard } from "@/lib/plans";
+
+export type PlanActionPlan = { id: string; name: string; popular: boolean };
 
 const dateFmt = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Argentina/Buenos_Aires" });
 
-// VA-121: botón de cada tarjeta de /plans. Sin suscripción: "Suscribirme" / "Comprar". Con una
-// suscripción vigente: "Cancelar suscripción" en el plan actual y "Cambiar a este plan" en las otras
-// suscripciones (cambio inmediato, sin prorrateo). Los packs no cambian.
+// VA-121: botón de cada plan de /plans. Sin suscripción: "Suscribirme". Con una suscripción vigente:
+// "Cancelar suscripción" en el plan actual y "Cambiar a este plan" en los otros (cambio inmediato, sin
+// prorrateo; VA-152: también entre las opciones del Empresarial).
 export function PlanCardAction({
   plan,
   state,
   onStateChange,
 }: {
-  plan: PlanCard;
+  plan: PlanActionPlan;
   state: MyPlanState;
   onStateChange: (s: MyPlanState) => void;
 }) {
@@ -28,12 +29,11 @@ export function PlanCardAction({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const base = "w-full min-h-11 py-3 px-4 rounded-xl font-medium text-sm text-center transition-all duration-200 flex items-center justify-center gap-2";
-  const primary = plan.popular ? "bg-red-600 hover:bg-red-700 text-white shadow-md" : "bg-[#001F58] hover:bg-[#001F58]/90 text-white shadow-sm";
-  const secondary = plan.popular
-    ? "border border-white/40 text-white hover:bg-white/10"
-    : "border border-[#001F58]/25 text-[#001F58] hover:bg-[#001F58]/5";
-  const note = `mt-2 text-center text-xs ${plan.popular ? "text-white/75" : "text-[#001F58]/70"}`;
+  const base = "w-full min-h-11 py-3 px-4 rounded-md font-bold text-sm text-center transition-colors flex items-center justify-center gap-2";
+  // El plan destacado lleva el CTA rojo; el resto, el azul de marca (pautas de diseño).
+  const primary = plan.popular ? "bg-[#E70F1F] hover:bg-[#C20D1A] text-white" : "bg-[#001F58] hover:bg-[#00133A] text-white";
+  const secondary = "border border-[#001F58]/25 text-[#001F58] hover:bg-[#001F58]/5";
+  const note = "mt-2 text-xs text-slate-500";
 
   const checkout = (label: string) => (
     <Link href={`/checkout?planId=${plan.id}`} className={`${base} ${primary}`}>
@@ -42,7 +42,7 @@ export function PlanCardAction({
     </Link>
   );
 
-  if (!plan.isSubscription || !state) return checkout(plan.buttonText);
+  if (!state) return checkout("Suscribirme");
 
   const isCurrent = state.planId === plan.id;
   const until = dateFmt.format(new Date(state.currentPeriodEnd));

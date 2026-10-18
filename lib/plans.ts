@@ -1,73 +1,65 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getListingPrices } from "@/lib/listing-prices";
-import { billingText, defaultUsageText } from "@/lib/plan-rules";
+import { getFreeQuota } from "@/lib/quota";
 
-// VA-80: tarjetas de /plans: los planes activos de la base, editables desde /admin/plans.
-// VA-92 (decisión del socio, 13/10): no hay planes de 1 publicación. Quien publica una sola cosa la
-// paga al terminar el formulario, al precio individual de /admin/prices (SinglePrices, referencia).
+// VA-152: datos de /plans: Gratis (el cupo de QuotaSettings), Pro y las 3 opciones del Empresarial,
+// editables desde /admin/plans. Un plan sin precio (o inactivo) no se muestra; sin planes pagos,
+// /plans muestra solo el Gratis.
 export const PLANS_TAG = "plans";
 
-export type PlanCard = {
+export type PaidPlan = {
   id: string;
   name: string;
-  price: string;
-  billingText: string;
-  postCount: string;
-  badge: string | null;
+  price: number;
   description: string;
-  popular: boolean;
-  isSubscription: boolean;
   features: string[];
-  buttonText: string;
+  badge: string | null;
+  popular: boolean;
+  /** Cupo de avisos activos (null = ilimitado). */
+  aircraft: number | null;
+  parts: number | null;
 };
 
-const NUMBER = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
-const formatARS = (amount: number) => (amount === 0 ? "Gratis" : `AR$ ${NUMBER.format(amount)}`);
+export type PlansPage = {
+  free: { aircraft: number; parts: number };
+  pro: PaidPlan | null;
+  /** Opciones del Empresarial por lo que eligió ilimitado. */
+  business: { aircraft: PaidPlan | null; parts: PaidPlan | null; both: PaidPlan | null };
+};
 
-const getActivePlans = unstable_cache(
-  async () =>
-    prisma.plan.findMany({
-      where: { isActive: true, archivedAt: null, type: { not: "AD_BANNER" } },
-      orderBy: [{ sortOrder: "asc" }, { price: "asc" }],
-    }),
-  // VA-105: clave nueva para no servir los planes de prueba cacheados (los reales se cargan con un
-  // script, que no puede invalidar el tag). Cambios desde /admin/plans invalidan con PLANS_TAG.
-  ["active-plans", "va105-reales"],
-  { tags: [PLANS_TAG], revalidate: 3600 }
-);
-
-/** Precio de la publicación individual (ListingPrice, VA-59): se muestra como referencia, no es un plan. */
-export type SinglePrices = { aircraft: string; parts: string };
-
-export async function getPlanCards(): Promise<{ plans: PlanCard[]; single: SinglePrices }> {
-  const [prices, plans] = await Promise.all([getListingPrices(), getActivePlans()]);
-
-  const toCard = (p: (typeof plans)[number]): PlanCard => {
-    const isSubscription = p.type === "SUBSCRIPTION";
-    const count = p.type === "AIRCRAFT_PACK" ? p.aircraftListingsCount : p.sparePartsListingsCount;
-    return {
-      id: p.id,
-      name: p.name,
-      price: formatARS(Number(p.price)),
-      billingText: billingText(p.type, p.billingInterval),
-      postCount: p.usageDescription || defaultUsageText(p),
-      badge: p.badge,
-      description: p.description ?? "",
-      popular: p.isPopular,
-      isSubscription,
-      features: p.features,
-      buttonText: isSubscription
-        ? "Suscribirme"
-        : `Comprar ${count} ${p.type === "AIRCRAFT_PACK" ? (count === 1 ? "Avión" : "Aviones") : count === 1 ? "Repuesto" : "Repuestos"}`,
+export const getPlansPage = unstable_cache(
+  async (): Promise<PlansPage> => {
+    const [free, plans] = await Promise.all([
+      getFreeQuota(),
+      prisma.plan.findMany({
+        where: { tier: { not: null }, isActive: true, archivedAt: null, price: { gt: 0 } },
+        orderBy: [{ sortOrder: "asc" }, { price: "asc" }],
+      }),
+    ]);
+    const toPlan = (p: (typeof plans)[number]): PaidPlan => {
+      const business = p.tier === "BUSINESS";
+      return {
+        id: p.id,
+        name: p.name,
+        price: Number(p.price),
+        description: p.description ?? "",
+        features: p.features,
+        badge: p.badge,
+        popular: p.isPopular,
+        aircraft: p.isUnlimitedAircraft ? null : business ? free.AIRCRAFT : p.aircraftListingsCount,
+        parts: p.isUnlimitedSpareParts ? null : business ? free.SPARE_PART : p.sparePartsListingsCount,
+      };
     };
-  };
-
-  // VA-105 (pedido del socio, 14/10): /plans muestra todos los planes juntos, sin pestañas de
-  // aviones y repuestos (showInAircraftTab/showInPartsTab quedan en la base, sin uso).
-  return {
-    plans: plans.map(toCard),
-    single: { aircraft: formatARS(prices.AIRCRAFT.amount), parts: formatARS(prices.SPARE_PART.amount) },
-  };
-}
+    const pro = plans.find((p) => p.tier === "PRO");
+    const option = (a: boolean, r: boolean) => plans.find((p) => p.tier === "BUSINESS" && p.isUnlimitedAircraft === a && p.isUnlimitedSpareParts === r);
+    const pick = (p: (typeof plans)[number] | undefined) => (p ? toPlan(p) : null);
+    return {
+      free: { aircraft: free.AIRCRAFT ?? 0, parts: free.SPARE_PART ?? 0 },
+      pro: pick(pro),
+      business: { aircraft: pick(option(true, false)), parts: pick(option(false, true)), both: pick(option(true, true)) },
+    };
+  },
+  ["plans-page", "va152"],
+  { tags: [PLANS_TAG, "quota"], revalidate: 3600 }
+);

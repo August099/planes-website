@@ -8,9 +8,7 @@ import { RECOMMENDATIONS_TAG } from "@/lib/recommendations";
 import { Resend } from "resend";
 import { EMAIL_FROM, escapeHtml, getSupportEmail } from "@/lib/mail";
 import { AnalyticsEventType } from "@prisma/client";
-import { hasNoExpiryPlan } from "@/lib/subscriptions";
-import { consumeListingAllowance, refundListingAllowance } from "@/lib/payments/allowance";
-import { recordFunding } from "@/lib/balances";
+import { lockAndCheckRoom, QUOTA_KIND_TEXT, getQuotaUsage } from "@/lib/quota";
 import { coordinatesFor } from "@/lib/geocode";
 import {
   listingSchema,
@@ -189,7 +187,7 @@ export async function discardListingUploads(input: {
  * Paso 2: crea la publicación con los datos del formulario y las rutas de los archivos
  * ya subidos. Devuelve { ok: true, id, url } o { ok: false, error, fieldErrors }.
  */
-export async function createListing(input: ListingInput): Promise<ListingResult> {
+export async function createListing(input: ListingInput, opts: { saveAsPaused?: boolean } = {}): Promise<ListingResult> {
   const user = await getCurrentUser();
   if (!user?.id) return { ok: false, error: "Tenés que iniciar sesión." };
 
@@ -221,12 +219,7 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
   if (duplicate) {
     // Ya existe: los archivos de este segundo envío sobran.
     await removeUploads(user.id, listingType, imagePaths, docPaths);
-    return {
-      ok: true,
-      id: duplicate.id,
-      url: listingUrl(listingType, duplicate.id),
-      ...(duplicate.status === "PENDING_PAYMENT" ? { checkoutUrl: `/checkout?listing=${listingType}:${duplicate.id}` } : {}),
-    };
+    return { ok: true, id: duplicate.id, url: listingUrl(listingType, duplicate.id), ...(duplicate.status === "PAUSED" ? { paused: true } : {}) };
   }
 
   const uploads = await verifyUploads(
@@ -238,14 +231,10 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
   if (!uploads.ok) return fail({ ok: false, error: uploads.error, fieldErrors: { images: uploads.error } });
 
   const now = new Date();
-  // VA-80: con un plan "sin vencimiento" vigente, la publicación no vence (activeListingWhere
-  // acepta listingExpiresAt null).
-  const expiresAt: Date | null = (await hasNoExpiryPlan(user.id, data.listingType === "aircraft" ? "AIRCRAFT" : "SPARE_PART")) ? null : new Date(now);
-  expiresAt?.setDate(now.getDate() + 45);
   // VA-83: coordenadas de la localidad para el mapa del detalle (si Georef falla, sin mapa).
   const coords = await coordinatesFor(data.city, data.province);
 
-  // Las categorías se validan antes de reservar el permiso de publicación (VA-92).
+  // Las categorías se validan antes de mirar el cupo.
   const aircraftCategoryId = data.listingType === "aircraft" ? await resolveAircraftCategory(data) : null;
   if (data.listingType === "aircraft" && !aircraftCategoryId) {
     return fail({ ok: false, error: "Seleccioná una categoría válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });
@@ -255,35 +244,36 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
     return fail({ ok: false, error: msg, fieldErrors: { categoryId: msg } });
   }
 
-  // VA-92: suscripción o saldo → se publica ya; si no, queda "pendiente de pago" y va al checkout.
+  // VA-152: con cupo libre se publica activo; sin cupo, solo si eligió "Guardar como pausado". El
+  // cupo se mira y el aviso se crea en la misma transacción, con la fila del usuario bloqueada: dos
+  // altas simultáneas con un solo lugar libre no quedan las dos activas.
   const kind = listingType === "aircraft" ? "AIRCRAFT" : "SPARE_PART";
-  const allowance = await consumeListingAllowance(user.id, kind);
-  const publication = allowance
-    ? { status: "ACTIVE" as const, listingStartsAt: now, listingExpiresAt: expiresAt }
-    : { status: "PENDING_PAYMENT" as const, listingStartsAt: null, listingExpiresAt: null };
+  const sellerId = user.id;
 
   try {
-    let id: string;
-
-    if (data.listingType === "aircraft") {
-      const aircraft = await prisma.aircraft.create({
+    const created = await prisma.$transaction(async (tx) => {
+      const room = await lockAndCheckRoom(tx, sellerId, kind);
+      if (!room && !opts.saveAsPaused) return null;
+      const publication = room ? { status: "ACTIVE" as const, listingStartsAt: now } : { status: "PAUSED" as const, listingStartsAt: null };
+      if (data.listingType === "aircraft") {
+        const aircraft = await tx.aircraft.create({
+          data: {
+            sellerId,
+            ...aircraftFields(data, aircraftCategoryId!),
+            ...coords,
+            ...publication,
+            images: { create: uploads.imageUrls.map((url, order) => ({ url, order })) },
+            documents: { create: uploads.documents },
+            engines: { create: engineRows(data) },
+            propeller: { create: propellerRows(data) },
+          },
+          select: { id: true },
+        });
+        return { id: aircraft.id, paused: !room };
+      }
+      const sparePart = await tx.sparePart.create({
         data: {
-          sellerId: user.id,
-          ...aircraftFields(data, aircraftCategoryId!),
-          ...coords,
-          ...publication,
-          images: { create: uploads.imageUrls.map((url, order) => ({ url, order })) },
-          documents: { create: uploads.documents },
-          engines: { create: engineRows(data) },
-          propeller: { create: propellerRows(data) },
-        },
-        select: { id: true },
-      });
-      id = aircraft.id;
-    } else {
-      const sparePart = await prisma.sparePart.create({
-        data: {
-          sellerId: user.id,
+          sellerId,
           ...sparePartFields(data),
           ...coords,
           ...publication,
@@ -291,17 +281,20 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
         },
         select: { id: true },
       });
-      id = sparePart.id;
-    }
+      return { id: sparePart.id, paused: !room };
+    });
 
-    // VA-150: con qué se pagó la publicación (suscripción o lote de saldo), para el arrepentimiento.
-    if (allowance) {
-      try {
-        await recordFunding(prisma, { userId: user.id, kind, listingId: id, reason: "PUBLISH", funding: allowance });
-      } catch (err) {
-        console.error("[VA-150] no se pudo registrar con qué se pagó el aviso:", err);
-      }
+    if (!created) {
+      const usage = await getQuotaUsage(sellerId);
+      const used = usage.used[kind];
+      const text = QUOTA_KIND_TEXT[kind];
+      return fail({
+        ok: false,
+        quotaFull: true,
+        error: `Tenés ${used} ${used === 1 ? `${text.one} activo` : `${text.many} activos`} y no te queda cupo en tu plan ${usage.planName}. Pausá uno de tus avisos, pasate a un plan con más cupo o guardalo como pausado.`,
+      });
     }
+    const { id } = created;
 
     try {
       await prisma.analyticsEvent.create({
@@ -322,15 +315,9 @@ export async function createListing(input: ListingInput): Promise<ListingResult>
     revalidatePath("/");
     revalidatePath(listingType === "aircraft" ? "/aircraft" : "/spareparts");
     updateTag(RECOMMENDATIONS_TAG); // VA-88
-    return {
-      ok: true,
-      id,
-      url: listingUrl(listingType, id),
-      ...(allowance ? {} : { checkoutUrl: `/checkout?listing=${listingType}:${id}` }),
-    };
+    return { ok: true, id, url: listingUrl(listingType, id), ...(created.paused ? { paused: true } : {}) };
   } catch (error) {
     console.error("Error al crear la publicación:", error);
-    await refundListingAllowance(user.id, kind, allowance);
     return fail({ ok: false, error: "No se pudo guardar la publicación. Probá de nuevo." });
   }
 }

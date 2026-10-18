@@ -50,11 +50,8 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
     (purchase.spareParts[0] && { ...purchase.spareParts[0], href: `/spareparts/sparepart-details/${purchase.spareParts[0].id}`, type: "parts" }) ||
     (purchase.hangars[0] && { ...purchase.hangars[0], href: `/services/hangars/hangar-details/${purchase.hangars[0].id}`, type: "hangar" }) ||
     null;
-  const retryHref = listing
-    ? `/checkout?listing=${listing.type}:${listing.id}`
-    : purchase.plan
-      ? `/checkout?planId=${purchase.plan.id}`
-      : "/plans";
+  // VA-152: ya no se paga por aviso; las compras viejas de un aviso llevan a /plans al reintentar.
+  const retryHref = !listing && purchase.plan ? `/checkout?planId=${purchase.plan.id}` : "/plans";
 
   const mpStatus = params.status ?? params.collection_status ?? null;
   const invoiceReady = purchase.payments.flatMap((p) => p.invoices).find((i) => i.status === "ISSUED" && i.pdfPath) ?? null;
@@ -91,8 +88,8 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
                 {listing
                   ? `Tu aviso “${listing.title}” ya está publicado.`
                   : purchase.plan
-                    ? `Tu ${purchase.plan.name} ya está disponible: cada vez que publiques, se descuenta de tu saldo.`
-                    : "Ya tenés el aviso disponible para publicar."}
+                    ? `Tu ${purchase.plan.name} ya está disponible.`
+                    : "Tu compra ya está acreditada."}
                 {total > 0 && !invoiceReady && " Te enviamos la factura por email cuando esté emitida; también la vas a encontrar en Mis compras."}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">

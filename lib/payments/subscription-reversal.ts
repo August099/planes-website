@@ -2,13 +2,12 @@ import "server-only";
 import { PreApproval } from "mercadopago";
 import { prisma } from "@/lib/prisma";
 import { mpClient } from "@/lib/mercadopago";
-import { syncListingExpiry } from "@/lib/subscriptions";
-import { applyReversal, previewReversal, type ReversalSummary } from "@/lib/payments/reversal";
+import { enforceQuota, excessFor, limitsWithoutPlan, type QuotaKind } from "@/lib/quota";
 
-// VA-150: reembolso de un cobro de suscripción (botón de arrepentimiento, reembolso a mano en Mercado
-// Pago o contracargo). La suscripción termina en el momento, se cancela el débito y los avisos
-// publicados o renovados gracias a la suscripción desde ese cobro pasan a "pendiente de pago" o
-// vuelven al vencimiento anterior. Lo que salió de otro origen queda como estaba.
+// Reembolso de un cobro de suscripción (botón de arrepentimiento, reembolso a mano en Mercado Pago o
+// contracargo). La suscripción termina en el momento y se cancela el débito. VA-152: con cupos fijos
+// no hay nada que "devolver" aviso por aviso: la cuenta vuelve al cupo Gratis y, si tiene más avisos
+// activos, se pausan los más nuevos (lib/quota.ts).
 
 /** Primer cobro del débito al que pertenece (el alta, o el primero del plan nuevo tras un cambio). */
 export function preapprovalOf(raw: unknown): string | null {
@@ -27,20 +26,27 @@ export async function isLaterSubscriptionCharge(payment: { id: string; subscript
   return earlier.some((p) => preapprovalOf(p.raw) === preapproval);
 }
 
-export async function previewSubscriptionReversal(paymentId: string): Promise<ReversalSummary | null> {
-  const payment = await prisma.payment.findUnique({ where: { id: paymentId }, select: { subscriptionId: true, approvedAt: true } });
-  if (!payment?.subscriptionId || !payment.approvedAt) return null;
-  return previewReversal({ subscriptionId: payment.subscriptionId, since: payment.approvedAt });
+/** Qué se pausaría al terminar la suscripción de este cobro (no cambia nada). */
+export async function previewSubscriptionReversal(paymentId: string): Promise<Record<QuotaKind, number> | null> {
+  const payment = await prisma.payment.findUnique({ where: { id: paymentId }, select: { subscription: { select: { userId: true } } } });
+  if (!payment?.subscription) return null;
+  const userId = payment.subscription.userId;
+  return excessFor(userId, await limitsWithoutPlan(userId));
 }
 
-/** Retira lo obtenido con el cobro y termina la suscripción. Idempotente. */
-export async function revertSubscriptionCharge(paymentId: string): Promise<ReversalSummary | null> {
-  const payment = await prisma.payment.findUnique({ where: { id: paymentId }, select: { id: true, subscriptionId: true, approvedAt: true } });
-  if (!payment?.subscriptionId || !payment.approvedAt) return null;
-  const summary = await prisma.$transaction((tx) => applyReversal(tx, { subscriptionId: payment.subscriptionId!, since: payment.approvedAt! }, payment.id));
+/** Termina la suscripción del cobro reembolsado. Idempotente. Devuelve lo que se pausó. */
+export async function revertSubscriptionCharge(paymentId: string): Promise<Record<QuotaKind, number> | null> {
+  const payment = await prisma.payment.findUnique({ where: { id: paymentId }, select: { subscriptionId: true, raw: true } });
+  if (!payment?.subscriptionId) return null;
   const sub = await prisma.subscription.findUnique({ where: { id: payment.subscriptionId }, select: { id: true, userId: true, mpSubscriptionId: true, mpStatus: true, status: true } });
-  if (sub) await endSubscriptionNow(sub);
-  return summary;
+  if (!sub) return null;
+  // Un reembolso de un débito anterior (ya reemplazado por otro, VA-121) no termina el plan de hoy.
+  const preapproval = preapprovalOf(payment.raw);
+  if (preapproval && sub.mpSubscriptionId && preapproval !== sub.mpSubscriptionId) {
+    console.warn(`[suscripciones] reembolso del débito ${preapproval}, que ya no es el vigente (${sub.mpSubscriptionId}): no se termina el plan`);
+    return null;
+  }
+  return endSubscriptionNow(sub);
 }
 
 export async function endSubscriptionNow(sub: { id: string; userId: string; mpSubscriptionId: string | null; mpStatus: string | null; status?: string }) {
@@ -60,10 +66,8 @@ export async function endSubscriptionNow(sub: { id: string; userId: string; mpSu
       mpStatus: sub.mpSubscriptionId ? "cancelled" : null,
       pendingPlanId: null,
       pendingMpSubscriptionId: null,
-      // Se pierden los destacados incluidos.
-      featuredCredits: 0,
     },
   });
-  // Los avisos de otro origen que no vencían por el plan vuelven a tener vencimiento.
-  await syncListingExpiry(sub.userId);
+  // VA-152: vuelve al cupo Gratis; lo que sobra se pausa (los más nuevos).
+  return enforceQuota(sub.userId);
 }

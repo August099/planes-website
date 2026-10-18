@@ -83,7 +83,7 @@ export default function PrivacidadPage() {
                 <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
                   <li>Crear y administrar tu cuenta, verificar tu correo y permitirte recuperar el acceso.</li>
                   <li>Mostrar tus publicaciones y permitir que los interesados te contacten por WhatsApp, teléfono o correo.</li>
-                  <li>Cobrar las publicaciones y los planes, emitir las facturas, gestionar renovaciones, cancelaciones y devoluciones (incluido el derecho de arrepentimiento).</li>
+                  <li>Cobrar los planes, emitir las facturas, gestionar cancelaciones, cambios de plan y devoluciones (incluido el derecho de arrepentimiento).</li>
                   <li>Enviarte correos operativos: verificación de cuenta, cambio de contraseña, estado de pagos y avisos sobre tu suscripción.</li>
                   <li>Mantener la seguridad del sitio: revisar reportes, evitar abusos y limitar pedidos repetidos.</li>
                   <li>Medir el uso del sitio de forma agregada para mejorarlo (qué se busca, qué se ve, de dónde llegan las visitas).</li>

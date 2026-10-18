@@ -926,19 +926,22 @@ Notas para cuando se encare, a partir de lo que ya existe:
 > Una sola lista de lo que falta, en tres grupos. Se actualiza al cerrar cada punto. El detalle de cada paso está en `docs/PRUEBAS_PREVIEW.md` (Preview) y `docs/PASE_A_PRODUCCION.md` (producción).
 
 ### 1. Bloquea el lanzamiento
-- [ ] **Migraciones nuevas en el Preview:** al menos las del 17/10 (`va150_registro_de_consumo`, `va149_experimental_lsa` y `va148_iconos_categorias`). Se confirma con `npx prisma migrate status` y se aplican con `npx prisma migrate deploy` (lo corre el socio).
+- [ ] **Migraciones nuevas en el Preview** (lo corre el socio): primero `scripts/va152-report.ts` (informe, antes de migrar), después `npx prisma migrate deploy` (las del 17/10 y 18/10: `va150_registro_de_consumo`, `va149_experimental_lsa`, `va148_iconos_categorias`, `va151_metricas_vendedor`, `va151_favoritos_fecha`, `va96_rutas_aircraft`, `va152_cupos` y `va152_limpieza`) y `scripts/va152-migrate-data.ts` (planes y cupos). Sin las migraciones, Vercel no puede construir el Preview.
+- [ ] **Lote del 18/10 (VA-152 a VA-163):** ver la tabla al final del plan. VA-152 hecho en local el 18/10.
+- [ ] **Montos de Pro y del Empresarial** (los definen los socios; se cargan en `/admin/plans`).
 - [ ] **Pruebas en el Preview:**
   - [ ] Webhook: el pago se activa solo y la página pasa sola a "¡Pago acreditado!", con vuelta automática al sitio.
-  - [ ] Suscripción mensual: alta con la cuenta compradora de prueba y "Cambiar a este plan" (VA-121). La cancelación ya está probada.
-  - [ ] VA-150 con pagos de prueba: los casos de la tabla que se puedan probar con Mercado Pago de prueba.
-  - [ ] Registro y login con Google reales: saldo de lanzamiento 1/1 y ventana de bienvenida una sola vez (VA-89, VA-111, VA-135).
+  - [ ] Suscripción mensual (VA-152): alta al Pro con la cuenta compradora de prueba, "Cambiar a este plan" al Empresarial y cambio de opción del Empresarial (VA-121). La cancelación ya está probada.
+  - [ ] Cupos (VA-152): publicar sin cupo, "Guardar como pausado", pausar y activar, y la baja del Pro (se pausan los más nuevos).
+  - [ ] Arrepentimiento del alta de una suscripción: reembolso, fin de la suscripción y baja al cupo Gratis.
+  - [ ] Registro y login con Google reales: cupo Gratis 1/5 y ventana de bienvenida una sola vez (VA-111, VA-135, VA-152).
 - [ ] **Celular real:** las 6 pruebas de VA-30, el QR del PDF, filtros con "Aplicar" visible y carruseles de la Home.
 - [ ] **Rendimiento (VA-76):** PageSpeed Insights sobre el Preview (Home, `/aircraft` y un detalle, en celular): Lighthouse ≥ 85 y menos de 1 MB de JavaScript en la Home. 17/10: 64 en celular y 96 en PC; mejoras del 18/10 a medir cuando el Preview se vuelva a desplegar.
 - [ ] **D14:** región de las funciones de Vercel contra Supabase (Montreal), con latencia antes y después si conviene moverlas.
 - [ ] **Fuera del código** (`docs/PASE_A_PRODUCCION.md`, sección 6): Google OAuth publicado, dominio en Resend, webhook de producción, `www` → sin `www`, bucket `documents` privado y Search Console/Bing.
 - [ ] **Runbook actualizado** (`docs/PASE_A_PRODUCCION.md`) contra el estado actual: migraciones, variables y scripts de datos base.
 - [ ] **Limpieza de producción** con `scripts/prod-cleanup-report.ts` (solo informe) y decisión sobre los fundadores asignados a cuentas de prueba.
-- [ ] **Testeo final en producción:** webhook real, pago real de AR$ 100, arrepentimiento, archivar el "Pago de prueba" y recién ahí `TUSFACTURAS_MODE=production` y `BILLING_ENABLED=true` (solo en Production).
+- [ ] **Testeo final en producción:** webhook real, un pago real (⏳ a redefinir con VA-152: ya no hay "Pago de prueba"; lo deciden los socios), arrepentimiento y recién ahí `TUSFACTURAS_MODE=production` y `BILLING_ENABLED=true` (solo en Production).
 - [ ] **Textos del socio:** FAQ, términos y `/about` sin `[COMPLETAR]`.
 
 ### 2. Se decide
@@ -946,7 +949,8 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - [ ] **VA-150 (lo confirma el socio más adelante):** ¿arrepentimiento solo en el primer cobro de la suscripción o en cada cobro? Hoy: solo el primero (`WITHDRAWAL_SUBSCRIPTION_SCOPE`). Confirmar con el contador o un abogado.
 - [x] **VA-97** (grilla del perfil): ✅ sí, antes del lanzamiento (hecho el 17/10). **VA-100** (color del footer): ❌ descartada (socio, 17/10).
 - [x] **VA-151 · Métricas de la cuenta VA:** ✅ se hace (socio, 17/10). Spec en `docs/specs/VA-151-metricas-cuenta-va.md`; falta el OK del SQL de la migración.
-- [ ] **VA-136** (header blanco al recargar la Home): no se reproduce; hace falta una captura y el dispositivo y navegador donde pasa.
+- [ ] **VA-136** (header blanco al recargar la Home): causa encontrada el 17/10 (la Home regenerada llega como `/index`), arreglo en `2c85309`; falta confirmarlo en el Preview cuando se vuelva a desplegar.
+- [ ] **Cómo se prueba un pago real en producción** sin el "Pago de prueba" (VA-152): lo deciden los socios.
 - [x] **VA-96 · Renombrar a `aircraft`:** ✅ se hace (socio, 17/10). Antes, la lista completa de renombres para el OK.
 
 ### 3. Después del lanzamiento
@@ -1592,3 +1596,41 @@ Probados en celular; verificar también en escritorio.
 - **Reglas de los datos:** no cuentan el dueño, los admins ni los bots; solo totales, nunca quién vio; retención mínima de 60 días; consultas agregadas con caché.
 - **Al desplegar:** sumar "Métricas de tus avisos" a la tarjeta de la Suscripción VA en `/plans`.
 - **Prioridad:** después de VA-148 a VA-150. Preguntar si sale en el lanzamiento o queda oculto.
+
+---
+
+## Lote del 18/10 (socios) — va en el MVP · ordenado por prioridad · detalle en `docs/specs/VA-152-a-VA-164-lote-18-10.md`
+
+> **Cambio de modelo de negocio:** VA-152 reemplaza el cobro por publicación. Lo que el checklist de lanzamiento dice sobre pagos (pruebas en el Preview, VA-150 y la parte de la promo de lanzamiento) se revisa a la luz de este cambio. Al final, todo se migra a producción (VA-164).
+
+| Prioridad | Tarea | Qué |
+|---|---|---|
+| 1 | **VA-152** | **Cupos fijos sin vencimiento.** Gratis para siempre: 1 avión y 5 repuestos activos. **Pro:** 3 y 15, mensual. **Empresarial:** aviones ilimitados, repuestos ilimitados o ambos, con precio según la opción. Montos a definir, se cargan en el admin. Fuera aviso suelto, packs, renovación, vencimiento y "pendiente de pago" (los vencidos o pendientes pasan a pausados). Promo de lanzamiento → cupo gratis. En la baja de un plan, el usuario elige qué avisos quedan (7 días; si no, se pausan los más nuevos). Arrepentimiento solo en suscripciones. ❓ Cupo del tipo no ilimitado en el Empresarial, beneficios de Pro y Empresarial (Página VA y métricas) y cuentas con más avisos que el cupo |
+| 2 | **VA-153** | Cada modelo y submodelo con su categoría (las marcas se derivan). Planilla para que el socio complete, script de importación y formulario guiado: la categoría filtra marcas y modelos, y el modelo completa la categoría |
+| 3 | **VA-154** | Pausa indefinida por reporte, con motivo; ventana flotante al dueño en su próxima visita y mail; el dueño edita y pide revisión; el admin reactiva o mantiene |
+| 4 | **VA-155** | Cartel de cookies ("Aceptar" / "Solo necesarias"), inventario de cookies y privacidad y términos actualizados (borrador para los socios) |
+| 5 | **VA-157** | Quitar DURG/SMOH de todo (informe y migración que elimina la columna) |
+| 6 | **VA-158** | Eliminar todo lo referido a los Miembros Fundadores (insignia, admin, textos y columna) |
+| 7 | **VA-156** | Mapa del detalle con MapLibre + OpenFreeMap (zona aproximada de 5 km, carga diferida, el SVG como respaldo) |
+| 8 | VA-159 a VA-163 | Ajustes chicos: implementos agrícolas arriba de "Exterior"; flechas de la galería del detalle iguales a las de las tarjetas; "Reportar" en el detalle; "Ver todo el catálogo" en azul; 404 con "Inicio" y "Página anterior" |
+| 9 | **VA-164** | Migración de todo a producción con el runbook actualizado (backup, migraciones, scripts de datos y planes con montos) |
+
+**Decisiones de los socios (18/10):**
+- Pro y Empresarial con **suscripción mensual**.
+- En la baja, el usuario **elige qué avisos quedan**.
+- Los avisos reportados se pueden **editar y pedir revisión**.
+- La promo de lanzamiento **se reemplaza** por el cupo gratis.
+
+### Estado del lote del 18/10
+
+- **VA-152 (18/10/2026):** ✅ hecho en local. Decisiones del socio (18/10): sin página de cupones ni
+  pestaña "Mis cupones" (la lógica queda en el código); planes viejos borrados (el "Pago de prueba" queda
+  archivado porque tiene compras); "Planes y precios" en un solo lugar del admin; en el Empresarial, lo
+  que no es ilimitado tiene el cupo del Gratis; solo el Empresarial incluye Página VA y métricas; sin
+  plazos en la baja (se pausan en el momento los más nuevos); las cuentas que hoy superan el cupo
+  conservan sus avisos; las cortesías pasan al Empresarial con todo ilimitado; los admins, como una
+  cuenta Empresarial. Hangares sin cambios. Migraciones `va152_cupos` y `va152_limpieza`, script
+  `scripts/va152-migrate-data.ts` y `scripts/verify-quota.ts` (23/23). Informe:
+  `docs/VA-152_INFORME_IMPACTO.md`. Textos de FAQ, términos, `/howtopublish`, `/arrepentimiento` y la
+  bienvenida: borrador para que los revisen los socios.
+- **VA-153:** en espera de los datos del socio (la planilla está en `docs/planillas/`).

@@ -234,25 +234,18 @@ export default async function SparePartDetailsPage({
         </div>
       </div>
 
-      {/* VA-92: aviso para el dueño cuando su repuesto no está visible (pendiente de pago o vencido). */}
+      {/* VA-152: aviso para el dueño cuando su repuesto no está visible (pausado o vendido). */}
       {!isListingActive(sparePart) && (
         <div className="bg-amber-500 text-white text-xs font-semibold py-3 px-4 text-center flex items-center justify-center gap-2 print:hidden">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          {sparePart.status === "PENDING_PAYMENT" ? (
-            <>
-              <span>Tu aviso está guardado pero no se publica hasta que se acredite el pago.</span>
-              <Link href={`/checkout?listing=parts:${sparePart.id}`} className="underline font-bold hover:text-amber-100 ml-2">
-                Pagar
-              </Link>
-            </>
-          ) : (
-            <>
-              <span>Tu publicación venció y no es visible para el público. Renovala desde tu perfil.</span>
-              <Link href={`/profile/${sparePart.sellerId}`} className="underline font-bold hover:text-amber-100 ml-2">
-                Ir a mi perfil
-              </Link>
-            </>
-          )}
+          <span>
+            {sparePart.status === "SOLD"
+              ? "Marcaste este aviso como vendido: no es visible para el público."
+              : "Tu aviso está pausado y no es visible para el público. Lo activás desde tu perfil, si tenés cupo libre."}
+          </span>
+          <Link href={`/profile/${sparePart.sellerId}`} className="underline font-bold hover:text-amber-100 ml-2">
+            Ir a mi perfil
+          </Link>
         </div>
       )}
 

@@ -24,7 +24,6 @@ import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle,
 import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
 import { DescriptionTextarea } from "@/components/ui/DescriptionTextarea";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
-import { LAUNCH_PROMO } from "@/lib/promo";
 
 export interface CategoryOption { 
     id: string; 
@@ -59,15 +58,22 @@ interface PublishFormProps {
     editListing?: EditListingData;
     // VA-46: el usuario no tiene teléfono cargado (no puede publicar hasta cargarlo).
     needsPhone?: boolean;
-    // VA-59: precio vigente por aviso (texto ya formateado), editable desde /admin/prices.
-    listingPrices?: { aircraft: string; sparePart: string };
-    // VA-111: publicaciones gratis que le quedan del lanzamiento (solo si recibió ese saldo).
-    freeBalance?: { aircraft: number; parts: number };
-    // VA-94: CTA al publicar el 2.º aviso sin plan (ahorro de un pack frente a la publicación suelta).
-    packHints?: { aircraft: PackHint | null; parts: PackHint | null };
+    // VA-152: uso del cupo de la cuenta (solo al crear). limit null = ilimitado.
+    quota?: { tier: "FREE" | "PRO" | "BUSINESS" | "ADMIN"; planName: string; aircraft: QuotaLine; parts: QuotaLine };
+    // VA-152: hay planes pagos activos en /plans (si no, no se ofrece "Pasarme a Pro").
+    plansAvailable?: boolean;
 }
 
-type PackHint = { planId: string; name: string; count: number; perListing: number; single: number; savingPercent: number };
+type QuotaLine = { used: number; limit: number | null };
+
+// VA-152: "Ya tenés 1 avión activo, que es el cupo de tu plan Gratis" (o, si quedó por encima del
+// cupo, "Tenés 5 aviones activos y el cupo de tu plan Gratis es de 1").
+function quotaFullText(tab: "aircraft" | "parts", used: number, limit: number, planName: string) {
+    const word = (n: number) => (tab === "aircraft" ? (n === 1 ? "avión activo" : "aviones activos") : n === 1 ? "repuesto activo" : "repuestos activos");
+    return used > limit
+        ? `Tenés ${used} ${word(used)} y el cupo de tu plan ${planName} es de ${limit}`
+        : `Ya tenés ${used} ${word(used)}, que es el cupo de tu plan ${planName}`;
+}
 
 interface EngineInput {
     brand: string;
@@ -109,9 +115,8 @@ export default function PublishForm({
     spareCategoriesData = [],
     editListing,
     needsPhone = false,
-    listingPrices,
-    packHints,
-    freeBalance
+    quota,
+    plansAvailable = false
 }: PublishFormProps) {
     const errorRef = useRef<HTMLDivElement>(null);
     const isEditing = !!editListing;
@@ -119,6 +124,10 @@ export default function PublishForm({
 
     // Sistema de Pasos
     const [activeTab, setActiveTab] = useState<"aircraft" | "parts">(editListing?.type ?? "aircraft");
+    // VA-152: sin cupo libre, el usuario puede elegir guardarlo pausado (por tipo de aviso).
+    const [saveAsPaused, setSaveAsPaused] = useState<{ aircraft: boolean; parts: boolean }>({ aircraft: false, parts: false });
+    const quotaLine = quota ? (activeTab === "aircraft" ? quota.aircraft : quota.parts) : null;
+    const quotaFull = !isEditing && !!quotaLine && quotaLine.limit !== null && quotaLine.used >= quotaLine.limit;
     const [currentStep, setCurrentStep] = useState(1);
 
     // Controla si el usuario ya intentó avanzar en el paso actual.
@@ -658,7 +667,7 @@ export default function PublishForm({
         const orderedImages = images.map((img) => img.url ?? newPaths.shift()!);
         const allDocuments = [...existingDocuments.map((d) => ({ path: d.url, name: d.name })), ...upload.documents];
         const input = buildListingInput(orderedImages, allDocuments);
-        const res = editListing ? await updateListing(editListing.id, input) : await createListing(input);
+        const res = editListing ? await updateListing(editListing.id, input) : await createListing(input, { saveAsPaused: saveAsPaused[activeTab] });
         // Con o sin éxito, el servidor ya se hizo cargo de estos archivos.
         uploaded = null;
         if (!res.ok) {
@@ -667,13 +676,9 @@ export default function PublishForm({
           return;
         }
 
-        // VA-92: sin saldo ni suscripción, el aviso quedó "pendiente de pago": se sigue al checkout.
-        if ("checkoutUrl" in res && res.checkoutUrl) {
-          setPublishStatus("¡Aviso guardado! Ahora falta el pago para publicarlo...");
-          router.push(res.checkoutUrl);
-          return;
-        }
-        setPublishStatus(isEditing ? "¡Guardado! Abriendo tu aviso..." : "¡Publicado! Abriendo tu aviso...");
+        setPublishStatus(
+          isEditing ? "¡Guardado! Abriendo tu aviso..." : res.paused ? "¡Guardado como pausado! Abriendo tu aviso..." : "¡Publicado! Abriendo tu aviso..."
+        );
         router.push(res.url);
       } catch (error) {
         console.error("Error al publicar:", error);
@@ -735,47 +740,69 @@ export default function PublishForm({
               </h1>
             </div>
 
-            {/* VA-111: saldo gratis del lanzamiento (VA-89). Se descuenta solo al publicar, sin cupón. */}
-            {freeBalance && !isEditing && (activeTab === "aircraft" ? freeBalance.aircraft : freeBalance.parts) > 0 && (
-              <p className="max-w-2xl mx-auto mb-4 border-l-2 border-[#E70F1F] pl-3 text-sm text-slate-700">
-                <span className="font-semibold text-[#001F58]">{LAUNCH_PROMO.title}:</span>{" "}
-                {(() => {
-                  const n = activeTab === "aircraft" ? freeBalance.aircraft : freeBalance.parts;
-                  const what = activeTab === "aircraft" ? "avión" : "repuesto";
-                  return `te ${n === 1 ? "queda" : "quedan"} ${n} ${n === 1 ? "publicación" : "publicaciones"} de ${what} gratis. Se usa sola al publicar: no pagás nada.`;
-                })()}
-              </p>
-            )}
-
-            {/* VA-92: con un pack o una suscripción vigente se publica directo; si no, el aviso se
-                guarda y se paga en el checkout. */}
-            {listingPrices && !isEditing && (
+            {/* VA-152: cupo de la cuenta. Sin lugar libre se avisa al empezar (no al final), con las salidas. */}
+            {!isEditing && quota && quotaLine && !quotaFull && quotaLine.limit !== null && (
               <p className="max-w-2xl mx-auto mb-6 border-l-2 border-[#001F58]/30 pl-3 text-sm text-slate-600">
-                Precio por aviso de {activeTab === "aircraft" ? "avión" : "repuesto"}:{" "}
+                Plan {quota.planName}:{" "}
                 <span className="font-semibold tabular-nums text-[#001F58]">
-                  {activeTab === "aircraft" ? listingPrices.aircraft : listingPrices.sparePart}
-                </span>
-                . Si tenés un pack o una suscripción con saldo, se publica sin pagar; si no, al publicar pasás al pago de
-                esta publicación.
+                  {quotaLine.used} de {quotaLine.limit}
+                </span>{" "}
+                {activeTab === "aircraft" ? "aviones" : "repuestos"} activos. Tus avisos no vencen.
               </p>
             )}
-
-            {/* VA-94: sin plan ni saldo, al publicar el 2.º aviso de ese tipo: cuánto ahorra con un pack. */}
-            {!isEditing && (() => {
-              const hint = activeTab === "aircraft" ? packHints?.aircraft : packHints?.parts;
-              if (!hint) return null;
-              const ars = (n: number) => `AR$ ${Math.round(n).toLocaleString("es-AR")}`;
-              return (
-                <p className="max-w-2xl mx-auto -mt-3 mb-6 pl-3 text-sm text-slate-600">
-                  ¿Vas a publicar más de uno? Con el <strong className="text-[#001F58]">{hint.name}</strong> cada aviso sale{" "}
-                  <span className="tabular-nums">{ars(hint.perListing)}</span> en vez de <span className="tabular-nums">{ars(hint.single)}</span> (ahorrás{" "}
-                  {hint.savingPercent}%).{" "}
-                  <Link href={`/checkout?planId=${hint.planId}`} className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
-                    Ver el plan
-                  </Link>
-                </p>
-              );
-            })()}
+            {quotaFull && quota && quotaLine && (
+              <section
+                aria-labelledby="quota-full-title"
+                className="max-w-2xl mx-auto mb-6 rounded-lg border border-[#001F58]/15 border-l-4 border-l-[#E70F1F] bg-white p-5 space-y-3"
+              >
+                <h2 id="quota-full-title" className="text-base font-bold leading-snug text-[#001F58] sm:text-lg">
+                  {quotaFullText(activeTab, quotaLine.used, quotaLine.limit ?? 0, quota.planName)}
+                </h2>
+                {saveAsPaused[activeTab] ? (
+                  <p className="text-sm text-slate-600">
+                    Este aviso se va a guardar <strong className="text-[#001F58]">pausado</strong>: no se ve hasta que lo actives desde tu
+                    perfil, cuando tengas lugar.{" "}
+                    <button
+                      type="button"
+                      onClick={() => setSaveAsPaused({ ...saveAsPaused, [activeTab]: false })}
+                      className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F] cursor-pointer"
+                    >
+                      Cambiar
+                    </button>
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-slate-600">Para publicar otro, elegí una opción:</p>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                      <Link
+                        href={`/profile/${userId}?tipo=${activeTab === "aircraft" ? "aeronaves" : "repuestos"}&estado=activos`}
+                        className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#001F58]/20 px-4 text-sm font-semibold text-[#001F58] hover:border-[#001F58]"
+                      >
+                        Pausar uno de mis avisos
+                      </Link>
+                      {plansAvailable && (
+                        <Link
+                          href="/plans"
+                          className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#E70F1F] px-4 text-sm font-bold text-white hover:bg-[#C20D1A]"
+                        >
+                          {quota.tier === "FREE" ? "Pasarme a Pro" : "Ver planes con más cupo"}
+                        </Link>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSaveAsPaused({ ...saveAsPaused, [activeTab]: true });
+                          setFormError(null);
+                        }}
+                        className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#001F58]/20 px-4 text-sm font-semibold text-[#001F58] hover:border-[#001F58] cursor-pointer"
+                      >
+                        Guardar como pausado
+                      </button>
+                    </div>
+                  </>
+                )}
+              </section>
+            )}
 
             {phoneMissing && <PhoneRequiredCard onSaved={() => { setPhoneMissing(false); setFormError(null); }} />}
 

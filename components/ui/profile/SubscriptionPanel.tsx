@@ -56,7 +56,7 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
           <p className={LABEL}>Tu plan</p>
           <p className="mt-1 text-lg font-bold text-[#001F58]">{subscription.planName}</p>
           <p className="text-sm text-slate-600">
-            Plan de cortesía, sin cargo{subscription.noExpiry && ` · ${subscription.noExpiryLabel} no vencen`}
+            Plan de cortesía, sin cargo
           </p>
         </div>
         <p className="border-t border-[#001F58]/10 px-5 py-3 text-sm text-slate-600">
@@ -74,7 +74,6 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
           <p className="mt-1 text-lg font-bold text-[#001F58]">{subscription.planName}</p>
           <p className="text-sm tabular-nums text-slate-600">
             AR$ {NUMBER.format(subscription.price)} por {per}
-            {subscription.noExpiry && ` · ${subscription.noExpiryLabel} no vencen`}
           </p>
         </div>
         {subscription.cancelAtPeriodEnd ? (
@@ -127,8 +126,8 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
         }}
       >
         <p className="text-sm text-slate-600">
-          Vas a poder usar el plan hasta el <strong>{end}</strong>. Después no se vuelve a cobrar
-          {subscription.noExpiry ? ` y ${subscription.noExpiryLabel} vuelven a tener fecha de vencimiento` : ""}.
+          Vas a poder usar el plan hasta el <strong>{end}</strong>. Después no se vuelve a cobrar y pasás al plan Gratis: si tenés
+          más avisos activos que su cupo, se pausan los más nuevos (después elegís cuáles quedan activos).
         </p>
       </ConfirmDialog>
     </section>

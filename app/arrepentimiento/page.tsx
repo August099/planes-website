@@ -26,9 +26,9 @@ export default async function WithdrawalPage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Derecho de arrepentimiento</p>
           <h1 className="mt-1 font-heading text-2xl sm:text-3xl font-semibold text-[#001F58]">Botón de arrepentimiento</h1>
           <p className="mt-4 text-sm leading-relaxed text-slate-700">
-            Podés arrepentirte de cualquier compra hecha en Ventas Aeronáuticas (publicaciones, packs, renovaciones o suscripciones)
-            dentro de los <strong>10 días corridos</strong> desde el pago, sin dar explicaciones y sin costo. Te devolvemos el total por
-            Mercado Pago y se da de baja lo que compraste.
+            Podés arrepentirte de la contratación de una suscripción (Pro o Empresarial) dentro de los <strong>10 días corridos</strong>
+            desde el pago, sin dar explicaciones y sin costo. Te devolvemos el total por Mercado Pago, la suscripción termina y volvés al
+            plan Gratis. Publicar dentro del cupo Gratis no tiene costo.
           </p>
           <ol className="mt-6 divide-y divide-[#001F58]/10 rounded-lg border border-[#001F58]/12 text-sm">
             {["Iniciá sesión con la cuenta con la que pagaste.", "Entrá a tu perfil → Mis compras.", "En el pago, tocá “Arrepentirme” y confirmá."].map((step, i) => (

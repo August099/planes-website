@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Clock, Edit, Eye, Heart, Loader2, MessageSquare, RefreshCw, Trash2 } from "lucide-react";
+import { CheckCircle2, Edit, Eye, Heart, Loader2, MessageSquare, Pause, Play, Trash2 } from "lucide-react";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
@@ -10,8 +10,9 @@ import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 // VA-97: una sola grilla de publicaciones en el perfil (antes, una pestaña por tipo). Arriba,
 // interruptores por tipo (combinables, todos prendidos por defecto) y, en el panel propio, filtros por
 // estado con contadores. Todo queda en la URL (?tipo=…&estado=…) para compartir o volver.
-// Las tarjetas son las mismas de los listados; el dueño ve debajo el estado, el vencimiento, las
-// métricas y las acciones (VA-150: "Pendiente de pago" con "Pagar").
+// Las tarjetas son las mismas de los listados; el dueño ve debajo el estado, las métricas y las
+// acciones. VA-152: sin vencimiento ni pagos por aviso; arriba, el uso del cupo, y en cada aviso
+// Pausar / Activar / Vendido (activar necesita cupo libre, lo controla el servidor).
 
 type Listing = {
   id: string;
@@ -21,7 +22,6 @@ type Listing = {
   province: string;
   category: { id: string; name: string } | null;
   images: { url: string }[];
-  listingExpiresAt: string | null;
   status?: string;
   createdAt?: string;
   _count?: { favorites: number; questions: number; analyticsEvents: number };
@@ -30,7 +30,10 @@ type AircraftListing = Listing & { year: number; totalTimeHours: number | null }
 type PartListing = Listing & { inPesos: boolean };
 
 type Kind = "aeronaves" | "repuestos";
-type StatusKey = "activos" | "pausados" | "pendientes" | "vencidos" | "vendidos";
+type StatusKey = "activos" | "pausados" | "vendidos";
+export type StatusTarget = "ACTIVE" | "PAUSED" | "SOLD";
+type QuotaLine = { used: number; limit: number | null };
+export type ProfileQuota = { planName: string; aircraft: QuotaLine; parts: QuotaLine };
 
 const KINDS: { key: Kind; label: string }[] = [
   { key: "aeronaves", label: "Aeronaves" },
@@ -39,25 +42,24 @@ const KINDS: { key: Kind; label: string }[] = [
 const STATUSES: { key: StatusKey; label: string }[] = [
   { key: "activos", label: "Activos" },
   { key: "pausados", label: "Pausados" },
-  { key: "pendientes", label: "Pendientes de pago" },
-  { key: "vencidos", label: "Vencidos" },
   { key: "vendidos", label: "Vendidos" },
 ];
 
-function statusOf(l: Listing, now: number): StatusKey {
+// Los estados viejos (vencido, pendiente de pago) se muestran como pausados (VA-152).
+function statusOf(l: Listing): StatusKey {
   if (l.status === "SOLD") return "vendidos";
-  if (l.status === "PAUSED") return "pausados";
-  if (l.status === "PENDING_PAYMENT") return "pendientes";
-  if (l.status === "EXPIRED" || (l.listingExpiresAt && new Date(l.listingExpiresAt).getTime() <= now)) return "vencidos";
-  return "activos";
+  if (l.status === "ACTIVE") return "activos";
+  return "pausados";
 }
 
-function expiryText(expiresAt: string | null, now: number): { text: string; tone: string } {
-  if (!expiresAt) return { text: "Sin vencimiento", tone: "bg-emerald-50 text-emerald-700" };
-  const days = Math.ceil((new Date(expiresAt).getTime() - now) / 86_400_000);
-  if (days <= 0) return { text: "Vencida", tone: "bg-red-100 text-red-700" };
-  if (days <= 7) return { text: `Vence en ${days} ${days === 1 ? "día" : "días"}`, tone: "bg-amber-100 text-amber-800" };
-  return { text: `Vence en ${days} días`, tone: "bg-emerald-50 text-emerald-700" };
+const BADGE: Record<StatusKey, { text: string; tone: string }> = {
+  activos: { text: "Activo", tone: "bg-emerald-50 text-emerald-700" },
+  pausados: { text: "Pausado", tone: "bg-slate-100 text-slate-700" },
+  vendidos: { text: "Vendido", tone: "bg-slate-100 text-slate-700" },
+};
+
+function quotaPart(label: string, q: QuotaLine) {
+  return `${label} ${q.used}/${q.limit ?? "∞"}`;
 }
 
 const CHIP = "inline-flex min-h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold transition-colors cursor-pointer";
@@ -69,23 +71,23 @@ export function ProfileListings({
   spareParts,
   isOwner,
   favIds,
-  onRenew,
+  quota,
+  onStatus,
   onDelete,
-  loadingRenewId,
+  loadingId,
 }: {
   aircrafts: AircraftListing[];
   spareParts: PartListing[];
   isOwner: boolean;
   favIds: string[];
-  onRenew: (id: string, type: "aircraft" | "sparepart") => void;
+  quota?: ProfileQuota | null;
+  onStatus: (id: string, type: "aircraft" | "sparepart", to: StatusTarget) => void;
   onDelete: (id: string, type: "aircraft" | "sparepart") => void;
-  loadingRenewId: string | null;
+  loadingId: string | null;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  // eslint-disable-next-line react-hooks/purity -- la fecha solo decide etiquetas de vencimiento
-  const now = Date.now();
 
   const kindsParam = params.get("tipo");
   const kinds = new Set<Kind>(kindsParam ? (kindsParam.split(",").filter((k) => k === "aeronaves" || k === "repuestos") as Kind[]) : ["aeronaves", "repuestos"]);
@@ -114,11 +116,27 @@ export function ProfileListings({
     ...spareParts.map((l) => ({ kind: "repuestos" as const, l })),
   ].sort((a, b) => (b.l.createdAt ?? "").localeCompare(a.l.createdAt ?? ""));
   const ofKind = all.filter((x) => kinds.has(x.kind));
-  const counts = Object.fromEntries(STATUSES.map((s) => [s.key, ofKind.filter((x) => statusOf(x.l, now) === s.key).length])) as Record<StatusKey, number>;
-  const shown = status ? ofKind.filter((x) => statusOf(x.l, now) === status) : ofKind;
+  const counts = Object.fromEntries(STATUSES.map((s) => [s.key, ofKind.filter((x) => statusOf(x.l) === s.key).length])) as Record<StatusKey, number>;
+  const shown = status ? ofKind.filter((x) => statusOf(x.l) === status) : ofKind;
 
+  const full = (q: QuotaLine) => q.limit !== null && q.used >= q.limit;
   return (
     <div className="space-y-5">
+      {isOwner && quota && (
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-[#001F58]/12 bg-white px-4 py-3 text-sm text-slate-600">
+          <span>
+            <span className="font-semibold text-[#001F58]">Plan {quota.planName}</span> ·{" "}
+            <span className="tabular-nums">
+              {quotaPart("Aviones", quota.aircraft)} · {quotaPart("Repuestos", quota.parts)}
+            </span>
+          </span>
+          {(full(quota.aircraft) || full(quota.parts)) && (
+            <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+              Ver planes con más cupo
+            </Link>
+          )}
+        </p>
+      )}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Tipo de publicación">
           {KINDS.map((k) => {
@@ -153,7 +171,7 @@ export function ProfileListings({
         <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {shown.map(({ kind, l }) => {
             const type = kind === "aeronaves" ? "aircraft" : "sparepart";
-            const st = statusOf(l, now);
+            const st = statusOf(l);
             return (
               <div key={`${kind}-${l.id}`} className="flex h-full flex-col justify-between space-y-2">
                 {kind === "aeronaves" ? (
@@ -183,7 +201,7 @@ export function ProfileListings({
                   />
                 )}
 
-                {isOwner && <OwnerPanel l={l} type={type} st={st} now={now} onRenew={onRenew} onDelete={onDelete} loadingRenewId={loadingRenewId} />}
+                {isOwner && <OwnerPanel l={l} type={type} st={st} onStatus={onStatus} onDelete={onDelete} loadingId={loadingId} />}
               </div>
             );
           })}
@@ -193,68 +211,52 @@ export function ProfileListings({
   );
 }
 
+const ACTION =
+  "inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-1 rounded-lg px-3 py-1 text-xs font-semibold transition-colors disabled:opacity-50 sm:min-h-0 sm:px-2.5 sm:text-[10px]";
+
 function OwnerPanel({
   l,
   type,
   st,
-  now,
-  onRenew,
+  onStatus,
   onDelete,
-  loadingRenewId,
+  loadingId,
 }: {
   l: Listing;
   type: "aircraft" | "sparepart";
   st: StatusKey;
-  now: number;
-  onRenew: (id: string, type: "aircraft" | "sparepart") => void;
+  onStatus: (id: string, type: "aircraft" | "sparepart", to: StatusTarget) => void;
   onDelete: (id: string, type: "aircraft" | "sparepart") => void;
-  loadingRenewId: string | null;
+  loadingId: string | null;
 }) {
-  const expiry = expiryText(l.listingExpiresAt, now);
-  const badge =
-    st === "pendientes"
-      ? { text: "Pendiente de pago", tone: "bg-amber-100 text-amber-800" }
-      : st === "vendidos"
-        ? { text: "Vendido", tone: "bg-slate-100 text-slate-700" }
-        : st === "pausados"
-          ? { text: "Pausado", tone: "bg-slate-100 text-slate-700" }
-          : expiry;
-  const checkoutType = type === "aircraft" ? "aircraft" : "parts";
+  const badge = BADGE[st];
+  const busy = loadingId === l.id;
 
   return (
     <div className="space-y-2 rounded-xl border border-slate-200/80 bg-white/90 p-3 text-[11px] text-slate-600 shadow-2xs">
-      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-1.5">
+        <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${badge.tone}`}>{badge.text}</span>
         <div className="flex items-center gap-1">
-          <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-          <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${badge.tone}`}>{badge.text}</span>
+          {busy && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" aria-label="Guardando" />}
+          {st === "activos" && (
+            <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "PAUSED")} className={`${ACTION} border border-[#001F58]/20 text-[#001F58] hover:border-[#001F58]`}>
+              <Pause className="h-3 w-3" />
+              Pausar
+            </button>
+          )}
+          {st !== "activos" && (
+            <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "ACTIVE")} className={`${ACTION} bg-[#001F58] text-white hover:bg-blue-900`}>
+              <Play className="h-3 w-3" />
+              {st === "vendidos" ? "Volver a publicar" : "Activar"}
+            </button>
+          )}
+          {st !== "vendidos" && (
+            <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "SOLD")} className={`${ACTION} border border-[#001F58]/20 text-[#001F58] hover:border-[#001F58]`}>
+              <CheckCircle2 className="h-3 w-3" />
+              Vendido
+            </button>
+          )}
         </div>
-
-        {st === "pendientes" ? (
-          // VA-150: un aviso pendiente (también por arrepentimiento) solo se reactiva pagándolo.
-          <Link
-            href={`/checkout?listing=${checkoutType}:${l.id}`}
-            className="inline-flex min-h-11 shrink-0 items-center rounded-lg bg-[#E70F1F] px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-[#C20D1A] sm:min-h-0 sm:px-2.5 sm:text-[10px]"
-          >
-            Pagar
-          </Link>
-        ) : st !== "vendidos" ? (
-          <button
-            type="button"
-            onClick={() => onRenew(l.id, type)}
-            disabled={loadingRenewId === l.id}
-            className="inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-1 rounded-lg bg-[#001F58] px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-blue-900 disabled:opacity-50 sm:min-h-0 sm:px-2.5 sm:text-[10px]"
-            title="Renovar 45 días más (sin cargo con un plan que lo incluya)"
-          >
-            {loadingRenewId === l.id ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <>
-                <RefreshCw className="h-3 w-3" />
-                Renovar
-              </>
-            )}
-          </button>
-        ) : null}
       </div>
 
       <div className="flex items-center justify-between gap-1">

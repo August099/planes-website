@@ -9,12 +9,12 @@ import { aircraftPdfSections, sparePartPdfSections } from "@/lib/pdf-sections";
 import { ListingPDF, type ListingPdfProps } from "@/components/pdf/ListingPDF";
 
 // VA-87 A: arma el PDF de un aviso. Los avisos activos los puede bajar cualquiera; los que no
-// están visibles (pausados, vencidos, vendidos), solo su dueño o un admin. El QR siempre lleva al
+// están visibles (pausados o vendidos), solo su dueño o un admin. El QR siempre lleva al
 // aviso (si no está visible, el detalle muestra el cartel de "no disponible").
 
 const AR_DATE = (d: Date) => d.toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" });
 
-async function canSee(listing: { status: string; listingExpiresAt: Date | null; sellerId: string }) {
+async function canSee(listing: { status: string; sellerId: string }) {
   if (isListingActive(listing)) return { ok: true, inactive: false };
   const user = await getCurrentUser();
   const allowed = !!user && (user.id === listing.sellerId || !!user.isAdmin);

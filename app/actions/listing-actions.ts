@@ -2,15 +2,13 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { RECOMMENDATIONS_TAG } from "@/lib/recommendations";
-import { renewalPrice, renewedExpiry } from "@/lib/renewal";
-import { recordFunding } from "@/lib/balances";
-import { currentSubscriptionWhere } from "@/lib/subscriptions";
+import { lockAndCheckRoom, QUOTA_KIND_TEXT } from "@/lib/quota";
 import { prisma } from "@/lib/prisma";
 import { assertListingOwner } from "@/lib/listing-auth";
 import { pathFromPublicUrl, removeUploads } from "@/lib/listing-uploads";
 
 // Alta y edición de publicaciones: app/publish/actions.ts (createListing / updateListing).
-// Acá quedan solo renovar y eliminar, desde el perfil.
+// Acá quedan cambiar el estado (pausar, activar, vendido) y eliminar, desde el perfil.
 
 // Traduce los errores de assertListingOwner a un mensaje para el usuario.
 function listingAuthError(error: unknown): string | null {
@@ -22,36 +20,38 @@ function listingAuthError(error: unknown): string | null {
 }
 
 // ==========================================
-// 1. RENOVAR / EXTENDER PUBLICACIÓN (+45 DÍAS)
+// 1. PAUSAR, ACTIVAR Y MARCAR VENDIDO (VA-152)
 // ==========================================
-export async function renewListingAction(
+export type ListingStatusTarget = "ACTIVE" | "PAUSED" | "SOLD";
+
+/**
+ * VA-152: el dueño (o un admin) cambia el estado de su aviso. Activar necesita cupo libre del mismo
+ * tipo en la cuenta del dueño; se mira y se cambia en la misma transacción (lib/quota.ts).
+ */
+export async function setListingStatusAction(
   id: string,
-  type: "aircraft" | "sparepart"
-): Promise<{ success: true } | { success: false; error?: string; checkoutUrl?: string }> {
+  type: "aircraft" | "sparepart",
+  to: ListingStatusTarget
+): Promise<{ success: true } | { success: false; error: string; quotaFull?: boolean }> {
   try {
+    if (!["ACTIVE", "PAUSED", "SOLD"].includes(to)) return { success: false, error: "Estado inválido." };
     await assertListingOwner(id, type);
     const kind = type === "aircraft" ? "AIRCRAFT" : "SPARE_PART";
-    const select = { listingExpiresAt: true, status: true, sellerId: true } as const;
+    const select = { status: true, sellerId: true, listingStartsAt: true } as const;
     const current = type === "aircraft" ? await prisma.aircraft.findUnique({ where: { id }, select }) : await prisma.sparePart.findUnique({ where: { id }, select });
     if (!current) return { success: false, error: "La publicación no existe." };
-    if (current.status === "SOLD" || current.status === "PENDING_PAYMENT") return { success: false, error: "Esta publicación no se puede renovar." };
+    if (current.status === to) return { success: true };
 
-    // VA-105 (14/10): sin cargo si el plan vigente deja este tipo sin vencimiento (queda sin fecha) o
-    // si el porcentaje de renovación es 0; si no, se paga en el checkout y se renueva al aprobarse.
-    const price = await renewalPrice(current.sellerId, kind);
-    if (!price.covered && price.amount > 0) {
-      return { success: false, checkoutUrl: `/checkout?renew=${type === "aircraft" ? "aircraft" : "parts"}:${id}` };
-    }
-    const data = { status: "ACTIVE" as const, listingExpiresAt: price.covered ? null : renewedExpiry(current.listingExpiresAt) };
-    if (type === "aircraft") await prisma.aircraft.update({ where: { id }, data });
-    else await prisma.sparePart.update({ where: { id }, data });
-    // VA-150: renovación gracias a la suscripción: se guarda el vencimiento anterior (si se arrepiente
-    // de ese cobro, vuelve a él).
-    if (price.covered) {
-      const sub = await prisma.subscription.findFirst({ where: currentSubscriptionWhere(current.sellerId), select: { id: true } });
-      if (sub) {
-        await recordFunding(prisma, { userId: current.sellerId, kind, listingId: id, reason: "RENEWAL", funding: { source: "SUBSCRIPTION", subscriptionId: sub.id }, previousExpiresAt: current.listingExpiresAt });
-      }
+    const result = await prisma.$transaction(async (tx) => {
+      if (to === "ACTIVE" && !(await lockAndCheckRoom(tx, current.sellerId, kind))) return "FULL" as const;
+      const data = to === "ACTIVE" ? { status: to, listingStartsAt: current.listingStartsAt ?? new Date() } : { status: to };
+      if (type === "aircraft") await tx.aircraft.update({ where: { id }, data });
+      else await tx.sparePart.update({ where: { id }, data });
+      return "OK" as const;
+    });
+    if (result === "FULL") {
+      const text = QUOTA_KIND_TEXT[kind];
+      return { success: false, quotaFull: true, error: `No te queda cupo de ${text.many}: pausá otro aviso o pasate a un plan con más cupo.` };
     }
 
     revalidatePath(type === "aircraft" ? "/aircraft" : "/spareparts");
@@ -63,8 +63,8 @@ export async function renewListingAction(
   } catch (error) {
     const authError = listingAuthError(error);
     if (authError) return { success: false, error: authError };
-    console.error("Error al renovar publicación:", error);
-    return { success: false, error: "No se pudo renovar la publicación." };
+    console.error("Error al cambiar el estado de la publicación:", error);
+    return { success: false, error: "No se pudo cambiar el estado de la publicación." };
   }
 }
 

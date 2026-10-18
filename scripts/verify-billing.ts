@@ -57,6 +57,12 @@ async function main() {
   delete process.env.VERCEL_ENV;
 
   const created = { coupons: [] as string[], purchases: [] as string[], payments: [] as string[] };
+  // El pack "plan-aircraft-3" ya no existe (VA-105 / VA-152): el script crea uno temporal de pago único
+  // con el mismo id y precio, y lo borra al final.
+  const tempPlan = !(await prisma.plan.findUnique({ where: { id: "plan-aircraft-3" } }));
+  if (tempPlan) {
+    await prisma.plan.create({ data: { id: "plan-aircraft-3", name: "Pack 3 aviones (verificación)", type: "AIRCRAFT_PACK", price: 72000, aircraftListingsCount: 3, isActive: true, billingType: "ONE_TIME" } });
+  }
   try {
     const c100 = await prisma.coupon.create({ data: { code: "VERIF100", discountType: "FULL_DISCOUNT", scope: "ALL", maxUses: 10, maxUsesPerUser: 5 } });
     const c50 = await prisma.coupon.create({ data: { code: "VERIF50", discountType: "PERCENTAGE", discountValue: 50, scope: "ALL", maxUses: 10, maxUsesPerUser: 5 } });
@@ -105,8 +111,7 @@ async function main() {
     await prisma.couponUsage.deleteMany({ where: { purchaseId: { in: created.purchases } } });
     await prisma.purchase.deleteMany({ where: { id: { in: created.purchases } } });
     await prisma.coupon.deleteMany({ where: { id: { in: created.coupons } } });
-    // El pack del cupón del 100% sumó 3 avisos al saldo: se descuentan.
-    await prisma.user.update({ where: { id: USER }, data: { aircraftListingsBalance: 0 } });
+    if (tempPlan) await prisma.plan.deleteMany({ where: { id: "plan-aircraft-3", purchases: { none: {} } } });
     await prisma.billingProfile.deleteMany({ where: { userId: USER } });
     await prisma.$disconnect();
   }

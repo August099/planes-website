@@ -51,6 +51,16 @@ Si está vacío:
 npx prisma migrate resolve --applied 20261008145019_baseline_db_push
 ```
 
+**VA-152: informe ANTES de migrar** (solo lee; la migración `va152_limpieza` borra columnas que este
+informe necesita). Guardar la salida y mandársela a Code: suscripciones a los planes viejos (de quién),
+cuentas con más avisos activos que el cupo Gratis, avisos vencidos o pendientes de pago, compras, pagos y
+cupones.
+
+```bash
+export RUNTIME_DATABASE_URL="$PROD_DATABASE_URL"
+npx tsx scripts/va152-report.ts
+```
+
 **Aplicar todas las pendientes y verificar:**
 
 ```bash
@@ -58,12 +68,17 @@ npm run migrate:deploy
 npx prisma migrate status
 ```
 
-Esperado: la última aplicada es `20261014041658_va105_renewal_purchase` y el estado dice
+Esperado: la última aplicada es `20261018120000_va152_limpieza` y el estado dice
 **"Database schema is up to date!"**.
+
+`va152_limpieza` pasa a **pausados** los avisos vencidos y "pendiente de pago" (aviones y repuestos; los
+hangares no se tocan) y borra el vencimiento, los saldos de publicaciones y la configuración de
+renovación y destacados. Las compras, pagos y facturas no se tocan.
 
 Migraciones que entran (si no estaban): VA-43, VA-44, VA-54, VA-11, VA-16, VA-87, VA-59, VA-83, VA-85,
 VA-80, VA-84 (dos), VA-92 (dos), VA-105 facturación, contraseña, porcentaje de renovación y compra de
-renovación.
+renovación, y desde el 17/10: VA-150, VA-149, VA-148, VA-151 (dos), VA-96 y VA-152 (`va152_cupos` y
+`va152_limpieza`).
 
 ---
 
@@ -75,16 +90,14 @@ después, si el informe está bien, con el flag de aplicar.
 | Qué | Informe | Aplicar | Esperado |
 |---|---|---|---|
 | Guías | `npx tsx scripts/seed-guides.ts --allow-remote` | `… --apply --allow-remote` | 4 publicadas y 6 en borrador; las que ya existen no se tocan |
-| Planes reales | `npx tsx --require ./scripts/stub-server-only.cjs scripts/seed-real-plans.ts --confirm-production` | `… --apply --confirm-production` | Quedan Plan Repuestos, Plan Aviones, Suscripción VA y **Pago de prueba** (AR$ 100, VA-119, para el paso 8). Las cortesías pasan a Suscripción VA. Si frena por una suscripción paga en otro plan, avisar |
+| Planes y cupos (VA-152) | `npx tsx scripts/va152-migrate-data.ts --confirm-production` | `… --apply --confirm-production` | Cupo Gratis 1 / 5; Pro y las 3 opciones del Empresarial **sin precio e inactivos**; las cortesías pasan al Empresarial · Todo ilimitado; los planes viejos sin compras se borran y los demás quedan archivados; cupones de avisos inactivos; lotes de lanzamiento borrados. **Si frena por una suscripción paga en un plan viejo, avisar** |
 | Coordenadas de los avisos viejos | `npx tsx scripts/geocode-listings.ts --allow-remote` | `… --apply --allow-remote` | Los avisos sin latitud/longitud (los de antes de VA-83) toman el centro de su localidad con la API Georef: sin eso, el mapa del detalle muestra la provincia pero no el punto. Los de ciudad ambigua ("Buenos Aires, Buenos Aires") quedan sin resolver: corregir la ciudad del aviso. Correrlo también en el Preview |
-| Precios sueltos | `/admin/prices` | — | Avión AR$ 30.000, repuesto AR$ 15.000 (o los que decidan) y renovación al 70% |
+| Precios de los planes | `/admin/plans` → Editar | — | Precio de Pro y de las 3 opciones del Empresarial (los definen los socios) y **Activo** en cada uno |
 | Facturación | `/admin/payments` → Configuración | — | Tope del monotributo, alerta, desde qué monto se pide DNI y días de gracia |
 | Taxonomía | `/admin/taxonomy` | — | Marcas, modelos y categorías como en el Preview |
 
-Después de cargar los planes, en `/admin/plans` abrir uno y tocar **Guardar** (así `/plans` los
-muestra sin esperar la hora de caché).
-
-Los precios de los destacados (VA-95) todavía no están: se cargan cuando se termine esa tarea.
+Guardar cada plan desde `/admin/plans` refresca `/plans` al momento (el script no puede invalidar la
+caché: si se cargan los precios de otra forma, `/plans` tarda hasta una hora).
 
 ---
 
@@ -171,6 +184,10 @@ Esperado: `robots.txt` con `Allow: /` y el sitemap responde `200`.
 
 ## 8. Pago real de prueba y facturación
 
+> ⏳ **A redefinir (VA-152):** el "Pago de prueba" era un pack de AR$ 100 y ya no hay packs (quedó
+> archivado). Los socios definen cómo se prueba (por ejemplo, un Pro de prueba oculto o el Pro con su
+> precio y el arrepentimiento). Los pasos de abajo se ajustan cuando esté decidido (VA-164).
+
 1. Con `BILLING_ENABLED=false`, comprar el **Pago de prueba** (AR$ 100, en `/plans`) con una tarjeta real.
 2. En `/admin/payments` el pago figura aprobado y su factura **pendiente** (no se emitió nada).
 3. Pedir la devolución con el **botón de arrepentimiento** (Perfil → Mis compras → "Arrepentirme", VA-125):
@@ -185,11 +202,11 @@ Esperado: `robots.txt` con `Allow: /` y el sitemap responde `200`.
 ## 9. Verificación posterior
 
 - [ ] Home, `/aircraft`, `/spareparts`, un detalle de avión y uno de repuesto.
-- [ ] `/plans` con los tres planes reales.
+- [ ] `/plans` con Gratis, Pro y Empresarial (con precio y activos).
 - [ ] Login con Google y con email; registro con mail de verificación; "Olvidé mi contraseña" (el mail
       llega y el link funciona).
-- [ ] Saldo de lanzamiento (VA-89/VA-111): una cuenta nueva ve la ventana de bienvenida una vez y
-      publica un avión y un repuesto sin pasar por Mercado Pago ni factura; un segundo avión ya va al pago.
+- [ ] Cupo Gratis (VA-152): una cuenta nueva ve la ventana de bienvenida una vez, publica 1 avión y 5
+      repuestos sin pagar nada y, al entrar a publicar un 2.º avión, el formulario avisa que no tiene cupo.
 - [ ] `/services/hangars`, `/ads` y `/banners` dan 404.
 - [ ] `/about` con los textos reales de la misión (no deben quedar `[COMPLETAR]`) y una sugerencia de prueba llega por mail.
 - [ ] `/arrepentimiento` desde el footer lleva a Mis compras.

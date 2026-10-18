@@ -2,7 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { notFound } from "next/navigation";
-import { ProfileView, type ProfileCoupon } from "@/components/ui/ProfileView";
+import { ProfileView } from "@/components/ui/ProfileView";
+import { getQuotaUsage } from "@/lib/quota";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { getMissingProfileFieldsCached } from "@/lib/cached-data";
 import { getSubscriptionSummary, hasCustomPage, hasSellerMetrics, hasVerifiedBadge } from "@/lib/subscriptions";
@@ -100,33 +101,6 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       }
     : null;
 
-  // Obtener los cupones guardados/utilizados por el usuario si es el propietario
-  let userCoupons: ProfileCoupon[] = [];
-  if (isOwner) {
-    const usages = await prisma.couponUsage.findMany({
-      where: { userId: id },
-      include: {
-        Coupon: true,
-      },
-      orderBy: { usedAt: "desc" },
-    });
-
-    userCoupons = usages.map((u) => ({
-      usageId: u.id,
-      usedAt: u.usedAt.toISOString(),
-      code: u.Coupon.code,
-      type: u.Coupon.type,
-      discountType: u.Coupon.discountType,
-      discountValue: Number(u.Coupon.discountValue),
-      scope: u.Coupon.scope,
-      isActive: u.Coupon.isActive,
-      expiresAt: u.Coupon.expiresAt?.toISOString() ?? null,
-      purchaseId: u.purchaseId,
-      aircraftId: u.aircraftId,
-      sparePartId: u.sparePartId,
-    }));
-  }
-
   // Sanitización de objetos Prisma (Decimal y Date) para el Client Component 
   const profileUser = {
     ...rawProfileUser,
@@ -137,7 +111,6 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       createdAt: a.createdAt.toISOString(),
       updatedAt: a.updatedAt.toISOString(),
       listingStartsAt: a.listingStartsAt?.toISOString() ?? null,
-      listingExpiresAt: a.listingExpiresAt?.toISOString() ?? null,
     })),
     spareParts: rawProfileUser.spareParts.map((s) => ({
       ...s,
@@ -145,7 +118,6 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       createdAt: s.createdAt.toISOString(),
       updatedAt: s.updatedAt.toISOString(),
       listingStartsAt: s.listingStartsAt?.toISOString() ?? null,
-      listingExpiresAt: s.listingExpiresAt?.toISOString() ?? null,
     })),
   };
 
@@ -172,7 +144,6 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         profileUser={profileUser}
         isOwner={isOwner}
         currentUserFavIds={currentUserFavIds}
-        userCoupons={userCoupons}
         missingProfileFields={isOwner ? await getMissingProfileFieldsCached(id) : []}
         storefront={storefront}
         subscription={isOwner ? await getSubscriptionSummary(id) : null}
@@ -180,6 +151,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         billingProfile={isOwner ? await ownerBillingProfile(id, rawProfileUser.name, rawProfileUser.email) : null}
         hasPassword={isOwner ? Boolean((await prisma.user.findUnique({ where: { id }, select: { passwordHash: true } }))?.passwordHash) : false}
         hasSellerMetrics={isOwner ? await hasSellerMetrics(id) : false}
+        quota={isOwner ? quotaForView(await getQuotaUsage(id)) : null}
       />
     </main>
   );
@@ -201,5 +173,14 @@ async function ownerBillingProfile(userId: string, name: string | null, email: s
       address: p.address ?? "",
       email: p.email,
     },
+  };
+}
+
+// VA-152: uso del cupo para "Mis publicaciones".
+function quotaForView(u: Awaited<ReturnType<typeof getQuotaUsage>>) {
+  return {
+    planName: u.planName,
+    aircraft: { used: u.used.AIRCRAFT, limit: u.limits.AIRCRAFT },
+    parts: { used: u.used.SPARE_PART, limit: u.limits.SPARE_PART },
   };
 }

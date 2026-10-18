@@ -114,7 +114,8 @@ export async function getUserPurchases(userId: string): Promise<PurchaseRow[]> {
             ? invoiceCell(invoice) ?? { label: "En preparación", downloadHref: null }
             : null,
       href: `/payment/status?purchase=${p.id}`,
-      withdrawal: withdrawalFor(p.payments[0]),
+      // VA-152: el arrepentimiento queda solo para suscripciones (no se venden avisos ni packs).
+      withdrawal: null,
     };
   });
 

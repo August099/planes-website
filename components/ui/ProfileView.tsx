@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ProfileListings } from "@/components/ui/profile/ProfileListings";
+import { ProfileListings, type ProfileQuota, type StatusTarget } from "@/components/ui/profile/ProfileListings";
 import dynamic from "next/dynamic";
 
 // VA-151: el panel (y su gráfico) se descarga solo al abrir la pestaña "Métricas".
@@ -17,8 +17,7 @@ import {
   removeAvatarAction,
   changePasswordAction, // Asegúrate de importar tu Server Action o API para cambiar contraseña
 } from "@/app/actions/profile-actions";
-import { claimCouponToProfile } from "@/app/actions/coupon-validation";
-import { deleteListingAction, renewListingAction } from "@/app/actions/listing-actions";
+import { deleteListingAction, setListingStatusAction } from "@/app/actions/listing-actions";
 import { Lock } from "lucide-react";
 import {
   BarChart3,
@@ -32,9 +31,7 @@ import {
   CheckCircle2,
   Camera,
   Trash2,
-  Ticket,
   Receipt,
-  Plus,
   Star,
 } from "lucide-react";
 import { PROFILE_FIELD_LABELS, type ProfileField } from "@/lib/profile";
@@ -76,7 +73,6 @@ type ProfileListing = {
   province: string;
   category: { id: string; name: string } | null;
   images: { url: string }[];
-  listingExpiresAt: string | null;
   // VA-97: estado y fecha de alta (filtros por estado y orden de la grilla).
   status?: string;
   createdAt?: string;
@@ -101,20 +97,10 @@ export type ProfileUserData = {
   spareParts: (ProfileListing & { inPesos: boolean })[];
 };
 
-export type ProfileCoupon = {
-  usageId: string;
-  code: string;
-  type: string;
-  discountType: string | null;
-  discountValue: number;
-  purchaseId: string | null;
-};
-
 interface Props {
   profileUser: ProfileUserData;
   isOwner: boolean;
   currentUserFavIds: string[];
-  userCoupons?: ProfileCoupon[];
   // VA-46: campos que le faltan al dueño (se calculan en el servidor, ver lib/profile.ts).
   missingProfileFields?: ProfileField[];
   // VA-87: datos de la página personalizada; null si el vendedor no tiene el beneficio del plan.
@@ -130,13 +116,14 @@ interface Props {
   hasPassword?: boolean;
   // VA-151: el plan vigente incluye el panel de métricas (solo se pasa al dueño).
   hasSellerMetrics?: boolean;
+  // VA-152: uso del cupo (solo el dueño).
+  quota?: ProfileQuota | null;
 }
 
 export function ProfileView({
   profileUser,
   isOwner,
   currentUserFavIds,
-  userCoupons = [],
   missingProfileFields = [],
   storefront = null,
   subscription = null,
@@ -144,6 +131,7 @@ export function ProfileView({
   billingProfile = null,
   hasPassword = false,
   hasSellerMetrics = false,
+  quota = null,
   initialTab,
 }: Props) {
   const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
@@ -151,17 +139,12 @@ export function ProfileView({
     isMissing(field) ? (
       <span className="ml-1 inline-block w-2 h-2 rounded-full bg-red-600 align-middle" aria-label="Falta completar" />
     ) : null;
-  const [activeTab, setActiveTab] = useState<"listings" | "coupons" | "purchases" | "metrics" | "edit">(initialTab ?? "listings");
+  const [activeTab, setActiveTab] = useState<"listings" | "purchases" | "metrics" | "edit">(initialTab ?? "listings");
   const [loadingSave, setLoadingSave] = useState(false);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Estados para Modal de Edición de Publicaciones
-
-  // Estados para reclamo de cupones
-  const [couponCodeInput, setCouponCodeInput] = useState("");
-  const [claimingCoupon, setClaimingCoupon] = useState(false);
-  const [couponMsg, setCouponMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Estados para Cambio de Contraseña
   const [currentPassword, setCurrentPassword] = useState("");
@@ -173,24 +156,18 @@ export function ProfileView({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [loadingRenewId, setLoadingRenewId] = useState<string | null>(null);
+  // VA-152: pausar, activar (con cupo libre) y marcar vendido desde "Mis publicaciones".
+  const [loadingStatusId, setLoadingStatusId] = useState<string | null>(null);
 
-  const handleRenew = async (id: string, type: "aircraft" | "sparepart") => {
-    setLoadingRenewId(id);
+  const handleStatus = async (id: string, type: "aircraft" | "sparepart", to: StatusTarget) => {
+    setLoadingStatusId(id);
     try {
-      const res = await renewListingAction(id, type);
-      // VA-105: sin un plan que la cubra, la renovación se paga en el checkout.
-      if (!res.success && res.checkoutUrl) {
-        window.location.assign(res.checkoutUrl);
-        return;
-      }
-      if (!res.success) {
-        alert(res.error || "Ocurrió un error al intentar renovar.");
-      }
+      const res = await setListingStatusAction(id, type, to);
+      if (!res.success) alert(res.error);
     } catch {
-      alert("Error de conexión al renovar.");
+      alert("Error de conexión. Probá de nuevo.");
     } finally {
-      setLoadingRenewId(null);
+      setLoadingStatusId(null);
     }
   };
 
@@ -296,23 +273,6 @@ export function ProfileView({
     } finally {
       setLoadingAvatar(false);
     }
-  };
-
-  const handleClaimCoupon = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!couponCodeInput.trim()) return;
-
-    setClaimingCoupon(true);
-    setCouponMsg(null);
-
-    const res = await claimCouponToProfile(couponCodeInput);
-    if (res.success) {
-      setCouponMsg({ type: "success", text: res.message || "¡Cupón guardado exitosamente!" });
-      setCouponCodeInput("");
-    } else {
-      setCouponMsg({ type: "error", text: res.error || "Ocurrió un error al guardar el cupón." });
-    }
-    setClaimingCoupon(false);
   };
 
   const locationText = [profileUser.city, profileUser.province].filter(Boolean).join(", ");
@@ -536,20 +496,6 @@ export function ProfileView({
 
         {isOwner && (
           <button
-            onClick={() => setActiveTab("coupons")}
-            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === "coupons"
-                ? "border-[#001F58] text-[#001F58]"
-                : "border-transparent text-slate-400 hover:text-slate-600"
-            }`}
-          >
-            <Ticket className="w-4 h-4" />
-            Mis Cupones ({userCoupons.length})
-          </button>
-        )}
-
-        {isOwner && (
-          <button
             onClick={() => setActiveTab("purchases")}
             className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === "purchases"
@@ -598,21 +544,12 @@ export function ProfileView({
       {/* VA-97: una sola grilla de publicaciones con interruptores por tipo y filtros por estado. */}
       {activeTab === "listings" && (
         <>
-          {/* VA-94: CTA en "Mis publicaciones" para el dueño sin plan. */}
-          {isOwner && !subscription?.active && (
-            <p className="mb-4 text-sm text-slate-600">
-              Con un plan publicás más y pagás menos.{" "}
-              <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
-                Ver planes
-              </Link>
-            </p>
-          )}
           {/* VA-151: línea discreta para quien no tiene las métricas (sin bloquear nada). */}
           {isOwner && !hasSellerMetrics && (
             <p className="mb-4 text-sm text-slate-600">
-              Con la cuenta VA ves la evolución de tus avisos y de dónde llegan tus contactos.{" "}
+              Con el plan Empresarial ves la evolución de tus avisos y de dónde llegan tus contactos.{" "}
               <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
-                Ver la cuenta VA
+                Ver planes
               </Link>
             </p>
           )}
@@ -621,115 +558,12 @@ export function ProfileView({
             spareParts={profileUser.spareParts ?? []}
             isOwner={isOwner}
             favIds={currentUserFavIds}
-            onRenew={handleRenew}
+            quota={quota}
+            onStatus={handleStatus}
             onDelete={handleDelete}
-            loadingRenewId={loadingRenewId}
+            loadingId={loadingStatusId}
           />
         </>
-      )}
-
-      {/* Pestaña Cupones */}
-      {isOwner && activeTab === "coupons" && (
-        <div className="p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 space-y-6 max-w-2xl mx-auto md:mx-0">
-          <div>
-            <h2 className="text-lg font-bold text-[#001F58] flex items-center gap-2">
-              <Ticket className="w-5 h-5 text-indigo-600" />
-              Cupones Promocionales
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Ingresá los códigos recibidos para guardarlos en tu cuenta y aplicarlos al publicar o renovar.
-            </p>
-          </div>
-
-          <form onSubmit={handleClaimCoupon} className="space-y-3">
-            <label className="block text-xs font-semibold text-slate-700">
-              Agregar Nuevo Código
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                maxLength={6}
-                value={couponCodeInput}
-                onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
-                placeholder="Ej: LANZ26"
-                className="flex-1 px-3 py-2 text-xs border rounded-xl bg-white font-mono uppercase font-bold focus:outline-none focus:border-[#001F58]"
-              />
-              <button
-                type="submit"
-                disabled={claimingCoupon}
-                className="px-4 py-2 bg-[#001F58] hover:bg-blue-900 text-white font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
-              >
-                {claimingCoupon ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4" />
-                    Guardar
-                  </>
-                )}
-              </button>
-            </div>
-
-            {couponMsg && (
-              <p
-                className={`text-xs font-semibold ${
-                  couponMsg.type === "success" ? "text-emerald-600" : "text-red-600"
-                }`}
-              >
-                {couponMsg.text}
-              </p>
-            )}
-          </form>
-
-          <div className="space-y-3 pt-2 border-t border-slate-200">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Tus Cupones Registrados
-            </h3>
-
-            {userCoupons.length === 0 ? (
-              <div className="p-6 text-center text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                No tenés cupones guardados.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {userCoupons.map((c) => (
-                  <div
-                    key={c.usageId}
-                    className="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between shadow-2xs"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-[#001F58] text-sm bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
-                          {c.code}
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                          {c.type === "RENEWAL" ? "Renovación" : "Descuento"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-600">
-                        {c.discountType === "FULL_DISCOUNT" && "100% Gratis"}
-                        {c.discountType === "PERCENTAGE" && `${c.discountValue}% de descuento`}
-                        {c.discountType === "FIXED_AMOUNT" && `$${c.discountValue} de descuento`}
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      {c.purchaseId ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
-                          Utilizado
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
-                          <CheckCircle2 className="w-3 h-3" /> Disponible
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
       )}
 
       {/* VA-92: Pestaña Mis compras */}

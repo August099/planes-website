@@ -81,10 +81,9 @@ export default async function AircraftListPage({ searchParams }: Props) {
   };
 
   const orderBy = orderByMap[sort] ?? orderByMap.recent;
-  const now = new Date();
 
   const whereClause: Prisma.AircraftWhereInput = {
-    ...activeListingWhere(now),
+    ...activeListingWhere(),
     ...(categoryIds.length > 0 && { categoryId: { in: categoryIds } }),
     ...(brandIds.length > 0 && { brandId: { in: brandIds } }),
     ...(modelIds.length > 0 && { modelId: { in: modelIds } }),
@@ -132,7 +131,7 @@ export default async function AircraftListPage({ searchParams }: Props) {
       : Promise.resolve([]),
     // VA-74: marcas, modelos y variantes con avisos activos (para no mandar al filtro toda la taxonomía).
     prisma.aircraft.findMany({
-      where: activeListingWhere(now),
+      where: activeListingWhere(),
       select: { brandId: true, modelId: true, subModelId: true },
       distinct: ["brandId", "modelId", "subModelId"],
     }),

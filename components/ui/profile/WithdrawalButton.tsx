@@ -69,7 +69,7 @@ export function WithdrawalButton({ paymentId, until, description }: { paymentId:
               ))}
             </ul>
           )}
-          {detail && detail.lines.length === 0 && <p className="text-slate-700">No hay avisos ni saldo para retirar.</p>}
+          {detail && detail.lines.length === 0 && <p className="text-slate-700">La suscripción termina en el momento.</p>}
           <p className="text-xs text-slate-500">Podés pedirlo hasta el {DATE.format(new Date(until))}.</p>
         </div>
       </ConfirmDialog>

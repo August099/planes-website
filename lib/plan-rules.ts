@@ -1,119 +1,78 @@
 import { z } from "zod";
 import { LISTING_PRICE_MAX } from "@/lib/listing-price-format";
 
-// VA-80: reglas de un plan, compartidas entre el formulario del admin (cliente) y la action.
-// Los publicados por pack son créditos de pago único; las suscripciones se cobran por período.
+// VA-80 / VA-152: reglas de un plan, compartidas entre el formulario del admin (cliente) y la action.
+// Con los cupos fijos, la estructura es fija: Pro (cupo editable) y Empresarial en 3 opciones (lo
+// ilimitado sale de la opción). El nivel y lo ilimitado no se editan; el precio, los beneficios y lo
+// que se ve en /plans, sí. Todas son suscripciones mensuales.
 
-export const PLAN_KINDS = [
-  { value: "AIRCRAFT_PACK", label: "Pack de aviones (pago único)" },
-  { value: "SPARE_PART_PACK", label: "Pack de repuestos (pago único)" },
-  { value: "SUBSCRIPTION", label: "Suscripción" },
-] as const;
-export type PlanKind = (typeof PLAN_KINDS)[number]["value"];
+export const PLAN_TIER_LABELS: Record<string, string> = { PRO: "Pro", BUSINESS: "Empresarial" };
 
-export const PLAN_KIND_LABELS: Record<string, string> = {
-  AIRCRAFT_PACK: "Pack de aviones",
-  SPARE_PART_PACK: "Pack de repuestos",
-  SUBSCRIPTION: "Suscripción",
-  AD_BANNER: "Banner",
-};
-
-const count = z.coerce.number().int("Tiene que ser un número entero.").min(0).max(1000, "Hasta 1000.");
+const count = z.coerce.number().int("Tiene que ser un número entero.").min(1, "Al menos 1.").max(1000, "Hasta 1000.");
 
 export const planInputSchema = z
   .object({
     name: z.string().trim().min(3, "Poné un título de al menos 3 letras.").max(80, "Hasta 80 caracteres."),
-    type: z.enum(["AIRCRAFT_PACK", "SPARE_PART_PACK", "SUBSCRIPTION"]),
     price: z.coerce
       .number()
       .int("El precio va sin centavos.")
       .min(0, "El precio no puede ser negativo.")
       .max(LISTING_PRICE_MAX, "Hasta AR$ 10.000.000."),
-    billingInterval: z.enum(["MONTHLY", "YEARLY"]).nullable(),
+    // Cupo de avisos activos (solo Pro; el Empresarial usa el del Gratis en lo que no es ilimitado).
     aircraftListingsCount: count,
     sparePartsListingsCount: count,
-    isUnlimitedAircraft: z.boolean(),
-    isUnlimitedSpareParts: z.boolean(),
-    noExpiry: z.boolean(),
     includesVerifiedBadge: z.boolean(),
     includesCustomPage: z.boolean(),
-    // VA-151: panel de métricas de vendedor (solo suscripciones).
-    includesSellerMetrics: z.boolean().default(false),
-    // VA-95: destacados incluidos por mes (solo suscripciones).
-    featuredPerMonth: z.coerce.number().int("Tiene que ser un número entero.").min(0).max(100, "Hasta 100.").default(0),
-    usageDescription: z.string().trim().max(60, "Hasta 60 caracteres.").optional().default(""),
+    includesSellerMetrics: z.boolean(),
     description: z.string().trim().max(300, "Hasta 300 caracteres.").optional().default(""),
     features: z.array(z.string().trim().min(1).max(120, "Cada ítem, hasta 120 caracteres.")).max(10, "Hasta 10 ítems."),
     badge: z.string().trim().max(30, "Hasta 30 caracteres.").optional().default(""),
     isPopular: z.boolean(),
-    showInAircraftTab: z.boolean(),
-    showInPartsTab: z.boolean(),
-    sortOrder: z.coerce.number().int().min(0).max(999),
     isActive: z.boolean(),
   })
   .superRefine((p, ctx) => {
-    if (p.type === "SUBSCRIPTION" && !p.billingInterval) {
-      ctx.addIssue({ code: "custom", path: ["billingInterval"], message: "Elegí cada cuánto se cobra." });
+    // Mientras no tengan precio, los planes pagos quedan inactivos (/plans muestra solo el Gratis).
+    if (p.isActive && p.price <= 0) {
+      ctx.addIssue({ code: "custom", path: ["price"], message: "Cargá el precio antes de activarlo." });
     }
-    if (p.type !== "SUBSCRIPTION" && (p.isUnlimitedAircraft || p.isUnlimitedSpareParts)) {
-      ctx.addIssue({ code: "custom", path: ["type"], message: "Solo una suscripción puede ser ilimitada." });
-    }
-    const aircraft = p.isUnlimitedAircraft || p.aircraftListingsCount > 0;
-    const parts = p.isUnlimitedSpareParts || p.sparePartsListingsCount > 0;
-    if (!aircraft && !parts) {
-      ctx.addIssue({ code: "custom", path: ["aircraftListingsCount"], message: "El plan tiene que incluir alguna publicación." });
-    }
-    if (p.type === "AIRCRAFT_PACK" && p.aircraftListingsCount === 0) {
-      ctx.addIssue({ code: "custom", path: ["aircraftListingsCount"], message: "Un pack de aviones necesita publicaciones de aviones." });
-    }
-    if (p.type === "SPARE_PART_PACK" && p.sparePartsListingsCount === 0) {
-      ctx.addIssue({ code: "custom", path: ["sparePartsListingsCount"], message: "Un pack de repuestos necesita publicaciones de repuestos." });
-    }
-    // VA-105: /plans ya no tiene pestañas; showInAircraftTab/showInPartsTab no se validan.
   });
 
 export type PlanInput = z.input<typeof planInputSchema>;
 export type PlanData = z.output<typeof planInputSchema>;
 
-/** Registro de Plan a partir de los datos validados (lo usan la action del admin y los scripts). */
-export function planRecordFromInput(p: PlanData) {
-  const isSubscription = p.type === "SUBSCRIPTION";
+/** Campos editables de un plan a partir de los datos validados (el nivel y lo ilimitado no cambian). */
+export function planRecordFromInput(p: PlanData, tier: "PRO" | "BUSINESS") {
   return {
     name: p.name,
-    type: p.type,
     price: p.price,
-    billingType: isSubscription ? ("SUBSCRIPTION" as const) : ("ONE_TIME" as const),
-    billingInterval: isSubscription ? p.billingInterval : null,
-    aircraftListingsCount: p.isUnlimitedAircraft ? 0 : p.aircraftListingsCount,
-    sparePartsListingsCount: p.isUnlimitedSpareParts ? 0 : p.sparePartsListingsCount,
-    isUnlimitedAircraft: isSubscription && p.isUnlimitedAircraft,
-    isUnlimitedSpareParts: isSubscription && p.isUnlimitedSpareParts,
-    noExpiry: p.noExpiry,
+    ...(tier === "PRO" ? { aircraftListingsCount: p.aircraftListingsCount, sparePartsListingsCount: p.sparePartsListingsCount } : {}),
     includesVerifiedBadge: p.includesVerifiedBadge,
     includesCustomPage: p.includesCustomPage,
-    includesSellerMetrics: p.type === "SUBSCRIPTION" && p.includesSellerMetrics,
-    featuredPerMonth: isSubscription ? p.featuredPerMonth : 0,
-    usageDescription: p.usageDescription || null,
+    includesSellerMetrics: p.includesSellerMetrics,
     description: p.description || null,
     features: p.features,
     badge: p.badge || null,
     isPopular: p.isPopular,
-    showInAircraftTab: p.showInAircraftTab,
-    showInPartsTab: p.showInPartsTab,
-    sortOrder: p.sortOrder,
     isActive: p.isActive,
   };
 }
 
-/** Texto de "qué incluye" cuando el admin no escribe uno propio. */
-export function defaultUsageText(p: Pick<PlanData, "aircraftListingsCount" | "sparePartsListingsCount" | "isUnlimitedAircraft" | "isUnlimitedSpareParts">) {
-  if (p.isUnlimitedAircraft && p.isUnlimitedSpareParts) return "Aviones y repuestos ilimitados";
-  const parts: string[] = [];
-  if (p.isUnlimitedAircraft) parts.push("Aviones ilimitados");
-  else if (p.aircraftListingsCount > 0) parts.push(`${p.aircraftListingsCount} ${p.aircraftListingsCount === 1 ? "aviso" : "avisos"} de avión`);
-  if (p.isUnlimitedSpareParts) parts.push("Repuestos ilimitados");
-  else if (p.sparePartsListingsCount > 0) parts.push(`${p.sparePartsListingsCount} ${p.sparePartsListingsCount === 1 ? "aviso" : "avisos"} de repuesto`);
-  return parts.join(" + ");
+type Counts = { tier?: string | null; aircraftListingsCount: number; sparePartsListingsCount: number; isUnlimitedAircraft: boolean; isUnlimitedSpareParts: boolean };
+type Free = { AIRCRAFT: number; SPARE_PART: number };
+
+function n(count: number, one: string, many: string) {
+  return `${count} ${count === 1 ? one : many}`;
+}
+
+/** "3 aviones y 15 repuestos activos" / "Aviones ilimitados y 5 repuestos activos". */
+export function defaultUsageText(p: Counts, free: Free = { AIRCRAFT: 1, SPARE_PART: 5 }) {
+  const business = p.tier === "BUSINESS";
+  const a = p.isUnlimitedAircraft ? null : business ? free.AIRCRAFT : p.aircraftListingsCount;
+  const r = p.isUnlimitedSpareParts ? null : business ? free.SPARE_PART : p.sparePartsListingsCount;
+  if (a === null && r === null) return "Aviones y repuestos ilimitados";
+  const left = a === null ? "Aviones ilimitados" : n(a, "avión", "aviones");
+  const right = r === null ? "repuestos ilimitados" : n(r, "repuesto", "repuestos");
+  return `${left} y ${right}${a !== null && r !== null ? " activos" : ""}`;
 }
 
 export function billingText(type: string, interval: string | null) {

@@ -1,5 +1,5 @@
 // VA-151: cada número del panel de métricas contra una consulta SQL directa (tabla métrica → panel →
-// SQL), con datos de prueba en va_dev. Crea un vendedor con la Suscripción VA de cortesía, dos
+// SQL), con datos de prueba en va_dev. Crea un vendedor con el Empresarial de cortesía, dos
 // repuestos, vistas, clics, preguntas, favoritos y visitas al perfil, y borra todo al final.
 //
 // Uso: npx tsx --require ./scripts/stub-server-only.cjs scripts/verify-seller-metrics.ts
@@ -17,7 +17,8 @@ async function main() {
   const now = Date.now();
   const ago = (d: number, h = 12) => new Date(now - d * DAY + h * 3_600_000 - 12 * 3_600_000);
   const categoryId = (await prisma.category.findFirstOrThrow({ where: { parentId: { not: null } }, select: { id: true } })).id;
-  const va = await prisma.plan.findFirstOrThrow({ where: { name: "Suscripción VA" } });
+  // VA-152: las métricas vienen con el Empresarial.
+  const va = await prisma.plan.findFirstOrThrow({ where: { tier: "BUSINESS", isUnlimitedAircraft: true, isUnlimitedSpareParts: true, archivedAt: null } });
 
   const seller = await prisma.user.create({ data: { email: `va151-vendedor-${now}@ventasaeronauticas.test`, name: "Vendedor VA-151" } });
   const buyer = await prisma.user.create({ data: { email: `va151-comprador-${now}@ventasaeronauticas.test`, name: "Comprador VA-151" } });
@@ -83,7 +84,7 @@ async function main() {
     check("Repuesto A: vistas", la.views, aViews);
     check("Repuesto A: tasa de contacto", la.contactRate ?? "—", Math.round(((2 /* WA de compradores */ + 0) / aViews) * 1000) / 10);
     check("Repuesto C: sin vistas", m30.listings.find((l) => l.id === c.id)!.views, 0);
-    check("Acceso: vendedor con Suscripción VA", String(await hasSellerMetrics(seller.id)), "true");
+    check("Acceso: vendedor con Empresarial", String(await hasSellerMetrics(seller.id)), "true");
     check("Acceso: usuario sin plan (ni por la action)", String(await hasSellerMetrics(plain.id)), "false");
   } finally {
     await prisma.analyticsEvent.deleteMany({ where: { OR: [{ sparePart: { sellerId: seller.id } }, { profileUserId: seller.id }] } });

@@ -5,6 +5,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { PLANS_TAG } from "@/lib/plans";
+import { QUOTA_TAG } from "@/lib/quota";
 import { planInputSchema, planRecordFromInput, type PlanInput } from "@/lib/plan-rules";
 import { isLargePriceChange } from "@/lib/listing-price-format";
 
@@ -21,10 +22,11 @@ function refresh(id?: string) {
   if (id) revalidatePath(`/admin/plans/${id}`);
 }
 
-// VA-80: alta y edición de un plan. Las reglas son las mismas del formulario (lib/plan-rules.ts).
+// VA-80 / VA-152: edición de un plan (Pro o una opción del Empresarial; la estructura es fija y la
+// crea el script de datos de VA-152). Las reglas son las mismas del formulario (lib/plan-rules.ts).
 // Un cambio de precio grande (más del 50 %, a 0 o desde 0) pide CONFIRMAR, como en VA-59; el nuevo
-// precio vale para las compras y los cobros siguientes.
-export async function savePlanAction(input: PlanInput & { id?: string; confirmText?: string }): Promise<Result> {
+// precio vale para los cobros siguientes.
+export async function savePlanAction(input: PlanInput & { id: string; confirmText?: string }): Promise<Result> {
   if (!(await requireAdmin())) return { ok: false, error: "No autorizado." };
 
   const parsed = planInputSchema.safeParse(input);
@@ -37,59 +39,37 @@ export async function savePlanAction(input: PlanInput & { id?: string; confirmTe
     return { ok: false, error: "Revisá los campos marcados.", fieldErrors };
   }
   const p = parsed.data;
-  const data = planRecordFromInput(p);
 
   try {
-    if (input.id) {
-      const current = await prisma.plan.findUnique({ where: { id: input.id }, select: { price: true, archivedAt: true } });
-      if (!current) return { ok: false, error: "El plan no existe." };
-      if (current.archivedAt) return { ok: false, error: "El plan está archivado: restauralo antes de editarlo." };
-      const previous = Number(current.price);
-      if (isLargePriceChange(previous, p.price) && input.confirmText?.trim().toUpperCase() !== "CONFIRMAR") {
-        return { ok: false, error: "Es un cambio de precio grande: escribí CONFIRMAR para guardarlo." };
-      }
-      await prisma.plan.update({ where: { id: input.id }, data });
-      refresh(input.id);
-      return { ok: true, id: input.id };
+    const current = await prisma.plan.findUnique({ where: { id: input.id }, select: { price: true, archivedAt: true, tier: true } });
+    if (!current || !current.tier) return { ok: false, error: "El plan no existe." };
+    if (current.archivedAt) return { ok: false, error: "El plan está archivado." };
+    const previous = Number(current.price);
+    if (isLargePriceChange(previous, p.price) && input.confirmText?.trim().toUpperCase() !== "CONFIRMAR") {
+      return { ok: false, error: "Es un cambio de precio grande: escribí CONFIRMAR para guardarlo." };
     }
-    const created = await prisma.plan.create({ data, select: { id: true } });
-    refresh();
-    return { ok: true, id: created.id };
+    await prisma.plan.update({ where: { id: input.id }, data: planRecordFromInput(p, current.tier) });
+    refresh(input.id);
+    return { ok: true, id: input.id };
   } catch (error) {
     console.error("Error al guardar el plan:", error);
     return { ok: false, error: "No se pudo guardar el plan." };
   }
 }
 
-// Archivar: sale de /plans y no se puede comprar, pero conserva compras y suscripciones.
-export async function archivePlanAction(id: string): Promise<Result> {
-  if (!(await requireAdmin())) return { ok: false, error: "No autorizado." };
-  await prisma.plan.update({ where: { id }, data: { archivedAt: new Date(), isActive: false } });
-  refresh(id);
-  return { ok: true, id };
-}
-
-// Restaurar vuelve a dejarlo editable, inactivo: el admin decide cuándo mostrarlo.
-export async function restorePlanAction(id: string): Promise<Result> {
-  if (!(await requireAdmin())) return { ok: false, error: "No autorizado." };
-  await prisma.plan.update({ where: { id }, data: { archivedAt: null, isActive: false } });
-  refresh(id);
-  return { ok: true, id };
-}
-
-// Eliminar solo si nadie lo compró ni está suscripto; si no, hay que archivarlo.
-export async function deletePlanAction(id: string, confirmText: string): Promise<Result> {
-  if (!(await requireAdmin())) return { ok: false, error: "No autorizado." };
-  if (confirmText.trim().toUpperCase() !== "ELIMINAR") return { ok: false, error: "Escribí ELIMINAR para confirmar." };
-  const plan = await prisma.plan.findUnique({
-    where: { id },
-    select: { _count: { select: { purchases: true, subscriptions: true } } },
-  });
-  if (!plan) return { ok: false, error: "El plan no existe." };
-  if (plan._count.purchases > 0 || plan._count.subscriptions > 0) {
-    return { ok: false, error: "Tiene compras o suscripciones: archivalo en vez de eliminarlo." };
-  }
-  await prisma.plan.delete({ where: { id } });
-  refresh();
-  return { ok: true, id };
+// VA-152: cupo del plan Gratis (también lo que no es ilimitado en el Empresarial).
+export async function saveFreeQuotaAction(input: { aircraft: unknown; parts: unknown }): Promise<{ ok: true } | { ok: false; error: string }> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "No autorizado." };
+  const aircraft = Number(input.aircraft);
+  const parts = Number(input.parts);
+  const valid = (n: number) => Number.isInteger(n) && n >= 0 && n <= 100;
+  if (!valid(aircraft) || !valid(parts)) return { ok: false, error: "Cada cupo va de 0 a 100." };
+  const data = { freeAircraftQuota: aircraft, freeSparePartQuota: parts, updatedById: admin.id };
+  await prisma.quotaSettings.upsert({ where: { id: "default" }, create: { id: "default", ...data }, update: data });
+  updateTag(QUOTA_TAG);
+  updateTag(PLANS_TAG);
+  revalidatePath("/admin/plans");
+  revalidatePath("/"); // VA-76: la Home es estática y muestra el cartel del cupo
+  return { ok: true };
 }
