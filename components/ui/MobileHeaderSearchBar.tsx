@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Search, Loader2, Plane, Wrench, ArrowLeft, X } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation"; // Importamos usePathname
+import { useRouter } from "next/navigation";
+import { useIsHome } from "@/lib/use-is-home";
 import { searchGlobal, SearchResultItem } from "@/app/actions/search-actions";
 import { logSearch } from "@/app/actions/analytics-actions";
 import { ensureAnalyticsCookies } from "@/lib/analytics-client";
@@ -13,8 +14,7 @@ export default function MobileHeaderSearchBar() {
   const [fetched, setFetched] = useState<{ query: string; items: SearchResultItem[] }>({ query: "", items: [] });
 
   const router = useRouter();
-  const pathname = usePathname(); // Detectamos la ruta actual
-  const isHome = pathname === "/";
+  const isHome = useIsHome();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {

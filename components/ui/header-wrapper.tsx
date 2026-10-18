@@ -1,10 +1,9 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useIsHome } from "@/lib/use-is-home";
 
 export function HeaderWrapper({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
+  const isHome = useIsHome();
 
   return (
     <header

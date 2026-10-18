@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { useIsHome } from "@/lib/use-is-home";
 
 export function HeaderLogo() {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
+  const isHome = useIsHome();
 
   const fullLogoSrc = isHome ? "/logo-full-white.png" : "/logo-full-blue.png";
 
