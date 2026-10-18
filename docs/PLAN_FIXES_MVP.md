@@ -926,9 +926,10 @@ Notas para cuando se encare, a partir de lo que ya existe:
 > Una sola lista de lo que falta, en tres grupos. Se actualiza al cerrar cada punto. El detalle de cada paso está en `docs/PRUEBAS_PREVIEW.md` (Preview) y `docs/PASE_A_PRODUCCION.md` (producción).
 
 ### 1. Bloquea el lanzamiento
-- [x] **Migraciones en la base de Supabase (la usan el Preview y el sitio de `main`)** — 18/10, con OK del socio: backup (`C:UserspcDocumentsa-backupsackup-prod-20261018-1840.dump`), informe de VA-152, las 11 migraciones pendientes (VA-150 a VA-158) y `va152-migrate-data.ts` (cupo Gratis, Pro y Empresarial sin precio, planes viejos borrados y "Plan de Prueba" archivado, 29 lotes de saldo borrados). Sin suscripciones en esa base; compras, pagos y facturas intactos.
-- [ ] **Coordenadas de los avisos** (`geocode-listings.ts --apply`): 51 de 80 avisos se resuelven; falta el OK para escribirlas. Los otros 29 tienen la ciudad mal cargada (datos de prueba).
-- [ ] **`main` quedó con código viejo sobre la base migrada:** `/planes` da 500 (lee columnas que ya no existen). Se arregla desplegando el código nuevo en `main` o con un cambio puntual; lo decide el socio.
+- [x] **Migraciones en la base de Supabase (la usan el Preview y el sitio de `main`)** — 18/10, con OK del socio: backup (`Documents/va-backups/backup-prod-20261018-1840.dump`), informe de VA-152, las 11 migraciones pendientes (VA-150 a VA-158) y `va152-migrate-data.ts` (cupo Gratis, Pro y Empresarial sin precio, planes viejos borrados y "Plan de Prueba" archivado, 29 lotes de saldo borrados). Sin suscripciones en esa base; compras, pagos y facturas intactos.
+- [x] **Coordenadas de los avisos** (`geocode-listings.ts --apply`) — 18/10, con OK del socio: 51 de 80 resueltas. Los otros 29 tienen la ciudad mal cargada (datos de prueba).
+- [x] **`main` con código viejo sobre la base migrada** — 18/10, opción b del socio: `main` redirige todo a la Home (`8bb5945`, verificado: `/planes` → 307 a `/`). El código nuevo va a `main` cuando lo diga el socio.
+- [x] **Categorías de los modelos (VA-153)** — 18/10, con OK del socio: `va153-import-categorias.ts --apply --confirm-production`, 3 cambios (PC-12, Duke, C-425 Conquest); el informe posterior da 0 pendientes.
 - [ ] **Lote del 18/10 (VA-152 a VA-163):** ver la tabla al final del plan. VA-152 hecho en local el 18/10.
 - [ ] **Montos de Pro y del Empresarial** (los definen los socios; se cargan en `/admin/plans`).
 - [ ] **Pruebas en el Preview:**
@@ -1645,7 +1646,7 @@ Probados en celular; verificar también en escritorio.
   de otra marca o un submodelo de otro modelo. También acotan por categoría el buscador de la Home y la lista
   de marcas de `/aircraft`; en `/admin/taxonomy` cada modelo tiene su selector de categoría. Sin migración
   (las columnas ya existían). Informe: 25 avisos con categoría distinta a la de su modelo, todos "(Mock N)" de
-  prueba; no se tocan. **Falta aplicar el script en producción** (OK del socio).
+  prueba; no se tocan. Aplicado en producción el 18/10 (OK del socio).
 - **VA-159 a VA-163 (18/10/2026):** ✅ hechos (un commit cada uno): implementos agrícolas antes de
   "Exterior", flechas de la galería del detalle, "Reportar", "Ver todo el catálogo" en azul y 404/403 con
   "Inicio" y "Página anterior".
