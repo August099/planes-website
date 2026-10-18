@@ -47,6 +47,10 @@ const nextConfig = {
       ["glosario-aeronautico", "aviation-glossary"],
     ];
     return [
+      // VA-96: las rutas de aeronaves pasan de /planes a /aircraft (la query string se conserva).
+      { source: "/planes", destination: "/aircraft", permanent: true },
+      { source: "/planes/compare", destination: "/aircraft/compare", permanent: true },
+      { source: "/planes/plane-details/:id", destination: "/aircraft/:id", permanent: true },
       { source: "/guias", destination: "/services/guides", permanent: true },
       ...guides.map(([from, to]) => ({ source: `/guias/${from}`, destination: `/services/guides/${to}`, permanent: true })),
     ];

@@ -103,7 +103,7 @@ export default async function ServicesPage() {
               </p>
             </div>
             <Link
-              href="/planes/compare"
+              href="/aircraft/compare"
               className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-[#001F58]/20 px-5 text-sm font-semibold text-[#001F58] transition-colors hover:border-[#001F58]"
             >
               Abrir el comparador →

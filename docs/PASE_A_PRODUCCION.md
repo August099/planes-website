@@ -183,7 +183,7 @@ Esperado: `robots.txt` con `Allow: /` y el sitemap responde `200`.
 
 ## 9. Verificación posterior
 
-- [ ] Home, `/planes`, `/spareparts`, un detalle de avión y uno de repuesto.
+- [ ] Home, `/aircraft`, `/spareparts`, un detalle de avión y uno de repuesto.
 - [ ] `/plans` con los tres planes reales.
 - [ ] Login con Google y con email; registro con mail de verificación; "Olvidé mi contraseña" (el mail
       llega y el link funciona).

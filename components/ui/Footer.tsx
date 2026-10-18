@@ -80,7 +80,7 @@ export function Footer() {
             </h3>
             <ul className="space-y-1 sm:space-y-2 text-sm text-white/90 drop-shadow-sm">
               <li>
-                <Link href="/planes" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                <Link href="/aircraft" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Aviones en venta
                 </Link>
               </li>

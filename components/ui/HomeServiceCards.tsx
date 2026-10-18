@@ -11,9 +11,9 @@ export default function HomeServicesCards() {
       title: "AVIONES",
       status: "Disponible",
       isAvailable: true,
-      image: "/cards/planes.webp",
+      image: "/cards/aircraft.webp",
       position: "object-[70%_65%]", // que se vea el avión, no solo el cielo
-      href: "/planes",
+      href: "/aircraft",
     },
     {
       title: "REPUESTOS",

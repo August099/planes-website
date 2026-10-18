@@ -12,14 +12,14 @@ import { CompareTable, type CompareColumn } from "@/components/ui/compare/Compar
 export const metadata: Metadata = {
   title: "Comparar aeronaves",
   robots: { index: false, follow: true },
-  alternates: { canonical: "/planes/compare" },
+  alternates: { canonical: "/aircraft/compare" },
 };
 
 interface Props {
   searchParams: Promise<{ ids?: string }>;
 }
 
-// VA-83: comparador de hasta 3 aeronaves (/planes/compare?ids=a,b,c), con todos sus datos.
+// VA-83: comparador de hasta 3 aeronaves (/aircraft/compare?ids=a,b,c), con todos sus datos.
 export default async function ComparePage({ searchParams }: Props) {
   const { ids = "" } = await searchParams;
   const wanted = [...new Set(ids.split(",").map((s) => s.trim()).filter(Boolean))].slice(0, 3);
@@ -29,7 +29,7 @@ export default async function ComparePage({ searchParams }: Props) {
   const columns: CompareColumn[] = found.map((a) => ({
     id: a.id,
     title: a.title,
-    href: `/planes/plane-details/${a.id}`,
+    href: `/aircraft/${a.id}`,
     image: a.images[0]?.url ?? PLACEHOLDER_IMAGE,
     price: formatPrice(a.price, { fallback: "Precio a consultar" }),
     location: [a.city, a.province].filter(Boolean).join(", "),
@@ -40,9 +40,9 @@ export default async function ComparePage({ searchParams }: Props) {
 
   return (
     <main className="relative isolate min-h-screen">
-      <PageBackground page="planes" />
+      <PageBackground page="aircraftList" />
       <div className="container mx-auto px-4 pb-16 pt-6">
-        <Breadcrumbs items={[{ label: "Aviones", href: "/planes" }, { label: "Comparar" }]} className="mb-6" />
+        <Breadcrumbs items={[{ label: "Aviones", href: "/aircraft" }, { label: "Comparar" }]} className="mb-6" />
         <div className="mb-6 max-w-2xl">
           <h1 className="text-2xl font-bold text-[#001F58] sm:text-3xl">Comparar aeronaves</h1>
           <p className="mt-1 text-sm text-slate-600">

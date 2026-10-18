@@ -7,7 +7,7 @@ import { FilterShell, FilterSection, AppliedFilterChips, ProvinceFilterSelect } 
 import { provinceBySlug, provinceShortName } from "@/lib/provinces";
 import { AIRCRAFT_TYPE_LABELS, OFFER_TYPES, SERVICE_LABELS } from "@/lib/hangars";
 
-// VA-84: filtros del listado de hangares, con la misma estructura que los de /planes (FilterShell):
+// VA-84: filtros del listado de hangares, con la misma estructura que los de /aircraft (FilterShell):
 // tipo de publicación, provincia, ancho mínimo de puerta, tipo de aeronave, precio y servicios.
 
 type SectionKey = "type" | "province" | "door" | "aircraft" | "price" | "services";

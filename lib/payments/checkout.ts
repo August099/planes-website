@@ -23,7 +23,7 @@ export type ListingType = "aircraft" | "parts" | "hangar";
 
 const LISTING_KIND: Record<ListingType, ListingKind> = { aircraft: "AIRCRAFT", parts: "SPARE_PART", hangar: "HANGAR" };
 const KIND_TEXT: Record<ListingKind, { one: string; detail: (id: string) => string }> = {
-  AIRCRAFT: { one: "Publicación de aeronave", detail: (id) => `/planes/plane-details/${id}` },
+  AIRCRAFT: { one: "Publicación de aeronave", detail: (id) => `/aircraft/${id}` },
   SPARE_PART: { one: "Publicación de repuesto", detail: (id) => `/spareparts/sparepart-details/${id}` },
   HANGAR: { one: "Publicación de hangar", detail: (id) => `/services/hangars/hangar-details/${id}` },
 };

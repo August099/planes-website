@@ -1,6 +1,6 @@
 import { CategoryIconBase, type CategoryIconProps } from "./CategoryIconBase";
 
-export function AvionIcon(props: CategoryIconProps) {
+export function AircraftIcon(props: CategoryIconProps) {
   return (
     <CategoryIconBase {...props}>
       <path d="M3 12h18" />

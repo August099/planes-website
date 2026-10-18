@@ -12,7 +12,7 @@ import { sortAircraftCategories } from "@/lib/aircraft-categories";
 export const AIRCRAFT_TAXONOMY_TAG = "aircraft-taxonomy";
 export const SPAREPART_CATEGORIES_TAG = "sparepart-categories";
 
-// Categorías de aeronave + marcas → modelos → variantes (filtros de /planes y marcas de la Home).
+// Categorías de aeronave + marcas → modelos → variantes (filtros de /aircraft y marcas de la Home).
 export const getAircraftTaxonomy = unstable_cache(
   async () => {
     const [categories, brands] = await Promise.all([
@@ -52,7 +52,7 @@ export const getSparePartCategories = unstable_cache(
       select: { id: true, name: true, slug: true, parentId: true, icon: true },
       orderBy: { name: "asc" },
     }),
-  ["sparepart-categories", "va148"],
+  ["sparepart-categories", "va96"],
   { tags: [SPAREPART_CATEGORIES_TAG], revalidate: 3600 }
 );
 

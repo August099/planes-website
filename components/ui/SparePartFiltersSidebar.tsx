@@ -93,7 +93,7 @@ function CategoryNode({
 
 type Props = { categories: CategoryRow[] };
 
-// Igual que en /planes: el formulario se rearma desde la URL en cada cambio (VA-31 / VA-45).
+// Igual que en /aircraft: el formulario se rearma desde la URL en cada cambio (VA-31 / VA-45).
 export function SparePartFiltersSidebar(props: Props) {
   const searchParams = useSearchParams();
   return <SparePartFiltersForm key={searchParams.toString()} {...props} />;

@@ -61,7 +61,7 @@ export async function pdfLogo(): Promise<string | null> {
 
 /** URL pública y canónica del aviso, con los UTM del QR, y la versión corta para escribir. */
 export function listingPdfUrls(kind: "aircraft" | "parts", id: string) {
-  const pathname = kind === "aircraft" ? `/planes/plane-details/${id}` : `/spareparts/sparepart-details/${id}`;
+  const pathname = kind === "aircraft" ? `/aircraft/${id}` : `/spareparts/sparepart-details/${id}`;
   const full = `${SITE_URL}${pathname}?utm_source=pdf&utm_medium=qr`;
   const short = `${SITE_URL.replace(/^https?:\/\//, "").replace(/\/$/, "")}${pathname}`;
   return { full, short };

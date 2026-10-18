@@ -1,5 +1,5 @@
 // components/ui/AircraftFiltersWrapper.tsx
-import { FiltersSidebar } from "./PlanesFiltersSidebar";
+import { FiltersSidebar } from "./AircraftFiltersSidebar";
 
 type SubModel = { id: string; name: string };
 type Model = { id: string; name: string; variants: SubModel[] };

@@ -54,8 +54,8 @@ export async function renewListingAction(
       }
     }
 
-    revalidatePath(type === "aircraft" ? "/planes" : "/spareparts");
-    revalidatePath(type === "aircraft" ? `/planes/plane-details/${id}` : `/spareparts/sparepart-details/${id}`);
+    revalidatePath(type === "aircraft" ? "/aircraft" : "/spareparts");
+    revalidatePath(type === "aircraft" ? `/aircraft/${id}` : `/spareparts/sparepart-details/${id}`);
     revalidatePath("/profile/[id]", "page"); // "/profile" no existe: se revalidan los perfiles
     revalidatePath("/"); // VA-76: la Home es estática
     updateTag(RECOMMENDATIONS_TAG); // VA-88
@@ -106,7 +106,7 @@ export async function deleteListingAction(id: string, type: "AIRCRAFT" | "SPARE_
     );
 
     revalidatePath("/profile/[id]", "page"); // "/profile" no existe: se revalidan los perfiles
-    revalidatePath("/planes");
+    revalidatePath("/aircraft");
     revalidatePath("/spareparts");
     revalidatePath("/"); // VA-76: la Home es estática
     updateTag(RECOMMENDATIONS_TAG); // VA-88

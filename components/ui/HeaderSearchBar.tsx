@@ -9,7 +9,7 @@ import { ensureAnalyticsCookies } from "@/lib/analytics-client";
 
 function sectionSearchType(pathname: string): SearchType | null {
   if (pathname.startsWith("/spareparts")) return "Repuesto";
-  if (pathname.startsWith("/planes")) return "Aeronave";
+  if (pathname.startsWith("/aircraft")) return "Aeronave";
   return null;
 }
 
@@ -93,7 +93,7 @@ export default function HeaderSearchBar() {
 
     setIsOpen(false);
 
-    // Antes iba a /planes?search= o /spareparts?search=, que no leen ese parámetro (no filtraba
+    // Antes iba a /aircraft?search= o /spareparts?search=, que no leen ese parámetro (no filtraba
     // nada). /search busca en aviones y repuestos, y registra la búsqueda (VA-15).
     router.push(`/search?q=${encodeURIComponent(query.trim())}`);
   };

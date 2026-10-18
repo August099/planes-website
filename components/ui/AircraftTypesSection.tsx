@@ -24,7 +24,7 @@ const TYPES = [
   },
   {
     name: "Experimental / LSA",
-    image: "avion-ligero",
+    image: "experimental-lsa",
     width: 494,
     height: 176,
     categories: ["E"],
@@ -60,7 +60,7 @@ const TYPES = [
   },
 ];
 
-const hrefFor = (categories: string[]) => `/planes?${categories.map((c) => `category=${encodeURIComponent(c)}`).join("&")}`;
+const hrefFor = (categories: string[]) => `/aircraft?${categories.map((c) => `category=${encodeURIComponent(c)}`).join("&")}`;
 
 export function AircraftTypesSection({ counts }: { counts: Record<string, number> }) {
   return (

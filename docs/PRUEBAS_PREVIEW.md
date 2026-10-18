@@ -121,7 +121,7 @@ Marcar cada punto. Celular real para los que dicen 📱.
 ### Publicar y ver
 - [ ] Formulario de avión: motor opcional en Proyecto, dos obligatorios en Bimotor; texto de fotos (máx. 15).
 - [ ] Detalle de avión y de repuesto: título, categoría con link, ficha, mapa de zona (SVG), compartir, PDF con QR (el QR abre el Preview).
-- [ ] Listados `/planes` y `/spareparts`: orden de filtros, filtros en celular con "Aplicar" siempre visible 📱.
+- [ ] Listados `/aircraft` y `/spareparts`: orden de filtros, filtros en celular con "Aplicar" siempre visible 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 

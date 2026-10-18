@@ -102,7 +102,7 @@ function LinkList({ label, values, max, onChange }: { label: string; values: Lin
         {values.map((l, i) => (
           <div key={i} className="grid grid-cols-[1fr_1fr_auto] items-start gap-1">
             <input value={l.label} placeholder="Texto" onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} className={INPUT} aria-label={`${label} ${i + 1}: texto`} />
-            <input value={l.href} placeholder="/planes o https://…" onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, href: e.target.value } : x)))} className={INPUT} aria-label={`${label} ${i + 1}: destino`} />
+            <input value={l.href} placeholder="/aircraft o https://…" onChange={(e) => onChange(values.map((x, j) => (j === i ? { ...x, href: e.target.value } : x)))} className={INPUT} aria-label={`${label} ${i + 1}: destino`} />
             <button type="button" className={ICON_BTN} onClick={() => onChange(values.filter((_, j) => j !== i))} aria-label="Quitar link">
               <X className="h-4 w-4" />
             </button>

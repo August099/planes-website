@@ -11,7 +11,7 @@ import { PROVINCES, provinceShortName } from "@/lib/provinces";
 export const TOOLBAR_BUTTON_CLASS =
   "min-h-11 lg:min-h-0 flex items-center justify-center gap-2 bg-white border border-slate-200 shadow-sm px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer";
 
-// Estructura común de las barras de filtros de /planes, /spareparts y /services/hangars (VA-45):
+// Estructura común de las barras de filtros de /aircraft, /spareparts y /services/hangars (VA-45):
 // en celular, botón "Filtros (n)" que abre un panel lateral; desde lg, barra lateral fija.
 // VA-91: el panel de celular va en un portal a <body> (las páginas usan `isolate`, que lo dejaba
 // debajo del header) y "Aplicar filtros" queda fijo al pie, siempre visible.

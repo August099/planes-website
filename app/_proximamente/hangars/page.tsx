@@ -25,7 +25,7 @@ const toNumber = (v: string | string[] | undefined) => {
   return Number.isFinite(n) && n >= 0 ? n : undefined;
 };
 
-// Igual que /planes: los filtros apuntan al canonical del listado.
+// Igual que /aircraft: los filtros apuntan al canonical del listado.
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const params = await searchParams;
   const page = Number(params.page) || 1;
@@ -58,7 +58,7 @@ const ORDER_BY: Record<string, Prisma.HangarOrderByWithRelationInput[]> = {
 
 const ITEMS_PER_PAGE = 21;
 
-// VA-84: listado de hangares, con la misma estructura que /planes (filtros, orden y paginación).
+// VA-84: listado de hangares, con la misma estructura que /aircraft (filtros, orden y paginación).
 export default async function HangarsPage({ searchParams }: Props) {
   const params = await searchParams;
   const currentPage = Math.max(1, Number(params.page) || 1);

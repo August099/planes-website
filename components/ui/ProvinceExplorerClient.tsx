@@ -138,7 +138,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
               </p>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Link
-                  href={`/planes?province=${current.slug}`}
+                  href={`/aircraft?province=${current.slug}`}
                   className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md bg-[#E70F1F] px-5 text-sm font-bold text-white hover:bg-[#C20D1A] transition-colors"
                 >
                   Ver aeronaves

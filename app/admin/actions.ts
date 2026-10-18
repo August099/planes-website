@@ -569,7 +569,7 @@ export async function getListingsAnalytics(
       inPesos: false,
       status: item.status,
       createdAt: item.createdAt,
-      detailUrl: `/planes/plane-details/${item.id}`,
+      detailUrl: `/aircraft/${item.id}`,
     })
   );
   spareParts.forEach((item) =>

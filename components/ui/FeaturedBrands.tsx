@@ -51,7 +51,7 @@ export function FeaturedBrands({ brands }: FeaturedBrandsProps) {
             return (
             <Link
               key={`${brand.id}-${index}`}
-              href={`/planes?brand=${encodeURIComponent(brand.id)}&page=1`}
+              href={`/aircraft?brand=${encodeURIComponent(brand.id)}&page=1`}
               aria-hidden={isCopy || undefined}
               tabIndex={isCopy ? -1 : undefined}
               className="flex items-center justify-center mx-6 sm:mx-10 w-28 sm:w-36 h-16 sm:h-20 transition-transform duration-300 hover:scale-110 shrink-0 cursor-pointer overflow-visible"

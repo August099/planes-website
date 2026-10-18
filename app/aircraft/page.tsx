@@ -22,13 +22,13 @@ function toArray(value: string | string[] | undefined): string[] {
   return Array.isArray(value) ? value : [value];
 }
 
-// Canonical: los filtros no generan URLs indexables propias (apuntan a /planes);
-// sin filtros, cada página del listado es su propia URL (/planes?page=N).
+// Canonical: los filtros no generan URLs indexables propias (apuntan a /aircraft);
+// sin filtros, cada página del listado es su propia URL (/aircraft?page=N).
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const params = await searchParams;
   const page = Number(params.page) || 1;
   const hasFilters = Object.keys(params).some((key) => key !== "page");
-  const canonical = !hasFilters && page > 1 ? `/planes?page=${page}` : "/planes";
+  const canonical = !hasFilters && page > 1 ? `/aircraft?page=${page}` : "/aircraft";
 
   return {
     title: "Aviones en venta en Argentina",
@@ -37,7 +37,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   };
 }
 
-export default async function AvionesPage({ searchParams }: Props) {
+export default async function AircraftListPage({ searchParams }: Props) {
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
   const itemsPerPage = 21;
@@ -201,7 +201,7 @@ export default async function AvionesPage({ searchParams }: Props) {
 
   return (
     <main className="relative isolate min-h-screen px-4 py-8">
-      <PageBackground page="planes" />
+      <PageBackground page="aircraftList" />
       <Breadcrumbs items={[{ label: "Aviones" }]} className="-mt-4 mb-2" />
 
       {/* Encabezado: Título a la izquierda, Sort (solo Desktop) a la derecha */}

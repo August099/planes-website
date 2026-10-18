@@ -90,7 +90,7 @@ export async function searchGlobal(
       } • ${
         formatPrice(a.price)
       }`,
-      url: `/planes/plane-details/${a.id}`,
+      url: `/aircraft/${a.id}`,
     })));
   }
 

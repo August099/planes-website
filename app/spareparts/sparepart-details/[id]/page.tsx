@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { AircraftGallery } from "@/components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
 import { QnaSection } from "@/components/ui/QnaSection";
-import { PlaneActionsHeader } from "@/components/ui/PlaneActionsHeader";
+import { AircraftActionsHeader } from "@/components/ui/AircraftActionsHeader";
 import { AppImage } from "@/components/ui/AppImage";
 import { auth } from "@/lib/auth";
 import type { Metadata } from "next";
@@ -283,7 +283,7 @@ export default async function SparePartDetailsPage({
           <div className="contents lg:flex lg:w-1/3 lg:flex-col lg:gap-5">
             <div className="order-2 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
               <PublishedLine createdAt={sparePart.createdAt} location={locationText} />
-              <PlaneActionsHeader
+              <AircraftActionsHeader
                 title={sparePart.title}
                 aircraftId={sparePart.id}
                 type="SPARE_PART"
