@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackOrHomeButton } from "@/components/ui/BackOrHomeButton";
 import { PageBackground } from "@/components/ui/PageBackground";
 
 export default function NotFound() {
@@ -29,15 +30,11 @@ export default function NotFound() {
             href="/"
             className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#001F58] hover:bg-[#001F58]/90 text-white font-medium text-sm transition-all shadow-md active:scale-[0.98]"
           >
-            Volver a la Base (Inicio)
+            Inicio
           </Link>
 
-          <Link
-            href="/aircraft"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/80 hover:bg-white border border-[#001F58]/20 text-[#001F58] font-medium text-sm transition-all shadow-sm"
-          >
-            Ver Catálogo
-          </Link>
+          {/* VA-163 */}
+          <BackOrHomeButton className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/80 hover:bg-white border border-[#001F58]/20 text-[#001F58] font-medium text-sm transition-all shadow-sm" />
         </div>
       </div>
     </main>
