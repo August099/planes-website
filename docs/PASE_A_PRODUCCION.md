@@ -68,7 +68,7 @@ npm run migrate:deploy
 npx prisma migrate status
 ```
 
-Esperado: la última aplicada es `20261018120000_va152_limpieza` y el estado dice
+Esperado: la última aplicada es la última carpeta de `prisma/migrations` y el estado dice
 **"Database schema is up to date!"**.
 
 `va152_limpieza` pasa a **pausados** los avisos vencidos y "pendiente de pago" (aviones y repuestos; los
