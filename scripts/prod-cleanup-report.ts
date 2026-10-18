@@ -39,13 +39,11 @@ async function main() {
 
   const testUsers = await prisma.user.findMany({
     where: { OR: TEST_EMAIL },
-    select: { id: true, email: true, isFoundingMember: true, isAdmin: true, _count: { select: { aircrafts: true, spareParts: true, purchases: true } } },
+    select: { id: true, email: true, isAdmin: true, _count: { select: { aircrafts: true, spareParts: true, purchases: true } } },
   });
   console.log(`\nUsuarios de prueba: ${testUsers.length}`);
-  console.table(testUsers.map((u) => ({ email: u.email, fundador: u.isFoundingMember, admin: u.isAdmin, aviones: u._count.aircrafts, repuestos: u._count.spareParts, compras: u._count.purchases })));
+  console.table(testUsers.map((u) => ({ email: u.email, admin: u.isAdmin, aviones: u._count.aircrafts, repuestos: u._count.spareParts, compras: u._count.purchases })));
 
-  const founders = testUsers.filter((u) => u.isFoundingMember);
-  console.log(`\nFundadores en cuentas de prueba (decidir en /admin/users): ${founders.map((u) => u.email).join(", ") || "ninguno"}`);
 
   const plans = await prisma.plan.findMany({ select: { name: true, isActive: true, archivedAt: true, _count: { select: { purchases: true, subscriptions: true } } }, orderBy: { sortOrder: "asc" } });
   console.log("\nPlanes (scripts/seed-real-plans.ts deja solo Plan Repuestos, Plan Aviones y Suscripción VA)");

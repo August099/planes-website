@@ -48,7 +48,6 @@ export async function registerUserAction(formData: FormData) {
     // 6. Enhashear contraseña
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // 7. Miembro fundador: ya no se asigna acá, lo da el admin desde /admin/users (VA-58).
 
     // 8. Crear el usuario en la base de datos
     await prisma.user.create({

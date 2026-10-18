@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { updateReportStatusAction } from "@/app/actions/report-actions";
+import { pauseListingAction } from "@/app/actions/moderation-actions";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ModerationHistory, type HistoryItem } from "@/components/admin/ModerationHistory";
 import {
   Plane,
   Wrench,
@@ -21,13 +25,36 @@ interface ReportItem {
   status: "PENDING" | "REVIEWED" | "DISMISSED";
   createdAt: string;
   user: { id: string; name: string | null; email: string } | null;
-  aircraft: { id: string; title: string } | null;
-  sparePart: { id: string; title: string } | null;
+  aircraft: { id: string; title: string; status: string } | null;
+  sparePart: { id: string; title: string; status: string } | null;
 }
 
-export function AdminReportsTable({ reports }: { reports: ReportItem[] }) {
+export function AdminReportsTable({ reports, history = {} }: { reports: ReportItem[]; history?: Record<string, HistoryItem[]> }) {
+  const router = useRouter();
   const [filter, setFilter] = useState<"ALL" | "PENDING" | "REVIEWED" | "DISMISSED">("PENDING");
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  // VA-154: "Pausar indefinidamente" con motivo obligatorio (se le muestra al dueño).
+  const [pausing, setPausing] = useState<ReportItem | null>(null);
+  const [reason, setReason] = useState("");
+  const [pauseError, setPauseError] = useState<string | null>(null);
+  const [pausePending, setPausePending] = useState(false);
+
+  const confirmPause = async () => {
+    if (!pausing) return;
+    const target = pausing.aircraft ?? pausing.sparePart;
+    if (!target) return;
+    setPausePending(true);
+    setPauseError(null);
+    const res = await pauseListingAction({ kind: pausing.aircraft ? "AIRCRAFT" : "SPARE_PART", id: target.id, reason, reportId: pausing.id });
+    setPausePending(false);
+    if (!res.ok) {
+      setPauseError(res.error);
+      return;
+    }
+    setPausing(null);
+    setReason("");
+    router.refresh();
+  };
 
   const filteredReports = reports.filter((r) => {
     if (filter === "ALL") return true;
@@ -145,6 +172,18 @@ export function AdminReportsTable({ reports }: { reports: ReportItem[] }) {
                             {r.details}
                           </p>
                         )}
+                        {(() => {
+                          const target = r.aircraft ?? r.sparePart;
+                          const h = target ? history[target.id] : undefined;
+                          return (
+                            <>
+                              {target?.status === "MODERATED" && (
+                                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-red-700">Pausado por moderación</p>
+                              )}
+                              {h && h.length > 0 && <ModerationHistory items={h} compact />}
+                            </>
+                          );
+                        })()}
                       </td>
 
                       {/* Denunciante */}
@@ -182,6 +221,19 @@ export function AdminReportsTable({ reports }: { reports: ReportItem[] }) {
                           <Loader2 className="w-4 h-4 animate-spin text-slate-400 ml-auto" />
                         ) : (
                           <div className="flex items-center justify-end gap-1">
+                            {(r.aircraft ?? r.sparePart) && (r.aircraft ?? r.sparePart)!.status !== "MODERATED" && (
+                              <button
+                                onClick={() => {
+                                  setPausing(r);
+                                  setReason("");
+                                  setPauseError(null);
+                                }}
+                                title="Pausar indefinidamente (con motivo)"
+                                className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 font-semibold text-[10px] rounded-lg border border-red-200 transition-colors cursor-pointer"
+                              >
+                                Pausar indefinidamente
+                              </button>
+                            )}
                             {r.status !== "REVIEWED" && (
                               <button
                                 onClick={() => handleStatusChange(r.id, "REVIEWED")}
@@ -211,6 +263,33 @@ export function AdminReportsTable({ reports }: { reports: ReportItem[] }) {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!pausing}
+        eyebrow="Moderación"
+        title="Pausar indefinidamente"
+        confirmLabel="Pausar aviso"
+        danger
+        pending={pausePending}
+        error={pauseError}
+        onConfirm={() => void confirmPause()}
+        onClose={() => setPausing(null)}
+      >
+        <p className="text-sm text-slate-600">
+          “{pausing?.aircraft?.title ?? pausing?.sparePart?.title}” deja de verse en todo el sitio y no cuenta en el cupo del dueño. El
+          dueño no lo puede reactivar: lo edita y pide revisión. Le llega un mail y una ventana con el motivo.
+        </p>
+        <label className="mt-3 block text-left">
+          <span className="mb-1 block text-xs font-semibold text-slate-600">Motivo (lo ve el dueño)</span>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={3}
+            maxLength={1000}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </label>
+      </ConfirmDialog>
     </div>
   );
 }

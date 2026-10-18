@@ -166,14 +166,6 @@ export const ENGINE_FIELDS: { key: string; label: string; value: (e: Engine) => 
   { key: "horsepower", label: "Potencia", value: (e) => (e.horsepower != null ? `${e.horsepower} HP` : undefined) },
   { key: "engineHours", label: "Horas totales", value: (e) => hours(e.engineHours), numeric: (e) => e.engineHours ?? undefined, best: "min" },
   { key: "TBO", label: "TBO", value: (e) => hours(e.TBO) },
-  {
-    key: "DURG",
-    label: "DURG / SMOH",
-    value: (e) => hours(e.DURG),
-    numeric: (e) => e.DURG ?? undefined,
-    best: "min",
-    helpHref: "/services/guides/aviation-glossary#smoh",
-  },
   { key: "description", label: "Descripción", value: (e) => text(e.description) },
 ];
 

@@ -40,6 +40,8 @@ export async function setListingStatusAction(
     const select = { status: true, sellerId: true, listingStartsAt: true } as const;
     const current = type === "aircraft" ? await prisma.aircraft.findUnique({ where: { id }, select }) : await prisma.sparePart.findUnique({ where: { id }, select });
     if (!current) return { success: false, error: "La publicación no existe." };
+    // VA-154: un aviso pausado por moderación solo lo reactiva el admin (el dueño pide revisión).
+    if (current.status === "MODERATED") return { success: false, error: "Este aviso está pausado por moderación: editalo y pedí revisión." };
     if (current.status === to) return { success: true };
 
     const result = await prisma.$transaction(async (tx) => {

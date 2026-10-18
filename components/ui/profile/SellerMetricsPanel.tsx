@@ -15,7 +15,7 @@ const NUM = new Intl.NumberFormat("es-AR");
 const DAY_FMT = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
 const SINCE_FMT = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", timeZone: "America/Argentina/Buenos_Aires" });
 const CHANNEL_LABEL: Record<ChannelKey, string> = { WHATSAPP: "WhatsApp", PHONE: "Teléfono", EMAIL: "Email", FORM: "Preguntas" };
-const STATUS_LABEL: Record<string, string> = { ACTIVE: "Activo", PAUSED: "Pausado", PENDING_PAYMENT: "Pendiente de pago", EXPIRED: "Vencido", SOLD: "Vendido" };
+const STATUS_LABEL: Record<string, string> = { ACTIVE: "Activo", PAUSED: "Pausado", MODERATED: "Pausado por moderación", PENDING_PAYMENT: "Pendiente de pago", EXPIRED: "Vencido", SOLD: "Vendido" };
 
 type SortKey = "views" | "contacts" | "favorites" | "contactRate" | "title";
 

@@ -3,7 +3,8 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ProfileListings, type ProfileQuota, type StatusTarget } from "@/components/ui/profile/ProfileListings";
+import { ProfileListings, type ModerationMap, type ProfileQuota, type StatusTarget } from "@/components/ui/profile/ProfileListings";
+import { requestReviewAction } from "@/app/actions/moderation-actions";
 import dynamic from "next/dynamic";
 
 // VA-151: el panel (y su gráfico) se descarga solo al abrir la pestaña "Métricas".
@@ -32,7 +33,6 @@ import {
   Camera,
   Trash2,
   Receipt,
-  Star,
 } from "lucide-react";
 import { PROFILE_FIELD_LABELS, type ProfileField } from "@/lib/profile";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
@@ -89,7 +89,6 @@ export type ProfileUserData = {
   city: string | null;
   province: string | null;
   userType: string;
-  isFoundingMember: boolean;
   facebook: string | null;
   instagram: string | null;
   createdAt: string;
@@ -118,6 +117,8 @@ interface Props {
   hasSellerMetrics?: boolean;
   // VA-152: uso del cupo (solo el dueño).
   quota?: ProfileQuota | null;
+  // VA-154: avisos pausados por moderación (motivo y si pidió revisión), solo el dueño.
+  moderation?: ModerationMap;
 }
 
 export function ProfileView({
@@ -132,6 +133,7 @@ export function ProfileView({
   hasPassword = false,
   hasSellerMetrics = false,
   quota = null,
+  moderation = {},
   initialTab,
 }: Props) {
   const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
@@ -164,6 +166,20 @@ export function ProfileView({
     try {
       const res = await setListingStatusAction(id, type, to);
       if (!res.success) alert(res.error);
+    } catch {
+      alert("Error de conexión. Probá de nuevo.");
+    } finally {
+      setLoadingStatusId(null);
+    }
+  };
+
+  // VA-154: "Pedir revisión" de un aviso pausado por moderación (después de editarlo).
+  const handleRequestReview = async (id: string, type: "aircraft" | "sparepart") => {
+    if (!confirm("¿Ya corregiste el aviso? Vamos a revisarlo y te avisamos por mail.")) return;
+    setLoadingStatusId(id);
+    try {
+      const res = await requestReviewAction({ kind: type === "aircraft" ? "AIRCRAFT" : "SPARE_PART", id });
+      if (!res.ok) alert(res.error);
     } catch {
       alert("Error de conexión. Probá de nuevo.");
     } finally {
@@ -294,7 +310,6 @@ export function ProfileView({
           instagram={profileUser.instagram}
           facebook={profileUser.facebook}
           isOwner={isOwner}
-          isFoundingMember={profileUser.isFoundingMember}
           onEdit={() => setActiveTab("edit")}
         />
       ) : (
@@ -363,18 +378,11 @@ export function ProfileView({
                   {profileUser.name || "Usuario de Ventas Aeronáuticas"}
                 </h1>
 
-                {/* INSIGNIAS: TIPO DE CUENTA Y MIEMBRO FUNDADOR */}
+                {/* INSIGNIA: TIPO DE CUENTA */}
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-1.5">
                   <span className="inline-block px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold uppercase tracking-wider">
                     {USER_TYPE_LABELS[profileUser.userType as keyof typeof USER_TYPE_LABELS] ?? profileUser.userType}
                   </span>
-
-                  {profileUser.isFoundingMember && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold shadow-2xs">
-                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
-                      Miembro Fundador
-                    </span>
-                  )}
                 </div>
               </div>
 
@@ -559,7 +567,9 @@ export function ProfileView({
             isOwner={isOwner}
             favIds={currentUserFavIds}
             quota={quota}
+            moderation={moderation}
             onStatus={handleStatus}
+            onRequestReview={handleRequestReview}
             onDelete={handleDelete}
             loadingId={loadingStatusId}
           />

@@ -28,6 +28,8 @@ export const AIRCRAFT_STATUS_LABELS: Record<string, string> = {
   SOLD: "Vendida",
   EXPIRED: "Expirada",
   PENDING_PAYMENT: "Pendiente de pago",
+  // VA-154
+  MODERATED: "Pausada por moderación",
 };
 
 export const AIRCRAFT_CATEGORY_LABELS: Record<string, string> = {
@@ -109,8 +111,6 @@ export function formatEnum(
     .replace(/_/g, " ")
     .replace(/(?:^|\s)\S/g, (a) => a.toUpperCase());
 }
-// Miembros fundadores: los asigna el admin a mano desde /admin/users (VA-58).
-export const FOUNDING_MEMBER_LIMIT = 50;
 
 // Imagen de reemplazo cuando una publicación no tiene foto o la foto no carga (VA-25).
 // Antes se usaba "/placeholder.png", que no existe en public/.

@@ -74,7 +74,6 @@ export async function loadListingForEdit(id: string, type: "aircraft" | "parts")
         model: e.model ?? "",
         engineHours: str(e.engineHours),
         TBO: str(e.TBO),
-        DURG: str(e.DURG),
         horsepower: str(e.horsepower),
         description: e.description ?? "",
       })),

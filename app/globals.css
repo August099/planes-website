@@ -102,6 +102,8 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
+    /* VA-155: mientras se ve el cartel de cookies, el pie de la página no queda tapado. */
+    padding-bottom: var(--va-consent-h, 0px);
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { notFound } from "next/navigation";
 import { ProfileView } from "@/components/ui/ProfileView";
 import { getQuotaUsage } from "@/lib/quota";
+import { moderationInfoFor } from "@/lib/moderation";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { getMissingProfileFieldsCached } from "@/lib/cached-data";
 import { getSubscriptionSummary, hasCustomPage, hasSellerMetrics, hasVerifiedBadge } from "@/lib/subscriptions";
@@ -34,7 +35,6 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       city: true,
       province: true,
       userType: true,
-      isFoundingMember: true,
       facebook: true,
       instagram: true,
       createdAt: true,
@@ -152,6 +152,14 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         hasPassword={isOwner ? Boolean((await prisma.user.findUnique({ where: { id }, select: { passwordHash: true } }))?.passwordHash) : false}
         hasSellerMetrics={isOwner ? await hasSellerMetrics(id) : false}
         quota={isOwner ? quotaForView(await getQuotaUsage(id)) : null}
+        moderation={
+          isOwner
+            ? await moderationInfoFor([
+                ...rawProfileUser.aircrafts.filter((a) => a.status === "MODERATED").map((a) => ({ kind: "AIRCRAFT" as const, id: a.id })),
+                ...rawProfileUser.spareParts.filter((s) => s.status === "MODERATED").map((s) => ({ kind: "SPARE_PART" as const, id: s.id })),
+              ])
+            : {}
+        }
       />
     </main>
   );

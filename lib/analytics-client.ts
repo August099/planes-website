@@ -3,6 +3,8 @@
 // - va_src: de dónde llegó en esta sesión (referrer externo y utm_*). Cookie de sesión: se fija en
 //   la primera página de la visita y no se pisa al navegar dentro del sitio.
 // El servidor las lee en lib/analytics-context.ts y las guarda en cada AnalyticsEvent.
+// VA-155: son cookies de medición: solo se crean si el visitante tocó "Aceptar" en el cartel de cookies
+// (lib/consent.ts); con "Solo necesarias" se borran.
 
 export const ANON_COOKIE = "va_anon";
 export const SOURCE_COOKIE = "va_src";
@@ -15,6 +17,12 @@ function readCookie(name: string): string | null {
 function writeCookie(name: string, value: string, maxAgeSeconds?: number) {
   const age = maxAgeSeconds ? `; max-age=${maxAgeSeconds}` : "";
   document.cookie = `${name}=${encodeURIComponent(value)}; path=/; samesite=lax${age}`;
+}
+
+/** Borra las cookies de medición (el visitante eligió "Solo necesarias"). */
+export function clearAnalyticsCookies() {
+  if (typeof document === "undefined") return;
+  for (const name of [ANON_COOKIE, SOURCE_COOKIE]) document.cookie = `${name}=; path=/; max-age=0; samesite=lax`;
 }
 
 export function ensureAnalyticsCookies() {
