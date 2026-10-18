@@ -5,16 +5,8 @@ import {
   OverlayAircraftCard,
   AircraftCardProps,
 } from "@/components/ui/OverlayAircraftCard";
-
-// Swiper React
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
-
-// Estilos Swiper
-import "swiper/css";
-import "swiper/css/navigation";
 import { SectionTitle } from "@/components/ui/home/SectionTitle";
-import { CarouselArrow, CarouselDots, carouselPagination } from "@/components/ui/home/CarouselArrow";
+import { ScrollCarousel } from "@/components/ui/home/ScrollCarousel";
 import { FEATURED_AIRCRAFT_COUNT } from "@/lib/constants";
 
 export interface FeaturedAircraftProps extends AircraftCardProps {
@@ -57,42 +49,21 @@ function FeaturedCarousel({ aircrafts }: Props) {
         <SectionTitle>Aeronaves Destacadas</SectionTitle>
       </div>
 
-      {/* CONTENEDOR CON NAVEGACIÓN LATERAL */}
-      <div className="relative sm:px-10">
-        <CarouselArrow id="swiper-aircraft-prev" direction="prev" />
-
-        {/* SWIPER */}
-        <Swiper
-          modules={[Navigation, Pagination]}
-          navigation={{
-            prevEl: "#swiper-aircraft-prev",
-            nextEl: "#swiper-aircraft-next",
-          }}
-          pagination={carouselPagination("swiper-aircraft-dots")}
-          spaceBetween={12}
-          // VA-139: en celular se asoma la tarjeta siguiente.
-          slidesPerView={1.12}
-          breakpoints={{
-            640: {
-              slidesPerView: 2,
-              spaceBetween: 24,
-            },
-          }}
-          className="py-2"
-        >
-          {selectedAircrafts.map((aircraft, index) => (
-            <SwiperSlide key={aircraft.id} className="h-auto">
-              <OverlayAircraftCard
-                {...aircraft}
-                featuredBadge={index === 0 ? "Dato Destacado" : undefined}
-              />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-
-        <CarouselArrow id="swiper-aircraft-next" direction="next" />
-        <CarouselDots id="swiper-aircraft-dots" />
-      </div>
+      {/* VA-139: en celular se asoma la tarjeta siguiente (1,12 por pantalla); desde sm, 2. */}
+      <ScrollCarousel
+        label="Aeronaves destacadas"
+        className="sm:px-10"
+        gapClassName="gap-3 sm:gap-6"
+        slideClassName="w-[calc((100%-1.44px)/1.12)] sm:w-[calc((100%-24px)/2)]"
+      >
+        {selectedAircrafts.map((aircraft, index) => (
+          <OverlayAircraftCard
+            key={aircraft.id}
+            {...aircraft}
+            featuredBadge={index === 0 ? "Dato Destacado" : undefined}
+          />
+        ))}
+      </ScrollCarousel>
     </section>
   );
 }

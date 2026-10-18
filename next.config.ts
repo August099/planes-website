@@ -32,6 +32,8 @@ const nextConfig = {
   // Solo afecta al servidor de desarrollo (túneles de loca.lt para probar en el celular).
   allowedDevOrigins: ['*.loca.lt'],
   experimental: {
+    // Probado y descartado (VA-76, 18/10): `inlineCss: true` mete el CSS en el HTML pero también lo
+    // repite en los datos de la página; la Home pasaba de 48 KB a 127 KB comprimida en cada visita.
     serverActions: {
       bodySizeLimit: "30mb",
     },

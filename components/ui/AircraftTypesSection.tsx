@@ -87,7 +87,8 @@ export function AircraftTypesSection({ counts }: { counts: Record<string, number
                       src={`/aircraft-types/${type.image}.webp`}
                       alt=""
                       fill
-                      sizes="(min-width: 1280px) 250px, (min-width: 1024px) 20vw, (min-width: 768px) 27vw, 40vw"
+                      // En celular la caja mide ~35vw (85% de media columna): así baja la de 256 px y no la de 384.
+                      sizes="(min-width: 1280px) 250px, (min-width: 1024px) 20vw, (min-width: 768px) 27vw, 35vw"
                       className="object-contain object-bottom"
                     />
                   </div>

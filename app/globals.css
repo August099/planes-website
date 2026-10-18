@@ -176,6 +176,15 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
   scrollbar-color: #E70F1F #f1f1f1;
 }
 
+/* Carruseles de la Home (ScrollCarousel): se deslizan sin barra. Va acá y no como utilidad de
+   Tailwind porque la regla de arriba, sin capa, le ganaría. */
+.va-no-scrollbar {
+  scrollbar-width: none;
+}
+.va-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes marquee {
   0% {
     transform: translateX(0%);
@@ -266,8 +275,7 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
   box-shadow: 0 1px 2px rgb(0 31 88 / 0.06);
 }
 
-/* VA-139: puntos de los carruseles de la Home (Swiper los dibuja con estas clases). */
-.va-dots.swiper-pagination-lock { display: none; }
+/* VA-139: puntos de los carruseles de la Home (los dibuja ScrollCarousel). */
 .va-dot {
   display: inline-block;
   width: 8px;
@@ -275,6 +283,8 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
   border-radius: 9999px;
   background: rgb(0 31 88 / 0.22);
   cursor: pointer;
+  padding: 0;
+  border: 0;
   transition: width 150ms, background-color 150ms;
 }
 .va-dot-active {

@@ -76,6 +76,7 @@ después, si el informe está bien, con el flag de aplicar.
 |---|---|---|---|
 | Guías | `npx tsx scripts/seed-guides.ts --allow-remote` | `… --apply --allow-remote` | 4 publicadas y 6 en borrador; las que ya existen no se tocan |
 | Planes reales | `npx tsx --require ./scripts/stub-server-only.cjs scripts/seed-real-plans.ts --confirm-production` | `… --apply --confirm-production` | Quedan Plan Repuestos, Plan Aviones, Suscripción VA y **Pago de prueba** (AR$ 100, VA-119, para el paso 8). Las cortesías pasan a Suscripción VA. Si frena por una suscripción paga en otro plan, avisar |
+| Coordenadas de los avisos viejos | `npx tsx scripts/geocode-listings.ts --allow-remote` | `… --apply --allow-remote` | Los avisos sin latitud/longitud (los de antes de VA-83) toman el centro de su localidad con la API Georef: sin eso, el mapa del detalle muestra la provincia pero no el punto. Los de ciudad ambigua ("Buenos Aires, Buenos Aires") quedan sin resolver: corregir la ciudad del aviso. Correrlo también en el Preview |
 | Precios sueltos | `/admin/prices` | — | Avión AR$ 30.000, repuesto AR$ 15.000 (o los que decidan) y renovación al 70% |
 | Facturación | `/admin/payments` → Configuración | — | Tope del monotributo, alerta, desde qué monto se pide DNI y días de gracia |
 | Taxonomía | `/admin/taxonomy` | — | Marcas, modelos y categorías como en el Preview |
