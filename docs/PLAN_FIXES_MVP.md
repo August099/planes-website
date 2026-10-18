@@ -1579,6 +1579,7 @@ Probados en celular; verificar también en escritorio.
 - **Estado (17/10):** ✅ hecho. Los 14 íconos ya eran componentes propios desde VA-70; ahora el admin elige entre ellos, los nombres viejos se migraron (`va148_iconos_categorias`, tabla aprobada por el socio) y se quitó `react-icons`. Sin íconos sin usar en el código: Gps, Combustible, Hélice y Frenos quedan disponibles en el selector. JS de la Home igual (801 KB).
 
 ### VA-151 · Métricas de la cuenta VA (primer nivel) — detalle en `docs/specs/VA-151-metricas-cuenta-va.md`
+- **Estado (17/10):** ✅ hecho en local. Migraciones `va151_metricas_vendedor` (evento `PROFILE_VIEW`, perfil visitado e interruptor `includesSellerMetrics`, prendido en la Suscripción VA) y `va151_favoritos_fecha` (`Favorite.createdAt`; los anteriores quedaron con 1/1/2026). Contactos = clics de WhatsApp, teléfono y email + preguntas del aviso (el formulario `Lead` no se usa). Retención actual: 90 días (botón del admin). 16 números verificados contra SQL (`scripts/verify-seller-metrics.ts`). En producción, el ítem "Métricas de tus avisos" de `/plans` llega al correr `scripts/seed-real-plans.ts --apply` después del deploy.
 - **Reemplaza la parte "avanzada" de VA-98.** Pocas métricas a propósito: lo avanzado queda para una futura **cuenta empresarial**.
 - **Quién lo ve:** un interruptor nuevo en el plan, `includesSellerMetrics`, prendido en "Suscripción VA" (cortesías incluidas). Quien no tiene cuenta VA ve lo básico más una línea discreta hacia `/plans`.
 - **Pestaña "Métricas" del perfil propio, últimos 7 o 30 días:**

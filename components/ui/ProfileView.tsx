@@ -4,6 +4,13 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ProfileListings } from "@/components/ui/profile/ProfileListings";
+import dynamic from "next/dynamic";
+
+// VA-151: el panel (y su gráfico) se descarga solo al abrir la pestaña "Métricas".
+const SellerMetricsPanel = dynamic(() => import("@/components/ui/profile/SellerMetricsPanel"), {
+  ssr: false,
+  loading: () => <p className="text-sm text-slate-500">Cargando métricas…</p>,
+});
 import {
   updateProfileAction,
   updateAvatarAction,
@@ -14,6 +21,7 @@ import { claimCouponToProfile } from "@/app/actions/coupon-validation";
 import { deleteListingAction, renewListingAction } from "@/app/actions/listing-actions";
 import { Lock } from "lucide-react";
 import {
+  BarChart3,
   MapPin,
   Calendar,
   Phone,
@@ -120,6 +128,8 @@ interface Props {
   // VA-105 · 3: "Cambiar contraseña" solo para cuentas con contraseña (las de Google la crean con
   // "Olvidé mi contraseña").
   hasPassword?: boolean;
+  // VA-151: el plan vigente incluye el panel de métricas (solo se pasa al dueño).
+  hasSellerMetrics?: boolean;
 }
 
 export function ProfileView({
@@ -133,6 +143,7 @@ export function ProfileView({
   purchases = [],
   billingProfile = null,
   hasPassword = false,
+  hasSellerMetrics = false,
   initialTab,
 }: Props) {
   const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
@@ -140,7 +151,7 @@ export function ProfileView({
     isMissing(field) ? (
       <span className="ml-1 inline-block w-2 h-2 rounded-full bg-red-600 align-middle" aria-label="Falta completar" />
     ) : null;
-  const [activeTab, setActiveTab] = useState<"listings" | "coupons" | "purchases" | "edit">(initialTab ?? "listings");
+  const [activeTab, setActiveTab] = useState<"listings" | "coupons" | "purchases" | "metrics" | "edit">(initialTab ?? "listings");
   const [loadingSave, setLoadingSave] = useState(false);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -551,6 +562,21 @@ export function ProfileView({
           </button>
         )}
 
+        {/* VA-151: métricas de la cuenta VA (solo el dueño con el plan). */}
+        {isOwner && hasSellerMetrics && (
+          <button
+            onClick={() => setActiveTab("metrics")}
+            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+              activeTab === "metrics"
+                ? "border-[#001F58] text-[#001F58]"
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" />
+            Métricas
+          </button>
+        )}
+
         {isOwner && (
           <button
             onClick={() => setActiveTab("edit")}
@@ -578,6 +604,15 @@ export function ProfileView({
               Con un plan publicás más y pagás menos.{" "}
               <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
                 Ver planes
+              </Link>
+            </p>
+          )}
+          {/* VA-151: línea discreta para quien no tiene las métricas (sin bloquear nada). */}
+          {isOwner && !hasSellerMetrics && (
+            <p className="mb-4 text-sm text-slate-600">
+              Con la cuenta VA ves la evolución de tus avisos y de dónde llegan tus contactos.{" "}
+              <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+                Ver la cuenta VA
               </Link>
             </p>
           )}
@@ -699,6 +734,8 @@ export function ProfileView({
 
       {/* VA-92: Pestaña Mis compras */}
       {isOwner && activeTab === "purchases" && <PurchasesPanel rows={purchases} />}
+
+      {isOwner && hasSellerMetrics && activeTab === "metrics" && <SellerMetricsPanel />}
 
       {/* Pestaña Ajustes */}
       {isOwner && activeTab === "edit" && (

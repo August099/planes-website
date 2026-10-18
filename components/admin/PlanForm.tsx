@@ -199,6 +199,13 @@ export function PlanForm({ planId, initial }: { planId?: string; initial: PlanFo
             disabled={!isSubscription}
             onChange={(c) => set("includesCustomPage", c)}
           />
+          <Check
+            label="Métricas de vendedor"
+            hint="Panel de métricas en el perfil: vistas, contactos, favoritos y visitas a la Página VA (VA-151)."
+            checked={v.includesSellerMetrics ?? false}
+            disabled={!isSubscription}
+            onChange={(c) => set("includesSellerMetrics", c)}
+          />
           {isSubscription && (
             <div>
               <label htmlFor="plan-featured" className={LABEL}>Destacados incluidos por mes</label>

@@ -63,11 +63,14 @@ const PLANS: PlanInput[] = [
     isUnlimitedAircraft: true,
     isUnlimitedSpareParts: true,
     includesCustomPage: true,
+    // VA-151: panel de métricas de vendedor.
+    includesSellerMetrics: true,
     description: "Todo ilimitado y tu propia Página VA.",
     features: [
       "Aviones y repuestos ilimitados",
       "Nada vence: no hace falta renovar",
       "Página VA: portada, logo, nombre comercial y WhatsApp",
+      "Métricas de tus avisos",
       "Cancelás cuando quieras",
     ],
     sortOrder: 30,

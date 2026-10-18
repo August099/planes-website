@@ -34,6 +34,15 @@ export async function hasCustomPage(userId: string): Promise<boolean> {
   return !!sub;
 }
 
+/** VA-151: panel de métricas de vendedor (plan con includesSellerMetrics, también de cortesía). */
+export async function hasSellerMetrics(userId: string): Promise<boolean> {
+  const sub = await prisma.subscription.findFirst({
+    where: { ...currentSubscriptionWhere(userId), plan: { includesSellerMetrics: true } },
+    select: { id: true },
+  });
+  return !!sub;
+}
+
 /** VA-105 (14/10): "Cuenta verificada" sale del plan (includesVerifiedBadge), no de la Página VA. */
 export async function hasVerifiedBadge(userId: string): Promise<boolean> {
   const sub = await prisma.subscription.findFirst({
