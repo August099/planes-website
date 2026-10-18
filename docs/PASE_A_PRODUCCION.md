@@ -115,7 +115,6 @@ node scripts/storage-orphans.mjs
 - pagos de prueba, compras nunca activadas, eventos del webhook y facturas (el Preview usó esta base);
 - avisos "Prueba…";
 - usuarios de prueba (`@ventasaeronauticas.test`, `@resend.dev`, `augusto@gmail.com`);
-- **fundadores asignados a cuentas de prueba**, para decidirlos en `/admin/users`;
 - los planes que quedan.
 
 `storage-orphans.mjs` sin `--delete` solo informa.
@@ -212,26 +211,12 @@ Esperado: `robots.txt` con `Allow: /` y el sitemap responde `200`.
 - [ ] `/arrepentimiento` desde el footer lleva a Mis compras.
 - [ ] Vercel → Logs sin errores en la primera hora.
 
-## Checklist previo a mandar el link a los fundadores
+## Checklist previo al lanzamiento
 
 - [ ] Pasos 1 a 9 hechos.
 - [ ] FAQ y términos actualizados (los actualiza el socio).
 - [ ] Prueba en celular real: las 6 pruebas de aceptación de VA-30 y escanear el QR del PDF de un aviso.
-- [ ] "Pago de prueba" archivado en `/admin/plans` (no se ve en `/plans`).
-- [ ] La insignia de miembro fundador se asigna a mano en `/admin/users` a medida que se registran (decisión del socio, 14/10).
+- [ ] Planes con precio y activos en `/admin/plans`; el "Pago de prueba" sigue archivado (VA-152).
 
-## Mail a los miembros fundadores
-
-Link para el botón del mail (lleva al registro, que ya muestra la promoción de lanzamiento; quien ya tiene
-cuenta entra desde "Iniciar sesión" en esa misma pantalla):
-
-```
-https://ventasaeronauticas.com/register?utm_source=mail&utm_medium=email&utm_campaign=fundadores
-```
-
-- Los `utm_*` quedan guardados desde la primera visita (cookie `va_src`, VA-15): las visitas, búsquedas y
-  contactos de quienes llegan por el mail se ven en `/admin/traffic` con el origen **mail**.
-- Para probarlo en el Preview, el mismo link con el dominio de pre-production.
-- Al registrarse y entrar por primera vez ven la ventana de bienvenida con su avión y su repuesto gratis
-  (VA-111). Si hace falta reenviar, el link es el mismo.
-
+> VA-158 (18/10): se quitaron los Miembros Fundadores (insignia, admin y textos). Si se manda un mail de
+> lanzamiento, el link con `utm_campaign` sigue sirviendo para medir el origen en `/admin/traffic`.

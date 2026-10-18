@@ -33,7 +33,6 @@ import {
   Camera,
   Trash2,
   Receipt,
-  Star,
 } from "lucide-react";
 import { PROFILE_FIELD_LABELS, type ProfileField } from "@/lib/profile";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
@@ -90,7 +89,6 @@ export type ProfileUserData = {
   city: string | null;
   province: string | null;
   userType: string;
-  isFoundingMember: boolean;
   facebook: string | null;
   instagram: string | null;
   createdAt: string;
@@ -312,7 +310,6 @@ export function ProfileView({
           instagram={profileUser.instagram}
           facebook={profileUser.facebook}
           isOwner={isOwner}
-          isFoundingMember={profileUser.isFoundingMember}
           onEdit={() => setActiveTab("edit")}
         />
       ) : (
@@ -381,18 +378,11 @@ export function ProfileView({
                   {profileUser.name || "Usuario de Ventas Aeronáuticas"}
                 </h1>
 
-                {/* INSIGNIAS: TIPO DE CUENTA Y MIEMBRO FUNDADOR */}
+                {/* INSIGNIA: TIPO DE CUENTA */}
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-1.5">
                   <span className="inline-block px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold uppercase tracking-wider">
                     {USER_TYPE_LABELS[profileUser.userType as keyof typeof USER_TYPE_LABELS] ?? profileUser.userType}
                   </span>
-
-                  {profileUser.isFoundingMember && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold shadow-2xs">
-                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
-                      Miembro Fundador
-                    </span>
-                  )}
                 </div>
               </div>
 

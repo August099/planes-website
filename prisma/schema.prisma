@@ -16,7 +16,6 @@ model User {
   phone                     String?
   bio                       String?
   isAdmin                   Boolean              @default(false)
-  isFoundingMember          Boolean              @default(false)
   createdAt                 DateTime             @default(now())
   // VA-111: cuándo vio (y cerró) la ventana de bienvenida. null = todavía no. (VA-152: los saldos de
   // publicaciones y el de lanzamiento se quitaron; el cupo está en lib/quota.ts.)

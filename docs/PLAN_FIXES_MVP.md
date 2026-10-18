@@ -940,7 +940,7 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - [ ] **D14:** región de las funciones de Vercel contra Supabase (Montreal), con latencia antes y después si conviene moverlas.
 - [ ] **Fuera del código** (`docs/PASE_A_PRODUCCION.md`, sección 6): Google OAuth publicado, dominio en Resend, webhook de producción, `www` → sin `www`, bucket `documents` privado y Search Console/Bing.
 - [ ] **Runbook actualizado** (`docs/PASE_A_PRODUCCION.md`) contra el estado actual: migraciones, variables y scripts de datos base.
-- [ ] **Limpieza de producción** con `scripts/prod-cleanup-report.ts` (solo informe) y decisión sobre los fundadores asignados a cuentas de prueba.
+- [ ] **Limpieza de producción** con `scripts/prod-cleanup-report.ts` (solo informe).
 - [ ] **Testeo final en producción:** webhook real, un pago real (⏳ a redefinir con VA-152: ya no hay "Pago de prueba"; lo deciden los socios), arrepentimiento y recién ahí `TUSFACTURAS_MODE=production` y `BILLING_ENABLED=true` (solo en Production).
 - [ ] **Textos del socio:** FAQ, términos y `/about` sin `[COMPLETAR]`.
 
@@ -1647,3 +1647,7 @@ Probados en celular; verificar también en escritorio.
 - **VA-157 (18/10/2026):** ✅ hecho en local. DURG/SMOH fuera del formulario, la validación, el detalle,
   el comparador, el PDF y la semilla; migración `va157_sin_durg` (36 avisos lo tenían en `va_dev`). El
   glosario y `/services` siguen nombrando SMOH como término general.
+- **VA-158 (18/10/2026):** ✅ hecho en local. Sin insignia (perfil y Página VA), sin interruptor ni filtro
+  en `/admin/users`, sin `FOUNDING_MEMBER_LIMIT`, sin la sección del mail en el runbook; migración
+  `va158_sin_fundadores` (6 cuentas lo tenían en `va_dev`). Las tarjetas, el PDF, FAQ, términos y guías no
+  lo mencionaban. El link con `utm_campaign=fundadores` sigue midiendo el origen.

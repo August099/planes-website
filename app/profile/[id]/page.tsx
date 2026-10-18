@@ -35,7 +35,6 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       city: true,
       province: true,
       userType: true,
-      isFoundingMember: true,
       facebook: true,
       instagram: true,
       createdAt: true,

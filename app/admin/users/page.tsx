@@ -1,27 +1,24 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
-import { Award, Search, Users } from "lucide-react";
+import { Search, Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
-import { FOUNDING_MEMBER_LIMIT } from "@/lib/constants";
-import { FoundingMemberToggle } from "@/components/ui/FoundingMemberToggle";
 import { UserTypeSelect } from "@/components/admin/UserTypeSelect";
 import { CourtesyPlanControl } from "@/components/admin/CourtesyPlanControl";
 import { getQuotaUsage } from "@/lib/quota";
 
 const PAGE_SIZE = 50;
 
-type Props = { searchParams: Promise<{ q?: string; page?: string; founding?: string }> };
+type Props = { searchParams: Promise<{ q?: string; page?: string }> };
 
-// Usuarios del sitio y asignación manual de "Miembro fundador" (VA-58).
+// Usuarios del sitio: tipo de cuenta, plan y cupo (VA-152) y plan de cortesía.
 export default async function AdminUsersPage({ searchParams }: Props) {
   const admin = await getCurrentUser();
   if (!admin?.isAdmin) redirect("/");
 
-  const { q = "", page: pageParam, founding } = await searchParams;
+  const { q = "", page: pageParam } = await searchParams;
   const query = q.trim();
-  const onlyFounding = founding === "1";
   const page = Math.max(1, Number(pageParam) || 1);
 
   const where: Prisma.UserWhereInput = {
@@ -31,10 +28,9 @@ export default async function AdminUsersPage({ searchParams }: Props) {
         { email: { contains: query, mode: "insensitive" } },
       ],
     }),
-    ...(onlyFounding && { isFoundingMember: true }),
   };
 
-  const [users, total, foundingCount] = await Promise.all([
+  const [users, total] = await Promise.all([
     prisma.user.findMany({
       where,
       orderBy: { createdAt: "asc" },
@@ -48,7 +44,6 @@ export default async function AdminUsersPage({ searchParams }: Props) {
         emailVerified: true,
         passwordHash: true,
         isAdmin: true,
-        isFoundingMember: true,
         userType: true,
         userTypeConfirmed: true,
         _count: { select: { aircrafts: true, spareParts: true, accounts: true } },
@@ -56,7 +51,6 @@ export default async function AdminUsersPage({ searchParams }: Props) {
       },
     }),
     prisma.user.count({ where }),
-    prisma.user.count({ where: { isFoundingMember: true } }),
   ]);
   // VA-92: planes para "Asignar plan de cortesía" (también inactivos, no archivados). VA-152: Pro o
   // una opción del Empresarial.
@@ -85,7 +79,6 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   const pageUrl = (n: number) => {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
-    if (onlyFounding) params.set("founding", "1");
     params.set("page", String(n));
     return `/admin/users?${params.toString()}`;
   };
@@ -100,13 +93,8 @@ export default async function AdminUsersPage({ searchParams }: Props) {
             Usuarios
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Los miembros fundadores se asignan a mano, así las cuentas de prueba no ocupan lugares.
             El tipo de cuenta alimenta el filtro “Publica”; “Fábrica” solo se asigna desde acá.
           </p>
-        </div>
-        <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800">
-          <Award className="w-4 h-4" />
-          Fundadores: {foundingCount} de {FOUNDING_MEMBER_LIMIT}
         </div>
       </div>
 
@@ -120,10 +108,6 @@ export default async function AdminUsersPage({ searchParams }: Props) {
             className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-700">
-          <input type="checkbox" name="founding" value="1" defaultChecked={onlyFounding} />
-          Solo fundadores
-        </label>
         <button type="submit" className="rounded-xl bg-[#001F58] px-5 py-2.5 text-sm font-semibold text-white">
           Buscar
         </button>
@@ -140,7 +124,6 @@ export default async function AdminUsersPage({ searchParams }: Props) {
               <th className="px-4 py-3" title="Avisos activos / cupo, por tipo (VA-152)">Cupo</th>
               <th className="px-4 py-3 text-center" title="Pagos con pedido de arrepentimiento (VA-150). Solo informativo.">Arrepent.</th>
               <th className="px-4 py-3">Tipo de cuenta</th>
-              <th className="px-4 py-3">Miembro fundador</th>
               <th className="px-4 py-3">Plan</th>
             </tr>
           </thead>
@@ -200,9 +183,6 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                   </td>
                   <td className="px-4 py-3">
                     <UserTypeSelect userId={u.id} userType={u.userType} confirmed={u.userTypeConfirmed} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <FoundingMemberToggle userId={u.id} isFounding={u.isFoundingMember} />
                   </td>
                   <td className="px-4 py-3">
                     <CourtesyPlanControl
