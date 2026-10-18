@@ -3,7 +3,7 @@
 Todo lo hecho sobre el plan `docs/PLAN_FIXES_MVP.md`, en orden, con el commit y dónde verlo.
 Rama: `milton/auth-roles` (sin push). Las URLs son de `npm run dev` → http://localhost:3000.
 
-**Progreso (17/10):** hechas en local todas las tareas hasta VA-150, salvo las que siguen abiertas o para después (ver "Checklist de lanzamiento oficial" en el plan). **Abiertas:** VA-76 (PageSpeed en el Preview y D14), VA-95 (destacados: se decide si salen), VA-97 y VA-100 (se decide si van antes), VA-136 (no se reproduce) y VA-151 (métricas de la cuenta VA, nueva). **Para después del lanzamiento:** VA-96, VA-98 avanzado, VA-99, VA-102, VA-103 (standby) y VA-104. **Antes (14/10):** VA-89 a VA-91 y VA-106 a VA-125; hasta el 10/10, VA-01 a VA-87 menos VA-48 (descartada) y VA-76 (parcial).
+**Progreso (17/10):** hechas en local todas las tareas hasta VA-151, incluidas VA-96 y VA-97; VA-95 y VA-100 descartadas (ver "Checklist de lanzamiento oficial" en el plan). **Abiertas:** VA-76 (PageSpeed en el Preview: 64 en celular y 96 en PC, con mejoras propuestas; falta D14), VA-136 (probable arreglo en `2c85309`, ver "Bugs encontrados en el camino") y el alcance del arrepentimiento en suscripciones (VA-150). **Para después del lanzamiento:** VA-98 avanzado, VA-99, VA-102, VA-103 (standby) y VA-104. **Antes (14/10):** VA-89 a VA-91 y VA-106 a VA-125; hasta el 10/10, VA-01 a VA-87 menos VA-48 (descartada) y VA-76 (parcial).
 
 ---
 
@@ -323,6 +323,7 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 | `790eabd` | El perfil muestra los errores de renovar, borrar y editar. | Perfil |
 | `5a7f84f` | **Al borrar un aviso, sus fotos y documentos quedaban en Supabase Storage.** Ahora se borran también. Nuevo `scripts/storage-orphans.mjs` para los huérfanos que ya existen (en producción hay 44, unos 23 MB). Por defecto solo informa; con `--delete` los borra. | Perfil → 🗑️ en un aviso · `app/actions/listing-actions.ts` |
 | `005ba2a` | Error de hidratación por el formato de horas ("2600" vs "2.600"). | Home / `/planes`, sin aviso rojo de Next |
+| `2c85309` | **El header de la Home quedaba blanco al recargar** (celular y PC; probablemente es VA-136). Cuando Vercel regenera la Home (cada 5 minutos o al publicar), la ruta llega como `/index` en vez de `/`, y el header, el logo y la lupa del celular se armaban como fuera de la Home. Nuevo `lib/use-is-home.ts` acepta las dos. En un build local no se ve: ahí la ruta es `/`. | Home → recargar |
 
 ## Cambios fuera del código (no commiteados)
 
