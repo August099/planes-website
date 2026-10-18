@@ -25,6 +25,7 @@ export default async function OpengraphImage() {
           color: "white",
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse (satori) no admite next/image */}
         <img src={logo} width={516} height={138} alt="" />
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
           <div style={{ fontSize: 56, fontWeight: 700 }}>{SITE_NAME}</div>
