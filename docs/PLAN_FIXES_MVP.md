@@ -926,7 +926,9 @@ Notas para cuando se encare, a partir de lo que ya existe:
 > Una sola lista de lo que falta, en tres grupos. Se actualiza al cerrar cada punto. El detalle de cada paso está en `docs/PRUEBAS_PREVIEW.md` (Preview) y `docs/PASE_A_PRODUCCION.md` (producción).
 
 ### 1. Bloquea el lanzamiento
-- [ ] **Migraciones nuevas en el Preview** (lo corre el socio): primero `scripts/va152-report.ts` (informe, antes de migrar), después `npx prisma migrate deploy` (las del 17/10 y 18/10: `va150_registro_de_consumo`, `va149_experimental_lsa`, `va148_iconos_categorias`, `va151_metricas_vendedor`, `va151_favoritos_fecha`, `va96_rutas_aircraft`, `va152_cupos` y `va152_limpieza`) y `scripts/va152-migrate-data.ts` (planes y cupos). Sin las migraciones, Vercel no puede construir el Preview.
+- [x] **Migraciones en la base de Supabase (la usan el Preview y el sitio de `main`)** — 18/10, con OK del socio: backup (`C:UserspcDocumentsa-backupsackup-prod-20261018-1840.dump`), informe de VA-152, las 11 migraciones pendientes (VA-150 a VA-158) y `va152-migrate-data.ts` (cupo Gratis, Pro y Empresarial sin precio, planes viejos borrados y "Plan de Prueba" archivado, 29 lotes de saldo borrados). Sin suscripciones en esa base; compras, pagos y facturas intactos.
+- [ ] **Coordenadas de los avisos** (`geocode-listings.ts --apply`): 51 de 80 avisos se resuelven; falta el OK para escribirlas. Los otros 29 tienen la ciudad mal cargada (datos de prueba).
+- [ ] **`main` quedó con código viejo sobre la base migrada:** `/planes` da 500 (lee columnas que ya no existen). Se arregla desplegando el código nuevo en `main` o con un cambio puntual; lo decide el socio.
 - [ ] **Lote del 18/10 (VA-152 a VA-163):** ver la tabla al final del plan. VA-152 hecho en local el 18/10.
 - [ ] **Montos de Pro y del Empresarial** (los definen los socios; se cargan en `/admin/plans`).
 - [ ] **Pruebas en el Preview:**
