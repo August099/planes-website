@@ -1651,3 +1651,7 @@ Probados en celular; verificar también en escritorio.
   en `/admin/users`, sin `FOUNDING_MEMBER_LIMIT`, sin la sección del mail en el runbook; migración
   `va158_sin_fundadores` (6 cuentas lo tenían en `va_dev`). Las tarjetas, el PDF, FAQ, términos y guías no
   lo mencionaban. El link con `utm_campaign=fundadores` sigue midiendo el origen.
+- **VA-156 (18/10/2026):** ✅ hecho en local. MapLibre 6.12.0 + OpenFreeMap (Positron) sobre el SVG, carga
+  diferida desde `public/vendor/` (módulo nativo, sin sumar JS: detalle +2 KB, Home igual), círculo de
+  ~5 km sin pin, zoom máximo = el círculo, atribución visible; el SVG queda de respaldo. Revisadas la
+  documentación y las condiciones de OpenFreeMap (uso comercial sí, sin clave ni cookies, sin SLA).

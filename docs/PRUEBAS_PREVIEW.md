@@ -138,6 +138,10 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
+### Mapa del detalle (VA-156)
+- [ ] Detalle de un aviso con coordenadas: el bloque "Zona" muestra el mapa real con el círculo (sin pin), no deja acercar más que el círculo y se ve la atribución abajo 📱.
+- [ ] En celular el mapa se mueve con dos dedos (con uno se scrollea la página).
+
 ### Cookies (VA-155)
 - [ ] En una ventana de incógnito: el cartel sale abajo y no tapa la bandeja del comparador ni "Aplicar filtros" (celular) 📱.
 - [ ] "Solo necesarias": el cartel no vuelve al recargar. Footer → "Cookies" lo abre de nuevo y dice "Elegiste: solo necesarias".

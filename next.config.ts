@@ -1,5 +1,12 @@
+import { readFileSync } from "node:fs";
+
+// VA-156: versión de MapLibre (la de package.json), para la ruta de public/vendor/ que arma el script
+// scripts/vendor-maplibre.mjs.
+const MAPLIBRE_VERSION: string = JSON.parse(readFileSync("./package.json", "utf8")).dependencies["maplibre-gl"];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: { NEXT_PUBLIC_MAPLIBRE_VERSION: MAPLIBRE_VERSION },
   // Builds locales de verificación en otra carpeta (NEXT_DIST_DIR=.next-local), así no pisan la de
   // `next dev` (.next/dev): correr un build con el dev abierto dejaba las rutas /api en 404 y Auth.js
   // daba ClientFetchError. Sin la variable (Vercel y `npm run dev`), queda .next como siempre.
@@ -39,6 +46,10 @@ const nextConfig = {
     },
   },
   staticPageGenerationTimeout: 120,
+  // VA-156: MapLibre en public/vendor/maplibre-gl-<versión>/ (la versión está en la ruta): caché larga.
+  async headers() {
+    return [{ source: "/vendor/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] }];
+  },
   // Las guías se mudaron de /guias a /services/guides, con slugs en inglés (cambio sobre VA-78, 9/10).
   // permanent: true → 308.
   async redirects() {

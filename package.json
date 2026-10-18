@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && node scripts/vendor-maplibre.mjs && next build",
     "migrate:deploy": "prisma migrate deploy",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "predev": "node scripts/vendor-maplibre.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
@@ -25,6 +26,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "lucide-react": "^1.25.0",
+    "maplibre-gl": "6.12.0",
     "mercadopago": "^3.2.0",
     "next": "^16.2.11",
     "next-auth": "^5.0.0-beta.32",
