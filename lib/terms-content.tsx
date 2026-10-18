@@ -10,6 +10,7 @@ export const termsSections = [
   { id: "denuncias", title: "6. Sistema de Denuncias" },
   { id: "ley", title: "7. Ley Aplicable" },
   { id: "marca", title: "8. Propiedad Intelectual" },
+  { id: "privacidad", title: "9. Privacidad y Cookies" },
 ];
 
 export function TermsContent() {
@@ -81,7 +82,7 @@ export function TermsContent() {
         <h3 className="font-heading font-semibold text-[#001F58] text-base">
           6. Sistema de Denuncias y Moderación
         </h3>
-        <p>Los usuarios pueden reportar anuncios sospechosos. Ventas Aeronáuticas podrá remover el contenido preventivamente.</p>
+        <p>Los usuarios pueden reportar anuncios sospechosos. Ventas Aeronáuticas podrá pausar preventivamente un anuncio reportado, informando el motivo al vendedor. Mientras está pausado no se muestra en la plataforma ni cuenta en el cupo del plan; el vendedor puede corregirlo y pedir una revisión, tras la cual el anuncio se reactiva o se mantiene pausado.</p>
       </div>
 
       <div id="ley" className="flex flex-col gap-2 scroll-mt-24">
@@ -96,6 +97,19 @@ export function TermsContent() {
           8. Propiedad Intelectual
         </h3>
         <p>Marcas, logotipos y diseños son propiedad exclusiva o se utilizan con fines descriptivos e identificatorios.</p>
+      </div>
+
+      <div id="privacidad" className="flex flex-col gap-2 scroll-mt-24">
+        <h3 className="font-heading font-semibold text-[#001F58] text-base">
+          9. Privacidad y Cookies
+        </h3>
+        <p>
+          El tratamiento de los datos personales y el uso de cookies se rigen por la{" "}
+          <a href="/privacy" className="font-semibold underline underline-offset-2">Política de Privacidad</a>, que incluye la{" "}
+          <a href="/privacy#cookies" className="font-semibold underline underline-offset-2">política de cookies</a>. El usuario puede
+          aceptar o rechazar las cookies de medición y cambiar su elección en cualquier momento desde el enlace &quot;Cookies&quot; del pie de
+          la página.
+        </p>
       </div>
     </div>
   );

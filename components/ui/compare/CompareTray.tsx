@@ -88,7 +88,7 @@ export function CompareTray() {
     <>
     {/* Espacio para que la bandeja no tape el final de la página */}
     <div aria-hidden className="h-16 sm:h-[76px] print:hidden" />
-    <div role="region" aria-label="Comparación de aeronaves" className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#001331] text-white shadow-[0_-4px_16px_rgba(0,0,0,0.25)] print:hidden">
+    <div role="region" aria-label="Comparación de aeronaves" className="fixed inset-x-0 bottom-[var(--va-consent-h,0px)] z-40 border-t border-white/10 bg-[#001331] text-white shadow-[0_-4px_16px_rgba(0,0,0,0.25)] print:hidden">
       {notice && (
         <p role="status" className="border-b border-white/10 bg-[#E70F1F] px-4 py-2 text-center text-xs font-semibold">
           Podés comparar hasta 3. Quitá una para agregar otra.

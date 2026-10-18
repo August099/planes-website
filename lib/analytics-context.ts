@@ -1,6 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { ANON_COOKIE, SOURCE_COOKIE } from "@/lib/analytics-client";
+import { CONSENT_COOKIE } from "@/lib/consent";
 
 export type AnalyticsContext = {
   anonymousId: string | null;
@@ -17,6 +18,10 @@ const clean = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? 
 export async function getAnalyticsContext(): Promise<AnalyticsContext> {
   try {
     const jar = await cookies();
+    // VA-155: sin "Aceptar" en el cartel de cookies no se usan las de medición (aunque hayan quedado).
+    if (jar.get(CONSENT_COOKIE)?.value !== "all") {
+      return { anonymousId: null, referrer: null, utmSource: null, utmMedium: null, utmCampaign: null };
+    }
     const anon = clean(jar.get(ANON_COOKIE)?.value, 64);
     let src: { r?: unknown; s?: unknown; m?: unknown; c?: unknown } = {};
     const raw = jar.get(SOURCE_COOKIE)?.value;

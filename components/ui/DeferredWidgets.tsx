@@ -19,6 +19,9 @@ const ModerationNoticeDialog = dynamic(
   { ssr: false }
 );
 
+// VA-155: cartel de cookies (depende de una cookie del navegador: no va en el HTML del servidor).
+const CookieBanner = dynamic(() => import("@/components/ui/CookieBanner").then((m) => m.CookieBanner), { ssr: false });
+
 export function DeferredWidgets() {
   return (
     <>
@@ -27,6 +30,7 @@ export function DeferredWidgets() {
       {/* VA-111: bienvenida del lanzamiento (una vez por cuenta, con el saldo gratis de VA-89) */}
       <LaunchWelcomeDialog />
       <ModerationNoticeDialog />
+      <CookieBanner />
     </>
   );
 }

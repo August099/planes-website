@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { BrandSlashes } from "@/components/ui/BrandSlashes";
+import { CookieSettingsLink } from "@/components/ui/CookieSettingsLink";
 import { Mail, Phone } from "lucide-react";
 import { CONTACT_PHONE } from "@/lib/site";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
@@ -70,6 +71,10 @@ export function Footer() {
                 <Link href="/arrepentimiento" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Botón de arrepentimiento
                 </Link>
+              </li>
+              <li>
+                {/* VA-155: cambiar la elección del cartel de cookies */}
+                <CookieSettingsLink className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors" />
               </li>
             </ul>
           </div>

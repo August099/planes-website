@@ -1640,3 +1640,7 @@ Probados en celular; verificar también en escritorio.
 - **VA-154 (18/10/2026):** ✅ hecho en local (OK del SQL del socio). Estado `MODERATED` y tabla
   `ModerationAction`; pausa con motivo desde el reporte, ventana y mail al dueño, "Pedir revisión",
   cola "Revisiones pendientes" (reactivar o mantener) e historial. `scripts/verify-moderation.ts` 26/26.
+
+- **VA-155 (18/10/2026):** ✅ hecho en local. Cartel propio ("Aceptar" / "Solo necesarias", 1 año,
+  link "Cookies" en el footer); medición solo con "Aceptar"; inventario en Privacidad y referencia en
+  Términos (borrador para los socios; conviene que lo mire alguien de confianza).

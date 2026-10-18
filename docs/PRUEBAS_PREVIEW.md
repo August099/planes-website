@@ -138,6 +138,11 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
+### Cookies (VA-155)
+- [ ] En una ventana de incógnito: el cartel sale abajo y no tapa la bandeja del comparador ni "Aplicar filtros" (celular) 📱.
+- [ ] "Solo necesarias": el cartel no vuelve al recargar. Footer → "Cookies" lo abre de nuevo y dice "Elegiste: solo necesarias".
+- [ ] `/privacy#cookies` con la tabla de cookies y `/terms` con el punto 9.
+
 ### Moderación (VA-154)
 - [ ] Reportar un aviso de otra cuenta; en `/admin/report` → "Pausar indefinidamente" con un motivo: el aviso deja de verse (listado, búsqueda, Home) y el detalle dice "no disponible".
 - [ ] El dueño entra al sitio: ve la ventana con el motivo una vez (y le llega el mail). En Mis publicaciones: "Pausado por moderación", el motivo y "Pedir revisión"; no puede activarlo.

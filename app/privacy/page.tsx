@@ -134,13 +134,66 @@ export default function PrivacidadPage() {
                 <h2 className="font-heading text-xl font-semibold text-[#001F58]">
                   6. Cookies y medición
                 </h2>
-                <p>Usamos cookies y el almacenamiento del navegador solo para que el sitio funcione y para medir su uso. No usamos cookies de publicidad ni de seguimiento de terceros.</p>
-                <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
-                  <li><strong>Sesión:</strong> mantienen tu sesión iniciada de forma segura.</li>
-                  <li><strong>Medición propia:</strong> un identificador anónimo del navegador (dura un año) y una cookie con el sitio o la campaña desde la que llegaste (se borra al cerrar el navegador). Nos permiten contar visitas sin saber quién sos si no iniciaste sesión.</li>
-                  <li><strong>Preferencias en el navegador:</strong> las aeronaves que elegiste para comparar y si ya cerraste algún aviso del sitio. Quedan solo en tu dispositivo.</li>
-                </ul>
-                <p>Podés borrar o bloquear las cookies desde la configuración de tu navegador; si bloqueás las de sesión, no vas a poder iniciar sesión.</p>
+                <p>Usamos cookies y el almacenamiento del navegador para que el sitio funcione y, solo si lo aceptás, para medir su uso. No usamos cookies de publicidad ni de seguimiento de terceros.</p>
+                <p>La primera vez que entrás, un cartel te pregunta: con <strong>&quot;Aceptar&quot;</strong> se usan también las de medición; con <strong>&quot;Solo necesarias&quot;</strong>, no se crean. Las visitas se siguen contando igual, sin identificarte. Podés cambiar la elección cuando quieras desde el link <strong>&quot;Cookies&quot;</strong> del pie de la página; se recuerda por un año.</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[560px] text-left text-sm text-[#001F58]/90">
+                    <thead className="border-b border-[#001F58]/15 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                      <tr>
+                        <th className="py-2 pr-3">Qué</th>
+                        <th className="py-2 pr-3">Tipo</th>
+                        <th className="py-2 pr-3">Para qué</th>
+                        <th className="py-2">Duración</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#001F58]/10">
+                      <tr>
+                        <td className="py-2 pr-3 align-top font-mono text-xs">authjs.session-token (y sus variantes __Secure-/__Host-), authjs.csrf-token, authjs.callback-url</td>
+                        <td className="py-2 pr-3 align-top">Necesaria</td>
+                        <td className="py-2 pr-3 align-top">Mantener tu sesión iniciada de forma segura y protegerla</td>
+                        <td className="py-2 align-top">Mientras dure la sesión (hasta 30 días)</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-3 align-top font-mono text-xs">va_consent</td>
+                        <td className="py-2 pr-3 align-top">Necesaria</td>
+                        <td className="py-2 pr-3 align-top">Recordar si aceptaste las cookies de medición o elegiste solo las necesarias</td>
+                        <td className="py-2 align-top">1 año</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-3 align-top font-mono text-xs">Comparador (almacenamiento local)</td>
+                        <td className="py-2 pr-3 align-top">Necesaria</td>
+                        <td className="py-2 pr-3 align-top">Las aeronaves que elegiste para comparar; queda solo en tu dispositivo</td>
+                        <td className="py-2 align-top">Hasta que la quites</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-3 align-top font-mono text-xs">Cartel de la Home (almacenamiento local)</td>
+                        <td className="py-2 pr-3 align-top">Necesaria</td>
+                        <td className="py-2 pr-3 align-top">Si ya cerraste o viste el cartel de bienvenida, para no mostrártelo de más</td>
+                        <td className="py-2 align-top">Hasta que borres los datos del navegador</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-3 align-top font-mono text-xs">Marcas de visita (almacenamiento de la pestaña)</td>
+                        <td className="py-2 pr-3 align-top">Necesaria</td>
+                        <td className="py-2 pr-3 align-top">Contar una sola vez la visita a un aviso o a un perfil en la misma pestaña. No llevan ningún identificador</td>
+                        <td className="py-2 align-top">Se borran al cerrar la pestaña</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-3 align-top font-mono text-xs">va_anon</td>
+                        <td className="py-2 pr-3 align-top">Medición (solo si aceptás)</td>
+                        <td className="py-2 pr-3 align-top">Identificador anónimo del navegador para contar visitantes únicos, sin saber quién sos si no iniciaste sesión</td>
+                        <td className="py-2 align-top">1 año</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-3 align-top font-mono text-xs">va_src</td>
+                        <td className="py-2 pr-3 align-top">Medición (solo si aceptás)</td>
+                        <td className="py-2 pr-3 align-top">El sitio o la campaña desde la que llegaste en esta visita</td>
+                        <td className="py-2 align-top">Al cerrar el navegador</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p>Al iniciar sesión con Google o al pagar con Mercado Pago, esos servicios usan sus propias cookies en sus sitios, según sus políticas. Las métricas de rendimiento de Vercel (Speed Insights) no usan cookies ni identifican al visitante.</p>
+                <p>También podés borrar o bloquear las cookies desde la configuración de tu navegador; si bloqueás las necesarias, no vas a poder iniciar sesión.</p>
               </div>
 
               {/* SECCIÓN 7 */}
