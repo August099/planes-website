@@ -1644,3 +1644,6 @@ Probados en celular; verificar también en escritorio.
 - **VA-155 (18/10/2026):** ✅ hecho en local. Cartel propio ("Aceptar" / "Solo necesarias", 1 año,
   link "Cookies" en el footer); medición solo con "Aceptar"; inventario en Privacidad y referencia en
   Términos (borrador para los socios; conviene que lo mire alguien de confianza).
+- **VA-157 (18/10/2026):** ✅ hecho en local. DURG/SMOH fuera del formulario, la validación, el detalle,
+  el comparador, el PDF y la semilla; migración `va157_sin_durg` (36 avisos lo tenían en `va_dev`). El
+  glosario y `/services` siguen nombrando SMOH como término general.

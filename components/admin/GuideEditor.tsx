@@ -274,7 +274,7 @@ export function GuideEditor({ guideId, initial }: { guideId?: string; initial: G
                 </div>
                 <div>
                   <label htmlFor={`s-${i}-id`} className={LABEL}>Ancla (opcional)</label>
-                  <input id={`s-${i}-id`} value={s.id} onChange={(e) => setSection(i, { id: e.target.value.toLowerCase() })} placeholder="smoh" className={`${INPUT} font-mono`} />
+                  <input id={`s-${i}-id`} value={s.id} onChange={(e) => setSection(i, { id: e.target.value.toLowerCase() })} placeholder="tbo" className={`${INPUT} font-mono`} />
                   {err(`sections.${i}.id`)}
                 </div>
               </div>

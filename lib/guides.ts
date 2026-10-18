@@ -8,7 +8,7 @@ export type GuideLink = { label: string; href: string };
 
 export type GuideSection = {
   heading: string;
-  // Ancla (#id). En el glosario hay una por término (ej. #smoh).
+  // Ancla (#id). En el glosario hay una por término (ej. #tbo).
   id?: string;
   paragraphs?: string[];
   bullets?: string[];

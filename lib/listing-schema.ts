@@ -88,7 +88,6 @@ const engine = z.object({
   model: optionalText(100),
   engineHours: optionalInt("Horas del motor"),
   TBO: optionalInt("TBO"),
-  DURG: optionalInt("DURG / SMOH"),
   horsepower: optionalInt("Potencia"),
   description: optionalText(500),
 });
@@ -266,7 +265,7 @@ export interface EditListingData {
     extDescription: string;
     description: string;
   };
-  engines?: { brand: string; model: string; engineHours: string; TBO: string; DURG: string; horsepower: string; description: string }[];
+  engines?: { brand: string; model: string; engineHours: string; TBO: string; horsepower: string; description: string }[];
   propellers?: { brand: string; model: string; propellerHours: string; description: string }[];
   parts?: {
     title: string;

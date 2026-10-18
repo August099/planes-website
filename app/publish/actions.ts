@@ -125,7 +125,6 @@ function engineRows(data: AircraftListing) {
     model: e.model || null,
     engineHours: e.engineHours ?? null,
     TBO: e.TBO ?? null,
-    DURG: e.DURG ?? null,
     horsepower: e.horsepower ?? null,
     description: e.description || null,
   }));

@@ -113,7 +113,6 @@ async function main() {
             model: `Modelo-${getRandomPrice(100, 500)}`,
             TBO: 2000,
             engineHours: getRandomPrice(100, 1900),
-            DURG: getRandomPrice(0, 500),
             description: 'Cilindros y magnetos recorridos recientemente.'
           }]
         },

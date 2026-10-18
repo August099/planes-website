@@ -538,7 +538,6 @@ model AircraftEngine {
   aircraftId  String
   engineHours Int?
   TBO         Int?
-  DURG        Int?
   horsepower  Int?
   brand       String?
   model       String?
