@@ -1702,6 +1702,14 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
 - **Documentos de los avisos públicos (pedido del socio, 19/10):** ✅ hecho en local. La documentación
   adjunta se ve en el detalle para todos y se abre sin sesión (link firmado de 60 s, como antes); el
   formulario avisa que es pública. Un aviso pausado por moderación sigue sin mostrarlos.
-- **VA-165 a VA-175:** informe de impacto y modelo de datos presentados el 19/10; esperando el OK del SQL.
+- **VA-165 (19/10/2026):** ✅ hecho en local. Migración `va165_categoria_recomendada` (renombra
+  `defaultCategoryId` → `recommendedCategoryId` y su FK; lo cargado por VA-153 se conserva; en producción
+  entra con VA-164). Formulario: la categoría se propone con la recomendada y se puede cambiar ("Recomendada
+  para este modelo: …" y, si difiere, "Elegiste una categoría distinta de la recomendada"); con el tipo
+  elegido primero, marcas y modelos se acotan por la recomendada, con "Ver todas las marcas"; lo ya elegido
+  nunca se borra al cambiar la categoría; sin "Avisanos". El servidor guarda la categoría elegida (sigue
+  validando marca, modelo y submodelo). Filtros de `/aircraft` y buscador de la Home: marcas y modelos con
+  avisos activos reales de esa categoría. Admin: "categoría recomendada".
+- **VA-166 a VA-175:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
   En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
   prueba). Informe: `scripts/va166-report.ts` (solo lee).

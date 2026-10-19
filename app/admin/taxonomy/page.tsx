@@ -34,7 +34,7 @@ export default async function AdminTaxonomyPage() {
           select: {
             id: true,
             name: true,
-            defaultCategoryId: true, // VA-153
+            recommendedCategoryId: true, // VA-153
             variants: { // Usa exactamente la relación 'variants' del Schema
               select: { id: true, name: true },
               orderBy: { name: "asc" },
@@ -98,7 +98,7 @@ export default async function AdminTaxonomyPage() {
     models: brand.models.map((model) => ({
       id: model.id,
       name: model.name,
-      defaultCategoryId: model.defaultCategoryId,
+      recommendedCategoryId: model.recommendedCategoryId,
       subModels: model.variants,
     })),
   }));

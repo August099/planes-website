@@ -37,11 +37,11 @@ async function main() {
 
     for (const model of brand.models) {
       // Categoría por defecto del modelo (antes se ignoraba y el formulario no podía sugerirla).
-      const defaultCategoryId = categoryIds.has(model.category) ? model.category : null;
+      const recommendedCategoryId = categoryIds.has(model.category) ? model.category : null;
       const createdModel = await prisma.aircraftModel.upsert({
         where: { brandId_name: { brandId: createdBrand.id, name: model.name } },
-        update: { defaultCategoryId },
-        create: { brandId: createdBrand.id, name: model.name, defaultCategoryId },
+        update: { recommendedCategoryId },
+        create: { brandId: createdBrand.id, name: model.name, recommendedCategoryId },
       });
 
       if (model.subModels) {

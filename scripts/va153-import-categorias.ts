@@ -1,6 +1,6 @@
 // VA-153 · Carga la categoría de cada modelo y submodelo desde docs/planillas/VA-153_categorias_socio.txt.
 // Por defecto SOLO LEE y compara con la base: lista lo que cambiaría, lo que no se encuentra y lo que
-// sobra. Con --apply escribe (defaultCategoryId del modelo, categoryOverride del submodelo); contra
+// sobra. Con --apply escribe (recommendedCategoryId del modelo, categoryOverride del submodelo); contra
 // una base que no sea local exige además --confirm-production.
 //
 //   npx tsx --env-file=.env scripts/va153-import-categorias.ts            → informe, base local
@@ -69,7 +69,7 @@ async function main() {
         select: {
           id: true,
           name: true,
-          defaultCategoryId: true,
+          recommendedCategoryId: true,
           _count: { select: { aircrafts: true } },
           variants: { select: { id: true, name: true, categoryOverride: true, _count: { select: { aircrafts: true } } } },
         },
@@ -119,9 +119,9 @@ async function main() {
       seenModels.add(dbModel.id);
       if (m.code === "PR") continue; // a nivel modelo no se sabe qué heredar: queda como está y se consulta
       const target = codeToCat.get(m.code) ?? null;
-      if (target !== dbModel.defaultCategoryId) {
-        changes.push({ tipo: "modelo", marca: b.name, nombre: dbModel.name, antes: catName.get(dbModel.defaultCategoryId ?? "") ?? "—", despues: catName.get(target ?? "") ?? "—", avisos: dbModel._count.aircrafts });
-        writes.push(() => prisma.aircraftModel.update({ where: { id: dbModel.id }, data: { defaultCategoryId: target } }));
+      if (target !== dbModel.recommendedCategoryId) {
+        changes.push({ tipo: "modelo", marca: b.name, nombre: dbModel.name, antes: catName.get(dbModel.recommendedCategoryId ?? "") ?? "—", despues: catName.get(target ?? "") ?? "—", avisos: dbModel._count.aircrafts });
+        writes.push(() => prisma.aircraftModel.update({ where: { id: dbModel.id }, data: { recommendedCategoryId: target } }));
       }
       for (const s of m.subs) {
         const dbSub = dbModel.variants.find((x) => norm(x.name) === norm(s.name));
@@ -140,7 +140,7 @@ async function main() {
   }
 
   const extra = brands.flatMap((b) => [
-    ...b.models.filter((m) => !seenModels.has(m.id)).map((m) => ({ tipo: "modelo", marca: b.name, nombre: m.name, categoria: catName.get(m.defaultCategoryId ?? "") ?? "—", avisos: m._count.aircrafts })),
+    ...b.models.filter((m) => !seenModels.has(m.id)).map((m) => ({ tipo: "modelo", marca: b.name, nombre: m.name, categoria: catName.get(m.recommendedCategoryId ?? "") ?? "—", avisos: m._count.aircrafts })),
     ...b.models.filter((m) => seenModels.has(m.id)).flatMap((m) => m.variants.filter((v) => !seenSubs.has(v.id)).map((v) => ({ tipo: "submodelo", marca: b.name, nombre: `${m.name} › ${v.name}`, categoria: catName.get(v.categoryOverride ?? "") ?? "(hereda)", avisos: v._count.aircrafts }))),
   ]);
 
@@ -157,11 +157,11 @@ async function main() {
     from "Aircraft" a
     join "AircraftCategory" c on c.id = a."categoryId"
     left join "AircraftModel" m on m.id = a."modelId"
-    left join "AircraftCategory" mc on mc.id = m."defaultCategoryId"
+    left join "AircraftCategory" mc on mc.id = m."recommendedCategoryId"
     left join "AircraftSubModel" s on s.id = a."subModelId"
     left join "AircraftCategory" sc on sc.id = s."categoryOverride"
-    where coalesce(s."categoryOverride", m."defaultCategoryId") is not null
-      and coalesce(s."categoryOverride", m."defaultCategoryId") <> a."categoryId"`);
+    where coalesce(s."categoryOverride", m."recommendedCategoryId") is not null
+      and coalesce(s."categoryOverride", m."recommendedCategoryId") <> a."categoryId"`);
   console.log(`\n## Avisos con categoría distinta a la de su modelo, ANTES de aplicar (${mismatched.length})`);
   console.table(mismatched);
 

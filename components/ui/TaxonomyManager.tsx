@@ -39,7 +39,7 @@ interface SubModel {
 interface Model {
   id: string;
   name: string;
-  defaultCategoryId: string | null;
+  recommendedCategoryId: string | null;
   subModels: SubModel[];
 }
 
@@ -262,11 +262,12 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
     }
   };
 
-  // VA-153: la categoría del modelo (la heredan sus submodelos; el formulario de publicar la fija).
+  // VA-153/VA-165: la categoría recomendada del modelo (la heredan sus submodelos; el formulario de publicar
+  // la propone y el vendedor la puede cambiar).
   const handleModelCategory = async (id: string, categoryId: string) => {
     try {
       await setAircraftModelCategoryAction(id, categoryId || null);
-      showFeedback("Categoría del modelo actualizada");
+      showFeedback("Categoría recomendada actualizada");
     } catch {
       alert("Error al cambiar la categoría");
     }
@@ -770,7 +771,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
 
           {/* MODELOS */}
           <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
-            <h3 className="font-bold text-sm text-[#001F58]">Modelos</h3>
+            <h3 className="font-bold text-sm text-[#001F58]">Modelos <span className="font-normal text-[11px] text-slate-500">· a la derecha, su categoría recomendada</span></h3>
             <select
               value={selectedBrandId}
               onChange={(e) => {
@@ -828,12 +829,13 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                       <span className="font-medium text-slate-700">{model.name}</span>
                       <div className="flex items-center gap-2">
                         <select
-                          value={model.defaultCategoryId ?? ""}
+                          value={model.recommendedCategoryId ?? ""}
                           onChange={(e) => handleModelCategory(model.id, e.target.value)}
-                          aria-label={`Categoría de ${model.name}`}
+                          aria-label={`Categoría recomendada de ${model.name}`}
+                          title="Categoría recomendada"
                           className="max-w-36 px-1.5 py-1 text-[11px] border rounded-lg bg-white"
                         >
-                          <option value="">Sin categoría</option>
+                          <option value="">Sin categoría recomendada</option>
                           {aircraftCategories.map((cat) => (
                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                           ))}

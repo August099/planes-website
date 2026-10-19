@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { sortAircraftCategories } from "@/lib/aircraft-categories";
+import { activeListingWhere } from "@/lib/listing-filters";
 
 export async function getAircraftCategories() {
   // VA-149: mismo orden que en todo el sitio.
@@ -13,16 +14,14 @@ export async function getAircraftCategories() {
   );
 }
 
-// VA-153: un modelo es de una categoría por la suya o por la de alguno de sus submodelos (igual que
-// lib/aircraft-taxonomy.ts). Sin categoría, todos.
-const modelInCategory = (categoryId?: string) =>
-  categoryId
-    ? { OR: [{ defaultCategoryId: categoryId }, { variants: { some: { categoryOverride: categoryId } } }] }
-    : {};
+// VA-165: con una categoría, solo las marcas y los modelos que tienen avisos activos de esa categoría (la
+// elegida por el vendedor, no la recomendada del modelo). Sin categoría, todos.
+const withListingsIn = (categoryId?: string) =>
+  categoryId ? { aircrafts: { some: { ...activeListingWhere(), categoryId } } } : {};
 
 export async function getBrands(categoryId?: string) {
   return prisma.aircraftBrand.findMany({
-    where: categoryId ? { models: { some: modelInCategory(categoryId) } } : {},
+    where: withListingsIn(categoryId),
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
@@ -32,7 +31,7 @@ export async function getModelsByBrand(brandId: string, categoryId?: string) {
   if (!brandId) return [];
 
   return prisma.aircraftModel.findMany({
-    where: { brandId, ...modelInCategory(categoryId) },
+    where: { brandId, ...withListingsIn(categoryId) },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });

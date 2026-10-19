@@ -31,32 +31,22 @@ import {
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// La categoría por defecto del modelo o de la variante tiene prioridad (igual que en el
-// formulario). Si la categoría resultante no existe, se rechaza (VA-22: antes se usaba
-// la primera categoría que existiera).
-// VA-153: además, el modelo tiene que ser de esa marca y el submodelo de ese modelo (el formulario solo
-// ofrece combinaciones que existen; esto frena un pedido armado a mano). null si algo no corresponde.
+// VA-165: manda la categoría elegida (la del modelo es solo una recomendación: los aviones modificados
+// pueden ser de otra). Si no existe, se rechaza (VA-22: antes se usaba la primera que existiera).
+// VA-153: el modelo tiene que ser de esa marca y el submodelo de ese modelo (el formulario solo ofrece
+// combinaciones que existen; esto frena un pedido armado a mano). null si algo no corresponde.
 async function resolveAircraftCategory(data: AircraftListing): Promise<string | null> {
-  let categoryId = data.categoryId;
   if (data.modelId) {
-    const model = await prisma.aircraftModel.findUnique({
-      where: { id: data.modelId },
-      select: { brandId: true, defaultCategoryId: true },
-    });
+    const model = await prisma.aircraftModel.findUnique({ where: { id: data.modelId }, select: { brandId: true } });
     if (!model || model.brandId !== data.brandId) return null;
-    if (model.defaultCategoryId) categoryId = model.defaultCategoryId;
   } else if (data.subModelId) {
     return null;
   }
   if (data.subModelId) {
-    const subModel = await prisma.aircraftSubModel.findUnique({
-      where: { id: data.subModelId },
-      select: { modelId: true, categoryOverride: true },
-    });
+    const subModel = await prisma.aircraftSubModel.findUnique({ where: { id: data.subModelId }, select: { modelId: true } });
     if (!subModel || subModel.modelId !== data.modelId) return null;
-    if (subModel.categoryOverride) categoryId = subModel.categoryOverride;
   }
-  const category = await prisma.aircraftCategory.findUnique({ where: { id: categoryId }, select: { id: true } });
+  const category = await prisma.aircraftCategory.findUnique({ where: { id: data.categoryId }, select: { id: true } });
   return category?.id ?? null;
 }
 

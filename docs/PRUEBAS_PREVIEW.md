@@ -138,12 +138,13 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
-### Categorías y formulario guiado (VA-153)
-- [ ] `/publish` → Aeronave: elegir "Agrícola" en Tipo de aeronave → en Marca solo aparecen marcas con modelos agrícolas (Air Tractor, Cessna, Piper, Thrush…) y en Modelo solo los agrícolas.
-- [ ] Sin tipo elegido: Cessna → C-182 pone "Monomotor · Pistón" y queda fijo, con el link "¿La categoría no es correcta? Avisanos" (abre un mail con el modelo en el asunto).
-- [ ] "Otro modelo..." vuelve a pedir el tipo a mano.
-- [ ] Home → buscador: elegir "Helicóptero" deja solo las marcas de helicópteros.
-- [ ] `/admin/taxonomy` → una marca → cada modelo tiene su selector de categoría.
+### Categoría recomendada y formulario guiado (VA-153, VA-165)
+- [ ] `/publish` → Aeronave: elegir "Agrícola" en Tipo de aeronave → en Marca solo aparecen marcas con modelos agrícolas (Air Tractor, Cessna, Piper, Thrush…) y en Modelo solo los agrícolas; "Ver todas las marcas" muestra todas.
+- [ ] Sin tipo elegido: Cessna → C-182 propone "Monomotor · Pistón" con "Recomendada para este modelo: Monomotor Pistón". Cambiarlo a Agrícola se puede y dice "Elegiste una categoría distinta de la recomendada"; al publicar queda Agrícola.
+- [ ] "Otro modelo..." pide el tipo a mano.
+- [ ] Home → buscador: elegir una categoría deja solo las marcas con avisos de esa categoría.
+- [ ] `/admin/taxonomy` → una marca → cada modelo tiene su selector de categoría recomendada.
+- [ ] Un aviso con documentos: sin iniciar sesión se ven y se abren en el detalle; el formulario avisa que son públicos.
 
 ### Mapa del detalle (VA-156)
 - [ ] Detalle de un aviso con coordenadas: el bloque "Zona" muestra el mapa real con el círculo (sin pin), no deja acercar más que el círculo y se ve la atribución abajo 📱.

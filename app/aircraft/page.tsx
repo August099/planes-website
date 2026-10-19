@@ -132,25 +132,33 @@ export default async function AircraftListPage({ searchParams }: Props) {
     // VA-74: marcas, modelos y variantes con avisos activos (para no mandar al filtro toda la taxonomía).
     prisma.aircraft.findMany({
       where: activeListingWhere(),
-      select: { brandId: true, modelId: true, subModelId: true },
-      distinct: ["brandId", "modelId", "subModelId"],
+      select: { brandId: true, modelId: true, subModelId: true, categoryId: true },
+      distinct: ["brandId", "modelId", "subModelId", "categoryId"],
     }),
   ]);
 
   // Filtro: solo lo que tiene publicaciones activas, más lo que ya esté aplicado en la URL.
   const usedIds = new Set<string>([...brandIds, ...modelIds, ...subModelIds]);
+  // VA-165: categorías de los avisos reales de cada marca y modelo (para acotar marcas al elegir una
+  // categoría: un modificado aparece en la categoría que eligió el vendedor, no en la recomendada).
+  const categoriesOf = new Map<string, Set<string>>();
+  const addCategory = (id: string, categoryId: string) => categoriesOf.set(id, (categoriesOf.get(id) ?? new Set()).add(categoryId));
   for (const a of inUse) {
     if (a.brandId) usedIds.add(a.brandId);
     if (a.modelId) usedIds.add(a.modelId);
     if (a.subModelId) usedIds.add(a.subModelId);
+    if (a.brandId) addCategory(a.brandId, a.categoryId);
+    if (a.modelId) addCategory(a.modelId, a.categoryId);
   }
+  const categoryIdsOf = (id: string) => [...(categoriesOf.get(id) ?? [])];
   const filterBrands = brands
     .filter((b) => usedIds.has(b.id))
     .map((b) => ({
       ...b,
+      categoryIds: categoryIdsOf(b.id),
       models: b.models
         .filter((m) => usedIds.has(m.id))
-        .map((m) => ({ ...m, variants: m.variants.filter((v) => usedIds.has(v.id)) })),
+        .map((m) => ({ ...m, categoryIds: categoryIdsOf(m.id), variants: m.variants.filter((v) => usedIds.has(v.id)) })),
     }));
 
   const userFavIds = new Set(userFavorites.map((f) => f.aircraftId));

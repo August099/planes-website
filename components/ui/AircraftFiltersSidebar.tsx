@@ -5,13 +5,17 @@ import { useState, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { AIRCRAFT_GROUPS, ENGINE_LABELS, categoryDef } from "@/lib/aircraft-categories";
-import { modelInCategories } from "@/lib/aircraft-taxonomy";
 import { FilterShell, FilterSection, AppliedFilterChips, ProvinceFilterSelect } from "@/components/ui/filters/FilterShell";
 import { provinceBySlug, provinceShortName } from "@/lib/provinces";
 
 type SubModel = { id: string; name: string; categoryOverride?: string | null };
-type Model = { id: string; name: string; defaultCategoryId?: string | null; variants: SubModel[] };
-type Brand = { id: string; name: string; logoUrl?: string | null; models: Model[] };
+// VA-165: categoryIds = categorías de sus avisos activos reales (no la recomendada del modelo).
+type Model = { id: string; name: string; categoryIds?: string[]; variants: SubModel[] };
+type Brand = { id: string; name: string; logoUrl?: string | null; categoryIds?: string[]; models: Model[] };
+
+/** ¿Tiene avisos en alguna de esas categorías? Sin categorías elegidas: sí. */
+const inCategories = (item: { categoryIds?: string[] }, categoryIds: string[]) =>
+  categoryIds.length === 0 || (item.categoryIds ?? []).some((c) => categoryIds.includes(c));
 type Category = { id: string; name: string };
 
 type SectionKey = "price" | "year" | "category" | "brand" | "province" | "seller" | "options" | "condition";
@@ -81,8 +85,7 @@ function FiltersSidebarForm({ categories, brands }: Props) {
   // categorías tildadas, el resto se acota a las marcas que tienen modelos de esas categorías.
   const sortedBrands = useMemo(() => {
     const applied = new Set(searchParams.getAll("brand"));
-    const inCategories = (b: Brand) => b.models.some((m) => modelInCategories(m, categoryIds));
-    return [...brands.filter((b) => applied.has(b.id)), ...brands.filter((b) => !applied.has(b.id) && inCategories(b))];
+    return [...brands.filter((b) => applied.has(b.id)), ...brands.filter((b) => !applied.has(b.id) && inCategories(b, categoryIds))];
   }, [brands, searchParams, categoryIds]);
   // De entrada se ven 6 (o todas las aplicadas, si son más); "Ver todas (N)" muestra el resto.
   const visibleBrands = showAllBrands
@@ -354,7 +357,7 @@ function FiltersSidebarForm({ categories, brands }: Props) {
 
                 {isSelected && isExpanded && (
                   <div className="ml-6 mt-1 flex flex-col border-l pl-3">
-                    {brand.models.filter((m) => modelIds.includes(m.id) || modelInCategories(m, categoryIds)).map((model) => {
+                    {brand.models.filter((m) => modelIds.includes(m.id) || inCategories(m, categoryIds)).map((model) => {
                       const modelSelected = modelIds.includes(model.id);
                       return (
                         <div key={model.id} className="flex flex-col">

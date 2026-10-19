@@ -409,10 +409,11 @@ model AircraftModel {
   id                String             @id @default(cuid())
   brandId           String
   name              String
-  defaultCategoryId String?
+  // VA-165: categoría recomendada (era defaultCategoryId, VA-153): el formulario la propone y se puede cambiar.
+  recommendedCategoryId String?
   aircrafts         Aircraft[]
   brand             AircraftBrand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  AircraftCategory  AircraftCategory?  @relation(fields: [defaultCategoryId], references: [id])
+  AircraftCategory  AircraftCategory?  @relation(fields: [recommendedCategoryId], references: [id])
   variants          AircraftSubModel[]
 
   @@unique([brandId, name])
