@@ -3,17 +3,20 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { signedDocumentUrl } from "@/lib/listing-uploads";
 
-// VA-105 · 5.7: documentación de un aviso ("solo privado"). Solo el dueño del aviso o un admin;
-// redirige a un link firmado de 60 segundos. Así no se publica la URL del archivo y sigue
-// funcionando cuando el bucket "documents" pase a privado.
+// Documentación de un aviso: pública desde el 19/10 (pedido del socio; antes, VA-105 · 5.7, solo el dueño
+// o un admin). Redirige a un link firmado de 60 segundos: no se publica la URL del archivo y sigue
+// funcionando con el bucket "documents" privado. Un aviso pausado por moderación (VA-154) no se ve: sus
+// documentos, solo para el dueño o un admin.
 export const dynamic = "force-dynamic";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getCurrentUser();
-  if (!user?.id) return NextResponse.json({ error: "Tenés que iniciar sesión." }, { status: 401 });
   const { id } = await params;
-  const doc = await prisma.aircraftDocument.findUnique({ where: { id }, select: { url: true, aircraft: { select: { sellerId: true } } } });
-  if (!doc || (doc.aircraft.sellerId !== user.id && !user.isAdmin)) return NextResponse.json({ error: "No encontrado." }, { status: 404 });
+  const doc = await prisma.aircraftDocument.findUnique({ where: { id }, select: { url: true, aircraft: { select: { sellerId: true, status: true } } } });
+  if (!doc) return NextResponse.json({ error: "No encontrado." }, { status: 404 });
+  if (doc.aircraft.status === "MODERATED") {
+    const user = await getCurrentUser();
+    if (doc.aircraft.sellerId !== user?.id && !user?.isAdmin) return NextResponse.json({ error: "No encontrado." }, { status: 404 });
+  }
   const url = await signedDocumentUrl(doc.url);
   if (!url) return NextResponse.json({ error: "No se pudo generar el link." }, { status: 502 });
   const res = NextResponse.redirect(url);

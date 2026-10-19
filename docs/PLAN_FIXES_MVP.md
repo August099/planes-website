@@ -1668,3 +1668,40 @@ Probados en celular; verificar también en escritorio.
   diferida desde `public/vendor/` (módulo nativo, sin sumar JS: detalle +2 KB, Home igual), círculo de
   ~5 km sin pin, zoom máximo = el círculo, atribución visible; el SVG queda de respaldo. Revisadas la
   documentación y las condiciones de OpenFreeMap (uso comercial sí, sin clave ni cookies, sin SLA).
+---
+
+## Lote del 19/10 (socios) — planes según la grilla, cuenta Broker y categoría recomendada · va en el MVP, antes de VA-164 · detalle en `docs/specs/VA-165-a-VA-174-planes-y-broker.md`
+
+> Ajusta lo hecho en VA-152 y VA-153. Todo en `milton/auth-roles`. Orden = "Orden sugerido" de la spec.
+> Grilla: **Base** gratis (1 avión / 3 repuestos, 2 republicaciones por año) · **Pro** $38.000 (tachado
+> $50.000; 3 / 10, 5 republicaciones por año, verificado, destacadas, Página VA actual, métricas Pro) ·
+> **Broker / Empresa** $55.000 un rubro ilimitado o $85.000 ambos (tachados $68.000 y $108.000; lo no
+> ilimitado con el cupo de Base; republicar todas cada 30 días; Página VA armable, detalles
+> personalizados y métricas completas). El precio "promo" es el que se cobra; el tachado es solo para
+> mostrar. Admins: Broker completo para siempre, sin cortesía.
+
+| Orden | Tarea | Qué |
+|---|---|---|
+| 1 | **VA-165** | La categoría del modelo pasa a ser **recomendada** (`recommendedCategoryId`): se completa sola pero se puede cambiar; las reglas usan la elegida; filtros y buscador por avisos reales; sin "Avisanos" |
+| 2 | **VA-166** + **VA-174** | Planes Base / Pro / Broker según la grilla: cupos 1/3 y 3/10, beneficios por plan, grilla en `/plans` (interruptores en la columna Broker) y la misma grilla editable en el admin; admins como Broker para siempre (se cierran sus cortesías) |
+| 3 | **VA-167** | Republicar (`republishedAt`): Base 2 y Pro 5 por año, 7 días entre republicaciones del mismo aviso, Broker "Republicar todas" cada 30 días; aviso en el perfil |
+| 4 | **VA-168** | Destacadas por plan: la Home prioriza Pro, Broker y Admin; los listados por defecto los ponen primero |
+| 5 | **VA-171** | Métricas por plan: básicas, Pro (panel de VA-151) y completas (90 días, fuentes, provincias, comparador, Página VA, republicaciones, CSV) |
+| 6 | **VA-169** | Página VA del Pro (la actual) y Página VA armable del Broker (secciones: carrusel, grilla y texto; con flechas) |
+| 7 | **VA-175** | Página `/settings` (Ajustes) en el menú de Favoritos con toda la configuración (moviendo los formularios que ya existen) y botón "Editar" en "Mi cuenta" |
+| 8 | **VA-170** | Detalle de avisos de Brokers: portada, degradé, datos clave grandes, color de acento, video de YouTube, "Más de…", PDF con su logo. **Prototipo con 2 variantes del degradé y OK del socio** |
+| 9 | **VA-172** | Buscar Brokers por nombre comercial en el buscador |
+| 10 | **VA-173** | Admin: cuentas por tipo y gastos fijos (VA-102 pasa al MVP) |
+
+**Preguntas abiertas (se plantean al llegar):** mail cuando se reponen las republicaciones (VA-167);
+etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular del detalle del Broker
+(VA-170, a confirmar).
+
+### Estado del lote del 19/10
+
+- **Documentos de los avisos públicos (pedido del socio, 19/10):** ✅ hecho en local. La documentación
+  adjunta se ve en el detalle para todos y se abre sin sesión (link firmado de 60 s, como antes); el
+  formulario avisa que es pública. Un aviso pausado por moderación sigue sin mostrarlos.
+- **VA-165 a VA-175:** informe de impacto y modelo de datos presentados el 19/10; esperando el OK del SQL.
+  En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
+  prueba). Informe: `scripts/va166-report.ts` (solo lee).

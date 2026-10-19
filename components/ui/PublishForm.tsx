@@ -1196,7 +1196,7 @@ export default function PublishForm({
                                         </div>
 
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4 mt-6">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Documentación (Solo Privado)</h4>
+                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Documentación</h4>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-[10px] font-bold uppercase mb-1">Estado de Habilitación *</label>
@@ -1229,6 +1229,10 @@ export default function PublishForm({
                                                     <Paperclip className="w-4 h-4 text-[#001F58]" /> Adjuntar Fichas o Informes (PDF/Docs)
                                                     <input type="file" multiple accept=".pdf,.doc,.docx,image/*" onChange={handleDocumentUpload} className="hidden" />
                                                 </label>
+                                                {/* Pedido del socio (19/10): la documentación adjunta es pública. */}
+                                                <p className="mt-2 text-[11px] text-slate-600">
+                                                    <strong>Los documentos que adjuntes son públicos:</strong> cualquiera que vea el aviso los puede abrir y descargar. No subas datos personales que no quieras compartir.
+                                                </p>
                                                 {existingDocuments.map((doc) => (
                                                     <div key={doc.url} className="flex justify-between items-center p-2.5 mt-2 bg-white rounded-lg border border-slate-200 text-xs shadow-sm">
                                                         <span className="truncate w-3/4 font-medium text-slate-600">{doc.name}</span>
