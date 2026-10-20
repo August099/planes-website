@@ -930,6 +930,7 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - [x] **Coordenadas de los avisos** (`geocode-listings.ts --apply`) — 18/10, con OK del socio: 51 de 80 resueltas. Los otros 29 tienen la ciudad mal cargada (datos de prueba).
 - [x] **`main` con código viejo sobre la base migrada** — 18/10, opción b del socio: `main` redirige todo a la Home (`8bb5945`, verificado: `/planes` → 307 a `/`). El código nuevo va a `main` cuando lo diga el socio.
 - [x] **Categorías de los modelos (VA-153)** — 18/10, con OK del socio: `va153-import-categorias.ts --apply --confirm-production`, 3 cambios (PC-12, Duke, C-425 Conquest); el informe posterior da 0 pendientes.
+- [x] **Lote del 19/10 en la base de producción** — 20/10, con OK del socio: backup (`Documents/va-backups/backup-prod-20261020-0038.dump`, 91 tablas), las 8 migraciones `va165` a `va173` (sin diferencias con el schema después) y `va166-migrate-data.ts --apply --confirm-production` (Base 1 / 3, Pro 3 / 10 a AR$ 38.000, Broker 55.000 / 85.000, sin suscriptores ni cortesías). 5 cuentas de prueba quedan por encima del cupo (conservan sus avisos). Los planes siguen inactivos hasta activarlos en `/admin/plans`. Compras, pagos y facturas intactos.
 - [ ] **Lote del 18/10 (VA-152 a VA-163):** ver la tabla al final del plan. VA-152 hecho en local el 18/10.
 - [ ] **Montos de Pro y del Empresarial** (los definen los socios; se cargan en `/admin/plans`).
 - [ ] **Pruebas en el Preview:**
