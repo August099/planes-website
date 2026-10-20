@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { accountTypeWhere, ACCOUNT_TYPE_LABEL } from "@/lib/admin-accounts";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { Search, Users } from "lucide-react";
@@ -10,18 +11,21 @@ import { getQuotaUsage } from "@/lib/quota";
 
 const PAGE_SIZE = 50;
 
-type Props = { searchParams: Promise<{ q?: string; page?: string }> };
+type Props = { searchParams: Promise<{ q?: string; page?: string; plan?: string }> };
 
 // Usuarios del sitio: tipo de cuenta, plan y cupo (VA-152) y plan de cortesía.
 export default async function AdminUsersPage({ searchParams }: Props) {
   const admin = await getCurrentUser();
   if (!admin?.isAdmin) redirect("/");
 
-  const { q = "", page: pageParam } = await searchParams;
+  const { q = "", page: pageParam, plan: planParam } = await searchParams;
+  // VA-173: filtro por tipo de cuenta (desde el resumen del admin).
+  const plan = (["base", "pro", "broker", "admin", "cortesia"] as const).find((t) => t === planParam) ?? null;
   const query = q.trim();
   const page = Math.max(1, Number(pageParam) || 1);
 
   const where: Prisma.UserWhereInput = {
+    ...(plan && accountTypeWhere(plan)),
     ...(query && {
       OR: [
         { name: { contains: query, mode: "insensitive" } },
@@ -79,6 +83,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   const pageUrl = (n: number) => {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
+    if (plan) params.set("plan", plan);
     params.set("page", String(n));
     return `/admin/users?${params.toString()}`;
   };
@@ -95,6 +100,12 @@ export default async function AdminUsersPage({ searchParams }: Props) {
           <p className="mt-1 text-sm text-slate-600">
             El tipo de cuenta alimenta el filtro “Publica”; “Fábrica” solo se asigna desde acá.
           </p>
+          {plan && (
+            <p className="mt-2 text-sm">
+              Mostrando: <span className="font-semibold text-[#001F58]">{ACCOUNT_TYPE_LABEL[plan]}</span> ·{" "}
+              <Link href="/admin/users" className="font-semibold text-[#001F58] underline">Ver todos</Link>
+            </p>
+          )}
         </div>
       </div>
 

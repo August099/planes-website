@@ -1777,6 +1777,12 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
   vendedores"). Solo cuentas con la Página VA completa (suscripción vigente a un plan con Página VA completa, o
   admins con su página publicada): el filtro por plan acota a pocas cuentas antes de buscar el texto. Mismo
   debounce de antes. Sin coincidencias, se ve igual que antes.
-- **VA-173:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
+- **VA-173 (20/10/2026):** ✅ hecho en local. Migración `va173_gastos_fijos` (`FixedExpense`, `ExchangeRate`).
+  Resumen del admin: cuentas por tipo (Base, Pro, Broker, Admin y cortesías que no son de admins), con lo nuevo
+  del mes, el detalle del Broker por opción y el link a `/admin/users?plan=…` filtrado; KPI de cobertura en
+  verde o rojo (suscripciones cobradas este mes contra los gastos fijos). `/admin/expenses` ("Gastos fijos"):
+  nombre, monto, ARS o USD, mensual o anual, desde cuándo y notas; tipo de cambio manual con fecha; total
+  mensual en pesos. Es de referencia: no factura ni paga nada (VA-102 pasa al MVP).
+- **Lote del 19/10:** completo en local (VA-165 a VA-175).
   En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
   prueba). Informe: `scripts/va166-report.ts` (solo lee).

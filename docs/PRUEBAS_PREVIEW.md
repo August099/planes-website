@@ -138,6 +138,10 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
+### Cuentas y gastos fijos (VA-173)
+- [ ] `/admin`: arriba, las cuentas por tipo; tocar "Broker" lleva a `/admin/users` filtrado.
+- [ ] `/admin/expenses`: cargar un gasto en dólares y el tipo de cambio; el total mensual en pesos y la cobertura del resumen se actualizan.
+
 ### Buscar Brokers (VA-172)
 - [ ] Buscar el nombre comercial del admin (o de un Broker) en el header 📱: aparece "Vendedores" con su logo y "N avisos"; el link abre su Página VA.
 - [ ] Buscar "cessna": no aparece el bloque (sin Brokers que coincidan).
