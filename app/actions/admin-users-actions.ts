@@ -2,7 +2,8 @@
 
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { FEATURED_SELLERS_TAG } from "@/lib/featured";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { parseAnyUserType } from "@/lib/user-types";
 import { grantCourtesyPlan, revokeCourtesyPlan } from "@/lib/courtesy-plans";
@@ -44,6 +45,7 @@ export async function grantCourtesyPlanAction(input: {
   if (res.ok) {
     revalidatePath("/admin/users");
     revalidatePath(`/profile/${input.userId}`);
+    updateTag(FEATURED_SELLERS_TAG); // VA-168: la cortesía puede incluir destacadas
   }
   return res;
 }
@@ -52,6 +54,7 @@ export async function revokeCourtesyPlanAction(userId: string): Promise<{ ok: tr
   const admin = await getCurrentUser();
   if (!admin?.isAdmin) return { ok: false, error: "No autorizado." };
   const res = await revokeCourtesyPlan(userId);
+  if (res.ok) updateTag(FEATURED_SELLERS_TAG); // VA-168
   if (res.ok) {
     revalidatePath("/admin/users");
     revalidatePath(`/profile/${userId}`);

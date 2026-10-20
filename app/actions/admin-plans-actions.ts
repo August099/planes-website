@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { PLANS_TAG } from "@/lib/plans";
 import { QUOTA_TAG } from "@/lib/quota";
+import { FEATURED_SELLERS_TAG } from "@/lib/featured";
 import { gridDraftSchema, type GridBenefits, type GridDraft } from "@/lib/plan-grid-rules";
 
 type Result = { ok: true } | { ok: false; error: string; needsPriceConfirm?: boolean };
@@ -106,6 +107,7 @@ export async function savePlanGridAction(input: GridDraft, opts: { confirmPrice?
 
   updateTag(PLANS_TAG);
   updateTag(QUOTA_TAG);
+  updateTag(FEATURED_SELLERS_TAG); // VA-168: el interruptor "Destacadas" de un plan
   revalidatePath("/admin/plans");
   revalidatePath("/"); // VA-76: la Home es estática y muestra el cartel del cupo de Base
   return { ok: true };

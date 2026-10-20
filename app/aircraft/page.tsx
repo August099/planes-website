@@ -12,6 +12,7 @@ import Link from "next/link";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { featuredFirstPage, getFeaturedSellerIds } from "@/lib/featured";
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -108,18 +109,24 @@ export default async function AircraftListPage({ searchParams }: Props) {
     }),
   };
 
-  const [aircrafts, totalAircrafts, { categories, brands }, userFavorites, inUse] = await Promise.all([
+  // VA-168: en el orden por defecto, primero los avisos de cuentas con destacadas (Pro, Broker y admins);
+  // con otro orden (precio, año…), se respeta ese orden sin mezclar.
+  const featuredIds = sort === "recent" ? await getFeaturedSellerIds() : [];
+  const findPage = (sellerId: { in: string[] } | { notIn: string[] }, pageSkip: number, pageTake: number) =>
     prisma.aircraft.findMany({
-      where: whereClause,
+      where: { ...whereClause, sellerId },
       include: {
         category: { select: { id: true, name: true } },
         // El carrusel de la card muestra hasta 5 (antes se traían todas, VA-13).
         images: { orderBy: { order: "asc" }, take: 5 },
       },
       orderBy,
-      skip,
-      take: itemsPerPage,
-    }),
+      skip: pageSkip,
+      take: pageTake,
+    });
+
+  const [aircrafts, totalAircrafts, { categories, brands }, userFavorites, inUse] = await Promise.all([
+    featuredFirstPage(featuredIds, skip, itemsPerPage, findPage, () => prisma.aircraft.count({ where: { ...whereClause, sellerId: { in: featuredIds } } })),
     prisma.aircraft.count({ where: whereClause }),
     // Taxonomía cacheada (VA-13)
     getAircraftTaxonomy(),

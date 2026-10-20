@@ -138,6 +138,10 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
+### Destacadas por plan (VA-168)
+- [ ] Con un aviso de una cuenta Pro (cortesía desde `/admin/users`) y otros más nuevos de cuentas Base: en `/aircraft` el del Pro aparece primero; ordenando por precio, no.
+- [ ] Home → "Aeronaves destacadas": aparecen primero los avisos de cuentas Pro, Broker y admins.
+
 ### Republicar (VA-167)
 - [ ] Cuenta Base con avisos activos: en "Mis publicaciones" aparece "Tenés 2 republicaciones disponibles" y el punto en "Mi Cuenta" del menú 📱.
 - [ ] "Republicar" en un aviso: confirmar → el aviso aparece primero en "Últimas publicaciones" de la Home y en `/aircraft` (orden por defecto); en su detalle dice "Actualizado el …".

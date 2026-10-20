@@ -1731,6 +1731,12 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
   republicaciones disponibles" (se cierra y vuelve cuando cambia el saldo), botón "Republicar" por aviso
   activo con el saldo, "Republicar todas" del Broker y punto en "Mi Cuenta" del menú; en el detalle propio,
   una franja con "Republicar". `scripts/verify-republish.ts` 18/18. ❓ Pendiente: mail cuando se reponen.
-- **VA-168 a VA-175:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
+- **VA-168 (19/10/2026):** ✅ hecho en local. Sin migración. `lib/featured.ts`: las cuentas con el interruptor
+  "Destacadas" del plan (Pro, Broker) y los admins (lista cacheada 5 min, se invalida al guardar los planes o
+  una cortesía). Home, "Aeronaves destacadas": 6 al azar entre sus avisos y, si faltan, se completa con los
+  recientes. `/aircraft` y `/spareparts` en el orden por defecto: primero esos avisos y después el resto
+  (cada grupo por `lastPublishedAt`), con una paginación que no repite ni saltea; ordenar por precio, año,
+  etc. no los adelanta. `scripts/verify-featured.ts` 5/5. ❓ Pendiente: etiqueta "Destacado" en la tarjeta.
+- **VA-169 a VA-175:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
   En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
   prueba). Informe: `scripts/va166-report.ts` (solo lee).

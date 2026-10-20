@@ -116,9 +116,9 @@ export function formatEnum(
 // Antes se usaba "/placeholder.png", que no existe en public/.
 export const PLACEHOLDER_IMAGE = "/placeholder.svg";
 
-// VA-110: cantidad de aeronaves del carrusel "Aeronaves destacadas" de la Home. Hasta que existan los
-// destacados pagos (VA-95), son 6 al azar entre las FEATURED_AIRCRAFT_POOL más recientes activas
-// (decisión del socio, 14/10). "Últimas publicaciones" usa las 6 primeras de la misma consulta.
+// VA-110 / VA-168: cantidad de aeronaves del carrusel "Aeronaves destacadas" de la Home: 6 al azar entre
+// las de cuentas con destacadas (Pro, Broker y admins) y, si faltan, entre las FEATURED_AIRCRAFT_POOL más
+// recientes activas. "Últimas publicaciones" usa las 6 primeras de la consulta de recientes.
 export const FEATURED_AIRCRAFT_COUNT = 6;
 export const FEATURED_AIRCRAFT_POOL = 30;
 export const LATEST_AIRCRAFT_COUNT = 6;

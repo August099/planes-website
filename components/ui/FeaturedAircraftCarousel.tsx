@@ -11,20 +11,29 @@ import { FEATURED_AIRCRAFT_COUNT } from "@/lib/constants";
 
 export interface FeaturedAircraftProps extends AircraftCardProps {
   viewsCount?: number;
+  /** VA-168: aviso de una cuenta con destacadas (Pro, Broker o admin). */
+  planFeatured?: boolean;
 }
 
 interface Props {
   aircrafts: FeaturedAircraftProps[];
 }
 
-// VA-110: hasta que existan los destacados pagos (VA-95), 6 al azar entre las recientes activas.
-function pickFeatured(aircrafts: FeaturedAircraftProps[]) {
-  const pool = [...aircrafts];
+function shuffle<T>(list: T[]): T[] {
+  const pool = [...list];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  return pool.slice(0, FEATURED_AIRCRAFT_COUNT);
+  return pool;
+}
+
+// VA-110 / VA-168: 6 al azar entre los avisos de cuentas con destacadas (Pro, Broker y admins); si son
+// menos de 6, se completa al azar con los demás recientes.
+function pickFeatured(aircrafts: FeaturedAircraftProps[]) {
+  const featured = shuffle(aircrafts.filter((a) => a.planFeatured));
+  const others = shuffle(aircrafts.filter((a) => !a.planFeatured));
+  return [...featured, ...others].slice(0, FEATURED_AIRCRAFT_COUNT);
 }
 
 const subscribeNothing = () => () => {};

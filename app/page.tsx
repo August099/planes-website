@@ -23,6 +23,7 @@ import { FEATURED_AIRCRAFT_POOL, LATEST_AIRCRAFT_COUNT, PLACEHOLDER_IMAGE } from
 import { ProvinceExplorer, type ProvinceCounts } from "@/components/ui/ProvinceExplorer";
 import { provinceByName } from "@/lib/provinces";
 import { BrandSlashes } from "@/components/ui/BrandSlashes";
+import { getFeaturedSellerIds } from "@/lib/featured";
 
 // Título y descripción salen del layout; acá solo el canonical.
 export const metadata: Metadata = {
@@ -35,6 +36,8 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function HomePage() {
+  // VA-168: cuentas con destacadas (Pro, Broker y admins).
+  const featuredSellerIds = await getFeaturedSellerIds();
   // Datos en paralelo
   const [
     featuredAircraftsFromDb,
@@ -44,6 +47,7 @@ export default async function HomePage() {
     aircraftByProvince,
     sparePartsByProvince,
     aircraftByCategory,
+    planFeaturedFromDb,
   ] = await Promise.all([
     prisma.aircraft.findMany({
       where: activeListingWhere(),
@@ -80,6 +84,15 @@ export default async function HomePage() {
     prisma.sparePart.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
     // VA-86: avisos visibles por categoría de aeronave (mismo criterio que /aircraft).
     prisma.aircraft.groupBy({ by: ["categoryId"], where: activeListingWhere(), _count: { _all: true } }),
+    // VA-168: avisos de cuentas con destacadas (las más recientes; el carrusel elige al azar).
+    featuredSellerIds.length
+      ? prisma.aircraft.findMany({
+          where: { ...activeListingWhere(), sellerId: { in: featuredSellerIds } },
+          include: { images: { orderBy: { order: "asc" }, take: 1 }, category: true, brand: true, model: true },
+          orderBy: { lastPublishedAt: "desc" },
+          take: FEATURED_AIRCRAFT_POOL,
+        })
+      : Promise.resolve([]),
   ]);
   const categoryCounts: Record<string, number> = Object.fromEntries(
     aircraftByCategory.filter((g) => g.categoryId).map((g) => [g.categoryId as string, g._count._all])
@@ -97,8 +110,12 @@ export default async function HomePage() {
   aircraftByProvince.forEach((g) => addCount(g.province, "aircraft", g._count._all));
   sparePartsByProvince.forEach((g) => addCount(g.province, "parts", g._count._all));
 
-  // Formateo para Aeronaves Destacadas (OverlayCard)
-  const formattedFeaturedAircrafts = featuredAircraftsFromDb.map((aircraft) => ({
+  // Formateo para Aeronaves Destacadas (OverlayCard). VA-168: primero los de cuentas con destacadas
+  // (planFeatured: el carrusel elige entre ellos y completa con los demás recientes).
+  const planFeaturedIds = new Set(planFeaturedFromDb.map((a) => a.id));
+  const featuredPool = [...planFeaturedFromDb, ...featuredAircraftsFromDb.filter((a) => !planFeaturedIds.has(a.id))];
+  const formattedFeaturedAircrafts = featuredPool.map((aircraft) => ({
+    planFeatured: planFeaturedIds.has(aircraft.id),
     id: aircraft.id,
     title: aircraft.title,
     brand: aircraft.brand?.name ?? aircraft.customBrand ?? "",
