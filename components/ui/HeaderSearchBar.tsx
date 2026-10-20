@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Loader2, Plane, Wrench } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import { searchGlobal, SearchResultItem, SearchType } from "@/app/actions/search-actions";
+import { searchGlobal, searchSellers, SearchResultItem, SearchType, type SellerResult } from "@/app/actions/search-actions";
+import { SellerResults } from "@/components/ui/search/SellerResults";
 import { logSearch } from "@/app/actions/analytics-actions";
 import { ensureAnalyticsCookies } from "@/lib/analytics-client";
 
@@ -45,6 +46,9 @@ export default function HeaderSearchBar() {
   const searchKey = `${searchType}|${query}`;
   const [fetched, setFetched] = useState<{ key: string; items: SearchResultItem[] }>({ key: "", items: [] });
   const results = hasQuery ? fetched.items : [];
+  // VA-172: vendedores (Brokers) que coinciden por nombre comercial, arriba del interruptor.
+  const [sellerHits, setSellerHits] = useState<{ key: string; items: SellerResult[] }>({ key: "", items: [] });
+  const sellers = hasQuery && sellerHits.key === query ? sellerHits.items : [];
   const loading = hasQuery && fetched.key !== searchKey;
   const open = isOpen && hasQuery;
 
@@ -52,7 +56,8 @@ export default function HeaderSearchBar() {
     if (!hasQuery) return;
 
     const timer = setTimeout(async () => {
-      const res = await searchGlobal(query, searchType);
+      const [res, found] = await Promise.all([searchGlobal(query, searchType), searchSellers(query)]);
+      setSellerHits({ key: query, items: found });
 
       setFetched({ key: `${searchType}|${query}`, items: res });
       setIsOpen(true);
@@ -151,6 +156,8 @@ export default function HeaderSearchBar() {
       {/* Dropdown */}
       {open && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+
+          <SellerResults sellers={sellers} query={query} onSelect={() => { setIsOpen(false); setQuery(""); }} />
 
           {/* SWITCH */}
           <div className="p-2 border-b border-slate-100">

@@ -142,3 +142,56 @@ export async function searchGlobal(
 
   return results;
 }
+// ============================================================
+// VA-172: VENDEDORES (Brokers y admins con Página VA publicada)
+// ============================================================
+export interface SellerResult {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  listings: number;
+  url: string;
+}
+
+/**
+ * Brokers por nombre comercial (o nombre). Sin cuentas Base ni Pro: solo las que tienen la Página VA
+ * completa (suscripción vigente a un plan con vaPageLevel FULL, o admins con su página publicada). El
+ * filtro por plan acota a pocas cuentas antes de buscar el texto; se llama con el mismo debounce de hoy.
+ */
+export async function searchSellers(query: string, take = 4): Promise<SellerResult[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const now = new Date();
+  const users = await prisma.user.findMany({
+    where: {
+      OR: [
+        { isAdmin: true, profilePage: { publishedAt: { not: null } } },
+        {
+          Subscription: {
+            plan: { vaPageLevel: "FULL" },
+            OR: [
+              { status: "ACTIVE", currentPeriodEnd: { gt: now } },
+              { status: "PAST_DUE", graceUntil: { gt: now } },
+            ],
+          },
+        },
+      ],
+      AND: [{ OR: [{ businessName: { contains: q, mode: "insensitive" } }, { name: { contains: q, mode: "insensitive" } }] }],
+    },
+    select: {
+      id: true,
+      name: true,
+      businessName: true,
+      logoUrl: true,
+      _count: { select: { aircrafts: { where: activeListingWhere() }, spareParts: { where: activeListingWhere() } } },
+    },
+    take: Math.min(Math.max(1, take), 20),
+  });
+  return users.map((u) => ({
+    id: u.id,
+    name: u.businessName || u.name || "Vendedor",
+    logoUrl: u.logoUrl,
+    listings: u._count.aircrafts + u._count.spareParts,
+    url: `/profile/${u.id}`,
+  }));
+}

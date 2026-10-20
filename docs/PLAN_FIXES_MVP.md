@@ -1771,6 +1771,12 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
   tocarlo; "Más de [Broker]" antes de las recomendaciones; PDF con su logo junto al de VA. La ficha, la
   galería, el zoom y todo lo demás, iguales al detalle común. **Sin barra fija de contacto** (decisión del
   socio, 20/10). Privacidad: YouTube.
-- **VA-172, VA-173:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
+- **VA-172 (20/10/2026):** ✅ hecho en local. Sin migración. El buscador del header (escritorio y celular) y
+  `/search` buscan también Brokers por nombre comercial: bloque "Vendedores" arriba del interruptor Aviones /
+  Repuestos (logo, nombre en negrita, cantidad de avisos y link a la Página VA; hasta 3 con "Ver más
+  vendedores"). Solo cuentas con la Página VA completa (suscripción vigente a un plan con Página VA completa, o
+  admins con su página publicada): el filtro por plan acota a pocas cuentas antes de buscar el texto. Mismo
+  debounce de antes. Sin coincidencias, se ve igual que antes.
+- **VA-173:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
   En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
   prueba). Informe: `scripts/va166-report.ts` (solo lee).

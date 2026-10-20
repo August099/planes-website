@@ -8,6 +8,8 @@ import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { TrackSearch } from "@/components/analytics/TrackSearch";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { searchSellers } from "@/app/actions/search-actions";
+import { SellerResults } from "@/components/ui/search/SellerResults";
 
 interface Props {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -106,6 +108,8 @@ export default async function SearchResultsPage({ searchParams }: Props) {
 
   const hasNextPage = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
+  // VA-172: vendedores (Brokers) que coinciden por nombre comercial, arriba de los avisos.
+  const sellers = currentPage === 1 ? await searchSellers(query, 12) : [];
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -116,6 +120,12 @@ export default async function SearchResultsPage({ searchParams }: Props) {
       <h1 className="text-2xl font-medium mb-6">
         Resultados para “{query}” ({totalItems})
       </h1>
+
+      {sellers.length > 0 && (
+        <section id="vendedores" className="mb-8 max-w-xl rounded-lg border border-[#001F58]/12 bg-white">
+          <SellerResults sellers={sellers} query={query} max={12} />
+        </section>
+      )}
 
       <section className="w-full">
         {paginatedItems.length === 0 ? (

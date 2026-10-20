@@ -138,6 +138,10 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
+### Buscar Brokers (VA-172)
+- [ ] Buscar el nombre comercial del admin (o de un Broker) en el header 📱: aparece "Vendedores" con su logo y "N avisos"; el link abre su Página VA.
+- [ ] Buscar "cessna": no aparece el bloque (sin Brokers que coincidan).
+
 ### Detalle del Broker (VA-170)
 - [ ] Como admin, en Ajustes → Página VA: elegir un color de acento y (opcional) una portada para los avisos.
 - [ ] Publicar o editar un aviso del admin con un link de YouTube (youtu.be/…); un link que no es de YouTube da error.
