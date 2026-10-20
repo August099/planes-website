@@ -138,6 +138,13 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
+### Planes según la grilla (VA-166, VA-174)
+- [ ] `/plans` en la compu y en el celular 📱: grilla Base / Pro / Broker con "Promo de lanzamiento" y el precio tachado; en el Broker, apagar "Aviones ilimitados" cambia el precio (85.000 → 55.000) y la fila de aviones pasa a "1".
+- [ ] Sin sesión, los botones llevan a crear la cuenta; con una cuenta Base, "Suscribirme"; como admin, "Como admin tenés todo incluido".
+- [ ] `/admin/plans`: cambiar el cupo de repuestos de Base a 4, ver la línea "Base pasa de 3 a 4 repuestos activos", guardar y publicar el 4.º repuesto con una cuenta Base. Volverlo a 3.
+- [ ] Cuenta Base con 3 repuestos activos: el 4.º pide pausar uno o pasarse a Pro.
+- [ ] `/admin/users`: los admins dicen "Admin · Broker completo" (sin "Asignar plan de cortesía").
+
 ### Categoría recomendada y formulario guiado (VA-153, VA-165)
 - [ ] `/publish` → Aeronave: elegir "Agrícola" en Tipo de aeronave → en Marca solo aparecen marcas con modelos agrícolas (Air Tractor, Cessna, Piper, Thrush…) y en Modelo solo los agrícolas; "Ver todas las marcas" muestra todas.
 - [ ] Sin tipo elegido: Cessna → C-182 propone "Monomotor · Pistón" con "Recomendada para este modelo: Monomotor Pistón". Cambiarlo a Agrícola se puede y dice "Elegiste una categoría distinta de la recomendada"; al publicar queda Agrícola.

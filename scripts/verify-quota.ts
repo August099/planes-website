@@ -1,4 +1,4 @@
-// VA-152: verifica la regla del cupo (lib/quota.ts) con cuentas de prueba en va_dev. Crea usuarios y
+// VA-152 / VA-166: verifica la regla del cupo (lib/quota.ts) con cuentas de prueba en va_dev. Crea usuarios y
 // avisos temporales, prueba los casos de la spec y borra todo al final. Solo contra la base local.
 //
 //   npx tsx --env-file=.env --require ./scripts/stub-server-only.cjs scripts/verify-quota.ts
@@ -62,36 +62,36 @@ async function main() {
   partCategory = (await prisma.category.findFirstOrThrow({ where: { children: { none: {} } } })).id;
   const pro = await prisma.plan.findFirstOrThrow({ where: { tier: "PRO", archivedAt: null } });
   const bizParts = await prisma.plan.findFirstOrThrow({ where: { tier: "BUSINESS", isUnlimitedAircraft: false, isUnlimitedSpareParts: true, archivedAt: null } });
-  const free = await limitsWithoutPlan("-"); // usuario inexistente: cupo Gratis
+  const free = await limitsWithoutPlan("-"); // usuario inexistente: cupo de Base
 
   // 1. Publicar sin cupo
   const a = await user("gratis");
   const first = await publish(a, "AIRCRAFT");
-  check("1. Gratis: 1.er avión", "ACTIVE", first?.status);
-  check("1. Gratis: 2.º avión sin elegir", null, await publish(a, "AIRCRAFT"));
+  check("1. Base: 1.er avión", "ACTIVE", first?.status);
+  check("1. Base: 2.º avión sin elegir", null, await publish(a, "AIRCRAFT"));
   const parts = [];
-  for (let i = 0; i < 5; i++) parts.push((await publish(a, "SPARE_PART"))?.status);
-  check("1. Gratis: 5 repuestos", ["ACTIVE", "ACTIVE", "ACTIVE", "ACTIVE", "ACTIVE"], parts);
-  check("1. Gratis: 6.º repuesto sin elegir", null, await publish(a, "SPARE_PART"));
+  for (let i = 0; i < 3; i++) parts.push((await publish(a, "SPARE_PART"))?.status);
+  check("1. Base: 3 repuestos", ["ACTIVE", "ACTIVE", "ACTIVE"], parts);
+  check("1. Base: 4.º repuesto sin elegir", null, await publish(a, "SPARE_PART"));
   const saved = await publish(a, "AIRCRAFT", { saveAsPaused: true });
-  check("1. Gratis: 2.º avión 'Guardar como pausado'", "PAUSED", saved?.status);
+  check("1. Base: 2.º avión 'Guardar como pausado'", "PAUSED", saved?.status);
 
   // 2. Pausar libera cupo; activar sin cupo no
   check("2. Activar el pausado sin cupo", false, await activate(a, "AIRCRAFT", saved!.id));
   await prisma.aircraft.update({ where: { id: first!.id }, data: { status: "PAUSED" } });
   check("2. Pausar el activo libera: activar el otro", true, await activate(a, "AIRCRAFT", saved!.id));
   await prisma.aircraft.update({ where: { id: saved!.id }, data: { status: "SOLD" } });
-  check("2. Vendido no cuenta", { AIRCRAFT: 0, SPARE_PART: 5 }, (await getQuotaUsage(a)).used);
+  check("2. Vendido no cuenta", { AIRCRAFT: 0, SPARE_PART: 3 }, (await getQuotaUsage(a)).used);
 
   // 3. Pro: 3 / 15
   const b = await user("pro");
   const subB = await subscribe(b, pro.id);
   const usageB = await getQuotaUsage(b);
-  check("3. Pro: cupo", { tier: "PRO", AIRCRAFT: 3, SPARE_PART: 15 }, { tier: usageB.tier, ...usageB.limits });
+  check("3. Pro: cupo", { tier: "PRO", AIRCRAFT: 3, SPARE_PART: 10 }, { tier: usageB.tier, ...usageB.limits });
   const proAircraft = [];
   for (let i = 0; i < 4; i++) proAircraft.push((await publish(b, "AIRCRAFT"))?.status ?? null);
   check("3. Pro: 3 aviones y el 4.º no", ["ACTIVE", "ACTIVE", "ACTIVE", null], proAircraft);
-  check("3. Pro sin Página VA ni métricas", [false, false], [await hasCustomPage(b), await hasSellerMetrics(b)]);
+  check("3. Pro con Página VA (banner) y métricas Pro (VA-166)", [true, true], [await hasCustomPage(b), await hasSellerMetrics(b)]);
 
   // 4 y 6. Baja del Pro (arrepentimiento o fin): se pausan los 2 más nuevos
   check("6. Arrepentimiento: avance de lo que se pausa", { AIRCRAFT: 2, SPARE_PART: 0 }, await excessFor(b, await limitsWithoutPlan(b)));
@@ -101,16 +101,16 @@ async function main() {
   const stillActive = await prisma.aircraft.findMany({ where: { sellerId: b, status: "ACTIVE" }, select: { id: true } });
   check("4. Queda activo el más viejo", [oldest.id], stillActive.map((x) => x.id));
 
-  // 5. Empresarial "repuestos ilimitados": 40 repuestos y 1 avión (cupo Gratis)
+  // 5. Broker "repuestos ilimitados": 40 repuestos y 1 avión (cupo de Base)
   const c = await user("empresa");
   await subscribe(c, bizParts.id);
   const usageC = await getQuotaUsage(c);
-  check("5. Empresarial repuestos: cupo", { AIRCRAFT: free.AIRCRAFT, SPARE_PART: null }, usageC.limits);
+  check("5. Broker repuestos: cupo", { AIRCRAFT: free.AIRCRAFT, SPARE_PART: null }, usageC.limits);
   let ok = 0;
   for (let i = 0; i < 40; i++) if ((await publish(c, "SPARE_PART"))?.status === "ACTIVE") ok++;
-  check("5. Empresarial: 40 repuestos activos", 40, ok);
-  check("5. Empresarial: 1 avión y el 2.º no", ["ACTIVE", null], [(await publish(c, "AIRCRAFT"))?.status, (await publish(c, "AIRCRAFT"))?.status ?? null]);
-  check("5. Empresarial con Página VA y métricas", [true, true], [await hasCustomPage(c), await hasSellerMetrics(c)]);
+  check("5. Broker: 40 repuestos activos", 40, ok);
+  check("5. Broker: 1 avión y el 2.º no", ["ACTIVE", null], [(await publish(c, "AIRCRAFT"))?.status, (await publish(c, "AIRCRAFT"))?.status ?? null]);
+  check("5. Broker con Página VA y métricas", [true, true], [await hasCustomPage(c), await hasSellerMetrics(c)]);
 
   // 7. Concurrencia: dos altas simultáneas con 1 lugar libre
   const d = await user("concurrencia");
@@ -118,7 +118,7 @@ async function main() {
   check("7. Dos altas simultáneas: una sola activa", 1, both.filter((x) => x?.status === "ACTIVE").length);
   check("7. En la base: 1 avión activo", 1, await prisma.aircraft.count({ where: { sellerId: d, status: "ACTIVE" } }));
 
-  // Admin: como un Empresarial con todo ilimitado
+  // Admin (VA-174): Broker completo para siempre
   const e = await user("admin", true);
   const usageE = await getQuotaUsage(e);
   check("Admin: ilimitado", { tier: "ADMIN", AIRCRAFT: null, SPARE_PART: null }, { tier: usageE.tier, ...usageE.limits });

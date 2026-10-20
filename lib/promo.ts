@@ -13,7 +13,7 @@ function count(n: number | null, one: string, many: string): string {
   return n === null ? `${many} ilimitados` : `${n} ${n === 1 ? one : many}`;
 }
 
-/** "Publicá gratis 1 avión y 5 repuestos. Sin vencimiento." */
+/** "Publicá gratis 1 avión y 3 repuestos. Sin vencimiento." (el cupo del plan Base) */
 export function freeQuotaText(q: FreeQuota): string {
   return `Publicá gratis ${count(q.AIRCRAFT, "avión", "aviones")} y ${count(q.SPARE_PART, "repuesto", "repuestos")}. Sin vencimiento.`;
 }

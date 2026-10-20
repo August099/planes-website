@@ -81,7 +81,7 @@ export function CourtesyPlanControl({ userId, userName, subscription, plans }: {
         onClose={close}
         onConfirm={() => run(() => grantCourtesyPlanAction({ userId, planId, until, note }))}
       >
-        <p className="text-sm text-slate-600">Sin cobro ni renovación: no cuenta en ingresos. Al vencer, vuelve al cupo Gratis y, si tiene más avisos activos, se pausan los más nuevos.</p>
+        <p className="text-sm text-slate-600">Sin cobro ni renovación: no cuenta en ingresos. Al vencer, vuelve al cupo de Base y, si tiene más avisos activos, se pausan los más nuevos.</p>
         <div className="mt-4 space-y-3 text-left">
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-slate-600">Plan</span>

@@ -2,63 +2,36 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { currentSubscriptionWhere } from "@/lib/subscriptions";
+import { getAccountPlan, getBaseLimits, type AccountKind } from "@/lib/plan-benefits";
 
-// VA-152: cupos fijos sin vencimiento. ÚNICO lugar con la regla del cupo (publicar, activar, perfil,
-// admin, /plans y bajas de plan). Cupo = avisos ACTIVE al mismo tiempo, por tipo; no cuentan los
-// pausados, vendidos ni (VA-154) los pausados por moderación.
-//
-// - Gratis (toda cuenta sin suscripción vigente): QuotaSettings (1 avión / 5 repuestos, editable).
-// - Pro: aircraftListingsCount / sparePartsListingsCount del plan (3 / 15).
-// - Empresarial: lo que eligió ilimitado; lo otro, el cupo del Gratis.
-// - Admins: como un Empresarial con todo ilimitado (decisión del 18/10).
-// Los hangares (ocultos) no usan cupos.
+// VA-152 / VA-166: cupos fijos sin vencimiento. ÚNICO lugar con la regla del cupo (publicar, activar,
+// perfil, admin, /plans y bajas de plan). Cupo = avisos ACTIVE al mismo tiempo, por tipo; no cuentan los
+// pausados, vendidos ni (VA-154) los pausados por moderación. Los límites de cada plan salen de
+// lib/plan-benefits.ts (Base 1 / 3, Pro 3 / 10, Broker lo elegido ilimitado y lo demás como Base, admins
+// sin límite). Los hangares (ocultos) no usan cupos.
 
 type Db = Prisma.TransactionClient | typeof prisma;
 export type QuotaKind = "AIRCRAFT" | "SPARE_PART";
 /** null = ilimitado. */
 export type QuotaLimits = { AIRCRAFT: number | null; SPARE_PART: number | null };
-export type QuotaTier = "FREE" | "PRO" | "BUSINESS" | "ADMIN";
+export type QuotaTier = AccountKind;
 
 export const QUOTA_KIND_TEXT: Record<QuotaKind, { one: string; many: string }> = {
   AIRCRAFT: { one: "avión", many: "aviones" },
   SPARE_PART: { one: "repuesto", many: "repuestos" },
 };
 
-const FREE_DEFAULT = { freeAircraftQuota: 1, freeSparePartQuota: 5 };
-
+/** Cupo del plan Base (el de toda cuenta sin plan). */
 export async function getFreeQuota(db: Db = prisma): Promise<QuotaLimits> {
-  const s = (await db.quotaSettings.findUnique({ where: { id: "default" } })) ?? FREE_DEFAULT;
-  return { AIRCRAFT: s.freeAircraftQuota, SPARE_PART: s.freeSparePartQuota };
+  return getBaseLimits(db);
 }
 
 export type Entitlement = { tier: QuotaTier; planName: string; limits: QuotaLimits };
 
 /** Plan efectivo y cupo de la cuenta. */
 export async function getEntitlement(userId: string, db: Db = prisma, now = new Date()): Promise<Entitlement> {
-  // En serie: dentro de una transacción todas las consultas van por la misma conexión.
-  const user = await db.user.findUnique({ where: { id: userId }, select: { isAdmin: true } });
-  const sub = await db.subscription.findFirst({
-    where: currentSubscriptionWhere(userId, now),
-    select: {
-      plan: {
-        select: { name: true, tier: true, aircraftListingsCount: true, sparePartsListingsCount: true, isUnlimitedAircraft: true, isUnlimitedSpareParts: true },
-      },
-    },
-  });
-  const free = await getFreeQuota(db);
-  if (user?.isAdmin) return { tier: "ADMIN", planName: "Administrador", limits: { AIRCRAFT: null, SPARE_PART: null } };
-  const plan = sub?.plan;
-  if (!plan) return { tier: "FREE", planName: "Gratis", limits: free };
-  if (plan.tier === "PRO") {
-    return { tier: "PRO", planName: plan.name, limits: { AIRCRAFT: plan.aircraftListingsCount, SPARE_PART: plan.sparePartsListingsCount } };
-  }
-  // Empresarial (y cualquier suscripción vieja que siga vigente): ilimitado lo elegido, el resto Gratis.
-  return {
-    tier: "BUSINESS",
-    planName: plan.name,
-    limits: { AIRCRAFT: plan.isUnlimitedAircraft ? null : free.AIRCRAFT, SPARE_PART: plan.isUnlimitedSpareParts ? null : free.SPARE_PART },
-  };
+  const plan = await getAccountPlan(userId, db, now);
+  return { tier: plan.kind, planName: plan.planName, limits: plan.limits };
 }
 
 export async function countActive(userId: string, db: Db = prisma): Promise<Record<QuotaKind, number>> {
@@ -131,7 +104,7 @@ export async function excessFor(userId: string, limits: QuotaLimits, db: Db = pr
   return { AIRCRAFT: over("AIRCRAFT"), SPARE_PART: over("SPARE_PART") };
 }
 
-/** Cupos al quedarse sin suscripción: Gratis (los admins siguen sin límite). */
+/** Cupos al quedarse sin suscripción: Base (los admins siguen sin límite). */
 export async function limitsWithoutPlan(userId: string, db: Db = prisma): Promise<QuotaLimits> {
   const user = await db.user.findUnique({ where: { id: userId }, select: { isAdmin: true } });
   return user?.isAdmin ? { AIRCRAFT: null, SPARE_PART: null } : getFreeQuota(db);
@@ -145,6 +118,6 @@ export function describePaused(p: Record<QuotaKind, number>): string | null {
   return parts.length ? `Se pausan ${parts.join(" y ")}, para quedar dentro del cupo. Después podés elegir cuáles quedan activos.` : null;
 }
 
-/** Cupo Gratis cacheado para los carteles de páginas estáticas (se refresca al editarlo, tag "quota"). */
+/** Cupo de Base cacheado para los carteles de páginas estáticas (se refresca al editarlo, tag "quota"). */
 export const QUOTA_TAG = "quota";
-export const getCachedFreeQuota = unstable_cache(() => getFreeQuota(), ["free-quota"], { tags: [QUOTA_TAG], revalidate: 3600 });
+export const getCachedFreeQuota = unstable_cache(() => getFreeQuota(), ["free-quota", "va166"], { tags: [QUOTA_TAG], revalidate: 3600 });

@@ -52,10 +52,10 @@ export default async function AdminUsersPage({ searchParams }: Props) {
     }),
     prisma.user.count({ where }),
   ]);
-  // VA-92: planes para "Asignar plan de cortesía" (también inactivos, no archivados). VA-152: Pro o
-  // una opción del Empresarial.
+  // VA-92: planes para "Asignar plan de cortesía" (también inactivos, no archivados). VA-166: Pro o
+  // una opción del Broker / Empresa (Base es el de toda cuenta sin plan).
   const subscriptionPlans = await prisma.plan.findMany({
-    where: { billingType: "SUBSCRIPTION", archivedAt: null, tier: { not: null } },
+    where: { billingType: "SUBSCRIPTION", archivedAt: null, tier: { in: ["PRO", "BUSINESS"] } },
     orderBy: [{ isActive: "desc" }, { sortOrder: "asc" }],
     select: { id: true, name: true, isActive: true },
   });
@@ -185,6 +185,12 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                     <UserTypeSelect userId={u.id} userType={u.userType} confirmed={u.userTypeConfirmed} />
                   </td>
                   <td className="px-4 py-3">
+                    {/* VA-174: los admins tienen el Broker completo para siempre (sin cortesía). */}
+                    {u.isAdmin ? (
+                      <p className="text-xs text-slate-600">
+                        <span className="font-semibold text-[#001F58]">Admin</span> · Broker completo
+                      </p>
+                    ) : (
                     <CourtesyPlanControl
                       userId={u.id}
                       userName={u.name || u.email || "el usuario"}
@@ -200,6 +206,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                           : null
                       }
                     />
+                    )}
                   </td>
                 </tr>
               );

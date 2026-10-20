@@ -100,7 +100,7 @@ export default async function HowToPublishPage() {
                                 </div>
                             </dl>
                             <p className="text-base text-blue-100">
-                                ¿Necesitás más? Con los planes Pro y Empresarial publicás más avisos a la vez.{" "}
+                                ¿Necesitás más? Con los planes Pro y Broker / Empresa publicás más avisos a la vez.{" "}
                                 <Link href="/plans" className="font-semibold text-white underline underline-offset-2">Ver planes</Link>
                             </p>
                         </div>

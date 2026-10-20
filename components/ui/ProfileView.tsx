@@ -555,7 +555,7 @@ export function ProfileView({
           {/* VA-151: línea discreta para quien no tiene las métricas (sin bloquear nada). */}
           {isOwner && !hasSellerMetrics && (
             <p className="mb-4 text-sm text-slate-600">
-              Con el plan Empresarial ves la evolución de tus avisos y de dónde llegan tus contactos.{" "}
+              Con los planes Pro y Broker / Empresa ves la evolución de tus avisos y de dónde llegan tus contactos.{" "}
               <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
                 Ver planes
               </Link>
@@ -584,7 +584,7 @@ export function ProfileView({
       {/* Pestaña Ajustes */}
       {isOwner && activeTab === "edit" && (
         <div className="space-y-6 max-w-2xl mx-auto md:mx-0">
-          <SubscriptionPanel subscription={subscription} />
+          <SubscriptionPanel subscription={subscription} quota={quota ?? null} />
           {billingProfile && <BillingProfilePanel initial={billingProfile.values} saved={billingProfile.saved} />}
 
           {/* Formulario de información de la cuenta */}

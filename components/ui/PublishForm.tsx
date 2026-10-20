@@ -60,7 +60,7 @@ interface PublishFormProps {
     // VA-46: el usuario no tiene teléfono cargado (no puede publicar hasta cargarlo).
     needsPhone?: boolean;
     // VA-152: uso del cupo de la cuenta (solo al crear). limit null = ilimitado.
-    quota?: { tier: "FREE" | "PRO" | "BUSINESS" | "ADMIN"; planName: string; aircraft: QuotaLine; parts: QuotaLine };
+    quota?: { tier: "BASE" | "PRO" | "BROKER" | "ADMIN"; planName: string; aircraft: QuotaLine; parts: QuotaLine };
     // VA-152: hay planes pagos activos en /plans (si no, no se ofrece "Pasarme a Pro").
     plansAvailable?: boolean;
 }
@@ -800,7 +800,7 @@ export default function PublishForm({
                           href="/plans"
                           className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#E70F1F] px-4 text-sm font-bold text-white hover:bg-[#C20D1A]"
                         >
-                          {quota.tier === "FREE" ? "Pasarme a Pro" : "Ver planes con más cupo"}
+                          {quota.tier === "BASE" ? "Pasarme a Pro" : "Ver planes con más cupo"}
                         </Link>
                       )}
                       <button

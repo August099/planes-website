@@ -1710,6 +1710,18 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
   nunca se borra al cambiar la categoría; sin "Avisanos". El servidor guarda la categoría elegida (sigue
   validando marca, modelo y submodelo). Filtros de `/aircraft` y buscador de la Home: marcas y modelos con
   avisos activos reales de esa categoría. Admin: "categoría recomendada".
-- **VA-166 a VA-175:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
+- **VA-166 + VA-174 (19/10/2026):** ✅ hecho en local (capturas de `/plans` y del admin enviadas al socio el 19/10; se ajusta lo que pida). Migraciones `va166_plan_base` (valor BASE) y
+  `va166_planes_grilla` (precio tachado, republicaciones, destacadas, niveles de Página VA y métricas,
+  detalles personalizados; plan Base 1 / 3 como fila de `Plan`; filas de la grilla; el cupo gratis sale de
+  `QuotaSettings`, que suma la espera entre republicaciones). Script `scripts/va166-migrate-data.ts`
+  (informe / `--apply` / `--confirm-production`): Pro 3 / 10 a AR$ 38.000 (50.000), Broker 55.000 (68.000) y
+  85.000 (108.000), beneficios de la grilla y cierre de la cortesía del admin (en `va_dev`: 1). Regla única en
+  `lib/plan-benefits.ts`. `/plans`: la grilla (tabla en escritorio, una placa por plan en celular, sin
+  scroll lateral) con los interruptores del Broker que cambian precio y cupos en vivo; botones según
+  visitante, cuenta o admin. Admin: la misma grilla editable (celdas en su lugar, filas del sistema con
+  candado, filas propias con flechas, lista de cambios, vista previa y CONFIRMAR al cambiar un precio con
+  suscriptores). Admins: "Admin", Broker completo, sin cortesía ni suscripción. Textos (FAQ, términos,
+  arrepentimiento, `/howtopublish`, perfil): borrador para revisar. `scripts/verify-quota.ts` 23/23.
+- **VA-167 a VA-175:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
   En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
   prueba). Informe: `scripts/va166-report.ts` (solo lee).

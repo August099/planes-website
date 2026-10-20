@@ -52,7 +52,8 @@ export type ProductQuery = { planId?: string };
 export async function resolveProduct(userId: string, q: ProductQuery): Promise<CheckoutProduct | { error: string }> {
   const planId = q.planId ?? "";
   if (!planId) return { error: "Elegí un plan para continuar." };
-  const plan = await prisma.plan.findFirst({ where: { id: planId, isActive: true, archivedAt: null } });
+  // VA-166: Base es gratis (no se cobra) y los admins no se suscriben (tienen todo incluido, VA-174).
+  const plan = await prisma.plan.findFirst({ where: { id: planId, isActive: true, archivedAt: null, tier: { not: "BASE" } } });
   if (!plan) return { error: "Ese plan no está disponible." };
   return {
     key: `plan:${plan.id}`,
