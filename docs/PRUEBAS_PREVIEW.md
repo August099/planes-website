@@ -138,6 +138,11 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
+### Ajustes (VA-175)
+- [ ] Menú de usuario → "Ajustes" (compu y celular 📱): datos, foto, contraseña, plan, compras, facturación, cookies y, con Pro o Broker, la Página VA. Guardar cada sección.
+- [ ] "Mi cuenta" ya no tiene pestañas de ajustes ni de compras; "Ajustes" arriba a la derecha.
+- [ ] `/arrepentimiento` con sesión lleva a Ajustes → Mis compras.
+
 ### Métricas por plan (VA-171)
 - [ ] Cuenta Pro (cortesía): pestaña "Métricas" con 7 y 30 días.
 - [ ] Como admin (o Broker): además "Últimos 90 días", rango con dos fechas y "Ver rango", "Exportar CSV" (baja un .csv que abre en Excel), fuentes de tráfico, provincias, "Comparador" en la tabla y el efecto de las republicaciones.

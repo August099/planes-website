@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 // Con sesión, lleva directo a "Mis compras"; sin sesión, explica cómo hacerlo y pide iniciar sesión.
 export default async function WithdrawalPage() {
   const user = await getCurrentUser();
-  if (user?.id) redirect(`/profile/${user.id}?tab=compras#mis-compras`);
+  if (user?.id) redirect("/settings#compras"); // VA-175: "Mis compras" está en Ajustes
 
   return (
     <main className="relative isolate overflow-hidden min-h-screen">

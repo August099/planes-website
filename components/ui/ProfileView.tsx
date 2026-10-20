@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ProfileListings, type ModerationMap, type ProfileQuota, type StatusTarget } from "@/components/ui/profile/ProfileListings";
@@ -13,39 +13,12 @@ const SellerMetricsPanel = dynamic(() => import("@/components/ui/profile/SellerM
   ssr: false,
   loading: () => <p className="text-sm text-slate-500">Cargando métricas…</p>,
 });
-import {
-  updateProfileAction,
-  updateAvatarAction,
-  removeAvatarAction,
-  changePasswordAction, // Asegúrate de importar tu Server Action o API para cambiar contraseña
-} from "@/app/actions/profile-actions";
 import { deleteListingAction, setListingStatusAction } from "@/app/actions/listing-actions";
-import { Lock } from "lucide-react";
-import {
-  BarChart3,
-  MapPin,
-  Calendar,
-  Phone,
-  Mail,
-  Edit,
-  Plane,
-  Loader2,
-  CheckCircle2,
-  Camera,
-  Trash2,
-  Receipt,
-} from "lucide-react";
+import { BarChart3, MapPin, Calendar, Phone, Mail, Edit, Plane } from "lucide-react";
 import { PROFILE_FIELD_LABELS, type ProfileField } from "@/lib/profile";
-import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
-import { USER_TYPE_LABELS, USER_TYPE_OPTIONS } from "@/lib/user-types";
+import { USER_TYPE_LABELS } from "@/lib/user-types";
 import { StorefrontHeader, type StorefrontData } from "@/components/ui/profile/StorefrontHeader";
-import { StorefrontEditor } from "@/components/ui/profile/StorefrontEditor";
-import { SubscriptionPanel } from "@/components/ui/profile/SubscriptionPanel";
 import type { SubscriptionSummary } from "@/lib/subscriptions";
-import type { PurchaseRow } from "@/lib/purchases";
-import { PurchasesPanel } from "@/components/ui/profile/PurchasesPanel";
-import { BillingProfilePanel, type BillingProfileValues } from "@/components/ui/profile/BillingProfilePanel";
-import { PASSWORD_REGEX } from "@/lib/password-rules";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -107,13 +80,6 @@ interface Props {
   storefront?: StorefrontData | null;
   // VA-80: plan del dueño del perfil (solo se pasa cuando lo mira el dueño).
   subscription?: SubscriptionSummary | null;
-  // VA-92: "Mis compras" y datos de facturación guardados (solo el dueño).
-  purchases?: PurchaseRow[];
-  initialTab?: "purchases";
-  billingProfile?: { values: BillingProfileValues; saved: boolean } | null;
-  // VA-105 · 3: "Cambiar contraseña" solo para cuentas con contraseña (las de Google la crean con
-  // "Olvidé mi contraseña").
-  hasPassword?: boolean;
   // VA-151: el plan vigente incluye el panel de métricas (solo se pasa al dueño).
   hasSellerMetrics?: boolean;
   // VA-152: uso del cupo (solo el dueño).
@@ -131,37 +97,12 @@ export function ProfileView({
   missingProfileFields = [],
   storefront = null,
   subscription = null,
-  purchases = [],
-  billingProfile = null,
-  hasPassword = false,
   hasSellerMetrics = false,
   quota = null,
   republish = null,
   moderation = {},
-  initialTab,
 }: Props) {
-  const isMissing = (f: ProfileField) => isOwner && missingProfileFields.includes(f);
-  const missingDot = (field: ProfileField) =>
-    isMissing(field) ? (
-      <span className="ml-1 inline-block w-2 h-2 rounded-full bg-red-600 align-middle" aria-label="Falta completar" />
-    ) : null;
-  const [activeTab, setActiveTab] = useState<"listings" | "purchases" | "metrics" | "edit">(initialTab ?? "listings");
-  const [loadingSave, setLoadingSave] = useState(false);
-  const [loadingAvatar, setLoadingAvatar] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
-  // Estados para Modal de Edición de Publicaciones
-
-  // Estados para Cambio de Contraseña
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loadingPassword, setLoadingPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const [activeTab, setActiveTab] = useState<"listings" | "metrics">("listings");
   // VA-152: pausar, activar (con cupo libre) y marcar vendido desde "Mis publicaciones".
   const [loadingStatusId, setLoadingStatusId] = useState<string | null>(null);
 
@@ -203,98 +144,6 @@ export function ProfileView({
     }
   };
 
-  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoadingSave(true);
-    setSaveSuccess(false);
-
-    const formData = new FormData(e.currentTarget);
-    try {
-      await updateProfileAction(formData);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch {
-      alert("Error al actualizar los datos.");
-    } finally {
-      setLoadingSave(false);
-    }
-  };
-
-  const handleChangePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setPasswordError(null);
-    setPasswordSuccess(false);
-
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError("Todos los campos son obligatorios.");
-      return;
-    }
-
-    if (!PASSWORD_REGEX.test(newPassword)) {
-      setPasswordError(
-        "La contraseña debe contener al menos 8 caracteres, una mayúscula, un número y un carácter especial."
-      );
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setPasswordError("Las nuevas contraseñas no coinciden.");
-      return;
-    }
-
-    if (currentPassword === newPassword) {
-      setPasswordError("La nueva contraseña no puede ser igual a la actual.");
-      return;
-    }
-
-    setLoadingPassword(true);
-    try {
-      const res = await changePasswordAction({ currentPassword, newPassword });
-      if (res?.error) {
-        setPasswordError(res.error);
-      } else {
-        setPasswordSuccess(true);
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-        setTimeout(() => setPasswordSuccess(false), 4000);
-      }
-    } catch {
-      setPasswordError("Ocurrió un error inesperado. Probá de nuevo más tarde.");
-    } finally {
-      setLoadingPassword(false);
-    }
-  };
-
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setLoadingAvatar(true);
-    const formData = new FormData();
-    formData.append("avatar", file);
-
-    try {
-      await updateAvatarAction(formData);
-    } catch {
-      alert("Error al subir la imagen.");
-    } finally {
-      setLoadingAvatar(false);
-    }
-  };
-
-  const handleRemoveAvatar = async () => {
-    if (!confirm("¿Deseas eliminar tu foto de perfil?")) return;
-    setLoadingAvatar(true);
-    try {
-      await removeAvatarAction();
-    } catch {
-      alert("Error al eliminar la imagen.");
-    } finally {
-      setLoadingAvatar(false);
-    }
-  };
-
   const locationText = [profileUser.city, profileUser.province].filter(Boolean).join(", ");
   const memberSince = new Date(profileUser.createdAt).toLocaleDateString("es-AR", {
     month: "long",
@@ -314,7 +163,7 @@ export function ProfileView({
           instagram={profileUser.instagram}
           facebook={profileUser.facebook}
           isOwner={isOwner}
-          onEdit={() => setActiveTab("edit")}
+          editHref="/settings#pagina-va"
         />
       ) : (
         <div className="p-6 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6">
@@ -336,42 +185,6 @@ export function ProfileView({
               </svg>
             )}
 
-            {loadingAvatar && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white z-10">
-                <Loader2 className="w-5 h-5 animate-spin" />
-              </div>
-            )}
-
-            {isOwner && !loadingAvatar && (
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Cambiar foto"
-                  className="p-1.5 rounded-full bg-white/90 text-slate-800 hover:bg-white cursor-pointer"
-                >
-                  <Camera className="w-4 h-4" />
-                </button>
-                {profileUser.image && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveAvatar}
-                    title="Eliminar foto"
-                    className="p-1.5 rounded-full bg-red-600/90 text-white hover:bg-red-600 cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            )}
-
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleAvatarChange}
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-            />
           </div>
 
           <div className="flex-1 text-center md:text-left space-y-2 w-full">
@@ -390,14 +203,15 @@ export function ProfileView({
                 </div>
               </div>
 
+              {/* VA-175: "Mi cuenta" es para ver; los datos se cambian en Ajustes. */}
               {isOwner && (
-                <button
-                  onClick={() => setActiveTab("edit")}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer self-center md:self-auto"
+                <Link
+                  href="/settings"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 self-center rounded-md border border-[#001F58]/20 px-4 text-xs font-semibold text-[#001F58] hover:bg-slate-50 md:self-auto"
                 >
                   <Edit className="w-4 h-4" />
-                  Editar Perfil
-                </button>
+                  Ajustes
+                </Link>
               )}
             </div>
 
@@ -468,13 +282,12 @@ export function ProfileView({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setActiveTab("edit")}
-            className="min-h-11 shrink-0 rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 transition-colors cursor-pointer"
+          <Link
+            href="/settings#datos"
+            className="flex min-h-11 shrink-0 items-center rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
           >
             Completar ahora
-          </button>
+          </Link>
         </div>
       )}
 
@@ -506,20 +319,6 @@ export function ProfileView({
           Publicaciones ({(profileUser.aircrafts?.length || 0) + (profileUser.spareParts?.length || 0)})
         </button>
 
-        {isOwner && (
-          <button
-            onClick={() => setActiveTab("purchases")}
-            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === "purchases"
-                ? "border-[#001F58] text-[#001F58]"
-                : "border-transparent text-slate-400 hover:text-slate-600"
-            }`}
-          >
-            <Receipt className="w-4 h-4" />
-            Mis compras ({purchases.length})
-          </button>
-        )}
-
         {/* VA-151: métricas de la cuenta VA (solo el dueño con el plan). */}
         {isOwner && hasSellerMetrics && (
           <button
@@ -535,21 +334,16 @@ export function ProfileView({
           </button>
         )}
 
+        {/* VA-175: la configuración de la cuenta está en Ajustes (/settings). */}
         {isOwner && (
-          <button
-            onClick={() => setActiveTab("edit")}
-            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === "edit"
-                ? "border-[#001F58] text-[#001F58]"
-                : "border-transparent text-slate-400 hover:text-slate-600"
-            }`}
+          <Link
+            href="/settings"
+            className="pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 border-transparent whitespace-nowrap text-slate-400 hover:text-slate-600"
           >
             <Edit className="w-4 h-4" />
             Ajustes
-            {missingProfileFields.length > 0 && (
-              <span className="w-2 h-2 rounded-full bg-red-600" aria-label="Perfil incompleto" />
-            )}
-          </button>
+            {missingProfileFields.length > 0 && <span className="w-2 h-2 rounded-full bg-red-600" aria-label="Perfil incompleto" />}
+          </Link>
         )}
       </div>
 
@@ -582,177 +376,9 @@ export function ProfileView({
         </>
       )}
 
-      {/* VA-92: Pestaña Mis compras */}
-      {isOwner && activeTab === "purchases" && <PurchasesPanel rows={purchases} />}
 
       {isOwner && hasSellerMetrics && activeTab === "metrics" && <SellerMetricsPanel />}
 
-      {/* Pestaña Ajustes */}
-      {isOwner && activeTab === "edit" && (
-        <div className="space-y-6 max-w-2xl mx-auto md:mx-0">
-          <SubscriptionPanel subscription={subscription} quota={quota ?? null} />
-          {billingProfile && <BillingProfilePanel initial={billingProfile.values} saved={billingProfile.saved} />}
-
-          {/* Formulario de información de la cuenta */}
-          <form onSubmit={handleUpdate} className="p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 space-y-4">
-            <h2 className="text-lg font-bold text-[#001F58]">Editar Información de Cuenta</h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Nombre Completo</label>
-                <input type="text" name="name" defaultValue={profileUser.name || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
-              </div>
-              <div>
-                <label htmlFor="profile-user-type" className="block text-xs font-semibold text-slate-600 mb-1">Tipo de cuenta</label>
-                <select id="profile-user-type" name="userType" defaultValue={profileUser.userType} className="w-full px-3 py-2 text-xs border rounded-xl bg-white">
-                  {USER_TYPE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Teléfono de Contacto{missingDot("phone")}</label>
-                <input type="text" name="phone" defaultValue={profileUser.phone || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Ciudad{missingDot("city")}</label>
-                <input type="text" name="city" defaultValue={profileUser.city || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Provincia{missingDot("province")}</label>
-                <ProvinceSelect name="province" defaultValue={profileUser.province} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Facebook (URL)</label>
-                <input type="url" name="facebook" defaultValue={profileUser.facebook || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Instagram (URL)</label>
-                <input type="url" name="instagram" defaultValue={profileUser.instagram || ""} className="w-full px-3 py-2 text-xs border rounded-xl bg-white" />
-              </div>
-            </div>
-
-            <div className="pt-2 flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={loadingSave}
-                className="px-5 py-2.5 bg-[#001F58] hover:bg-blue-900 text-white font-bold text-xs rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
-              >
-                {loadingSave ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar Cambios"}
-              </button>
-
-              {saveSuccess && (
-                <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-                  <CheckCircle2 className="w-4 h-4" /> Perfil actualizado correctamente.
-                </span>
-              )}
-            </div>
-          </form>
-
-          {storefront && <StorefrontEditor storefront={storefront} />}
-
-          {/* Formulario de Cambio de Contraseña */}
-          {!hasPassword ? (
-            <div className="rounded-lg border border-[#001F58]/12 bg-white p-6">
-              <h2 className="flex items-center gap-2 text-lg font-bold text-[#001F58]">
-                <Lock className="h-5 w-5 text-slate-700" />
-                Contraseña
-              </h2>
-              <p className="mt-1 text-sm text-slate-600">
-                Tu cuenta entra con Google y no tiene contraseña. Si querés poder entrar también con tu email, creá una:
-                te mandamos un link a tu casilla.
-              </p>
-              <Link href="/forgot-password" className="mt-3 inline-block text-sm font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
-                Crear una contraseña
-              </Link>
-            </div>
-          ) : (
-          <form onSubmit={handleChangePasswordSubmit} className="p-6 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 space-y-4">
-            <div>
-              <h2 className="text-lg font-bold text-[#001F58] flex items-center gap-2">
-                <Lock className="w-5 h-5 text-slate-700" />
-                Seguridad & Contraseña
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Actualizá tu contraseña. Tiene que tener al menos 8 caracteres, una letra mayúscula, un número y un carácter especial.
-              </p>
-            </div>
-
-            {passwordError && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium">
-                {passwordError}
-              </div>
-            )}
-
-            {passwordSuccess && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl font-medium flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                Contraseña actualizada exitosamente.
-              </div>
-            )}
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  Contraseña Actual
-                </label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border rounded-xl bg-white focus:outline-none focus:border-[#001F58]"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Nueva Contraseña
-                  </label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border rounded-xl bg-white focus:outline-none focus:border-[#001F58]"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Confirmar Nueva Contraseña
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border rounded-xl bg-white focus:outline-none focus:border-[#001F58]"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2 flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={loadingPassword}
-                className="px-5 py-2.5 bg-[#001F58] hover:bg-blue-900 text-white font-bold text-xs rounded-xl transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {loadingPassword ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  "Cambiar Contraseña"
-                )}
-              </button>
-            </div>
-          </form>
-          )}
-        </div>
-      )}
 
     </div>
   );

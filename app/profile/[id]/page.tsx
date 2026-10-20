@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
 import { getCurrentUser } from "@/lib/auth-helpers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ProfileView } from "@/components/ui/ProfileView";
 import { getQuotaUsage } from "@/lib/quota";
 import { getRepublishStatus, republishView } from "@/lib/republish";
@@ -10,7 +10,7 @@ import { PageBackground } from "@/components/ui/PageBackground";
 import { getMissingProfileFieldsCached } from "@/lib/cached-data";
 import { getSubscriptionSummary, hasCustomPage, hasSellerMetrics, hasVerifiedBadge } from "@/lib/subscriptions";
 import { TrackProfileView } from "@/components/ui/profile/TrackProfileView";
-import { getUserPurchases } from "@/lib/purchases";
+import { quotaForView } from "@/lib/account-data";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
@@ -20,10 +20,12 @@ interface Props {
 
 export default async function ProfilePage({ params, searchParams }: Props) {
   const { id } = await params;
-  // VA-125: /profile/<id>?tab=compras abre "Mis compras" (lo usa el botón de arrepentimiento).
   const { tab } = await searchParams;
   const currentUser = await getCurrentUser();
   const isOwner = currentUser?.id === id;
+  // VA-175: los links viejos a las pestañas de ajustes y compras del perfil van a Ajustes.
+  if (isOwner && tab === "compras") redirect("/settings#compras");
+  if (isOwner && (tab === "edit" || tab === "ajustes")) redirect("/settings");
 
   const rawProfileUser = await prisma.user.findUnique({
     where: { id },
@@ -141,16 +143,12 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       {/* VA-151: visitas a la Página VA (no cuenta al dueño ni a los admins). */}
       {!isOwner && <TrackProfileView profileUserId={id} />}
       <ProfileView
-        initialTab={tab === "compras" && isOwner ? "purchases" : undefined}
         profileUser={profileUser}
         isOwner={isOwner}
         currentUserFavIds={currentUserFavIds}
         missingProfileFields={isOwner ? await getMissingProfileFieldsCached(id) : []}
         storefront={storefront}
         subscription={isOwner ? await getSubscriptionSummary(id) : null}
-        purchases={isOwner ? await getUserPurchases(id) : []}
-        billingProfile={isOwner ? await ownerBillingProfile(id, rawProfileUser.name, rawProfileUser.email) : null}
-        hasPassword={isOwner ? Boolean((await prisma.user.findUnique({ where: { id }, select: { passwordHash: true } }))?.passwordHash) : false}
         hasSellerMetrics={isOwner ? await hasSellerMetrics(id) : false}
         quota={isOwner ? quotaForView(await getQuotaUsage(id)) : null}
         republish={isOwner ? republishView(await getRepublishStatus(id)) : null}
@@ -165,32 +163,4 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       />
     </main>
   );
-}
-
-// VA-92: datos de facturación del dueño (o los del perfil, para precargar si todavía no guardó nada).
-async function ownerBillingProfile(userId: string, name: string | null, email: string | null) {
-  const p = await prisma.billingProfile.findUnique({ where: { userId } });
-  if (!p) {
-    return { saved: false, values: { kind: "CONSUMIDOR_FINAL" as const, name: name ?? "", docNumber: "", ivaCondition: "" as const, address: "", email: email ?? "" } };
-  }
-  return {
-    saved: true,
-    values: {
-      kind: p.kind,
-      name: p.name,
-      docNumber: p.docNumber ?? "",
-      ivaCondition: (["RI", "M", "E"].includes(p.ivaCondition) ? p.ivaCondition : "") as "RI" | "M" | "E" | "",
-      address: p.address ?? "",
-      email: p.email,
-    },
-  };
-}
-
-// VA-152: uso del cupo para "Mis publicaciones".
-function quotaForView(u: Awaited<ReturnType<typeof getQuotaUsage>>) {
-  return {
-    planName: u.planName,
-    aircraft: { used: u.used.AIRCRAFT, limit: u.limits.AIRCRAFT },
-    parts: { used: u.used.SPARE_PART, limit: u.limits.SPARE_PART },
-  };
 }

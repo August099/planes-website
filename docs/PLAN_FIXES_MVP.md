@@ -1746,6 +1746,13 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
   "Exportar CSV". La purga del admin conserva 13 meses los eventos de avisos y perfiles y sigue borrando el
   resto a los 90 días. Privacidad: la provincia aproximada. `scripts/verify-metrics-full.ts` 8/8 y
   `verify-seller-metrics.ts` sin cambios.
-- **VA-169, VA-175, VA-170, VA-172, VA-173:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
+- **VA-175 (19/10/2026):** ✅ hecho en local (antes que VA-169: el editor de la Página VA usa este "Editar" y
+  Ajustes). Página `/settings` ("Ajustes", noindex, protegida) en el menú del usuario junto a Favoritos, con
+  los formularios que ya existían, movidos sin rehacerlos: datos personales y foto, email y contraseña, plan
+  y suscripción, "Mis compras", datos de facturación, notificaciones y cookies, y la Página VA. Una columna y
+  un "Guardar" por sección. "Mi cuenta" (el perfil) queda para ver: publicaciones, métricas y
+  republicaciones, con "Ajustes" arriba a la derecha y "Editar página" en la Página VA. Los links viejos
+  (`?tab=compras`, `?tab=edit`) y el de `/arrepentimiento` llevan a Ajustes.
+- **VA-169, VA-170, VA-172, VA-173:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
   En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
   prueba). Informe: `scripts/va166-report.ts` (solo lee).

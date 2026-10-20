@@ -65,6 +65,12 @@ export function DesktopDropdown({ userId, isAdmin, hasUnanswered, hasRepublish =
             Favoritos
           </Link>
         </DropdownMenuItem>
+        {/* VA-175 */}
+        <DropdownMenuItem className="p-0">
+          <Link href="/settings" className="w-full px-2 py-1.5 text-sm">
+            Ajustes
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="p-0">
           <button
@@ -133,6 +139,11 @@ export function MobileDropdown({ userId, isAdmin, hasUnanswered, hasRepublish = 
             <DropdownMenuItem className="p-0">
               <Link href="/favs" className="w-full px-2 py-1.5 text-sm font-medium">
                 Favoritos
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="p-0">
+              <Link href="/settings" className="w-full px-2 py-1.5 text-sm font-medium">
+                Ajustes
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
