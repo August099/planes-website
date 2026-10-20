@@ -33,6 +33,10 @@ model User {
   logoUrl                   String?
   website                   String?
   whatsapp                  String?
+  // VA-170: detalles personalizados del Broker: portada propia de los detalles y color de acento (clave de
+  // una paleta cerrada, lib/accent-colors.ts; null = el azul de VA).
+  detailCoverUrl            String?
+  accentColor               String?              @db.VarChar(16)
   accounts                  Account[]
   adBanners                 AdBanner[]
   aircrafts                 Aircraft[]
@@ -470,6 +474,8 @@ model Aircraft {
   // VA-167: última vez que se publicó (alta o republicación). Ordena "Más recientes" y "Últimas
   // publicaciones"; el detalle muestra "Actualizado el …" si es posterior al alta.
   lastPublishedAt  DateTime            @default(now())
+  // VA-170: link a un video de YouTube (solo el texto; el reproductor se carga al tocarlo).
+  youtubeUrl       String?             @db.VarChar(100)
   updatedAt        DateTime            @updatedAt
   purchaseId       String?
   description      String
@@ -670,6 +676,8 @@ model SparePart {
   // VA-167: última vez que se publicó (alta o republicación). Ordena "Más recientes" y "Últimas
   // publicaciones"; el detalle muestra "Actualizado el …" si es posterior al alta.
   lastPublishedAt  DateTime            @default(now())
+  // VA-170: link a un video de YouTube (solo el texto; el reproductor se carga al tocarlo).
+  youtubeUrl       String?             @db.VarChar(100)
   updatedAt        DateTime            @updatedAt
   purchaseId       String?
   description      String

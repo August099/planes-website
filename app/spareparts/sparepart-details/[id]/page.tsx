@@ -29,6 +29,12 @@ import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { OwnerRepublishBar } from "@/components/ui/listing/OwnerRepublishBar";
+import { BrokerDetailHeader } from "@/components/ui/listing/BrokerDetailHeader";
+import { BigFacts, type BigFact } from "@/components/ui/listing/BigFacts";
+import { getBrokerDetail } from "@/lib/broker-detail";
+import { youtubeId } from "@/lib/youtube";
+import { getMoreFromSeller } from "@/lib/recommendations";
+import { Hash, MapPin, Plane, ShieldCheck } from "lucide-react";
 import { getRepublishStatus, republishView } from "@/lib/republish";
 import { RecommendationRail } from "@/components/ui/recommendations/RecommendationRail";
 import { getAircraftForPart, getSimilarParts } from "@/lib/recommendations";
@@ -132,6 +138,16 @@ export default async function SparePartDetailsPage({
   };
   const [similarParts, relatedAircraft] = await Promise.all([getSimilarParts(recSource), getAircraftForPart(recSource)]);
 
+  // VA-170: detalle de un Broker (detalles personalizados). La ficha y lo demás, igual al común.
+  const broker = await getBrokerDetail(sparePart.sellerId);
+  const moreFromSeller = broker ? await getMoreFromSeller(sparePart.sellerId, sparePart.id, broker.name) : null;
+  const bigFacts: BigFact[] = [
+    { icon: ShieldCheck, label: "Condición", value: sparePart.condition ? sparePartConditionLabel(sparePart.condition) : null },
+    { icon: Hash, label: "P/N", value: sparePart.partNumber },
+    { icon: Plane, label: "Compatible con", value: sparePart.aircrafts.length ? sparePart.aircrafts.slice(0, 2).join(", ") + (sparePart.aircrafts.length > 2 ? ` y ${sparePart.aircrafts.length - 2} más` : "") : null },
+    { icon: MapPin, label: "Ubicación", value: [sparePart.city, sparePart.province].filter(Boolean).join(", ") || null },
+  ];
+
   const leafCategory = sparePart.category;
   const midCategory = leafCategory?.parent ?? null;
   const rootCategory = midCategory?.parent ?? null;
@@ -184,6 +200,9 @@ export default async function SparePartDetailsPage({
             <p className="text-xl font-bold tracking-tight text-slate-900 uppercase">
               Ventas Aeronáuticas
             </p>
+            {/* VA-170: el logo del Broker junto al de VA. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {broker?.logoUrl && <img src={broker.logoUrl} alt={`Logo de ${broker.name}`} className="mt-1 h-10 w-auto max-w-[140px] object-contain" />}
             <p className="text-xs text-slate-500">Ficha Técnica de Repuesto</p>
           </div>
           <div className="text-right text-xs">
@@ -261,10 +280,11 @@ export default async function SparePartDetailsPage({
       <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
         <PageBackground page="spareparts" />
         <Breadcrumbs items={[{ label: "Repuestos", href: "/spareparts" }, { label: sparePart.title }]} jsonLd={false} className="-mt-4 -mb-6" />
+        {broker && <BrokerDetailHeader broker={broker} />}
         <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
           <div className="contents lg:flex lg:w-2/3 lg:flex-col lg:gap-8">
             <div className="order-1 lg:order-none">
-              <AircraftGallery images={sparePart.images} title={sparePart.title} />
+              <AircraftGallery images={sparePart.images} title={sparePart.title} video={broker ? youtubeId(sparePart.youtubeUrl) : null} fade={!!broker} />
             </div>
 
             {sparePart.description && (
@@ -295,6 +315,7 @@ export default async function SparePartDetailsPage({
                 <CategoryLinks items={categoryLinks} />
                 <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
               </div>
+              {broker && <BigFacts facts={bigFacts} accent={broker.accent} />}
               <Separator />
               <KeyFacts title="Detalles principales" facts={keyFacts} />
             </div>
@@ -330,6 +351,9 @@ export default async function SparePartDetailsPage({
         />
 
         {/* VA-88: recomendaciones, al pie (después de las preguntas) */}
+        {/* VA-170: "Más de [Broker]", antes de las recomendaciones generales. */}
+        {moreFromSeller?.parts && <RecommendationRail kind="sparePart" id="mas-del-vendedor" block={moreFromSeller.parts} />}
+        {moreFromSeller?.aircraft && <RecommendationRail kind="aircraft" id="aviones-del-vendedor" block={moreFromSeller.aircraft} />}
         {similarParts && <RecommendationRail kind="sparePart" id="similares" block={similarParts} />}
         {relatedAircraft && <RecommendationRail kind="aircraft" id="aeronaves-relacionadas" block={relatedAircraft} />}
       </main>

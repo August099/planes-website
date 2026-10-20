@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { youtubeId } from "@/lib/youtube";
 import { isRequired, minEngines } from "@/lib/aircraft-rules";
 import { normalizeProvince } from "@/lib/provinces";
 
@@ -81,6 +82,8 @@ const common = {
   }),
   description: requiredText("La descripción es obligatoria.", MAX_DESCRIPTION_LENGTH),
   images,
+  // VA-170: link a un video de YouTube (detalles personalizados del Broker). Solo el texto.
+  youtubeUrl: optionalText(100).refine((v) => !v || youtubeId(v) !== null, "Pegá un link de YouTube (youtube.com/watch, youtu.be o /shorts)."),
 };
 
 const engine = z.object({
@@ -256,6 +259,7 @@ export interface EditListingData {
     certified: boolean | null;
     certDate: string;
     plate: string;
+    youtubeUrl?: string;
     city: string;
     province: string;
     intDescription: string;
@@ -283,5 +287,6 @@ export interface EditListingData {
     parentCategoryId: string;
     subCategoryId: string;
     aircrafts: string[];
+    youtubeUrl?: string;
   };
 }

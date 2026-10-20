@@ -1762,7 +1762,15 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
   ocultar, borrar, elegir avisos con casillas, vista previa en escritorio y celular, "Publicar cambios",
   "Guardar borrador" o "Cancelar". La portada, el logo y los datos, en Ajustes. Si el plan baja, la página se
   guarda y no se muestra. Sin página armada, la grilla de todos los avisos (como antes).
-- **VA-170, VA-172, VA-173:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`). VA-170:
-  OK del socio al degradé (20/10); **sin** la barra fija de contacto en celular.
+- **VA-170 (20/10/2026):** ✅ hecho en local. Migración `va170_detalle_broker` (`User.detailCoverUrl`,
+  `User.accentColor`, `youtubeUrl` en avisos y repuestos). Solo con "detalles personalizados" (Broker y admins):
+  franja con la portada (la de detalles, la de la Página VA o la estándar de VA), logo, nombre, verificado y
+  "Ver Página VA"; la foto principal con degradé hacia abajo (variante elegida: OK del socio al degradé el
+  20/10); 4 a 6 datos clave grandes con ícono en el color de acento (paleta cerrada de 8, en Ajustes →
+  Página VA); video de YouTube como una diapositiva más, que carga el reproductor (youtube-nocookie) recién al
+  tocarlo; "Más de [Broker]" antes de las recomendaciones; PDF con su logo junto al de VA. La ficha, la
+  galería, el zoom y todo lo demás, iguales al detalle común. **Sin barra fija de contacto** (decisión del
+  socio, 20/10). Privacidad: YouTube.
+- **VA-172, VA-173:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
   En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
   prueba). Informe: `scripts/va166-report.ts` (solo lee).

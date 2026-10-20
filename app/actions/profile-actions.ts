@@ -13,6 +13,8 @@ import { unstable_update } from "@/lib/auth";
 import { normalizeProvince } from "@/lib/provinces";
 import { parseSelectableUserType } from "@/lib/user-types";
 import { hasCustomPage } from "@/lib/subscriptions";
+import { getAccountPlan } from "@/lib/plan-benefits";
+import { ACCENT_KEYS } from "@/lib/accent-colors";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -64,6 +66,14 @@ export async function updateProfileAction(formData: FormData) {
       if (digits.length < 8 || digits.length > 15) throw new Error("El WhatsApp tiene que tener entre 8 y 15 números.");
       dataToUpdate.whatsapp = digits;
     }
+  }
+
+  // VA-170: color de acento de los detalles (paleta cerrada), solo con detalles personalizados.
+  if (formData.has("accentColor")) {
+    const accent = String(formData.get("accentColor") ?? "");
+    if (!(await getAccountPlan(user.id)).customDetail) throw new Error("Tu plan no incluye detalles personalizados.");
+    if (!(ACCENT_KEYS as string[]).includes(accent)) throw new Error("Elegí un color de la lista.");
+    dataToUpdate.accentColor = accent;
   }
 
   // VA-77: la provincia del perfil también es una de las 24 canónicas.
@@ -212,7 +222,9 @@ export async function uploadStorefrontImageAction(formData: FormData) {
   if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye la Página VA.");
 
   const kind = formData.get("kind");
-  if (kind !== "cover" && kind !== "logo") throw new Error("Imagen inválida.");
+  if (kind !== "cover" && kind !== "logo" && kind !== "detailCover") throw new Error("Imagen inválida.");
+  // VA-170: la portada de los detalles es de los detalles personalizados (Broker y admins).
+  if (kind === "detailCover" && !(await getAccountPlan(user.id)).customDetail) throw new Error("Tu plan no incluye detalles personalizados.");
   const file = formData.get("image") as File | null;
   if (!file || file.size === 0) throw new Error("NO_FILE");
 
@@ -228,7 +240,7 @@ export async function uploadStorefrontImageAction(formData: FormData) {
 
   const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
   const url = `${data.publicUrl}?t=${Date.now()}`;
-  await prisma.user.update({ where: { id: user.id }, data: kind === "cover" ? { coverUrl: url } : { logoUrl: url } });
+  await prisma.user.update({ where: { id: user.id }, data: kind === "cover" ? { coverUrl: url } : kind === "logo" ? { logoUrl: url } : { detailCoverUrl: url } });
 
   revalidatePath(`/profile/${user.id}`);
   return { success: true, url };

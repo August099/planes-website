@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
 import { updateProfileAction, uploadStorefrontImageAction } from "@/app/actions/profile-actions";
+import { ACCENT_COLORS, ACCENT_KEYS } from "@/lib/accent-colors";
 import { compressImage } from "@/lib/image-compressor";
 import type { StorefrontData } from "@/components/ui/profile/StorefrontHeader";
 
@@ -18,7 +19,7 @@ function ImageField({
   hint,
   current,
 }: {
-  kind: "cover" | "logo";
+  kind: "cover" | "logo" | "detailCover";
   label: string;
   hint: string;
   current: string | null;
@@ -34,7 +35,7 @@ function ImageField({
     setLoading(true);
     setError(null);
     try {
-      const compressed = await compressImage(file, kind === "cover" ? "covers" : "brands");
+      const compressed = await compressImage(file, kind === "logo" ? "brands" : "covers");
       if (compressed.size > 4.5 * 1024 * 1024) throw new Error("La imagen sigue siendo muy pesada.");
       const fd = new FormData();
       fd.append("kind", kind);
@@ -53,8 +54,8 @@ function ImageField({
     <div>
       <span className={LABEL}>{label}</span>
       <div className="flex items-center gap-4">
-        <div className={`relative overflow-hidden rounded-md border border-slate-200 bg-slate-100 ${kind === "cover" ? "aspect-[4/1] w-48" : "h-16 w-16"}`}>
-          {url && <Image src={url} alt="" fill sizes="192px" className={kind === "cover" ? "object-cover" : "object-contain"} />}
+        <div className={`relative overflow-hidden rounded-md border border-slate-200 bg-slate-100 ${kind === "logo" ? "h-16 w-16" : "aspect-[4/1] w-48"}`}>
+          {url && <Image src={url} alt="" fill sizes="192px" className={kind === "logo" ? "object-contain" : "object-cover"} />}
           {loading && (
             <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -108,6 +109,9 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
       <div className="grid gap-5 sm:grid-cols-2">
         <ImageField kind="cover" label="Portada" hint="Ancha, por ejemplo 1600 × 400 px." current={storefront.coverUrl} />
         <ImageField kind="logo" label="Logo" hint="Cuadrado, con fondo claro." current={storefront.logoUrl} />
+        {storefront.customDetail && (
+          <ImageField kind="detailCover" label="Portada de tus avisos" hint="Opcional: si no subís una, se usa la de tu Página VA." current={storefront.detailCoverUrl ?? null} />
+        )}
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
@@ -128,6 +132,22 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
             <label htmlFor="sf-bio" className={LABEL}>Descripción del negocio</label>
             <textarea id="sf-bio" name="bio" rows={4} maxLength={1500} defaultValue={storefront.bio ?? ""} className={INPUT} />
           </div>
+          {/* VA-170: color de acento de los detalles (paleta cerrada; botones y letras siguen siendo los de VA). */}
+          {storefront.customDetail && (
+            <fieldset className="sm:col-span-2">
+              <legend className={LABEL}>Color de acento de tus avisos</legend>
+              <div className="flex flex-wrap gap-2">
+                {ACCENT_KEYS.map((k) => (
+                  <label key={k} className="flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2.5 text-xs has-[:checked]:border-[#001F58] has-[:checked]:font-semibold">
+                    <input type="radio" name="accentColor" value={k} defaultChecked={(storefront.accentColor ?? "navy") === k} className="sr-only" />
+                    <span className="h-4 w-4 rounded-full" style={{ background: ACCENT_COLORS[k].hex }} aria-hidden />
+                    {ACCENT_COLORS[k].label}
+                  </label>
+                ))}
+              </div>
+              <p className="mt-1 text-[11px] text-slate-500">Se usa en bordes, íconos y subrayados del detalle de tus avisos.</p>
+            </fieldset>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <button

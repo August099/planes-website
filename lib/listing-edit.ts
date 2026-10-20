@@ -60,6 +60,7 @@ export async function loadListingForEdit(id: string, type: "aircraft" | "parts")
         certified: a.certified,
         certDate: isoDate(a.certDate),
         plate: a.plate ?? "",
+        youtubeUrl: a.youtubeUrl ?? "",
         city: a.city,
         province: normalizeProvince(a.province) ?? a.province,
         intDescription: a.intDescription ?? "",
@@ -116,6 +117,7 @@ export async function loadListingForEdit(id: string, type: "aircraft" | "parts")
       city: s.city,
       province: normalizeProvince(s.province) ?? s.province,
       description: s.description,
+      youtubeUrl: s.youtubeUrl ?? "", // VA-170
       partNumber: s.partNumber ?? "",
       stock: str(s.stock),
       categoryId: s.categoryId,

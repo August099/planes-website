@@ -31,6 +31,12 @@ import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { OwnerRepublishBar } from "@/components/ui/listing/OwnerRepublishBar";
+import { BrokerDetailHeader } from "@/components/ui/listing/BrokerDetailHeader";
+import { BigFacts, type BigFact } from "@/components/ui/listing/BigFacts";
+import { getBrokerDetail } from "@/lib/broker-detail";
+import { youtubeId } from "@/lib/youtube";
+import { getMoreFromSeller } from "@/lib/recommendations";
+import { Calendar, Cog, Gauge, MapPin, Tag, Timer } from "lucide-react";
 import { getRepublishStatus, republishView } from "@/lib/republish";
 
 type Props = { params: Promise<{ id: string }> };
@@ -114,6 +120,25 @@ export default async function AircraftDetailsPage({
   // VA-57: características e "Información adicional", ya sin vacíos.
   const features = aircraftFeatures(aircraft);
   // VA-88: "Aeronaves similares" (unifica el "Comparar con similares" de VA-83) y "Repuestos para…".
+  // VA-170: detalle de un Broker (detalles personalizados): portada, degradé, datos clave grandes, video y
+  // "Más de…". Lo demás (ficha, galería, zoom, preguntas, etc.) es igual al detalle común.
+  const broker = await getBrokerDetail(aircraft.sellerId);
+  const moreFromSeller = broker ? await getMoreFromSeller(aircraft.sellerId, aircraft.id, broker.name) : null;
+  const firstEngine = aircraft.engines[0];
+  const fmt = new Intl.NumberFormat("es-AR");
+  const bigFacts: BigFact[] = [
+    { icon: Calendar, label: "Año", value: aircraft.year ? String(aircraft.year) : null },
+    { icon: Gauge, label: "Horas totales", value: aircraft.totalTimeHours != null ? `${fmt.format(aircraft.totalTimeHours)} hs` : null },
+    { icon: Cog, label: "Motor", value: firstEngine ? [firstEngine.brand, firstEngine.model].filter(Boolean).join(" ") || null : null },
+    {
+      icon: Timer,
+      label: "TBO restante",
+      value: firstEngine?.TBO != null && firstEngine.engineHours != null ? `${fmt.format(Math.max(0, firstEngine.TBO - firstEngine.engineHours))} hs` : null,
+    },
+    { icon: Tag, label: "Categoría", value: aircraft.category?.name ?? null },
+    { icon: MapPin, label: "Ubicación", value: [aircraft.city, aircraft.province].filter(Boolean).join(", ") || null },
+  ];
+
   const [similar, parts] = await Promise.all([
     getSimilarAircraft({
       id: aircraft.id,
@@ -177,8 +202,13 @@ export default async function AircraftDetailsPage({
         <div className="flex flex-col items-center justify-center border-b-2 border-[#001F58] pb-4 space-y-2 text-center">
           {/* Vista de impresión: <img> a propósito; next/image cargaría diferido dentro de un bloque
               oculto y las fotos podrían salir en blanco en el PDF. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-full.png" alt="Ventas Aeronáuticas" className="h-14 w-auto object-contain mx-auto" />
+          <div className="flex items-center justify-center gap-6">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-full.png" alt="Ventas Aeronáuticas" className="h-14 w-auto object-contain" />
+            {/* VA-170: el logo del Broker junto al de VA. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {broker?.logoUrl && <img src={broker.logoUrl} alt={`Logo de ${broker.name}`} className="h-14 w-auto max-w-[160px] object-contain" />}
+          </div>
           <div className="flex items-center gap-4 text-[11px] text-slate-500 font-medium">
             <span>Ficha Técnica de Publicación</span>
             <span>•</span>
@@ -242,10 +272,11 @@ export default async function AircraftDetailsPage({
       <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
         <PageBackground page="aircraftDetail" />
         <Breadcrumbs items={[{ label: "Aviones", href: "/aircraft" }, { label: aircraft.title }]} jsonLd={false} className="-mt-4 -mb-6" />
+        {broker && <BrokerDetailHeader broker={broker} />}
         <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
           <div className="contents lg:flex lg:w-2/3 lg:flex-col lg:gap-8">
             <div className="order-1 lg:order-none">
-              <AircraftGallery images={aircraft.images} title={aircraft.title} />
+              <AircraftGallery images={aircraft.images} title={aircraft.title} video={broker ? youtubeId(aircraft.youtubeUrl) : null} fade={!!broker} />
             </div>
 
             {aircraft.description && (
@@ -274,6 +305,7 @@ export default async function AircraftDetailsPage({
                 )}
                 <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
               </div>
+              {broker && <BigFacts facts={bigFacts} accent={broker.accent} />}
               <Separator />
               <KeyFacts title="Datos de la aeronave" facts={keyFacts} />
               {engineSummary && (
@@ -336,6 +368,10 @@ export default async function AircraftDetailsPage({
           sellerId={aircraft.sellerId}
           currentUserId={session?.user?.id}
         />
+
+        {/* VA-170: "Más de [Broker]", antes de las recomendaciones generales. */}
+        {moreFromSeller?.aircraft && <RecommendationRail kind="aircraft" id="mas-del-vendedor" block={moreFromSeller.aircraft} />}
+        {moreFromSeller?.parts && <RecommendationRail kind="sparePart" id="repuestos-del-vendedor" block={moreFromSeller.parts} />}
 
         {/* VA-88: recomendaciones, al pie (después de las preguntas) */}
         {similar && (
