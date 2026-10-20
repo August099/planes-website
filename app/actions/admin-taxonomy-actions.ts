@@ -138,7 +138,7 @@ export async function updateAircraftModelAction(id: string, name: string) {
   return { success: true };
 }
 
-// VA-153: la categoría del modelo (la heredan sus submodelos). null: sin categoría, el vendedor la elige.
+// VA-153/VA-165: la categoría recomendada del modelo (la heredan sus submodelos). null: sin recomendación.
 export async function setAircraftModelCategoryAction(id: string, categoryId: string | null) {
   await verifyAdmin();
   if (!id) throw new Error("Datos incompletos");
@@ -146,7 +146,7 @@ export async function setAircraftModelCategoryAction(id: string, categoryId: str
     throw new Error("Categoría inexistente");
   }
 
-  await prisma.aircraftModel.update({ where: { id }, data: { defaultCategoryId: categoryId } });
+  await prisma.aircraftModel.update({ where: { id }, data: { recommendedCategoryId: categoryId } });
 
   revalidatePath("/admin/taxonomy");
   updateTag(AIRCRAFT_TAXONOMY_TAG);

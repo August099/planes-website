@@ -19,19 +19,26 @@ _Última actualización: 18/10/2026 (VA-152: cupos fijos sin vencimiento)._
 tener **activos al mismo tiempo**, por tipo. Los avisos **no vencen**. Se cobra solo la suscripción
 mensual a un plan con más cupo.
 
-| Plan | Aviones activos | Repuestos activos | Página VA y métricas | Cobro |
-|---|---|---|---|---|
-| **Gratis** (toda cuenta sin suscripción, para siempre) | 1 | 5 | no | — |
-| **Pro** | 3 | 15 | no | Débito automático mensual |
-| **Empresarial · Aviones ilimitados** | ilimitados | el del Gratis (5) | sí | Débito automático mensual |
-| **Empresarial · Repuestos ilimitados** | el del Gratis (1) | ilimitados | sí | Débito automático mensual |
-| **Empresarial · Todo ilimitado** | ilimitados | ilimitados | sí | Débito automático mensual |
+**VA-166 (19/10): la grilla de los socios.** El precio real es el que se cobra (etiqueta "Promo de
+lanzamiento", sin fecha); el tachado es solo para mostrar.
 
-- **Precios:** se cargan en `/admin/plans` ("Planes y precios"). Mientras un plan no tenga precio queda
-  inactivo y `/plans` muestra solo el Gratis ("Pro y Empresarial, muy pronto").
-- **El cupo Gratis** (1 / 5) se edita en `/admin/plans`; vale también para lo que el Empresarial no
-  tiene ilimitado.
-- **Admins:** como un Empresarial con todo ilimitado (Página VA y métricas incluidas), sin suscripción.
+| Plan | Aviones activos | Repuestos activos | Precio real (tachado) | Beneficios | Cobro |
+|---|---|---|---|---|---|
+| **Base** (toda cuenta sin suscripción, para siempre) | 1 | 3 | gratis | 2 republicaciones por año, métricas básicas | — |
+| **Pro** | 3 | 10 | AR$ 38.000 (50.000) | 5 republicaciones por año, verificado, destacadas, Página VA "banner", métricas Pro | Débito automático mensual |
+| **Broker / Empresa · Aviones ilimitados** | ilimitados | el de Base (3) | AR$ 55.000 (68.000) | "Republicar todas" cada 30 días, verificado, destacadas, Página VA completa, detalles personalizados, métricas completas | Débito automático mensual |
+| **Broker / Empresa · Repuestos ilimitados** | el de Base (1) | ilimitados | AR$ 55.000 (68.000) | ídem | Débito automático mensual |
+| **Broker / Empresa · Todo ilimitado** | ilimitados | ilimitados | AR$ 85.000 (108.000) | ídem | Débito automático mensual |
+
+- **Todo se edita en `/admin/plans`** con la misma grilla de `/plans`: precios real y tachado, cupos,
+  republicaciones y beneficios (filas del sistema, con candado) y filas de texto propias. Cambiar un precio
+  real con suscriptores pide escribir CONFIRMAR: vale para sus cobros siguientes y hay que avisarles.
+  Mientras un plan pago no esté activo o no tenga precio, `/plans` dice "Muy pronto" en su columna.
+- **Base** es una fila más de `Plan` (`tier = BASE`, precio 0): no se puede pagar ni asignar como cortesía.
+  Su cupo vale también para lo que el Broker no tiene ilimitado.
+- **Admins (VA-174):** el Broker completo (ambos ilimitados) para siempre, sin suscripción ni cortesía; se
+  ven como "Admin". No pueden suscribirse ni recibir cortesías y no cuentan en ingresos.
+- La regla está en un solo lugar: `lib/plan-benefits.ts` (y el cupo, en `lib/quota.ts`).
 - **Los hangares** (ocultos, VA-93) no usan cupos: siguen como estaban.
 - **Ya no existen:** el aviso suelto, los packs, la renovación (paga o gratis), el vencimiento a los 45
   días, el estado "pendiente de pago", el saldo de lanzamiento y los precios de `/admin/prices` (la
@@ -128,13 +135,14 @@ confirmando tu pago…" (y se actualiza sola), "El pago no se completó" (con "I
 
 ## 6. Página VA, métricas y planes de cortesía
 
-- **Página VA** (portada, logo, nombre comercial y contacto en el perfil) y **métricas de vendedor**
-  (VA-151): solo con el **Empresarial** (interruptores del plan en `/admin/plans`) y para los admins.
-- **"Cuenta verificada":** interruptor "Insignia de vendedor verificado" del plan. Hoy ningún plan la
-  incluye.
+- **Página VA** (portada, logo, nombre comercial y contacto en el perfil): Pro (la actual, "banner") y
+  Broker / admins (completa, VA-169). **Métricas de vendedor** (VA-151): desde el nivel Pro (VA-171 suma las
+  del Broker). Se prenden por columna en la grilla de `/admin/plans`.
+- **"Cuenta verificada":** automática mientras el Pro o el Broker esté vigente (fila "Usuario verificado").
 - **Plan de cortesía:** el admin lo asigna en `/admin/users` → columna "Plan" → **"Asignar plan de
-  cortesía"** (Pro o una opción del Empresarial, vencimiento y nota). No se cobra ni se renueva y no cuenta
-  en ingresos ni en los KPIs. Al vencer o al quitarlo, la cuenta vuelve al cupo Gratis (con la baja de 5).
+  cortesía"** (Pro o una opción del Broker / Empresa, vencimiento y nota; nunca a un admin). No se cobra ni se renueva y
+  no cuenta en ingresos ni en los KPIs. Al vencer o al quitarlo, la cuenta vuelve al plan Base (con la baja de 5).
+  VA-174: la cortesía que tenía un admin se cerró (`scripts/va166-migrate-data.ts`).
   No pisa una suscripción paga vigente. Las cortesías que existían (Suscripción VA) pasaron al
   **Empresarial · Todo ilimitado** (script `scripts/va152-migrate-data.ts`).
 
@@ -239,9 +247,9 @@ pendiente) y después se descarta desde el admin.
   - **Exportar CSV** del período para el contador;
   - **configuración:** tope del monotributo y alerta, desde qué monto se pide DNI, días de gracia y
     reintentos de factura.
-- **`/admin/plans` ("Planes y precios"):** el cupo Gratis, Pro y las 3 opciones del Empresarial (precio,
-  cupo, beneficios, lo que se ve en `/plans`, activo o no) y, abajo, los planes del modelo anterior
-  archivados con sus compras.
+- **`/admin/plans` ("Planes y precios"):** la grilla editable de `/plans` (VA-166: Base, Pro y Broker /
+  Empresa, con precios real y tachado, cupos, beneficios, filas propias, vista previa y la lista de lo que
+  cambia antes de guardar) y, abajo, los planes del modelo anterior archivados con sus compras.
 - **`/admin/users`:** plan y cupo usado/total de cada cuenta (en ámbar si está por encima) y el plan de
   cortesía.
 - **KPIs** (`/admin/kpi`): ingresos solo de suscripciones pagas (sin cortesías ni pagos de prueba), en

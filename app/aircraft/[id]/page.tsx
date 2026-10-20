@@ -30,6 +30,8 @@ import { aircraftJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { OwnerRepublishBar } from "@/components/ui/listing/OwnerRepublishBar";
+import { getRepublishStatus, republishView } from "@/lib/republish";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -165,6 +167,11 @@ export default async function AircraftDetailsPage({
         </div>
       )}
 
+      {/* VA-167: republicar desde el detalle propio */}
+      {!isInactive && isOwner && (
+        <OwnerRepublishBar view={republishView(await getRepublishStatus(aircraft.sellerId))} id={aircraft.id} kind="AIRCRAFT" profileHref={`/profile/${aircraft.sellerId}`} />
+      )}
+
       {/* VISTA Y FORMATO DE EXPORTACIÓN PDF */}
       <div id="pdf-content" className="hidden print:block font-sans text-slate-900 p-10 max-w-4xl mx-auto space-y-6">
         <div className="flex flex-col items-center justify-center border-b-2 border-[#001F58] pb-4 space-y-2 text-center">
@@ -257,7 +264,7 @@ export default async function AircraftDetailsPage({
           <div className="contents lg:flex lg:w-1/3 lg:flex-col lg:gap-5">
             {/* Resumen: título, precio, acciones y datos clave */}
             <div className="order-2 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-              <PublishedLine createdAt={aircraft.createdAt} location={listingLocation} />
+              <PublishedLine createdAt={aircraft.createdAt} lastPublishedAt={aircraft.lastPublishedAt} location={listingLocation} />
               <AircraftActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url} />
               <Separator />
               <div>
@@ -302,11 +309,11 @@ export default async function AircraftDetailsPage({
               province={aircraft.province}
             />
 
-            {/* VA-105 · 5.7: la documentación es privada: solo la ven el dueño y los admins, con link firmado. */}
-            {aircraft.documents.length > 0 && (isOwner || session?.user?.isAdmin) && (
+            {/* Pedido del socio (19/10): la documentación es pública (antes, VA-105 · 5.7, solo dueño y admins).
+                Se sigue abriendo con un link firmado de 60 s, sin publicar la URL del archivo. */}
+            {aircraft.documents.length > 0 && (
               <div className="order-6 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-3">
                 <h2 className="font-bold text-[#001F58] text-sm">Documentación adjunta</h2>
-                <p className="text-xs text-slate-500">Solo la ves vos{isOwner ? "" : " (admin)"}: no es pública.</p>
                 <div className="space-y-2">
                   {aircraft.documents.map((doc) => (
                     <a key={doc.id} href={`/api/listing-documents/${doc.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 border border-slate-200 rounded-xl p-3 hover:bg-slate-50 transition-colors w-full group">

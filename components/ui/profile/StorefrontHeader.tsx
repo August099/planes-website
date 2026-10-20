@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { BadgeCheck, Edit, Globe, MapPin, MessageCircle } from "lucide-react";
 import { SiFacebook, SiInstagram } from "@icons-pack/react-simple-icons";
 
@@ -25,12 +26,13 @@ type Props = {
   instagram: string | null;
   facebook: string | null;
   isOwner: boolean;
-  onEdit?: () => void;
+  /** VA-175: "Editar página" lleva a Ajustes. */
+  editHref?: string;
 };
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 
-export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, location, memberSince, instagram, facebook, isOwner, onEdit }: Props) {
+export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, location, memberSince, instagram, facebook, isOwner, editHref }: Props) {
   const name = storefront.businessName || fallbackName;
   const websiteLabel = storefront.website?.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
   const contacts = [
@@ -86,15 +88,11 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
             {userTypeLabel} · Miembro desde {memberSince}
           </p>
           {storefront.bio && <p className="mt-4 max-w-2xl whitespace-pre-line text-sm leading-relaxed text-slate-700">{storefront.bio}</p>}
-          {isOwner && onEdit && (
-            <button
-              type="button"
-              onClick={onEdit}
-              className="mt-5 inline-flex items-center gap-2 rounded-md border border-[#001F58]/20 px-4 py-2 text-xs font-semibold text-[#001F58] hover:bg-slate-50 cursor-pointer"
-            >
+          {isOwner && editHref && (
+            <Link href={editHref} className="mt-5 inline-flex items-center gap-2 rounded-md border border-[#001F58]/20 px-4 py-2 text-xs font-semibold text-[#001F58] hover:bg-slate-50">
               <Edit className="h-4 w-4" aria-hidden />
               Editar página
-            </button>
+            </Link>
           )}
         </div>
 

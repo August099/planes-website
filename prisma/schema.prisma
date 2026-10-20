@@ -62,6 +62,8 @@ model User {
   // VA-154: historial de moderación de sus avisos (como dueño) y de las acciones que hizo (como admin).
   moderationActions         ModerationAction[]   @relation("ModerationOwner")
   moderationDone            ModerationAction[]   @relation("ModerationAdmin")
+  // VA-167: republicaciones hechas (el saldo del año sale de contarlas).
+  republications            Republication[]
 }
 
 model Account {
@@ -128,19 +130,27 @@ model Plan {
   id                      String           @id @default(cuid())
   name                    String
   type                    PlanType
-  // VA-152: nivel del plan de cupos (Pro o Empresarial). null = plan del modelo anterior (packs o
-  // "Pago de prueba"), que queda archivado porque tiene compras. Pro: aircraftListingsCount y
-  // sparePartsListingsCount son el CUPO de avisos activos al mismo tiempo. Empresarial: 3 filas (solo
-  // aviones, solo repuestos o ambos ilimitados); lo que no es ilimitado tiene el cupo del Gratis.
+  // VA-152/VA-166: nivel del plan (Base, Pro o Broker). null = plan del modelo anterior (packs o
+  // "Pago de prueba"), que queda archivado porque tiene compras. Base y Pro: aircraftListingsCount y
+  // sparePartsListingsCount son el CUPO de avisos activos al mismo tiempo. Broker (BUSINESS): 3 filas
+  // (solo aviones, solo repuestos o ambos ilimitados); lo que no es ilimitado tiene el cupo de Base.
   tier                    PlanTier?
+  // VA-166: precio real (el que se cobra, "Promo de lanzamiento") y precio tachado (solo se muestra).
   price                   Decimal          @db.Decimal(12, 2)
+  listPrice               Decimal?         @db.Decimal(12, 2)
   savingsPercent          Int?
   usageDescription        String?
   includesVerifiedBadge   Boolean          @default(false)
-  // VA-87: el plan da "Página personalizada" en /profile/[id].
-  includesCustomPage      Boolean          @default(false)
-  // VA-151: panel de métricas de vendedor en el perfil (Suscripción VA).
-  includesSellerMetrics   Boolean          @default(false)
+  // VA-166: beneficios según la grilla de los socios (interruptores del admin).
+  // Republicaciones (VA-167): por año (Base 2, Pro 5) o "Republicar todas" cada N días (Broker: 30).
+  republishesPerYear      Int              @default(0)
+  republishAllEveryDays   Int?
+  // Destacadas (VA-168), Página VA (VA-169: ninguna, banner del Pro o completa del Broker), detalles
+  // personalizados (VA-170) y nivel de métricas (VA-171).
+  includesFeatured        Boolean          @default(false)
+  vaPageLevel             VaPageLevel      @default(NONE)
+  includesCustomDetail    Boolean          @default(false)
+  metricsLevel            MetricsLevel     @default(BASIC)
   isActive                Boolean          @default(true)
   aircraftListingsCount   Int              @default(0)
   sparePartsListingsCount Int              @default(0)
@@ -409,10 +419,11 @@ model AircraftModel {
   id                String             @id @default(cuid())
   brandId           String
   name              String
-  defaultCategoryId String?
+  // VA-165: categoría recomendada (era defaultCategoryId, VA-153): el formulario la propone y se puede cambiar.
+  recommendedCategoryId String?
   aircrafts         Aircraft[]
   brand             AircraftBrand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  AircraftCategory  AircraftCategory?  @relation(fields: [defaultCategoryId], references: [id])
+  AircraftCategory  AircraftCategory?  @relation(fields: [recommendedCategoryId], references: [id])
   variants          AircraftSubModel[]
 
   @@unique([brandId, name])
@@ -454,6 +465,9 @@ model Aircraft {
   // VA-95: destacado pago o incluido en el plan, vigente hasta esta fecha.
   featuredUntil    DateTime?
   createdAt        DateTime            @default(now())
+  // VA-167: última vez que se publicó (alta o republicación). Ordena "Más recientes" y "Últimas
+  // publicaciones"; el detalle muestra "Actualizado el …" si es posterior al alta.
+  lastPublishedAt  DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   purchaseId       String?
   description      String
@@ -496,6 +510,7 @@ model Aircraft {
   leads            Lead[]
   questions        Question[]
   reports          Report[]
+  republications   Republication[]
   tags             Tag[]               @relation("AircraftToTag")
   // VA-83: centroide de la localidad (API Georef), para el mapa de zona aproximada.
   latitude         Float?
@@ -503,6 +518,7 @@ model Aircraft {
 
   @@index([price])
   @@index([status, createdAt])
+  @@index([status, lastPublishedAt])
   @@index([brandId, modelId])
   @@index([province, city])
   @@index([year])
@@ -649,6 +665,9 @@ model SparePart {
   // VA-95: destacado pago o incluido en el plan, vigente hasta esta fecha.
   featuredUntil    DateTime?
   createdAt        DateTime            @default(now())
+  // VA-167: última vez que se publicó (alta o republicación). Ordena "Más recientes" y "Últimas
+  // publicaciones"; el detalle muestra "Actualizado el …" si es posterior al alta.
+  lastPublishedAt  DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   purchaseId       String?
   description      String
@@ -663,6 +682,7 @@ model SparePart {
   favorites        Favorite[]
   questions        Question[]
   reports          Report[]
+  republications   Republication[]
   category         Category            @relation(fields: [categoryId], references: [id])
   purchase         Purchase?           @relation(fields: [purchaseId], references: [id])
   seller           User                @relation(fields: [sellerId], references: [id])
@@ -674,6 +694,7 @@ model SparePart {
 
   @@index([price])
   @@index([status, inPesos, createdAt])
+  @@index([status, lastPublishedAt])
   @@index([province, city])
   @@index([sellerId])
   @@index([featuredUntil])
@@ -807,6 +828,8 @@ model AnalyticsEvent {
   // VA-151: perfil visitado (evento PROFILE_VIEW).
   profileUserId String?
   profileUser   User?              @relation("AnalyticsEventProfile", fields: [profileUserId], references: [id], onDelete: Cascade)
+  // VA-171: provincia aproximada del visitante (código ISO 3166-2:AR del encabezado de Vercel; sin la IP).
+  region        String?            @db.VarChar(8)
 
   @@index([eventType, createdAt])
   @@index([profileUserId, eventType, createdAt])
@@ -1077,6 +1100,10 @@ enum AnalyticsEventType {
   USER_REGISTERED
   // VA-151: visita al perfil de un vendedor (Página VA)
   PROFILE_VIEW
+  // VA-171: se agregó un aviso al comparador.
+  COMPARE_ADD
+  // VA-171: clic a un aviso desde la Página VA de su vendedor.
+  PROFILE_LISTING_CLICK
 }
 
 // --------------------------------------------------------------------------- VA-92 · Pagos y facturación
@@ -1353,17 +1380,47 @@ model ListingFunding {
 
 // VA-152: niveles de los planes de cupos.
 enum PlanTier {
+  // VA-166: el plan gratis (una sola fila, precio 0, no se cobra).
+  BASE
   PRO
+  // "Broker / Empresa" (antes "Empresarial").
   BUSINESS
 }
 
-// VA-152: cupo del plan Gratis (todas las cuentas sin suscripción; también lo que no es ilimitado en
-// el Empresarial). Una sola fila (id "default"), editable desde /admin/plans.
+// VA-166: Página VA del plan.
+enum VaPageLevel {
+  NONE
+  // La Página VA del Pro (portada o banner, logo, nombre comercial y WhatsApp).
+  BANNER
+  // La del Broker, con secciones armables (VA-169).
+  FULL
+}
+
+// VA-166/VA-171: nivel de métricas del plan.
+enum MetricsLevel {
+  BASIC
+  PRO
+  FULL
+}
+
+// VA-166: filas de la grilla de planes (/plans y /admin/plans). Las de sistema (systemKey) muestran
+// valores que salen de las columnas de Plan y no se borran; las propias guardan el texto de cada celda.
+model PlanGridRow {
+  id        String   @id @default(cuid())
+  label     String
+  sortOrder Int      @default(0)
+  systemKey String?  @unique
+  // Filas propias: { BASE: { kind: "yes" | "no" | "text", text? }, PRO: …, BROKER: … }.
+  cells     Json     @default("{}")
+  updatedAt DateTime @updatedAt
+}
+
+// Ajustes globales de los planes (una sola fila, id "default"). VA-166: el cupo gratis pasó al plan
+// Base; queda la espera entre republicaciones del mismo aviso (VA-167).
 model QuotaSettings {
-  id                 String   @id @default("default")
-  freeAircraftQuota  Int      @default(1)
-  freeSparePartQuota Int      @default(5)
-  updatedById        String?
+  id                    String   @id @default("default")
+  republishCooldownDays Int      @default(7)
+  updatedById           String?
   updatedAt          DateTime @default(now()) @updatedAt
 }
 
@@ -1406,4 +1463,23 @@ model ModerationAction {
   @@index([listingKind, listingId, createdAt])
   @@index([ownerId, ownerAcknowledgedAt])
   @@index([action, createdAt])
+}
+
+// VA-167: cada republicación de un aviso (vuelve a ponerlo primero en "Más recientes"). El saldo de Base y
+// Pro sale de contar las del año en curso; "Republicar todas" (Broker y admins) deja una fila por aviso
+// con bulk = true. No cambia el aviso ni su historial, solo lastPublishedAt.
+model Republication {
+  id          String     @id @default(cuid())
+  userId      String
+  aircraftId  String?
+  sparePartId String?
+  bulk        Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aircraft    Aircraft?  @relation(fields: [aircraftId], references: [id], onDelete: SetNull)
+  sparePart   SparePart? @relation(fields: [sparePartId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([aircraftId])
+  @@index([sparePartId])
 }

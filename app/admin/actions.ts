@@ -206,6 +206,31 @@ function ninetyDaysAgoCutoff() {
   return cutoff;
 }
 
+// VA-171: las métricas del Broker muestran hasta 13 meses. Los eventos de avisos y perfiles (vistas,
+// contactos, visitas, comparador y clics desde la Página VA) se conservan 13 meses; el resto (páginas,
+// búsquedas, filtros…) se sigue purgando a los 90 días.
+const LONG_RETENTION_EVENTS: AnalyticsEventType[] = [
+  "AIRCRAFT_VIEW",
+  "SPARE_PART_VIEW",
+  "WHATSAPP_CLICK",
+  "PHONE_CLICK",
+  "EMAIL_CLICK",
+  "PROFILE_VIEW",
+  "COMPARE_ADD",
+  "PROFILE_LISTING_CLICK",
+];
+function purgeWhere(cutoff90: Date) {
+  const cutoff13m = new Date(cutoff90);
+  cutoff13m.setDate(cutoff13m.getDate() + 90);
+  cutoff13m.setMonth(cutoff13m.getMonth() - 13);
+  return {
+    OR: [
+      { createdAt: { lt: cutoff90 }, eventType: { notIn: LONG_RETENTION_EVENTS } },
+      { createdAt: { lt: cutoff13m } },
+    ],
+  };
+}
+
 // Arma el CSV de los eventos anteriores a `cutoff` leyendo de a 5.000 (cursor por id), en vez de
 // traerlos todos en una sola consulta.
 async function buildOldEventsCsv(cutoff: Date) {
@@ -214,7 +239,7 @@ async function buildOldEventsCsv(cutoff: Date) {
 
   for (;;) {
     const batch = await prisma.analyticsEvent.findMany({
-      where: { createdAt: { lt: cutoff } },
+      where: purgeWhere(cutoff),
       select: {
         id: true,
         createdAt: true,
@@ -308,9 +333,7 @@ export async function archiveAndPurgeOldAnalytics() {
 
     // 4. Borrar registros de la base de datos tras envío exitoso
     const deleteResult = await prisma.analyticsEvent.deleteMany({
-      where: {
-        createdAt: { lt: ninetyDaysAgo },
-      },
+      where: purgeWhere(ninetyDaysAgo),
     });
 
     return {

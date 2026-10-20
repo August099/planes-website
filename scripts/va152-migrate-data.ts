@@ -49,8 +49,8 @@ const NEW_PLANS = [
     sparePartsListingsCount: 15,
     isUnlimitedAircraft: false,
     isUnlimitedSpareParts: false,
-    includesCustomPage: false,
-    includesSellerMetrics: false,
+    vaPageLevel: "NONE" as const, // VA-166: antes includesCustomPage
+    metricsLevel: "BASIC" as const,
     description: "Para quien vende más de un avión o tiene stock de repuestos.",
     features: ["Sin vencimiento", "Cambiás o cancelás cuando quieras"],
     isPopular: true,
@@ -64,8 +64,8 @@ const NEW_PLANS = [
     sparePartsListingsCount: 0,
     isUnlimitedAircraft: true,
     isUnlimitedSpareParts: false,
-    includesCustomPage: true,
-    includesSellerMetrics: true,
+    vaPageLevel: "FULL" as const, // VA-166: antes includesCustomPage
+    metricsLevel: "FULL" as const,
     description: "Para brokers, concesionarios y escuelas.",
     features: BUSINESS_FEATURES,
     isPopular: false,
@@ -79,8 +79,8 @@ const NEW_PLANS = [
     sparePartsListingsCount: 0,
     isUnlimitedAircraft: false,
     isUnlimitedSpareParts: true,
-    includesCustomPage: true,
-    includesSellerMetrics: true,
+    vaPageLevel: "FULL" as const, // VA-166: antes includesCustomPage
+    metricsLevel: "FULL" as const,
     description: "Para talleres, distribuidores y comercios de repuestos.",
     features: BUSINESS_FEATURES,
     isPopular: false,
@@ -94,8 +94,8 @@ const NEW_PLANS = [
     sparePartsListingsCount: 0,
     isUnlimitedAircraft: true,
     isUnlimitedSpareParts: true,
-    includesCustomPage: true,
-    includesSellerMetrics: true,
+    vaPageLevel: "FULL" as const, // VA-166: antes includesCustomPage
+    metricsLevel: "FULL" as const,
     description: "Aviones y repuestos sin límite.",
     features: BUSINESS_FEATURES,
     isPopular: false,
@@ -111,13 +111,8 @@ function line(text: string) {
 async function run(tx: Tx) {
   const now = new Date();
 
-  console.log("1. Cupo Gratis");
-  const settings = await tx.quotaSettings.findUnique({ where: { id: "default" } });
-  if (settings) line(`ya existe: ${settings.freeAircraftQuota} avión / ${settings.freeSparePartQuota} repuestos`);
-  else {
-    line("se crea: 1 avión / 5 repuestos");
-    if (APPLY) await tx.quotaSettings.create({ data: { id: "default", freeAircraftQuota: 1, freeSparePartQuota: 5 } });
-  }
+  // VA-166: el cupo gratis pasó al plan Base (lo crea la migración va166_planes_grilla); este paso ya no hace nada.
+  console.log("1. Cupo Gratis: ahora es el plan Base (VA-166)");
 
   console.log("2. Planes nuevos (sin precio e inactivos)");
   const planIds: Record<string, string> = {};

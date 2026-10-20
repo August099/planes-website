@@ -15,7 +15,7 @@ import {
 
 // DICCIONARIO DE DESCRIPCIONES DE LAS MÉTRICAS
 const METRIC_DESCRIPTIONS: Record<string, string> = {
-  "Ingresos Mensuales (MRR)": "Ingreso recurrente mensual de las suscripciones pagas vigentes (Pro y Empresarial; sin cortesías).",
+  "Ingresos Mensuales (MRR)": "Ingreso recurrente mensual de las suscripciones pagas vigentes (Pro y Broker / Empresa; sin cortesías ni admins).",
   "Ingresos Anuales (ARR)": "Proyección anualizada de los ingresos recurrentes (MRR × 12).",
   "Margen EBITDA": "Porcentaje de rentabilidad operativa antes de intereses, impuestos, depreciación y amortización. Todavía no se calcula: el sistema no tiene cargados los costos.",
   "Crecimiento (Mes/Año)": "Variación de lo cobrado en suscripciones este mes respecto del mes anterior (sin pagos de prueba).",

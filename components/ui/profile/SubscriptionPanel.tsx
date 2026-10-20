@@ -6,13 +6,15 @@ import { useRouter } from "next/navigation";
 import { cancelSubscriptionAction, resumeSubscriptionAction } from "@/app/actions/subscription-actions";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { SubscriptionSummary } from "@/lib/subscriptions";
+import type { ProfileQuota } from "@/components/ui/profile/ProfileListings";
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 const NUMBER = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
 const DATE = new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Argentina/Buenos_Aires" });
 
-// VA-80: el plan del usuario en "Mi perfil" → Ajustes. Sin suscripción, invita a ver los planes.
-export function SubscriptionPanel({ subscription }: { subscription: SubscriptionSummary | null }) {
+// VA-80: el plan del usuario en "Mi perfil" → Ajustes. Sin suscripción, el plan Base e invita a ver los
+// planes. VA-174: los admins tienen el Broker completo para siempre.
+export function SubscriptionPanel({ subscription, quota = null }: { subscription: SubscriptionSummary | null; quota?: ProfileQuota | null }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,12 +33,23 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
     });
   };
 
+  if (quota?.planName === "Admin") {
+    return (
+      <section className="rounded-lg border border-[#001F58]/12 bg-white p-5">
+        <p className={LABEL}>Tu plan</p>
+        <p className="mt-1 text-lg font-bold text-[#001F58]">Admin</p>
+        <p className="text-sm text-slate-600">Todo lo del Broker / Empresa, con aviones y repuestos ilimitados, sin suscripción ni vencimiento.</p>
+      </section>
+    );
+  }
+
   if (!subscription || !subscription.active) {
+    const base = quota ? `: ${quota.aircraft.limit ?? "∞"} ${quota.aircraft.limit === 1 ? "avión" : "aviones"} y ${quota.parts.limit ?? "∞"} ${quota.parts.limit === 1 ? "repuesto" : "repuestos"} activos` : "";
     return (
       <section className="rounded-lg border border-[#001F58]/12 bg-white p-5">
         <p className={LABEL}>Tu plan</p>
         <p className="mt-1 text-sm text-slate-700">
-          {subscription ? `Tu suscripción a ${subscription.planName} terminó.` : "Publicás aviso por aviso, sin suscripción."}{" "}
+          {subscription ? `Tu suscripción a ${subscription.planName} terminó. ` : ""}Tenés el plan Base, gratis{base}.{" "}
           <Link href="/plans" className="font-semibold text-[#001F58] underline">
             Ver planes
           </Link>
@@ -126,7 +139,7 @@ export function SubscriptionPanel({ subscription }: { subscription: Subscription
         }}
       >
         <p className="text-sm text-slate-600">
-          Vas a poder usar el plan hasta el <strong>{end}</strong>. Después no se vuelve a cobrar y pasás al plan Gratis: si tenés
+          Vas a poder usar el plan hasta el <strong>{end}</strong>. Después no se vuelve a cobrar y pasás al plan Base: si tenés
           más avisos activos que su cupo, se pausan los más nuevos (después elegís cuáles quedan activos).
         </p>
       </ConfirmDialog>

@@ -6,13 +6,17 @@ import { CheckCircle2, Edit, Eye, Heart, Loader2, MessageSquare, Pause, Play, Tr
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { RepublishButton, RepublishNotice } from "@/components/ui/profile/RepublishControls";
+import type { RepublishView } from "@/lib/republish";
+import { logProfileListingClick } from "@/app/actions/analytics-actions";
 
 // VA-97: una sola grilla de publicaciones en el perfil (antes, una pestaña por tipo). Arriba,
 // interruptores por tipo (combinables, todos prendidos por defecto) y, en el panel propio, filtros por
 // estado con contadores. Todo queda en la URL (?tipo=…&estado=…) para compartir o volver.
 // Las tarjetas son las mismas de los listados; el dueño ve debajo el estado, las métricas y las
 // acciones. VA-152: sin vencimiento ni pagos por aviso; arriba, el uso del cupo, y en cada aviso
-// Pausar / Activar / Vendido (activar necesita cupo libre, lo controla el servidor).
+// Pausar / Activar / Vendido (activar necesita cupo libre, lo controla el servidor). VA-167: arriba, el
+// cartel de republicaciones (o "Republicar todas" del Broker) y, en cada aviso activo, "Republicar".
 
 type Listing = {
   id: string;
@@ -74,6 +78,8 @@ export function ProfileListings({
   isOwner,
   favIds,
   quota,
+  republish = null,
+  profileUserId,
   moderation = {},
   onStatus,
   onRequestReview,
@@ -85,6 +91,9 @@ export function ProfileListings({
   isOwner: boolean;
   favIds: string[];
   quota?: ProfileQuota | null;
+  republish?: RepublishView | null;
+  /** VA-171: dueño de la página, para contar los clics de los visitantes hacia sus avisos. */
+  profileUserId?: string;
   moderation?: ModerationMap;
   onStatus: (id: string, type: "aircraft" | "sparepart", to: StatusTarget) => void;
   onRequestReview: (id: string, type: "aircraft" | "sparepart") => void;
@@ -143,6 +152,7 @@ export function ProfileListings({
           )}
         </p>
       )}
+      {isOwner && republish && <RepublishNotice view={republish} onChooseListings={() => setParam("estado", "activos")} />}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Tipo de publicación">
           {KINDS.map((k) => {
@@ -179,7 +189,19 @@ export function ProfileListings({
             const type = kind === "aeronaves" ? "aircraft" : "sparepart";
             const st = statusOf(l);
             return (
-              <div key={`${kind}-${l.id}`} className="flex h-full flex-col justify-between space-y-2">
+              <div
+                key={`${kind}-${l.id}`}
+                className="flex h-full flex-col justify-between space-y-2"
+                onClickCapture={
+                  !isOwner && profileUserId
+                    ? (e) => {
+                        // Solo el link al aviso (no favoritos, compartir ni comparar).
+                        if ((e.target as HTMLElement).closest("button")) return;
+                        if ((e.target as HTMLElement).closest("a")) void logProfileListingClick(profileUserId, kind === "aeronaves" ? "AIRCRAFT" : "SPARE_PART", l.id);
+                      }
+                    : undefined
+                }
+              >
                 {kind === "aeronaves" ? (
                   <AircraftCard
                     id={l.id}
@@ -213,6 +235,7 @@ export function ProfileListings({
                     type={type}
                     st={st}
                     moderation={l.status === "MODERATED" ? moderation[l.id] ?? { reason: null, reviewRequested: false } : null}
+                    republish={republish}
                     onStatus={onStatus}
                     onRequestReview={onRequestReview}
                     onDelete={onDelete}
@@ -236,6 +259,7 @@ function OwnerPanel({
   type,
   st,
   moderation,
+  republish,
   onStatus,
   onRequestReview,
   onDelete,
@@ -245,6 +269,7 @@ function OwnerPanel({
   type: "aircraft" | "sparepart";
   st: StatusKey;
   moderation: { reason: string | null; reviewRequested: boolean } | null;
+  republish: RepublishView | null;
   onStatus: (id: string, type: "aircraft" | "sparepart", to: StatusTarget) => void;
   onRequestReview: (id: string, type: "aircraft" | "sparepart") => void;
   onDelete: (id: string, type: "aircraft" | "sparepart") => void;
@@ -269,6 +294,9 @@ function OwnerPanel({
             >
               {moderation.reviewRequested ? "Revisión pedida" : "Pedir revisión"}
             </button>
+          )}
+          {!moderation && st === "activos" && republish && (
+            <RepublishButton view={republish} id={l.id} kind={type === "aircraft" ? "AIRCRAFT" : "SPARE_PART"} className={`${ACTION} border border-[#001F58]/20 text-[#001F58] hover:border-[#001F58]`} />
           )}
           {!moderation && st === "activos" && (
             <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "PAUSED")} className={`${ACTION} border border-[#001F58]/20 text-[#001F58] hover:border-[#001F58]`}>

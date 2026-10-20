@@ -138,12 +138,41 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
-### Categorías y formulario guiado (VA-153)
-- [ ] `/publish` → Aeronave: elegir "Agrícola" en Tipo de aeronave → en Marca solo aparecen marcas con modelos agrícolas (Air Tractor, Cessna, Piper, Thrush…) y en Modelo solo los agrícolas.
-- [ ] Sin tipo elegido: Cessna → C-182 pone "Monomotor · Pistón" y queda fijo, con el link "¿La categoría no es correcta? Avisanos" (abre un mail con el modelo en el asunto).
-- [ ] "Otro modelo..." vuelve a pedir el tipo a mano.
-- [ ] Home → buscador: elegir "Helicóptero" deja solo las marcas de helicópteros.
-- [ ] `/admin/taxonomy` → una marca → cada modelo tiene su selector de categoría.
+### Ajustes (VA-175)
+- [ ] Menú de usuario → "Ajustes" (compu y celular 📱): datos, foto, contraseña, plan, compras, facturación, cookies y, con Pro o Broker, la Página VA. Guardar cada sección.
+- [ ] "Mi cuenta" ya no tiene pestañas de ajustes ni de compras; "Ajustes" arriba a la derecha.
+- [ ] `/arrepentimiento` con sesión lleva a Ajustes → Mis compras.
+
+### Métricas por plan (VA-171)
+- [ ] Cuenta Pro (cortesía): pestaña "Métricas" con 7 y 30 días.
+- [ ] Como admin (o Broker): además "Últimos 90 días", rango con dos fechas y "Ver rango", "Exportar CSV" (baja un .csv que abre en Excel), fuentes de tráfico, provincias, "Comparador" en la tabla y el efecto de las republicaciones.
+- [ ] Desde otra cuenta, agregar al comparador un aviso del admin y entrar a un aviso desde su Página VA: suben "Comparador" y "Clics desde tu Página VA" (la caché tarda hasta 10 minutos).
+
+### Destacadas por plan (VA-168)
+- [ ] Con un aviso de una cuenta Pro (cortesía desde `/admin/users`) y otros más nuevos de cuentas Base: en `/aircraft` el del Pro aparece primero; ordenando por precio, no.
+- [ ] Home → "Aeronaves destacadas": aparecen primero los avisos de cuentas Pro, Broker y admins.
+
+### Republicar (VA-167)
+- [ ] Cuenta Base con avisos activos: en "Mis publicaciones" aparece "Tenés 2 republicaciones disponibles" y el punto en "Mi Cuenta" del menú 📱.
+- [ ] "Republicar" en un aviso: confirmar → el aviso aparece primero en "Últimas publicaciones" de la Home y en `/aircraft` (orden por defecto); en su detalle dice "Actualizado el …".
+- [ ] Republicar el mismo aviso otra vez: avisa que hay que esperar 7 días. Republicar otro: queda en 0 y el cartel desaparece.
+- [ ] Cerrar el cartel con la X: se van el cartel y el punto; vuelven cuando cambia el saldo.
+- [ ] Como admin: "Republicar todas" republica todos los avisos activos y después dice "Podés volver a republicar el dd/mm".
+
+### Planes según la grilla (VA-166, VA-174)
+- [ ] `/plans` en la compu y en el celular 📱: grilla Base / Pro / Broker con "Promo de lanzamiento" y el precio tachado; en el Broker, apagar "Aviones ilimitados" cambia el precio (85.000 → 55.000) y la fila de aviones pasa a "1".
+- [ ] Sin sesión, los botones llevan a crear la cuenta; con una cuenta Base, "Suscribirme"; como admin, "Como admin tenés todo incluido".
+- [ ] `/admin/plans`: cambiar el cupo de repuestos de Base a 4, ver la línea "Base pasa de 3 a 4 repuestos activos", guardar y publicar el 4.º repuesto con una cuenta Base. Volverlo a 3.
+- [ ] Cuenta Base con 3 repuestos activos: el 4.º pide pausar uno o pasarse a Pro.
+- [ ] `/admin/users`: los admins dicen "Admin · Broker completo" (sin "Asignar plan de cortesía").
+
+### Categoría recomendada y formulario guiado (VA-153, VA-165)
+- [ ] `/publish` → Aeronave: elegir "Agrícola" en Tipo de aeronave → en Marca solo aparecen marcas con modelos agrícolas (Air Tractor, Cessna, Piper, Thrush…) y en Modelo solo los agrícolas; "Ver todas las marcas" muestra todas.
+- [ ] Sin tipo elegido: Cessna → C-182 propone "Monomotor · Pistón" con "Recomendada para este modelo: Monomotor Pistón". Cambiarlo a Agrícola se puede y dice "Elegiste una categoría distinta de la recomendada"; al publicar queda Agrícola.
+- [ ] "Otro modelo..." pide el tipo a mano.
+- [ ] Home → buscador: elegir una categoría deja solo las marcas con avisos de esa categoría.
+- [ ] `/admin/taxonomy` → una marca → cada modelo tiene su selector de categoría recomendada.
+- [ ] Un aviso con documentos: sin iniciar sesión se ven y se abren en el detalle; el formulario avisa que son públicos.
 
 ### Mapa del detalle (VA-156)
 - [ ] Detalle de un aviso con coordenadas: el bloque "Zona" muestra el mapa real con el círculo (sin pin), no deja acercar más que el círculo y se ve la atribución abajo 📱.

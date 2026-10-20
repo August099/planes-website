@@ -28,12 +28,14 @@ export async function grantCourtesyPlan(input: {
   if (input.until > max) return { ok: false, error: `Hasta ${MAX_YEARS} años.` };
 
   const [plan, user, current] = await Promise.all([
-    prisma.plan.findUnique({ where: { id: input.planId }, select: { billingType: true, archivedAt: true } }),
-    prisma.user.findUnique({ where: { id: input.userId }, select: { id: true } }),
+    prisma.plan.findUnique({ where: { id: input.planId }, select: { billingType: true, archivedAt: true, tier: true } }),
+    prisma.user.findUnique({ where: { id: input.userId }, select: { id: true, isAdmin: true } }),
     prisma.subscription.findUnique({ where: { userId: input.userId }, select: { source: true, status: true, currentPeriodEnd: true, graceUntil: true } }),
   ]);
   if (!user) return { ok: false, error: "El usuario no existe." };
-  if (!plan || plan.archivedAt || plan.billingType !== "SUBSCRIPTION") {
+  // VA-174: los admins ya tienen el Broker completo, sin suscripción ni cortesía.
+  if (user.isAdmin) return { ok: false, error: "Los admins ya tienen todo lo del Broker incluido." };
+  if (!plan || plan.archivedAt || plan.billingType !== "SUBSCRIPTION" || plan.tier === "BASE") {
     return { ok: false, error: "Elegí un plan de suscripción vigente." };
   }
   // Una suscripción paga vigente no se pisa: primero hay que cancelarla.

@@ -73,7 +73,7 @@ export async function withdrawalPreview(userId: string, paymentId: string): Prom
 
 /** Qué pasa al arrepentirse, en el diálogo y en el mail. */
 function withdrawalLines(paused: Record<QuotaKind, number> | null): string[] {
-  const lines = ["Tu suscripción termina en el momento y se cancela el débito automático. Volvés al plan Gratis."];
+  const lines = ["Tu suscripción termina en el momento y se cancela el débito automático. Volvés al plan Base."];
   const p = paused && describePaused(paused);
   if (p) lines.push(p);
   return lines;

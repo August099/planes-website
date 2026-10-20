@@ -23,15 +23,15 @@ import {
 // descarga recién cuando el usuario se acerca al botón (HeaderUser). Se monta ya abierto, porque
 // solo aparece después de un clic.
 
-export function DesktopDropdown({ userId, isAdmin, hasUnanswered }: MenuUser & { userId: string }) {
+export function DesktopDropdown({ userId, isAdmin, hasUnanswered, hasRepublish = false }: MenuUser & { userId: string }) {
   return (
     <DropdownMenu defaultOpen>
       <DropdownMenuTrigger
         className={DESKTOP_TRIGGER_CLASS}
-        aria-label={hasUnanswered ? "Menú de usuario (tenés consultas sin responder)" : "Menú de usuario"}
+        aria-label={hasUnanswered || hasRepublish ? "Menú de usuario (tenés novedades)" : "Menú de usuario"}
       >
         <User className="h-4 w-4" />
-        {hasUnanswered && <PendingDot className="absolute -top-1 -right-1 h-3 w-3 border-2 border-white" />}
+        {(hasUnanswered || hasRepublish) && <PendingDot className="absolute -top-1 -right-1 h-3 w-3 border-2 border-white" />}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-white text-slate-900 min-w-[180px]">
         {isAdmin && (
@@ -51,6 +51,7 @@ export function DesktopDropdown({ userId, isAdmin, hasUnanswered }: MenuUser & {
         <DropdownMenuItem className="p-0">
           <Link href={`/profile/${userId}`} className="w-full px-2 py-1.5 text-sm flex items-center justify-between gap-3">
             <span>Mi Cuenta</span>
+            {hasRepublish && <PendingDot className="h-2 w-2" />}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem className="p-0">
@@ -62,6 +63,12 @@ export function DesktopDropdown({ userId, isAdmin, hasUnanswered }: MenuUser & {
         <DropdownMenuItem className="p-0">
           <Link href="/favs" className="w-full px-2 py-1.5 text-sm">
             Favoritos
+          </Link>
+        </DropdownMenuItem>
+        {/* VA-175 */}
+        <DropdownMenuItem className="p-0">
+          <Link href="/settings" className="w-full px-2 py-1.5 text-sm">
+            Ajustes
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -79,15 +86,15 @@ export function DesktopDropdown({ userId, isAdmin, hasUnanswered }: MenuUser & {
   );
 }
 
-export function MobileDropdown({ userId, isAdmin, hasUnanswered, loading, partCategories = [] }: MenuUser) {
+export function MobileDropdown({ userId, isAdmin, hasUnanswered, hasRepublish = false, loading, partCategories = [] }: MenuUser) {
   return (
     <DropdownMenu defaultOpen>
       <DropdownMenuTrigger
         className={MOBILE_TRIGGER_CLASS}
-        aria-label={hasUnanswered ? "Abrir menú (tenés consultas sin responder)" : "Abrir menú"}
+        aria-label={hasUnanswered || hasRepublish ? "Abrir menú (tenés novedades)" : "Abrir menú"}
       >
         <Menu className="h-6 w-6" />
-        {hasUnanswered && <PendingDot className="absolute top-1.5 right-1.5 h-2.5 w-2.5 border border-white" />}
+        {(hasUnanswered || hasRepublish) && <PendingDot className="absolute top-1.5 right-1.5 h-2.5 w-2.5 border border-white" />}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 bg-white text-slate-900 p-2 space-y-1">
         {NAV.map((item) =>
@@ -120,6 +127,7 @@ export function MobileDropdown({ userId, isAdmin, hasUnanswered, loading, partCa
             <DropdownMenuItem className="p-0">
               <Link href={`/profile/${userId}`} className="w-full px-2 py-1.5 text-sm font-medium flex items-center justify-between gap-3">
                 <span>Mi Cuenta</span>
+                {hasRepublish && <PendingDot className="h-2 w-2" />}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem className="p-0">
@@ -131,6 +139,11 @@ export function MobileDropdown({ userId, isAdmin, hasUnanswered, loading, partCa
             <DropdownMenuItem className="p-0">
               <Link href="/favs" className="w-full px-2 py-1.5 text-sm font-medium">
                 Favoritos
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="p-0">
+              <Link href="/settings" className="w-full px-2 py-1.5 text-sm font-medium">
+                Ajustes
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

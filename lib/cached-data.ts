@@ -28,7 +28,7 @@ export const getAircraftTaxonomy = unstable_cache(
             select: {
               id: true,
               name: true,
-              defaultCategoryId: true,
+              recommendedCategoryId: true,
               variants: {
                 orderBy: { name: "asc" },
                 select: { id: true, name: true, categoryOverride: true },
@@ -41,7 +41,7 @@ export const getAircraftTaxonomy = unstable_cache(
     return { categories, brands };
   },
   // VA-148/VA-149: clave nueva para no servir el orden y los nombres de íconos viejos cacheados.
-  ["aircraft-taxonomy", "va153"], // VA-153: categorías de modelos corregidas
+  ["aircraft-taxonomy", "va165"], // VA-165: recommendedCategoryId (antes defaultCategoryId)
   { tags: [AIRCRAFT_TAXONOMY_TAG], revalidate: 3600 }
 );
 

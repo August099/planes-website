@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 // Con sesión, lleva directo a "Mis compras"; sin sesión, explica cómo hacerlo y pide iniciar sesión.
 export default async function WithdrawalPage() {
   const user = await getCurrentUser();
-  if (user?.id) redirect(`/profile/${user.id}?tab=compras#mis-compras`);
+  if (user?.id) redirect("/settings#compras"); // VA-175: "Mis compras" está en Ajustes
 
   return (
     <main className="relative isolate overflow-hidden min-h-screen">
@@ -26,9 +26,9 @@ export default async function WithdrawalPage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Derecho de arrepentimiento</p>
           <h1 className="mt-1 font-heading text-2xl sm:text-3xl font-semibold text-[#001F58]">Botón de arrepentimiento</h1>
           <p className="mt-4 text-sm leading-relaxed text-slate-700">
-            Podés arrepentirte de la contratación de una suscripción (Pro o Empresarial) dentro de los <strong>10 días corridos</strong>
+            Podés arrepentirte de la contratación de una suscripción (Pro o Broker / Empresa) dentro de los <strong>10 días corridos</strong>
             desde el pago, sin dar explicaciones y sin costo. Te devolvemos el total por Mercado Pago, la suscripción termina y volvés al
-            plan Gratis. Publicar dentro del cupo Gratis no tiene costo.
+            plan Base. Publicar dentro del cupo de Base no tiene costo.
           </p>
           <ol className="mt-6 divide-y divide-[#001F58]/10 rounded-lg border border-[#001F58]/12 text-sm">
             {["Iniciá sesión con la cuenta con la que pagaste.", "Entrá a tu perfil → Mis compras.", "En el pago, tocá “Arrepentirme” y confirmá."].map((step, i) => (

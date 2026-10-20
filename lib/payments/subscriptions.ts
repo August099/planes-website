@@ -36,7 +36,9 @@ function addPeriod(from: Date, interval: string | null): Date {
 // --------------------------------------------------------------------------- Alta
 
 export async function startSubscription(input: { userId: string; planId: string; billing: unknown; payerEmail?: string }): Promise<Result> {
-  const plan = await prisma.plan.findFirst({ where: { id: input.planId, isActive: true, archivedAt: null, billingType: "SUBSCRIPTION" } });
+  const plan = await prisma.plan.findFirst({ where: { id: input.planId, isActive: true, archivedAt: null, billingType: "SUBSCRIPTION", tier: { not: "BASE" } } });
+  const subscriber = await prisma.user.findUnique({ where: { id: input.userId }, select: { isAdmin: true } });
+  if (subscriber?.isAdmin) return { ok: false, error: "Como admin ya tenés todo lo del Broker incluido." };
   if (!plan) return { ok: false, error: "Ese plan no está disponible." };
   const price = Number(plan.price);
   if (price <= 0) return { ok: false, error: "Este plan no tiene precio configurado." };

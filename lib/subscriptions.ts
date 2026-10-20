@@ -24,31 +24,26 @@ export function isSubscriptionCurrent(
   return false;
 }
 
-// Beneficios del plan (VA-87, VA-151). VA-152: solo el Empresarial los incluye (interruptores del
-// plan), y los admins los tienen siempre (mismos atributos que una cuenta Empresarial). Si la
-// suscripción termina, el perfil vuelve al diseño común sin borrar los datos cargados.
-type PlanFlag = "includesCustomPage" | "includesSellerMetrics" | "includesVerifiedBadge";
-async function hasPlanFlag(userId: string, flag: PlanFlag): Promise<boolean> {
-  const [user, sub] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, select: { isAdmin: true } }),
-    prisma.subscription.findFirst({ where: { ...currentSubscriptionWhere(userId), plan: { [flag]: true } }, select: { id: true } }),
-  ]);
-  return !!user?.isAdmin || !!sub;
-}
+// Beneficios del plan (VA-87, VA-151). VA-166: salen de lib/plan-benefits.ts (Pro: Página VA "banner",
+// métricas Pro y verificado; Broker y admins: todo). Si la suscripción termina, el perfil vuelve al
+// diseño común sin borrar los datos cargados.
 
-/** "Página VA" en /profile/[id]. */
+/** "Página VA" en /profile/[id] (la del Pro o la completa del Broker). */
 export async function hasCustomPage(userId: string): Promise<boolean> {
-  return hasPlanFlag(userId, "includesCustomPage");
+  const { getAccountPlan } = await import("@/lib/plan-benefits");
+  return (await getAccountPlan(userId)).vaPage !== "NONE";
 }
 
-/** VA-151: panel de métricas de vendedor. */
+/** VA-151: panel de métricas de vendedor (desde el nivel Pro). */
 export async function hasSellerMetrics(userId: string): Promise<boolean> {
-  return hasPlanFlag(userId, "includesSellerMetrics");
+  const { getAccountPlan } = await import("@/lib/plan-benefits");
+  return (await getAccountPlan(userId)).metrics !== "BASIC";
 }
 
-/** VA-105 (14/10): "Cuenta verificada" sale del plan (includesVerifiedBadge), no de la Página VA. */
+/** VA-105 (14/10): "Cuenta verificada" sale del plan (automático con Pro o Broker vigente). */
 export async function hasVerifiedBadge(userId: string): Promise<boolean> {
-  return hasPlanFlag(userId, "includesVerifiedBadge");
+  const { getAccountPlan } = await import("@/lib/plan-benefits");
+  return (await getAccountPlan(userId)).verified;
 }
 
 /** VA-80: suscripción del usuario (vigente o no) para mostrar en su perfil. */

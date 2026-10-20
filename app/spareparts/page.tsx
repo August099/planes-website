@@ -12,6 +12,7 @@ import { Prisma, SparepartCondition } from "@prisma/client";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { featuredFirstPage, getFeaturedSellerIds } from "@/lib/featured";
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -66,7 +67,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
   const orderByMap: Record<string, Prisma.SparePartOrderByWithRelationInput> = {
     price_desc: { price: "desc" },
     price_asc: { price: "asc" },
-    recent: { createdAt: "desc" },
+    recent: { lastPublishedAt: "desc" }, // VA-167: alta o republicación
     oldest: { createdAt: "asc" },
     az: { title: "asc" },
     za: { title: "desc" },
@@ -140,17 +141,22 @@ export default async function SparePartsPage({ searchParams }: Props) {
   // ==========================================
   // Ejecución paralela: listado + total + favoritos
   // ==========================================
-  const [spareParts, totalSpareParts, userFavorites] = await Promise.all([
+  // VA-168: en el orden por defecto, primero los avisos de cuentas con destacadas (Pro, Broker y admins);
+  // con otro orden, se respeta ese orden sin mezclar.
+  const featuredIds = sort === "recent" ? await getFeaturedSellerIds() : [];
+  const findPage = (sellerId: { in: string[] } | { notIn: string[] }, pageSkip: number, pageTake: number) =>
     prisma.sparePart.findMany({
-      where,
+      where: { ...where, sellerId },
       include: {
         images: { orderBy: { order: "asc" }, take: 1 },
         category: true,
       },
       orderBy,
-      skip,
-      take: itemsPerPage,
-    }),
+      skip: pageSkip,
+      take: pageTake,
+    });
+  const [spareParts, totalSpareParts, userFavorites] = await Promise.all([
+    featuredFirstPage(featuredIds, skip, itemsPerPage, findPage, () => prisma.sparePart.count({ where: { ...where, sellerId: { in: featuredIds } } })),
     prisma.sparePart.count({ where }),
     user
       ? prisma.favorite.findMany({

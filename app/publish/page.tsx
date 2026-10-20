@@ -55,11 +55,11 @@ export default async function PublishPage({ searchParams }: Props) {
       id: true,
       name: true,
       models: {
-        // defaultCategoryId y las variantes permiten sugerir el tipo de aeronave al elegir el modelo.
+        // recommendedCategoryId y las variantes permiten sugerir el tipo de aeronave al elegir el modelo.
         select: {
           id: true,
           name: true,
-          defaultCategoryId: true,
+          recommendedCategoryId: true,
           variants: { select: { id: true, name: true, categoryOverride: true }, orderBy: { name: "asc" } },
         },
         orderBy: { name: "asc" },

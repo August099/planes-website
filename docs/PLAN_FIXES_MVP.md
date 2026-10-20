@@ -926,9 +926,10 @@ Notas para cuando se encare, a partir de lo que ya existe:
 > Una sola lista de lo que falta, en tres grupos. Se actualiza al cerrar cada punto. El detalle de cada paso está en `docs/PRUEBAS_PREVIEW.md` (Preview) y `docs/PASE_A_PRODUCCION.md` (producción).
 
 ### 1. Bloquea el lanzamiento
-- [x] **Migraciones en la base de Supabase (la usan el Preview y el sitio de `main`)** — 18/10, con OK del socio: backup (`C:UserspcDocumentsa-backupsackup-prod-20261018-1840.dump`), informe de VA-152, las 11 migraciones pendientes (VA-150 a VA-158) y `va152-migrate-data.ts` (cupo Gratis, Pro y Empresarial sin precio, planes viejos borrados y "Plan de Prueba" archivado, 29 lotes de saldo borrados). Sin suscripciones en esa base; compras, pagos y facturas intactos.
-- [ ] **Coordenadas de los avisos** (`geocode-listings.ts --apply`): 51 de 80 avisos se resuelven; falta el OK para escribirlas. Los otros 29 tienen la ciudad mal cargada (datos de prueba).
-- [ ] **`main` quedó con código viejo sobre la base migrada:** `/planes` da 500 (lee columnas que ya no existen). Se arregla desplegando el código nuevo en `main` o con un cambio puntual; lo decide el socio.
+- [x] **Migraciones en la base de Supabase (la usan el Preview y el sitio de `main`)** — 18/10, con OK del socio: backup (`Documents/va-backups/backup-prod-20261018-1840.dump`), informe de VA-152, las 11 migraciones pendientes (VA-150 a VA-158) y `va152-migrate-data.ts` (cupo Gratis, Pro y Empresarial sin precio, planes viejos borrados y "Plan de Prueba" archivado, 29 lotes de saldo borrados). Sin suscripciones en esa base; compras, pagos y facturas intactos.
+- [x] **Coordenadas de los avisos** (`geocode-listings.ts --apply`) — 18/10, con OK del socio: 51 de 80 resueltas. Los otros 29 tienen la ciudad mal cargada (datos de prueba).
+- [x] **`main` con código viejo sobre la base migrada** — 18/10, opción b del socio: `main` redirige todo a la Home (`8bb5945`, verificado: `/planes` → 307 a `/`). El código nuevo va a `main` cuando lo diga el socio.
+- [x] **Categorías de los modelos (VA-153)** — 18/10, con OK del socio: `va153-import-categorias.ts --apply --confirm-production`, 3 cambios (PC-12, Duke, C-425 Conquest); el informe posterior da 0 pendientes.
 - [ ] **Lote del 18/10 (VA-152 a VA-163):** ver la tabla al final del plan. VA-152 hecho en local el 18/10.
 - [ ] **Montos de Pro y del Empresarial** (los definen los socios; se cargan en `/admin/plans`).
 - [ ] **Pruebas en el Preview:**
@@ -1645,7 +1646,7 @@ Probados en celular; verificar también en escritorio.
   de otra marca o un submodelo de otro modelo. También acotan por categoría el buscador de la Home y la lista
   de marcas de `/aircraft`; en `/admin/taxonomy` cada modelo tiene su selector de categoría. Sin migración
   (las columnas ya existían). Informe: 25 avisos con categoría distinta a la de su modelo, todos "(Mock N)" de
-  prueba; no se tocan. **Falta aplicar el script en producción** (OK del socio).
+  prueba; no se tocan. Aplicado en producción el 18/10 (OK del socio).
 - **VA-159 a VA-163 (18/10/2026):** ✅ hechos (un commit cada uno): implementos agrícolas antes de
   "Exterior", flechas de la galería del detalle, "Reportar", "Ver todo el catálogo" en azul y 404/403 con
   "Inicio" y "Página anterior".
@@ -1667,3 +1668,91 @@ Probados en celular; verificar también en escritorio.
   diferida desde `public/vendor/` (módulo nativo, sin sumar JS: detalle +2 KB, Home igual), círculo de
   ~5 km sin pin, zoom máximo = el círculo, atribución visible; el SVG queda de respaldo. Revisadas la
   documentación y las condiciones de OpenFreeMap (uso comercial sí, sin clave ni cookies, sin SLA).
+---
+
+## Lote del 19/10 (socios) — planes según la grilla, cuenta Broker y categoría recomendada · va en el MVP, antes de VA-164 · detalle en `docs/specs/VA-165-a-VA-174-planes-y-broker.md`
+
+> Ajusta lo hecho en VA-152 y VA-153. Todo en `milton/auth-roles`. Orden = "Orden sugerido" de la spec.
+> Grilla: **Base** gratis (1 avión / 3 repuestos, 2 republicaciones por año) · **Pro** $38.000 (tachado
+> $50.000; 3 / 10, 5 republicaciones por año, verificado, destacadas, Página VA actual, métricas Pro) ·
+> **Broker / Empresa** $55.000 un rubro ilimitado o $85.000 ambos (tachados $68.000 y $108.000; lo no
+> ilimitado con el cupo de Base; republicar todas cada 30 días; Página VA armable, detalles
+> personalizados y métricas completas). El precio "promo" es el que se cobra; el tachado es solo para
+> mostrar. Admins: Broker completo para siempre, sin cortesía.
+
+| Orden | Tarea | Qué |
+|---|---|---|
+| 1 | **VA-165** | La categoría del modelo pasa a ser **recomendada** (`recommendedCategoryId`): se completa sola pero se puede cambiar; las reglas usan la elegida; filtros y buscador por avisos reales; sin "Avisanos" |
+| 2 | **VA-166** + **VA-174** | Planes Base / Pro / Broker según la grilla: cupos 1/3 y 3/10, beneficios por plan, grilla en `/plans` (interruptores en la columna Broker) y la misma grilla editable en el admin; admins como Broker para siempre (se cierran sus cortesías) |
+| 3 | **VA-167** | Republicar (`republishedAt`): Base 2 y Pro 5 por año, 7 días entre republicaciones del mismo aviso, Broker "Republicar todas" cada 30 días; aviso en el perfil |
+| 4 | **VA-168** | Destacadas por plan: la Home prioriza Pro, Broker y Admin; los listados por defecto los ponen primero |
+| 5 | **VA-171** | Métricas por plan: básicas, Pro (panel de VA-151) y completas (90 días, fuentes, provincias, comparador, Página VA, republicaciones, CSV) |
+| 6 | **VA-169** | Página VA del Pro (la actual) y Página VA armable del Broker (secciones: carrusel, grilla y texto; con flechas) |
+| 7 | **VA-175** | Página `/settings` (Ajustes) en el menú de Favoritos con toda la configuración (moviendo los formularios que ya existen) y botón "Editar" en "Mi cuenta" |
+| 8 | **VA-170** | Detalle de avisos de Brokers: portada, degradé, datos clave grandes, color de acento, video de YouTube, "Más de…", PDF con su logo. **Prototipo con 2 variantes del degradé y OK del socio** |
+| 9 | **VA-172** | Buscar Brokers por nombre comercial en el buscador |
+| 10 | **VA-173** | Admin: cuentas por tipo y gastos fijos (VA-102 pasa al MVP) |
+
+**Preguntas abiertas (se plantean al llegar):** mail cuando se reponen las republicaciones (VA-167);
+etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular del detalle del Broker
+(VA-170, a confirmar).
+
+### Estado del lote del 19/10
+
+- **Documentos de los avisos públicos (pedido del socio, 19/10):** ✅ hecho en local. La documentación
+  adjunta se ve en el detalle para todos y se abre sin sesión (link firmado de 60 s, como antes); el
+  formulario avisa que es pública. Un aviso pausado por moderación sigue sin mostrarlos.
+- **VA-165 (19/10/2026):** ✅ hecho en local. Migración `va165_categoria_recomendada` (renombra
+  `defaultCategoryId` → `recommendedCategoryId` y su FK; lo cargado por VA-153 se conserva; en producción
+  entra con VA-164). Formulario: la categoría se propone con la recomendada y se puede cambiar ("Recomendada
+  para este modelo: …" y, si difiere, "Elegiste una categoría distinta de la recomendada"); con el tipo
+  elegido primero, marcas y modelos se acotan por la recomendada, con "Ver todas las marcas"; lo ya elegido
+  nunca se borra al cambiar la categoría; sin "Avisanos". El servidor guarda la categoría elegida (sigue
+  validando marca, modelo y submodelo). Filtros de `/aircraft` y buscador de la Home: marcas y modelos con
+  avisos activos reales de esa categoría. Admin: "categoría recomendada".
+- **VA-166 + VA-174 (19/10/2026):** ✅ hecho en local (capturas de `/plans` y del admin enviadas al socio el 19/10; se ajusta lo que pida). Migraciones `va166_plan_base` (valor BASE) y
+  `va166_planes_grilla` (precio tachado, republicaciones, destacadas, niveles de Página VA y métricas,
+  detalles personalizados; plan Base 1 / 3 como fila de `Plan`; filas de la grilla; el cupo gratis sale de
+  `QuotaSettings`, que suma la espera entre republicaciones). Script `scripts/va166-migrate-data.ts`
+  (informe / `--apply` / `--confirm-production`): Pro 3 / 10 a AR$ 38.000 (50.000), Broker 55.000 (68.000) y
+  85.000 (108.000), beneficios de la grilla y cierre de la cortesía del admin (en `va_dev`: 1). Regla única en
+  `lib/plan-benefits.ts`. `/plans`: la grilla (tabla en escritorio, una placa por plan en celular, sin
+  scroll lateral) con los interruptores del Broker que cambian precio y cupos en vivo; botones según
+  visitante, cuenta o admin. Admin: la misma grilla editable (celdas en su lugar, filas del sistema con
+  candado, filas propias con flechas, lista de cambios, vista previa y CONFIRMAR al cambiar un precio con
+  suscriptores). Admins: "Admin", Broker completo, sin cortesía ni suscripción. Textos (FAQ, términos,
+  arrepentimiento, `/howtopublish`, perfil): borrador para revisar. `scripts/verify-quota.ts` 23/23.
+- **VA-167 (19/10/2026):** ✅ hecho en local. Migración `va167_republicar` (`lastPublishedAt` en avisos y
+  repuestos, igual a `createdAt` en los existentes, y tabla `Republication`). Reglas en `lib/republish.ts`:
+  Base 2 y Pro 5 por año (de la grilla), contando desde el alta de la cuenta o de la suscripción, sin
+  acumular; el mismo aviso, cada 7 días como mucho (`QuotaSettings.republishCooldownDays`); Broker y admins,
+  "Republicar todas" cada 30 días. "Más recientes" (`/aircraft`, `/spareparts`) y "Últimas publicaciones"
+  (Home) ordenan por `lastPublishedAt`; el detalle suma "Actualizado el …". En el perfil: cartel "Tenés N
+  republicaciones disponibles" (se cierra y vuelve cuando cambia el saldo), botón "Republicar" por aviso
+  activo con el saldo, "Republicar todas" del Broker y punto en "Mi Cuenta" del menú; en el detalle propio,
+  una franja con "Republicar". `scripts/verify-republish.ts` 18/18. ❓ Pendiente: mail cuando se reponen.
+- **VA-168 (19/10/2026):** ✅ hecho en local. Sin migración. `lib/featured.ts`: las cuentas con el interruptor
+  "Destacadas" del plan (Pro, Broker) y los admins (lista cacheada 5 min, se invalida al guardar los planes o
+  una cortesía). Home, "Aeronaves destacadas": 6 al azar entre sus avisos y, si faltan, se completa con los
+  recientes. `/aircraft` y `/spareparts` en el orden por defecto: primero esos avisos y después el resto
+  (cada grupo por `lastPublishedAt`), con una paginación que no repite ni saltea; ordenar por precio, año,
+  etc. no los adelanta. `scripts/verify-featured.ts` 5/5. ❓ Pendiente: etiqueta "Destacado" en la tarjeta.
+- **VA-171 (19/10/2026):** ✅ hecho en local. Migración `va171_metricas` (eventos COMPARE_ADD y
+  PROFILE_LISTING_CLICK y `AnalyticsEvent.region`). El nivel sale de la grilla: Base, vistas y contactos por
+  aviso (como hoy); Pro, el panel de VA-151 con 7 y 30 días; Broker y admins, además 90 días y rango propio
+  (hasta 13 meses), fuentes de tráfico (solo de quien aceptó las cookies de medición, con la aclaración de
+  que son parciales), provincia aproximada (encabezado de Vercel, sin la IP), veces en el comparador por
+  aviso, clics desde la Página VA, efecto de las republicaciones (vistas 7 días antes y después) y
+  "Exportar CSV". La purga del admin conserva 13 meses los eventos de avisos y perfiles y sigue borrando el
+  resto a los 90 días. Privacidad: la provincia aproximada. `scripts/verify-metrics-full.ts` 8/8 y
+  `verify-seller-metrics.ts` sin cambios.
+- **VA-175 (19/10/2026):** ✅ hecho en local (antes que VA-169: el editor de la Página VA usa este "Editar" y
+  Ajustes). Página `/settings` ("Ajustes", noindex, protegida) en el menú del usuario junto a Favoritos, con
+  los formularios que ya existían, movidos sin rehacerlos: datos personales y foto, email y contraseña, plan
+  y suscripción, "Mis compras", datos de facturación, notificaciones y cookies, y la Página VA. Una columna y
+  un "Guardar" por sección. "Mi cuenta" (el perfil) queda para ver: publicaciones, métricas y
+  republicaciones, con "Ajustes" arriba a la derecha y "Editar página" en la Página VA. Los links viejos
+  (`?tab=compras`, `?tab=edit`) y el de `/arrepentimiento` llevan a Ajustes.
+- **VA-169, VA-170, VA-172, VA-173:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
+  En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
+  prueba). Informe: `scripts/va166-report.ts` (solo lee).

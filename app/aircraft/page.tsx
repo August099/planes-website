@@ -12,6 +12,7 @@ import Link from "next/link";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { featuredFirstPage, getFeaturedSellerIds } from "@/lib/featured";
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -74,7 +75,7 @@ export default async function AircraftListPage({ searchParams }: Props) {
   const orderByMap: Record<string, Prisma.AircraftOrderByWithRelationInput> = {
     price_desc: { price: "desc" },
     price_asc: { price: "asc" },
-    recent: { createdAt: "desc" },
+    recent: { lastPublishedAt: "desc" }, // VA-167: alta o republicación
     oldest: { createdAt: "asc" },
     az: { title: "asc" },
     za: { title: "desc" },
@@ -108,18 +109,24 @@ export default async function AircraftListPage({ searchParams }: Props) {
     }),
   };
 
-  const [aircrafts, totalAircrafts, { categories, brands }, userFavorites, inUse] = await Promise.all([
+  // VA-168: en el orden por defecto, primero los avisos de cuentas con destacadas (Pro, Broker y admins);
+  // con otro orden (precio, año…), se respeta ese orden sin mezclar.
+  const featuredIds = sort === "recent" ? await getFeaturedSellerIds() : [];
+  const findPage = (sellerId: { in: string[] } | { notIn: string[] }, pageSkip: number, pageTake: number) =>
     prisma.aircraft.findMany({
-      where: whereClause,
+      where: { ...whereClause, sellerId },
       include: {
         category: { select: { id: true, name: true } },
         // El carrusel de la card muestra hasta 5 (antes se traían todas, VA-13).
         images: { orderBy: { order: "asc" }, take: 5 },
       },
       orderBy,
-      skip,
-      take: itemsPerPage,
-    }),
+      skip: pageSkip,
+      take: pageTake,
+    });
+
+  const [aircrafts, totalAircrafts, { categories, brands }, userFavorites, inUse] = await Promise.all([
+    featuredFirstPage(featuredIds, skip, itemsPerPage, findPage, () => prisma.aircraft.count({ where: { ...whereClause, sellerId: { in: featuredIds } } })),
     prisma.aircraft.count({ where: whereClause }),
     // Taxonomía cacheada (VA-13)
     getAircraftTaxonomy(),
@@ -132,25 +139,33 @@ export default async function AircraftListPage({ searchParams }: Props) {
     // VA-74: marcas, modelos y variantes con avisos activos (para no mandar al filtro toda la taxonomía).
     prisma.aircraft.findMany({
       where: activeListingWhere(),
-      select: { brandId: true, modelId: true, subModelId: true },
-      distinct: ["brandId", "modelId", "subModelId"],
+      select: { brandId: true, modelId: true, subModelId: true, categoryId: true },
+      distinct: ["brandId", "modelId", "subModelId", "categoryId"],
     }),
   ]);
 
   // Filtro: solo lo que tiene publicaciones activas, más lo que ya esté aplicado en la URL.
   const usedIds = new Set<string>([...brandIds, ...modelIds, ...subModelIds]);
+  // VA-165: categorías de los avisos reales de cada marca y modelo (para acotar marcas al elegir una
+  // categoría: un modificado aparece en la categoría que eligió el vendedor, no en la recomendada).
+  const categoriesOf = new Map<string, Set<string>>();
+  const addCategory = (id: string, categoryId: string) => categoriesOf.set(id, (categoriesOf.get(id) ?? new Set()).add(categoryId));
   for (const a of inUse) {
     if (a.brandId) usedIds.add(a.brandId);
     if (a.modelId) usedIds.add(a.modelId);
     if (a.subModelId) usedIds.add(a.subModelId);
+    if (a.brandId) addCategory(a.brandId, a.categoryId);
+    if (a.modelId) addCategory(a.modelId, a.categoryId);
   }
+  const categoryIdsOf = (id: string) => [...(categoriesOf.get(id) ?? [])];
   const filterBrands = brands
     .filter((b) => usedIds.has(b.id))
     .map((b) => ({
       ...b,
+      categoryIds: categoryIdsOf(b.id),
       models: b.models
         .filter((m) => usedIds.has(m.id))
-        .map((m) => ({ ...m, variants: m.variants.filter((v) => usedIds.has(v.id)) })),
+        .map((m) => ({ ...m, categoryIds: categoryIdsOf(m.id), variants: m.variants.filter((v) => usedIds.has(v.id)) })),
     }));
 
   const userFavIds = new Set(userFavorites.map((f) => f.aircraftId));
