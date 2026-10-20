@@ -1737,6 +1737,15 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
   recientes. `/aircraft` y `/spareparts` en el orden por defecto: primero esos avisos y después el resto
   (cada grupo por `lastPublishedAt`), con una paginación que no repite ni saltea; ordenar por precio, año,
   etc. no los adelanta. `scripts/verify-featured.ts` 5/5. ❓ Pendiente: etiqueta "Destacado" en la tarjeta.
-- **VA-169 a VA-175:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
+- **VA-171 (19/10/2026):** ✅ hecho en local. Migración `va171_metricas` (eventos COMPARE_ADD y
+  PROFILE_LISTING_CLICK y `AnalyticsEvent.region`). El nivel sale de la grilla: Base, vistas y contactos por
+  aviso (como hoy); Pro, el panel de VA-151 con 7 y 30 días; Broker y admins, además 90 días y rango propio
+  (hasta 13 meses), fuentes de tráfico (solo de quien aceptó las cookies de medición, con la aclaración de
+  que son parciales), provincia aproximada (encabezado de Vercel, sin la IP), veces en el comparador por
+  aviso, clics desde la Página VA, efecto de las republicaciones (vistas 7 días antes y después) y
+  "Exportar CSV". La purga del admin conserva 13 meses los eventos de avisos y perfiles y sigue borrando el
+  resto a los 90 días. Privacidad: la provincia aproximada. `scripts/verify-metrics-full.ts` 8/8 y
+  `verify-seller-metrics.ts` sin cambios.
+- **VA-169, VA-175, VA-170, VA-172, VA-173:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
   En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
   prueba). Informe: `scripts/va166-report.ts` (solo lee).

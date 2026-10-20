@@ -3,24 +3,36 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { getSellerMetricsAction } from "@/app/actions/seller-metrics-actions";
-import type { ChannelKey, ListingMetrics, MetricsTotal, SellerMetrics } from "@/lib/seller-metrics";
+import type { ChannelKey, FullMetrics, ListingMetrics, MetricsTotal, SellerMetrics, SourceKey } from "@/lib/seller-metrics";
+import { regionName } from "@/lib/ar-regions";
 
 // VA-151: pestaña "Métricas" del perfil propio (cuenta VA). Pocas y útiles: resumen con variación,
 // vistas por día (SVG propio, sin librerías), contactos por canal y rendimiento por aviso. Se carga
-// con next/dynamic solo al abrir la pestaña.
+// con next/dynamic solo al abrir la pestaña. VA-171: con el nivel completo (Broker, la respuesta trae
+// "full"), además 90 días y rango propio, fuentes de tráfico, provincias, comparador, clics desde la
+// Página VA, efecto de las republicaciones y "Exportar CSV".
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 const BOX = "rounded-lg border border-[#001F58]/12 bg-white";
 const NUM = new Intl.NumberFormat("es-AR");
 const DAY_FMT = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
 const SINCE_FMT = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", timeZone: "America/Argentina/Buenos_Aires" });
+const SOURCE_LABEL: Record<SourceKey, string> = { SEARCH: "Google y buscadores", SOCIAL: "Redes sociales", WHATSAPP: "WhatsApp", DIRECT: "Directo", OTHER: "Otros sitios" };
+const DATE_FMT = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Argentina/Buenos_Aires" });
 const CHANNEL_LABEL: Record<ChannelKey, string> = { WHATSAPP: "WhatsApp", PHONE: "Teléfono", EMAIL: "Email", FORM: "Preguntas" };
 const STATUS_LABEL: Record<string, string> = { ACTIVE: "Activo", PAUSED: "Pausado", MODERATED: "Pausado por moderación", PENDING_PAYMENT: "Pendiente de pago", EXPIRED: "Vencido", SOLD: "Vendido" };
 
-type SortKey = "views" | "contacts" | "favorites" | "contactRate" | "title";
+type SortKey = "views" | "contacts" | "favorites" | "contactRate" | "compares" | "title";
+type Period = number | { from: string; to: string };
 
 export default function SellerMetricsPanel() {
-  const [days, setDays] = useState<7 | 30>(30);
+  const [days, setDays] = useState<Period>(30);
+  const [range, setRange] = useState(() => {
+    const to = new Date();
+    const from = new Date(to.getTime() - 60 * 86_400_000);
+    const iso = (d: Date) => d.toISOString().slice(0, 10);
+    return { from: iso(from), to: iso(to) };
+  });
   const [data, setData] = useState<SellerMetrics | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,8 +53,8 @@ export default function SellerMetricsPanel() {
     };
   }, [days]);
 
-  const changeDays = (d: 7 | 30) => {
-    if (d === days) return;
+  const changeDays = (d: Period) => {
+    if (typeof d === "number" && d === days) return;
     setLoading(true);
     setDays(d);
   };
@@ -64,8 +76,8 @@ export default function SellerMetricsPanel() {
             Métricas de tus avisos
           </h2>
         </div>
-        <div className="flex gap-2" role="group" aria-label="Período">
-          {([7, 30] as const).map((d) => (
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Período">
+          {(data?.full ? [7, 30, 90] : [7, 30]).map((d) => (
             <button
               key={d}
               type="button"
@@ -76,6 +88,27 @@ export default function SellerMetricsPanel() {
               Últimos {d} días
             </button>
           ))}
+          {/* VA-171: rango propio (nivel completo). */}
+          {data?.full && (
+            <span className="flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
+              <input type="date" aria-label="Desde" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="min-h-9 rounded-md border border-[#001F58]/20 px-2" />
+              <span>a</span>
+              <input type="date" aria-label="Hasta" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="min-h-9 rounded-md border border-[#001F58]/20 px-2" />
+              <button
+                type="button"
+                aria-pressed={typeof days !== "number"}
+                onClick={() => changeDays({ ...range })}
+                className={`min-h-9 rounded-md border px-3 font-semibold transition-colors ${typeof days !== "number" ? "border-[#001F58] bg-[#001F58] text-white" : "border-[#001F58]/20 bg-white text-[#001F58] hover:border-[#001F58]/50"}`}
+              >
+                Ver rango
+              </button>
+            </span>
+          )}
+          {data?.full && (
+            <button type="button" onClick={() => exportCsv(data)} className="min-h-9 rounded-md border border-[#001F58]/20 bg-white px-3 text-xs font-semibold text-[#001F58] hover:border-[#001F58]/50">
+              Exportar CSV
+            </button>
+          )}
         </div>
       </div>
 
@@ -86,13 +119,13 @@ export default function SellerMetricsPanel() {
         <div className={`space-y-5 transition-opacity ${loading ? "opacity-60" : ""}`}>
           {/* 1. Resumen */}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Stat label="Vistas" total={data.totals.views} days={days} />
-            <Stat label="Contactos" total={data.totals.contacts} days={days} />
-            <Stat label="Favoritos nuevos" total={data.totals.favorites} days={days} />
+            <Stat label="Vistas" total={data.totals.views} days={data.days} />
+            <Stat label="Contactos" total={data.totals.contacts} days={data.days} />
+            <Stat label="Favoritos nuevos" total={data.totals.favorites} days={data.days} />
             <Stat
               label="Visitas a tu Página VA"
               total={data.totals.profileVisits}
-              days={days}
+              days={data.days}
               note={data.profileVisitsSince ? `Desde el ${SINCE_FMT.format(new Date(data.profileVisitsSince))}` : "Se cuentan desde ahora"}
             />
           </div>
@@ -109,6 +142,9 @@ export default function SellerMetricsPanel() {
             {data.totals.contacts.current === 0 ? <Empty /> : <Channels channels={data.channels} />}
           </div>
 
+          {/* VA-171: secciones del nivel completo */}
+          {data.full && <FullSections full={data.full} days={data.days} />}
+
           {/* 4. Rendimiento por aviso */}
           <div className={BOX}>
             <p className={`border-b border-[#001F58]/10 px-4 py-3 sm:px-5 ${LABEL}`}>Rendimiento por aviso</p>
@@ -118,7 +154,7 @@ export default function SellerMetricsPanel() {
               </div>
             ) : (
               <>
-                <ListingTable listings={listings} sort={sort} onSort={setSort} best={best} />
+                <ListingTable listings={listings} sort={sort} onSort={setSort} best={best} showCompares={!!data.full} />
                 <ListingCards listings={listings} best={best} />
               </>
             )}
@@ -256,7 +292,9 @@ function ListingTable({
   sort,
   onSort,
   best,
+  showCompares = false,
 }: {
+  showCompares?: boolean;
   listings: ListingMetrics[];
   sort: { key: SortKey; dir: 1 | -1 };
   onSort: (s: { key: SortKey; dir: 1 | -1 }) => void;
@@ -281,6 +319,7 @@ function ListingTable({
             {th("contacts", "Contactos")}
             {th("favorites", "Favoritos")}
             {th("contactRate", "Tasa de contacto")}
+            {showCompares && th("compares", "Comparador")}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
@@ -303,6 +342,7 @@ function ListingTable({
               <td className="px-4 py-2.5 text-right tabular-nums">{NUM.format(l.contacts)}</td>
               <td className="px-4 py-2.5 text-right tabular-nums">{NUM.format(l.favorites)}</td>
               <td className="px-4 py-2.5 text-right tabular-nums">{rate(l.contactRate)}</td>
+              {showCompares && <td className="px-4 py-2.5 text-right tabular-nums">{NUM.format(l.compares)}</td>}
             </tr>
           ))}
         </tbody>
@@ -344,4 +384,115 @@ function ListingCards({ listings, best }: { listings: ListingMetrics[]; best: { 
       ))}
     </ul>
   );
+}
+
+// VA-171: fuentes, provincias, Página VA y republicaciones (nivel completo).
+function FullSections({ full, days }: { full: FullMetrics; days: number }) {
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div className={`${BOX} p-4 sm:p-5`}>
+          <p className={LABEL}>Fuentes de tráfico</p>
+          {full.sourcesBase === 0 ? (
+            <Empty />
+          ) : (
+            <Bars rows={full.sources.map((x) => ({ key: x.key, label: SOURCE_LABEL[x.key], count: x.count }))} />
+          )}
+          <p className="mt-3 text-[11px] leading-snug text-slate-500">
+            Parcial: sale de {NUM.format(full.sourcesBase)} vistas de visitantes que aceptaron las cookies de medición.
+          </p>
+        </div>
+        <div className={`${BOX} p-4 sm:p-5`}>
+          <p className={LABEL}>Provincia aproximada de los visitantes</p>
+          {full.regions.length === 0 ? <Empty /> : <Bars rows={full.regions.map((r) => ({ key: r.code, label: regionName(r.code), count: r.count }))} />}
+          <p className="mt-3 text-[11px] leading-snug text-slate-500">Aproximada y sumada: nunca quién te visitó.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Stat label="Clics desde tu Página VA a tus avisos" total={full.profileListingClicks} days={days} />
+        <div className={`${BOX} p-4`}>
+          <p className="text-xs text-slate-600">Efecto de tus republicaciones (vistas 7 días antes y después)</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums text-[#001F58]">
+            {NUM.format(full.republish.totalBefore)} → {NUM.format(full.republish.totalAfter)}
+          </p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            {full.republish.items.length ? `${full.republish.items.length} republicaciones en el período` : "Sin republicaciones en el período"}
+          </p>
+        </div>
+      </div>
+
+      {full.republish.items.length > 0 && (
+        <div className={BOX}>
+          <p className={`border-b border-[#001F58]/10 px-4 py-3 sm:px-5 ${LABEL}`}>Republicaciones</p>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px] text-sm">
+              <thead className={`border-b border-[#001F58]/10 text-left ${LABEL}`}>
+                <tr>
+                  <th className="px-4 py-2 font-semibold">Fecha</th>
+                  <th className="px-4 py-2 font-semibold">Aviso</th>
+                  <th className="px-4 py-2 text-right font-semibold">Vistas antes</th>
+                  <th className="px-4 py-2 text-right font-semibold">Vistas después</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {full.republish.items.map((r, i) => (
+                  <tr key={`${r.date}-${i}`}>
+                    <td className="px-4 py-2 tabular-nums text-slate-600">{DATE_FMT.format(new Date(r.date))}</td>
+                    <td className="max-w-[18rem] truncate px-4 py-2 text-[#001F58]">{r.title}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">{NUM.format(r.before)}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">{NUM.format(r.after)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function Bars({ rows }: { rows: { key: string; label: string; count: number }[] }) {
+  const total = rows.reduce((sum, r) => sum + r.count, 0) || 1;
+  return (
+    <ul className="mt-3 space-y-2.5">
+      {rows.map((r) => {
+        const pct = Math.round((r.count / total) * 100);
+        return (
+          <li key={r.key} className="grid grid-cols-[8.5rem_minmax(0,1fr)_4.5rem] items-center gap-3 text-sm">
+            <span className="truncate text-slate-700">{r.label}</span>
+            <span className="h-2.5 overflow-hidden rounded-full bg-slate-100" aria-hidden>
+              <span className="block h-full rounded-full bg-[#001F58]" style={{ width: `${pct}%` }} />
+            </span>
+            <span className="text-right tabular-nums text-slate-700">
+              {NUM.format(r.count)} <span className="text-xs text-slate-500">({pct} %)</span>
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/** VA-171: CSV del período (resumen y avisos), armado en el navegador. */
+function exportCsv(data: SellerMetrics) {
+  const q = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+  const lines: (string | number)[][] = [
+    ["Período", `${data.from.slice(0, 10)} a ${data.to.slice(0, 10)}`],
+    ["Vistas", data.totals.views.current],
+    ["Contactos", data.totals.contacts.current],
+    ["Favoritos nuevos", data.totals.favorites.current],
+    ["Visitas a la Página VA", data.totals.profileVisits.current],
+    [],
+    ["Aviso", "Tipo", "Estado", "Vistas", "Contactos", "Favoritos", "Tasa de contacto (%)", "Comparador"],
+    ...data.listings.map((l) => [l.title, l.kind === "AIRCRAFT" ? "Aeronave" : "Repuesto", STATUS_LABEL[l.status] ?? l.status, l.views, l.contacts, l.favorites, l.contactRate ?? "", l.compares]),
+  ];
+  const csv = "\uFEFF" + lines.map((row) => row.map(q).join(";")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `metricas-${data.from.slice(0, 10)}-a-${data.to.slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }

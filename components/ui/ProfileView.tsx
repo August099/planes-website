@@ -572,6 +572,7 @@ export function ProfileView({
             favIds={currentUserFavIds}
             quota={quota}
             republish={republish}
+            profileUserId={profileUser.id}
             moderation={moderation}
             onStatus={handleStatus}
             onRequestReview={handleRequestReview}

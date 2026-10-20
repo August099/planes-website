@@ -828,6 +828,8 @@ model AnalyticsEvent {
   // VA-151: perfil visitado (evento PROFILE_VIEW).
   profileUserId String?
   profileUser   User?              @relation("AnalyticsEventProfile", fields: [profileUserId], references: [id], onDelete: Cascade)
+  // VA-171: provincia aproximada del visitante (código ISO 3166-2:AR del encabezado de Vercel; sin la IP).
+  region        String?            @db.VarChar(8)
 
   @@index([eventType, createdAt])
   @@index([profileUserId, eventType, createdAt])
@@ -1098,6 +1100,10 @@ enum AnalyticsEventType {
   USER_REGISTERED
   // VA-151: visita al perfil de un vendedor (Página VA)
   PROFILE_VIEW
+  // VA-171: se agregó un aviso al comparador.
+  COMPARE_ADD
+  // VA-171: clic a un aviso desde la Página VA de su vendedor.
+  PROFILE_LISTING_CLICK
 }
 
 // --------------------------------------------------------------------------- VA-92 · Pagos y facturación

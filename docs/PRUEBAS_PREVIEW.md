@@ -138,6 +138,11 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
+### Métricas por plan (VA-171)
+- [ ] Cuenta Pro (cortesía): pestaña "Métricas" con 7 y 30 días.
+- [ ] Como admin (o Broker): además "Últimos 90 días", rango con dos fechas y "Ver rango", "Exportar CSV" (baja un .csv que abre en Excel), fuentes de tráfico, provincias, "Comparador" en la tabla y el efecto de las republicaciones.
+- [ ] Desde otra cuenta, agregar al comparador un aviso del admin y entrar a un aviso desde su Página VA: suben "Comparador" y "Clics desde tu Página VA" (la caché tarda hasta 10 minutos).
+
 ### Destacadas por plan (VA-168)
 - [ ] Con un aviso de una cuenta Pro (cortesía desde `/admin/users`) y otros más nuevos de cuentas Base: en `/aircraft` el del Pro aparece primero; ordenando por precio, no.
 - [ ] Home → "Aeronaves destacadas": aparecen primero los avisos de cuentas Pro, Broker y admins.

@@ -8,6 +8,7 @@ import { SparePartCard } from "@/components/ui/SparePartCard";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { RepublishButton, RepublishNotice } from "@/components/ui/profile/RepublishControls";
 import type { RepublishView } from "@/lib/republish";
+import { logProfileListingClick } from "@/app/actions/analytics-actions";
 
 // VA-97: una sola grilla de publicaciones en el perfil (antes, una pestaña por tipo). Arriba,
 // interruptores por tipo (combinables, todos prendidos por defecto) y, en el panel propio, filtros por
@@ -78,6 +79,7 @@ export function ProfileListings({
   favIds,
   quota,
   republish = null,
+  profileUserId,
   moderation = {},
   onStatus,
   onRequestReview,
@@ -90,6 +92,8 @@ export function ProfileListings({
   favIds: string[];
   quota?: ProfileQuota | null;
   republish?: RepublishView | null;
+  /** VA-171: dueño de la página, para contar los clics de los visitantes hacia sus avisos. */
+  profileUserId?: string;
   moderation?: ModerationMap;
   onStatus: (id: string, type: "aircraft" | "sparepart", to: StatusTarget) => void;
   onRequestReview: (id: string, type: "aircraft" | "sparepart") => void;
@@ -185,7 +189,19 @@ export function ProfileListings({
             const type = kind === "aeronaves" ? "aircraft" : "sparepart";
             const st = statusOf(l);
             return (
-              <div key={`${kind}-${l.id}`} className="flex h-full flex-col justify-between space-y-2">
+              <div
+                key={`${kind}-${l.id}`}
+                className="flex h-full flex-col justify-between space-y-2"
+                onClickCapture={
+                  !isOwner && profileUserId
+                    ? (e) => {
+                        // Solo el link al aviso (no favoritos, compartir ni comparar).
+                        if ((e.target as HTMLElement).closest("button")) return;
+                        if ((e.target as HTMLElement).closest("a")) void logProfileListingClick(profileUserId, kind === "aeronaves" ? "AIRCRAFT" : "SPARE_PART", l.id);
+                      }
+                    : undefined
+                }
+              >
                 {kind === "aeronaves" ? (
                   <AircraftCard
                     id={l.id}

@@ -2,6 +2,7 @@
 
 import { Check, Columns3 } from "lucide-react";
 import { addToCompare, removeFromCompare, useCompareItems, type CompareItem } from "@/lib/compare-store";
+import { logCompareAdd } from "@/app/actions/analytics-actions";
 
 // VA-83: botón chico "Comparar" / "Agregado". En las tarjetas va sobre la foto, en el detalle
 // junto a favoritos. No navega (frena el click del link de la tarjeta).
@@ -13,7 +14,8 @@ export function CompareButton({ item, variant = "card" }: { item: CompareItem; v
     e.preventDefault();
     e.stopPropagation();
     if (added) removeFromCompare(item.id);
-    else addToCompare(item);
+    // VA-171: cuenta para las métricas del Broker (el comparador es de aviones).
+    else if (addToCompare(item) === "added") void logCompareAdd("AIRCRAFT", item.id);
   };
 
   const label = added ? "Agregado" : "Comparar";

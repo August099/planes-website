@@ -193,6 +193,8 @@ export default function PrivacidadPage() {
                     </tbody>
                   </table>
                 </div>
+                {/* VA-171 */}
+                <p>Para las métricas de los vendedores registramos la provincia aproximada desde la que se ve un aviso, a partir de la conexión y sin guardar la dirección IP. Se muestra solo sumada (por ejemplo, &quot;30 vistas desde Córdoba&quot;), nunca quién visitó. Estos datos se conservan hasta 13 meses.</p>
                 <p>Al iniciar sesión con Google o al pagar con Mercado Pago, esos servicios usan sus propias cookies en sus sitios, según sus políticas. Las métricas de rendimiento de Vercel (Speed Insights) no usan cookies ni identifican al visitante.</p>
                 <p>También podés borrar o bloquear las cookies desde la configuración de tu navegador; si bloqueás las necesarias, no vas a poder iniciar sesión.</p>
               </div>
