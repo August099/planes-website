@@ -15,6 +15,10 @@ export type StorefrontData = {
   whatsapp: string | null;
   // VA-105: insignia del plan (includesVerifiedBadge), aparte de la Página VA.
   verified: boolean;
+  // VA-170: detalles personalizados (solo Broker y admins): portada de los detalles y color de acento.
+  customDetail?: boolean;
+  detailCoverUrl?: string | null;
+  accentColor?: string | null;
 };
 
 type Props = {

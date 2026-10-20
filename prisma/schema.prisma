@@ -33,6 +33,10 @@ model User {
   logoUrl                   String?
   website                   String?
   whatsapp                  String?
+  // VA-170: detalles personalizados del Broker: portada propia de los detalles y color de acento (clave de
+  // una paleta cerrada, lib/accent-colors.ts; null = el azul de VA).
+  detailCoverUrl            String?
+  accentColor               String?              @db.VarChar(16)
   accounts                  Account[]
   adBanners                 AdBanner[]
   aircrafts                 Aircraft[]
@@ -64,6 +68,8 @@ model User {
   moderationDone            ModerationAction[]   @relation("ModerationAdmin")
   // VA-167: republicaciones hechas (el saldo del año sale de contarlas).
   republications            Republication[]
+  // VA-169: secciones de la Página VA completa (Broker y admins).
+  profilePage               ProfilePage?
 }
 
 model Account {
@@ -468,6 +474,8 @@ model Aircraft {
   // VA-167: última vez que se publicó (alta o republicación). Ordena "Más recientes" y "Últimas
   // publicaciones"; el detalle muestra "Actualizado el …" si es posterior al alta.
   lastPublishedAt  DateTime            @default(now())
+  // VA-170: link a un video de YouTube (solo el texto; el reproductor se carga al tocarlo).
+  youtubeUrl       String?             @db.VarChar(100)
   updatedAt        DateTime            @updatedAt
   purchaseId       String?
   description      String
@@ -668,6 +676,8 @@ model SparePart {
   // VA-167: última vez que se publicó (alta o republicación). Ordena "Más recientes" y "Últimas
   // publicaciones"; el detalle muestra "Actualizado el …" si es posterior al alta.
   lastPublishedAt  DateTime            @default(now())
+  // VA-170: link a un video de YouTube (solo el texto; el reproductor se carga al tocarlo).
+  youtubeUrl       String?             @db.VarChar(100)
   updatedAt        DateTime            @updatedAt
   purchaseId       String?
   description      String
@@ -1482,4 +1492,45 @@ model Republication {
   @@index([userId, createdAt])
   @@index([aircraftId])
   @@index([sparePartId])
+}
+
+// VA-169: Página VA completa del Broker (y admins): secciones armables (carrusel, grilla de avisos y texto),
+// publicadas y en borrador. Validadas con zod (lib/profile-page.ts). Si el plan baja, se guarda y no se muestra.
+model ProfilePage {
+  userId        String    @id
+  sections      Json      @default("[]")
+  draftSections Json?
+  publishedAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// VA-173: gastos fijos de la web (referencia para el admin: no factura ni paga nada).
+enum ExpenseFrequency {
+  MONTHLY
+  YEARLY
+}
+
+model FixedExpense {
+  id        String           @id @default(cuid())
+  name      String
+  amount    Decimal          @db.Decimal(12, 2)
+  // "ARS" o "USD"
+  currency  String           @default("ARS")
+  frequency ExpenseFrequency @default(MONTHLY)
+  since     DateTime
+  notes     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+// VA-173: tipo de cambio cargado a mano (dólar → pesos), con fecha. Vale el más reciente.
+model ExchangeRate {
+  id          String   @id @default(cuid())
+  usdToArs    Decimal  @db.Decimal(12, 2)
+  date        DateTime
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@index([date])
 }

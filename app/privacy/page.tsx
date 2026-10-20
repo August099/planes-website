@@ -123,6 +123,8 @@ export default function PrivacidadPage() {
                   <li><strong>Google:</strong> inicio de sesión con tu cuenta de Google, si elegís esa opción.</li>
                   <li><strong>Supabase:</strong> base de datos y almacenamiento de fotos y documentos.</li>
                   <li><strong>Vercel:</strong> alojamiento del sitio y medición anónima de su rendimiento.</li>
+                  {/* VA-170 */}
+                  <li><strong>YouTube (Google):</strong> si un vendedor agregó un video a su aviso, el reproductor (modo de privacidad mejorada, youtube-nocookie.com) se carga recién cuando tocás &quot;Ver video&quot;; desde ahí rigen las políticas de YouTube.</li>
                   <li><strong>Resend:</strong> envío de los correos del sitio (verificación, contraseña, pagos).</li>
                   <li><strong>TusFacturas:</strong> emisión de las facturas electrónicas ante ARCA.</li>
                   <li><strong>OpenFreeMap:</strong> el mapa de zona del detalle de un aviso descarga las teselas (imágenes del mapa) de sus servidores, que reciben la dirección IP del navegador como cualquier sitio. No usa cookies y no recibe datos tuyos ni del aviso: el mapa muestra solo una zona aproximada.</li>

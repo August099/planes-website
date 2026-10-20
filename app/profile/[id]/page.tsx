@@ -11,6 +11,10 @@ import { getMissingProfileFieldsCached } from "@/lib/cached-data";
 import { getSubscriptionSummary, hasCustomPage, hasSellerMetrics, hasVerifiedBadge } from "@/lib/subscriptions";
 import { TrackProfileView } from "@/components/ui/profile/TrackProfileView";
 import { quotaForView } from "@/lib/account-data";
+import { getAccountPlan } from "@/lib/plan-benefits";
+import { parseSections, DEFAULT_SECTIONS } from "@/lib/profile-page";
+import type { PageCard } from "@/components/ui/profile/ProfilePageSections";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface Props {
@@ -124,6 +128,53 @@ export default async function ProfilePage({ params, searchParams }: Props) {
     })),
   };
 
+  // VA-169: Página VA completa (Broker y admins): secciones y avisos activos. Si el plan baja, no se muestra
+  // (las secciones quedan guardadas por si vuelve).
+  let vaPage: { sections: ReturnType<typeof parseSections>; draft: ReturnType<typeof parseSections> | null; listings: PageCard[] } | null = null;
+  if ((await getAccountPlan(id)).vaPage === "FULL") {
+    const page = await prisma.profilePage.findUnique({ where: { userId: id } });
+    const listings: PageCard[] = [
+      ...rawProfileUser.aircrafts
+        .filter((a) => a.status === "ACTIVE")
+        .map((a) => ({
+          key: `AIRCRAFT:${a.id}`,
+          kind: "AIRCRAFT" as const,
+          id: a.id,
+          title: a.title,
+          categoryId: a.categoryId,
+          lastPublishedAt: a.lastPublishedAt.toISOString(),
+          price: a.price ? Number(a.price) : null,
+          city: a.city,
+          province: a.province,
+          category: a.category,
+          imageUrl: a.images[0]?.url ?? PLACEHOLDER_IMAGE,
+          year: a.year,
+          totalTimeHours: a.totalTimeHours,
+        })),
+      ...rawProfileUser.spareParts
+        .filter((sp) => sp.status === "ACTIVE")
+        .map((sp) => ({
+          key: `SPARE_PART:${sp.id}`,
+          kind: "SPARE_PART" as const,
+          id: sp.id,
+          title: sp.title,
+          categoryId: null,
+          lastPublishedAt: sp.lastPublishedAt.toISOString(),
+          price: sp.price ? Number(sp.price) : null,
+          city: sp.city,
+          province: sp.province,
+          category: sp.category,
+          imageUrl: sp.images[0]?.url ?? PLACEHOLDER_IMAGE,
+          inPesos: sp.inPesos,
+        })),
+    ];
+    vaPage = {
+      sections: page?.publishedAt ? parseSections(page.sections) : DEFAULT_SECTIONS,
+      draft: isOwner && page?.draftSections ? parseSections(page.draftSections) : null,
+      listings,
+    };
+  }
+
   let currentUserFavIds: string[] = [];
   if (currentUser) {
     const userFavs = await prisma.favorite.findMany({
@@ -152,6 +203,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         hasSellerMetrics={isOwner ? await hasSellerMetrics(id) : false}
         quota={isOwner ? quotaForView(await getQuotaUsage(id)) : null}
         republish={isOwner ? republishView(await getRepublishStatus(id)) : null}
+        vaPage={vaPage}
         moderation={
           isOwner
             ? await moderationInfoFor([

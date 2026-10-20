@@ -4,14 +4,15 @@ import { useState, useEffect, useRef } from "react";
 import { Search, Loader2, Plane, Wrench, ArrowLeft, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useIsHome } from "@/lib/use-is-home";
-import { searchGlobal, SearchResultItem } from "@/app/actions/search-actions";
+import { searchGlobal, searchSellers, SearchResultItem, type SellerResult } from "@/app/actions/search-actions";
+import { SellerResults } from "@/components/ui/search/SellerResults";
 import { logSearch } from "@/app/actions/analytics-actions";
 import { ensureAnalyticsCookies } from "@/lib/analytics-client";
 
 export default function MobileHeaderSearchBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [fetched, setFetched] = useState<{ query: string; items: SearchResultItem[] }>({ query: "", items: [] });
+  const [fetched, setFetched] = useState<{ query: string; items: SearchResultItem[]; sellers: SellerResult[] }>({ query: "", items: [], sellers: [] });
 
   const router = useRouter();
   const isHome = useIsHome();
@@ -35,14 +36,16 @@ export default function MobileHeaderSearchBar() {
   // Los resultados se guardan con la búsqueda que los trajo; "cargando" se deriva (VA-63).
   const hasQuery = query.trim().length >= 2;
   const results = hasQuery ? fetched.items : [];
+  // VA-172: vendedores (Brokers) por nombre comercial.
+  const sellers = hasQuery && fetched.query === query ? fetched.sellers : [];
   const loading = hasQuery && fetched.query !== query;
 
   useEffect(() => {
     if (!hasQuery) return;
 
     const timer = setTimeout(async () => {
-      const res = await searchGlobal(query, "Todos");
-      setFetched({ query, items: res });
+      const [res, found] = await Promise.all([searchGlobal(query, "Todos"), searchSellers(query)]);
+      setFetched({ query, items: res, sellers: found });
     }, 350);
 
     return () => clearTimeout(timer);
@@ -165,7 +168,8 @@ export default function MobileHeaderSearchBar() {
 
           {/* Resultados desplegados */}
           <div className="flex-1 overflow-y-auto bg-white p-2">
-            {query.trim().length >= 2 && results.length === 0 && !loading && (
+            <SellerResults sellers={sellers} query={query} onSelect={() => { setIsOpen(false); setQuery(""); }} />
+            {query.trim().length >= 2 && results.length === 0 && sellers.length === 0 && !loading && (
               <div className="p-8 text-center text-xs text-slate-400">
                 No se encontraron resultados para “{query}”
               </div>

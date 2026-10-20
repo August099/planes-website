@@ -107,6 +107,7 @@ function aircraftFields(data: AircraftListing, categoryId: string) {
     certified: data.certified,
     certDate: data.certDate ? new Date(data.certDate) : null,
     plate: data.plate || null,
+    youtubeUrl: data.youtubeUrl || null, // VA-170
     intDescription: data.intDescription || null,
     extDescription: data.extDescription || null,
     passengers: data.passengers ?? null,
@@ -141,6 +142,7 @@ function sparePartFields(data: SparePartListing) {
     categoryId: data.categoryId,
     brand: data.brand || null,
     partNumber: data.partNumber || null,
+    youtubeUrl: data.youtubeUrl || null, // VA-170
     price: data.priceOnRequest ? null : data.price ?? null,
     inPesos: data.inPesos,
     stock: data.stock,

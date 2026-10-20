@@ -138,6 +138,25 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
+### Cuentas y gastos fijos (VA-173)
+- [ ] `/admin`: arriba, las cuentas por tipo; tocar "Broker" lleva a `/admin/users` filtrado.
+- [ ] `/admin/expenses`: cargar un gasto en dólares y el tipo de cambio; el total mensual en pesos y la cobertura del resumen se actualizan.
+
+### Buscar Brokers (VA-172)
+- [ ] Buscar el nombre comercial del admin (o de un Broker) en el header 📱: aparece "Vendedores" con su logo y "N avisos"; el link abre su Página VA.
+- [ ] Buscar "cessna": no aparece el bloque (sin Brokers que coincidan).
+
+### Detalle del Broker (VA-170)
+- [ ] Como admin, en Ajustes → Página VA: elegir un color de acento y (opcional) una portada para los avisos.
+- [ ] Publicar o editar un aviso del admin con un link de YouTube (youtu.be/…); un link que no es de YouTube da error.
+- [ ] Abrir ese aviso sin sesión 📱: franja con portada y "Ver Página VA", foto con degradé, datos grandes con el color elegido, la diapositiva "Ver video" (el video carga recién al tocarla), "Más de …" al pie y el PDF con los dos logos.
+- [ ] Un aviso de una cuenta Base se ve igual que antes.
+
+### Página VA armable (VA-169)
+- [ ] Como admin, en tu perfil → "Editar": agregar un carrusel ("Solo aviones") y un texto, subirlos con las flechas, ocultar uno, ver la vista previa en "Celular" y "Publicar cambios".
+- [ ] Sin sesión, el perfil del admin muestra esas secciones (sin la grilla común) 📱.
+- [ ] "Guardar borrador": los visitantes siguen viendo lo publicado; el dueño ve "Tenés cambios sin publicar".
+
 ### Ajustes (VA-175)
 - [ ] Menú de usuario → "Ajustes" (compu y celular 📱): datos, foto, contraseña, plan, compras, facturación, cookies y, con Pro o Broker, la Página VA. Guardar cada sección.
 - [ ] "Mi cuenta" ya no tiene pestañas de ajustes ni de compras; "Ajustes" arriba a la derecha.

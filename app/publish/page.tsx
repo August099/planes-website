@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getAccountPlan } from "@/lib/plan-benefits";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -105,6 +106,7 @@ export default async function PublishPage({ searchParams }: Props) {
         spareCategoriesData={JSON.parse(JSON.stringify(rawSpareCategories))}
         editListing={editListing ?? undefined}
         needsPhone={!sellerPhone?.phone?.trim()}
+        canVideo={(await getAccountPlan(user.id)).customDetail}
         quota={
           usage
             ? {

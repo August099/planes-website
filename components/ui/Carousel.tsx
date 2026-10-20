@@ -10,20 +10,27 @@ import "swiper/css/thumbs";
 import "swiper/css/zoom";
 
 import { AppImage } from "@/components/ui/AppImage";
-import { X, Maximize } from "lucide-react";
+import { X, Maximize, Play } from "lucide-react";
+import { youtubeEmbedUrl } from "@/lib/youtube";
 import { CarouselArrow } from "@/components/ui/home/CarouselArrow";
 
 type GalleryProps = {
   images: { url: string; alt?: string | null }[];
   // Título del aviso: se usa para el alt de cada foto ("{título} – foto {n}").
   title: string;
+  // VA-170 (detalle del Broker): id de un video de YouTube, como una miniatura más al final (el
+  // reproductor se carga recién al tocarlo, con youtube-nocookie), y el degradé de la foto hacia abajo.
+  video?: string | null;
+  fade?: boolean;
 };
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 6;
 const STEP = 0.15;
 
-export function AircraftGallery({ images, title }: GalleryProps) {
+export function AircraftGallery({ images, title, video = null, fade = false }: GalleryProps) {
+  const [playing, setPlaying] = useState(false);
+  const slideCount = images.length + (video ? 1 : 0);
   const photoAlt = (image: { alt?: string | null }, index: number) => image.alt || `${title} – foto ${index + 1}`;
 
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
@@ -86,13 +93,15 @@ export function AircraftGallery({ images, title }: GalleryProps) {
     <>
       {/* Mismo fondo que el resto de las tarjetas del detalle (VA-32): antes era transparente
           y alrededor de la foto y de las miniaturas se veía el fondo de la página. */}
-      <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white">
+      <div className={`relative w-full rounded-2xl overflow-hidden bg-white ${fade ? "" : "shadow-sm border border-slate-200"}`}>
         {/* Carrusel principal. Tocar o hacer clic en la foto abre la pantalla completa (VA-42):
             Swiper solo dispara onClick si no hubo arrastre, así que deslizar no la abre. */}
         <div className="relative">
         <Swiper
           onSwiper={(swiper) => (mainSwiperRef.current = swiper)}
-          onClick={(swiper) => handleOpenFullscreen(swiper.activeIndex)}
+          onClick={(swiper) => {
+            if (swiper.activeIndex < images.length) handleOpenFullscreen(swiper.activeIndex);
+          }}
           modules={[Autoplay, Parallax, Thumbs]}
           spaceBetween={10}
           slidesOffsetBefore={10}
@@ -132,8 +141,33 @@ export function AircraftGallery({ images, title }: GalleryProps) {
               </div>
             </SwiperSlide>
           ))}
+          {video && (
+            <SwiperSlide key="video" className="flex items-center justify-center">
+              <div className="relative flex h-full w-full items-center justify-center bg-[#001331]">
+                {playing ? (
+                  <iframe
+                    src={youtubeEmbedUrl(video)}
+                    title={`Video de ${title}`}
+                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                    allowFullScreen
+                    className="h-full w-full border-0"
+                  />
+                ) : (
+                  <button type="button" onClick={(e) => { e.stopPropagation(); setPlaying(true); }} className="flex flex-col items-center gap-3 text-white cursor-pointer">
+                    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#E70F1F]">
+                      <Play className="ml-1 h-7 w-7" fill="currentColor" />
+                    </span>
+                    <span className="text-sm font-semibold">Ver video</span>
+                    <span className="text-[11px] text-white/70">Se carga desde YouTube al tocarlo</span>
+                  </button>
+                )}
+              </div>
+            </SwiperSlide>
+          )}
         </Swiper>
-        {images.length > 1 && (
+        {/* VA-170: degradé de la foto hacia abajo (solo decoración: la foto se ve entera al tocarla). */}
+        {fade && <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-1/4 bg-gradient-to-b from-transparent to-white" />}
+        {slideCount > 1 && (
           <>
             <CarouselArrow direction="prev" placement="inside" onClick={() => mainSwiperRef.current?.slidePrev()} />
             <CarouselArrow direction="next" placement="inside" onClick={() => mainSwiperRef.current?.slideNext()} />
@@ -142,7 +176,7 @@ export function AircraftGallery({ images, title }: GalleryProps) {
         </div>
 
         {/* Miniaturas */}
-        {images.length > 1 && (
+        {slideCount > 1 && (
           <div className="p-3 bg-white border-t border-slate-100">
             <Swiper
               onSwiper={setThumbsSwiper}
@@ -171,6 +205,13 @@ export function AircraftGallery({ images, title }: GalleryProps) {
                   </div>
                 </SwiperSlide>
               ))}
+              {video && (
+                <SwiperSlide key="video" className="cursor-pointer opacity-70 hover:opacity-100 transition-opacity !w-[calc((100%-32px)/5)] sm:!w-[calc((100%-48px)/7)] lg:!w-[calc((100%-64px)/9)]">
+                  <div className="relative flex aspect-[4/3] items-center justify-center rounded-lg bg-[#001331] text-white" aria-label="Video">
+                    <Play className="h-5 w-5" fill="currentColor" />
+                  </div>
+                </SwiperSlide>
+              )}
             </Swiper>
           </div>
         )}

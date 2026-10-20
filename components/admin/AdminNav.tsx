@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Wallet,
   CreditCard,
   BookOpen,
   Layers,
@@ -34,6 +35,8 @@ export const NAV_ITEMS = [
   // VA-152: planes y precios en una sola sección. Los cupones quedan en el código, sin pantalla
   // (app/admin/_cupones es una carpeta privada: no genera la ruta).
   { label: "Planes y precios", href: "/admin/plans", icon: Layers },
+  // VA-173: gastos fijos y tipo de cambio (referencia).
+  { label: "Gastos fijos", href: "/admin/expenses", icon: Wallet },
   { label: "Guías", href: "/admin/guides", icon: BookOpen },
   { label: "Sugerencias", href: "/admin/suggestions", icon: Lightbulb },
 ];

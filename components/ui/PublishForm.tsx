@@ -59,6 +59,8 @@ interface PublishFormProps {
     editListing?: EditListingData;
     // VA-46: el usuario no tiene teléfono cargado (no puede publicar hasta cargarlo).
     needsPhone?: boolean;
+    // VA-170: el plan incluye detalles personalizados (campo "Video de YouTube").
+    canVideo?: boolean;
     // VA-152: uso del cupo de la cuenta (solo al crear). limit null = ilimitado.
     quota?: { tier: "BASE" | "PRO" | "BROKER" | "ADMIN"; planName: string; aircraft: QuotaLine; parts: QuotaLine };
     // VA-152: hay planes pagos activos en /plans (si no, no se ofrece "Pasarme a Pro").
@@ -115,6 +117,7 @@ export default function PublishForm({
     spareCategoriesData = [],
     editListing,
     needsPhone = false,
+    canVideo = false,
     quota,
     plansAvailable = false
 }: PublishFormProps) {
@@ -253,6 +256,7 @@ export default function PublishForm({
         certified: null as boolean | null,
         certDate: "",
         plate: "",
+        youtubeUrl: "",
         city: "",
         province: "",
         intDescription: "",
@@ -338,6 +342,7 @@ export default function PublishForm({
         description: "",
         partNumber: "",
         stock: "1",
+        youtubeUrl: "",
         categoryId: "",
     });
 
@@ -588,6 +593,7 @@ export default function PublishForm({
             certified: aircraftForm.certified as boolean,
             certDate: aircraftForm.certDate,
             plate: aircraftForm.plate,
+            youtubeUrl: aircraftForm.youtubeUrl ?? "",
             city: aircraftForm.city,
             province: aircraftForm.province,
             intDescription: aircraftForm.intDescription,
@@ -615,6 +621,7 @@ export default function PublishForm({
             partNumber: partsForm.partNumber,
             stock: partsForm.stock,
             categoryId: partsForm.categoryId,
+            youtubeUrl: partsForm.youtubeUrl ?? "",
             aircrafts: compatibleModels,
             images: imagePaths,
           };
@@ -1197,6 +1204,16 @@ export default function PublishForm({
                                             </div>
                                         </div>
 
+{/* VA-170: video de YouTube (detalles personalizados del Broker). */}
+                                        {canVideo && (
+                                            <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-1.5">
+                                                <label className="block text-xs font-bold uppercase">Video de YouTube <span className="font-normal normal-case text-slate-500">(opcional)</span></label>
+                                                <input type="url" inputMode="url" maxLength={100} placeholder="https://youtu.be/…" value={aircraftForm.youtubeUrl ?? ""} onChange={e => setAircraftForm({...aircraftForm, youtubeUrl: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <p className="text-[11px] text-slate-500">Pegá el link (youtube.com/watch, youtu.be o /shorts). Se ve como una foto más de la galería; el video se carga recién cuando lo tocan.</p>
+                                                <FieldError message={fieldErrors.youtubeUrl} />
+                                            </div>
+                                        )}
+
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4 mt-6">
                                             <h4 className="font-bold uppercase text-xs text-[#001F58]">Documentación</h4>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1496,6 +1513,17 @@ export default function PublishForm({
                                             </h3>
                                             <p className="text-xs text-slate-500 mt-1">Configurá las variables finales para que los compradores encuentren tu repuesto.</p>
                                         </div>
+
+                                        {/* VA-170: video de YouTube (detalles personalizados del Broker). */}
+                                        {canVideo && (
+                                            <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-1.5">
+                                                <label className="block text-xs font-bold uppercase">Video de YouTube <span className="font-normal normal-case text-slate-500">(opcional)</span></label>
+                                                <input type="url" inputMode="url" maxLength={100} placeholder="https://youtu.be/…" value={partsForm.youtubeUrl ?? ""} onChange={e => setPartsForm({...partsForm, youtubeUrl: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <p className="text-[11px] text-slate-500">Pegá el link (youtube.com/watch, youtu.be o /shorts). Se ve como una foto más de la galería; el video se carga recién cuando lo tocan.</p>
+                                                <FieldError message={fieldErrors.youtubeUrl} />
+                                            </div>
+                                        )}
+
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>

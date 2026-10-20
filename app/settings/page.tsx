@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { getMissingProfileFieldsCached } from "@/lib/cached-data";
 import { getSubscriptionSummary, hasCustomPage, hasVerifiedBadge } from "@/lib/subscriptions";
 import { getQuotaUsage } from "@/lib/quota";
+import { getAccountPlan } from "@/lib/plan-benefits";
 import { getUserPurchases } from "@/lib/purchases";
 import { ownerBillingProfile, quotaForView } from "@/lib/account-data";
 import { PageBackground } from "@/components/ui/PageBackground";
@@ -44,6 +45,8 @@ export default async function SettingsPage() {
       logoUrl: true,
       website: true,
       whatsapp: true,
+      detailCoverUrl: true,
+      accentColor: true,
     },
   });
   if (!user) redirect("/login");
@@ -57,6 +60,9 @@ export default async function SettingsPage() {
         website: user.website,
         whatsapp: user.whatsapp,
         verified: await hasVerifiedBadge(id),
+        customDetail: (await getAccountPlan(id)).customDetail,
+        detailCoverUrl: user.detailCoverUrl,
+        accentColor: user.accentColor,
       }
     : null;
 

@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { ProfilePageSections, type PageCard } from "@/components/ui/profile/ProfilePageSections";
+import { ProfilePageEditor } from "@/components/ui/profile/ProfilePageEditor";
+import type { PageSection } from "@/lib/profile-page";
 import Image from "next/image";
 import Link from "next/link";
 import { ProfileListings, type ModerationMap, type ProfileQuota, type StatusTarget } from "@/components/ui/profile/ProfileListings";
@@ -88,6 +91,8 @@ interface Props {
   republish?: RepublishView | null;
   // VA-154: avisos pausados por moderación (motivo y si pidió revisión), solo el dueño.
   moderation?: ModerationMap;
+  // VA-169: Página VA completa (Broker y admins): secciones publicadas, borrador (solo el dueño) y avisos activos.
+  vaPage?: { sections: PageSection[]; draft: PageSection[] | null; listings: PageCard[] } | null;
 }
 
 export function ProfileView({
@@ -101,7 +106,12 @@ export function ProfileView({
   quota = null,
   republish = null,
   moderation = {},
+  vaPage = null,
 }: Props) {
+  // VA-169: modo edición de la Página VA (solo el dueño).
+  const [editingPage, setEditingPage] = useState(false);
+  // Con la Página VA completa, los visitantes ven las secciones en vez de la grilla común.
+  const showTabs = !vaPage || isOwner;
   const [activeTab, setActiveTab] = useState<"listings" | "metrics">("listings");
   // VA-152: pausar, activar (con cupo libre) y marcar vendido desde "Mis publicaciones".
   const [loadingStatusId, setLoadingStatusId] = useState<string | null>(null);
@@ -304,6 +314,32 @@ export function ProfileView({
         </aside>
       )}
 
+      {/* VA-169: Página VA completa: secciones armables; el dueño la edita con "Editar". */}
+      {vaPage && (
+        <div className="space-y-4">
+          {isOwner && !editingPage && (
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {vaPage.draft && <span className="text-xs text-slate-500">Tenés cambios sin publicar</span>}
+              <button
+                type="button"
+                onClick={() => setEditingPage(true)}
+                className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#001F58] px-4 text-sm font-bold text-white hover:bg-[#00133A] cursor-pointer"
+              >
+                <Edit className="h-4 w-4" />
+                Editar
+              </button>
+            </div>
+          )}
+          {isOwner && editingPage ? (
+            <ProfilePageEditor initial={vaPage.draft ?? vaPage.sections} listings={vaPage.listings} profileUserId={profileUser.id} onClose={() => setEditingPage(false)} />
+          ) : (
+            <ProfilePageSections sections={vaPage.sections} listings={vaPage.listings} favIds={currentUserFavIds} profileUserId={profileUser.id} trackClicks={!isOwner} />
+          )}
+        </div>
+      )}
+
+      {showTabs && (
+      <>
       {/* Selector de pestañas responsive */}
       {/* En celular las pestañas van en grilla de 2 columnas: con scroll horizontal "Ajustes" quedaba escondida (VA-60) */}
       <div className="grid grid-cols-2 gap-x-4 border-b border-slate-200 sm:flex sm:gap-6 sm:overflow-x-auto scrollbar-none">
@@ -347,8 +383,11 @@ export function ProfileView({
         )}
       </div>
 
+      </>
+      )}
+
       {/* VA-97: una sola grilla de publicaciones con interruptores por tipo y filtros por estado. */}
-      {activeTab === "listings" && (
+      {showTabs && activeTab === "listings" && (
         <>
           {/* VA-151: línea discreta para quien no tiene las métricas (sin bloquear nada). */}
           {isOwner && !hasSellerMetrics && (

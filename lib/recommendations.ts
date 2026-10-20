@@ -520,3 +520,27 @@ export function getAircraftForPart(src: SparePartSource) {
     revalidate: REVALIDATE,
   })().then(stillVisible);
 }
+
+// --------------------------------------------------------------------------- VA-170. Más del vendedor
+
+/**
+ * "Más de [Broker]": sus otros avisos activos (aviones y repuestos), antes de las recomendaciones
+ * generales. Mismo tag de caché que el resto de las recomendaciones.
+ */
+export function getMoreFromSeller(sellerId: string, excludeId: string, sellerName: string) {
+  return unstable_cache(
+    async () => {
+      const [aircraft, parts] = await Promise.all([
+        prisma.aircraft.findMany({ where: { ...activeListingWhere(), sellerId, id: { not: excludeId } }, select: AIRCRAFT_CARD_SELECT, orderBy: { lastPublishedAt: "desc" }, take: 8 }),
+        prisma.sparePart.findMany({ where: { ...activeListingWhere(), sellerId, id: { not: excludeId } }, select: SPARE_PART_CARD_SELECT, orderBy: { lastPublishedAt: "desc" }, take: 8 }),
+      ]);
+      const title = `Más de ${sellerName}`;
+      return {
+        aircraft: aircraft.length ? { title, items: aircraft.map(toAircraftRec) } : null,
+        parts: parts.length ? { title: aircraft.length ? `Repuestos de ${sellerName}` : title, items: parts.map(toSparePartRec) } : null,
+      };
+    },
+    ["more-from-seller", sellerId, excludeId],
+    { tags: [RECOMMENDATIONS_TAG], revalidate: 600 }
+  )();
+}

@@ -930,6 +930,7 @@ Notas para cuando se encare, a partir de lo que ya existe:
 - [x] **Coordenadas de los avisos** (`geocode-listings.ts --apply`) — 18/10, con OK del socio: 51 de 80 resueltas. Los otros 29 tienen la ciudad mal cargada (datos de prueba).
 - [x] **`main` con código viejo sobre la base migrada** — 18/10, opción b del socio: `main` redirige todo a la Home (`8bb5945`, verificado: `/planes` → 307 a `/`). El código nuevo va a `main` cuando lo diga el socio.
 - [x] **Categorías de los modelos (VA-153)** — 18/10, con OK del socio: `va153-import-categorias.ts --apply --confirm-production`, 3 cambios (PC-12, Duke, C-425 Conquest); el informe posterior da 0 pendientes.
+- [x] **Lote del 19/10 en la base de producción** — 20/10, con OK del socio: backup (`Documents/va-backups/backup-prod-20261020-0038.dump`, 91 tablas), las 8 migraciones `va165` a `va173` (sin diferencias con el schema después) y `va166-migrate-data.ts --apply --confirm-production` (Base 1 / 3, Pro 3 / 10 a AR$ 38.000, Broker 55.000 / 85.000, sin suscriptores ni cortesías). 5 cuentas de prueba quedan por encima del cupo (conservan sus avisos). Los planes siguen inactivos hasta activarlos en `/admin/plans`. Compras, pagos y facturas intactos.
 - [ ] **Lote del 18/10 (VA-152 a VA-163):** ver la tabla al final del plan. VA-152 hecho en local el 18/10.
 - [ ] **Montos de Pro y del Empresarial** (los definen los socios; se cargan en `/admin/plans`).
 - [ ] **Pruebas en el Preview:**
@@ -1753,6 +1754,36 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
   un "Guardar" por sección. "Mi cuenta" (el perfil) queda para ver: publicaciones, métricas y
   republicaciones, con "Ajustes" arriba a la derecha y "Editar página" en la Página VA. Los links viejos
   (`?tab=compras`, `?tab=edit`) y el de `/arrepentimiento` llevan a Ajustes.
-- **VA-169, VA-170, VA-172, VA-173:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
+- **VA-169 (20/10/2026):** ✅ hecho en local. Migración `va169_pagina_va` (tabla `ProfilePage`: secciones publicadas
+  y borrador). Pro: la Página VA actual (banner). Broker y admins: Página VA completa con hasta 6 secciones
+  (carrusel con título y avisos a mano o por regla —recientes, solo aviones, solo repuestos, una categoría—,
+  grilla de todos los avisos por fecha o en orden propio, y texto de hasta 1000 caracteres), validadas con zod
+  (`lib/profile-page.ts`). Los visitantes ven las secciones en lugar de la grilla común. "Editar" (arriba a la
+  derecha, solo el dueño) abre el modo edición sobre la misma página: agregar, subir y bajar con flechas,
+  ocultar, borrar, elegir avisos con casillas, vista previa en escritorio y celular, "Publicar cambios",
+  "Guardar borrador" o "Cancelar". La portada, el logo y los datos, en Ajustes. Si el plan baja, la página se
+  guarda y no se muestra. Sin página armada, la grilla de todos los avisos (como antes).
+- **VA-170 (20/10/2026):** ✅ hecho en local. Migración `va170_detalle_broker` (`User.detailCoverUrl`,
+  `User.accentColor`, `youtubeUrl` en avisos y repuestos). Solo con "detalles personalizados" (Broker y admins):
+  franja con la portada (la de detalles, la de la Página VA o la estándar de VA), logo, nombre, verificado y
+  "Ver Página VA"; la foto principal con degradé hacia abajo (variante elegida: OK del socio al degradé el
+  20/10); 4 a 6 datos clave grandes con ícono en el color de acento (paleta cerrada de 8, en Ajustes →
+  Página VA); video de YouTube como una diapositiva más, que carga el reproductor (youtube-nocookie) recién al
+  tocarlo; "Más de [Broker]" antes de las recomendaciones; PDF con su logo junto al de VA. La ficha, la
+  galería, el zoom y todo lo demás, iguales al detalle común. **Sin barra fija de contacto** (decisión del
+  socio, 20/10). Privacidad: YouTube.
+- **VA-172 (20/10/2026):** ✅ hecho en local. Sin migración. El buscador del header (escritorio y celular) y
+  `/search` buscan también Brokers por nombre comercial: bloque "Vendedores" arriba del interruptor Aviones /
+  Repuestos (logo, nombre en negrita, cantidad de avisos y link a la Página VA; hasta 3 con "Ver más
+  vendedores"). Solo cuentas con la Página VA completa (suscripción vigente a un plan con Página VA completa, o
+  admins con su página publicada): el filtro por plan acota a pocas cuentas antes de buscar el texto. Mismo
+  debounce de antes. Sin coincidencias, se ve igual que antes.
+- **VA-173 (20/10/2026):** ✅ hecho en local. Migración `va173_gastos_fijos` (`FixedExpense`, `ExchangeRate`).
+  Resumen del admin: cuentas por tipo (Base, Pro, Broker, Admin y cortesías que no son de admins), con lo nuevo
+  del mes, el detalle del Broker por opción y el link a `/admin/users?plan=…` filtrado; KPI de cobertura en
+  verde o rojo (suscripciones cobradas este mes contra los gastos fijos). `/admin/expenses` ("Gastos fijos"):
+  nombre, monto, ARS o USD, mensual o anual, desde cuándo y notas; tipo de cambio manual con fecha; total
+  mensual en pesos. Es de referencia: no factura ni paga nada (VA-102 pasa al MVP).
+- **Lote del 19/10:** completo en local (VA-165 a VA-175).
   En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
   prueba). Informe: `scripts/va166-report.ts` (solo lee).
