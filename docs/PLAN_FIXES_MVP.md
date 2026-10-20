@@ -1753,6 +1753,16 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
   un "Guardar" por sección. "Mi cuenta" (el perfil) queda para ver: publicaciones, métricas y
   republicaciones, con "Ajustes" arriba a la derecha y "Editar página" en la Página VA. Los links viejos
   (`?tab=compras`, `?tab=edit`) y el de `/arrepentimiento` llevan a Ajustes.
-- **VA-169, VA-170, VA-172, VA-173:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
+- **VA-169 (20/10/2026):** ✅ hecho en local. Migración `va169_pagina_va` (tabla `ProfilePage`: secciones publicadas
+  y borrador). Pro: la Página VA actual (banner). Broker y admins: Página VA completa con hasta 6 secciones
+  (carrusel con título y avisos a mano o por regla —recientes, solo aviones, solo repuestos, una categoría—,
+  grilla de todos los avisos por fecha o en orden propio, y texto de hasta 1000 caracteres), validadas con zod
+  (`lib/profile-page.ts`). Los visitantes ven las secciones en lugar de la grilla común. "Editar" (arriba a la
+  derecha, solo el dueño) abre el modo edición sobre la misma página: agregar, subir y bajar con flechas,
+  ocultar, borrar, elegir avisos con casillas, vista previa en escritorio y celular, "Publicar cambios",
+  "Guardar borrador" o "Cancelar". La portada, el logo y los datos, en Ajustes. Si el plan baja, la página se
+  guarda y no se muestra. Sin página armada, la grilla de todos los avisos (como antes).
+- **VA-170, VA-172, VA-173:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`). VA-170:
+  OK del socio al degradé (20/10); **sin** la barra fija de contacto en celular.
   En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
   prueba). Informe: `scripts/va166-report.ts` (solo lee).

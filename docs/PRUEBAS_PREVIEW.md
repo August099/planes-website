@@ -138,6 +138,11 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
+### Página VA armable (VA-169)
+- [ ] Como admin, en tu perfil → "Editar": agregar un carrusel ("Solo aviones") y un texto, subirlos con las flechas, ocultar uno, ver la vista previa en "Celular" y "Publicar cambios".
+- [ ] Sin sesión, el perfil del admin muestra esas secciones (sin la grilla común) 📱.
+- [ ] "Guardar borrador": los visitantes siguen viendo lo publicado; el dueño ve "Tenés cambios sin publicar".
+
 ### Ajustes (VA-175)
 - [ ] Menú de usuario → "Ajustes" (compu y celular 📱): datos, foto, contraseña, plan, compras, facturación, cookies y, con Pro o Broker, la Página VA. Guardar cada sección.
 - [ ] "Mi cuenta" ya no tiene pestañas de ajustes ni de compras; "Ajustes" arriba a la derecha.
