@@ -62,6 +62,8 @@ model User {
   // VA-154: historial de moderación de sus avisos (como dueño) y de las acciones que hizo (como admin).
   moderationActions         ModerationAction[]   @relation("ModerationOwner")
   moderationDone            ModerationAction[]   @relation("ModerationAdmin")
+  // VA-167: republicaciones hechas (el saldo del año sale de contarlas).
+  republications            Republication[]
 }
 
 model Account {
@@ -463,6 +465,9 @@ model Aircraft {
   // VA-95: destacado pago o incluido en el plan, vigente hasta esta fecha.
   featuredUntil    DateTime?
   createdAt        DateTime            @default(now())
+  // VA-167: última vez que se publicó (alta o republicación). Ordena "Más recientes" y "Últimas
+  // publicaciones"; el detalle muestra "Actualizado el …" si es posterior al alta.
+  lastPublishedAt  DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   purchaseId       String?
   description      String
@@ -505,6 +510,7 @@ model Aircraft {
   leads            Lead[]
   questions        Question[]
   reports          Report[]
+  republications   Republication[]
   tags             Tag[]               @relation("AircraftToTag")
   // VA-83: centroide de la localidad (API Georef), para el mapa de zona aproximada.
   latitude         Float?
@@ -512,6 +518,7 @@ model Aircraft {
 
   @@index([price])
   @@index([status, createdAt])
+  @@index([status, lastPublishedAt])
   @@index([brandId, modelId])
   @@index([province, city])
   @@index([year])
@@ -658,6 +665,9 @@ model SparePart {
   // VA-95: destacado pago o incluido en el plan, vigente hasta esta fecha.
   featuredUntil    DateTime?
   createdAt        DateTime            @default(now())
+  // VA-167: última vez que se publicó (alta o republicación). Ordena "Más recientes" y "Últimas
+  // publicaciones"; el detalle muestra "Actualizado el …" si es posterior al alta.
+  lastPublishedAt  DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   purchaseId       String?
   description      String
@@ -672,6 +682,7 @@ model SparePart {
   favorites        Favorite[]
   questions        Question[]
   reports          Report[]
+  republications   Republication[]
   category         Category            @relation(fields: [categoryId], references: [id])
   purchase         Purchase?           @relation(fields: [purchaseId], references: [id])
   seller           User                @relation(fields: [sellerId], references: [id])
@@ -683,6 +694,7 @@ model SparePart {
 
   @@index([price])
   @@index([status, inPesos, createdAt])
+  @@index([status, lastPublishedAt])
   @@index([province, city])
   @@index([sellerId])
   @@index([featuredUntil])
@@ -1445,4 +1457,23 @@ model ModerationAction {
   @@index([listingKind, listingId, createdAt])
   @@index([ownerId, ownerAcknowledgedAt])
   @@index([action, createdAt])
+}
+
+// VA-167: cada republicación de un aviso (vuelve a ponerlo primero en "Más recientes"). El saldo de Base y
+// Pro sale de contar las del año en curso; "Republicar todas" (Broker y admins) deja una fila por aviso
+// con bulk = true. No cambia el aviso ni su historial, solo lastPublishedAt.
+model Republication {
+  id          String     @id @default(cuid())
+  userId      String
+  aircraftId  String?
+  sparePartId String?
+  bulk        Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aircraft    Aircraft?  @relation(fields: [aircraftId], references: [id], onDelete: SetNull)
+  sparePart   SparePart? @relation(fields: [sparePartId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([aircraftId])
+  @@index([sparePartId])
 }

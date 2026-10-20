@@ -138,6 +138,13 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] Home: 6 destacadas al azar, sin "//" rojas; menú Repuestos con categorías; Servicios sin desplegable.
 - [ ] Comparador: la X vacía la bandeja.
 
+### Republicar (VA-167)
+- [ ] Cuenta Base con avisos activos: en "Mis publicaciones" aparece "Tenés 2 republicaciones disponibles" y el punto en "Mi Cuenta" del menú 📱.
+- [ ] "Republicar" en un aviso: confirmar → el aviso aparece primero en "Últimas publicaciones" de la Home y en `/aircraft` (orden por defecto); en su detalle dice "Actualizado el …".
+- [ ] Republicar el mismo aviso otra vez: avisa que hay que esperar 7 días. Republicar otro: queda en 0 y el cartel desaparece.
+- [ ] Cerrar el cartel con la X: se van el cartel y el punto; vuelven cuando cambia el saldo.
+- [ ] Como admin: "Republicar todas" republica todos los avisos activos y después dice "Podés volver a republicar el dd/mm".
+
 ### Planes según la grilla (VA-166, VA-174)
 - [ ] `/plans` en la compu y en el celular 📱: grilla Base / Pro / Broker con "Promo de lanzamiento" y el precio tachado; en el Broker, apagar "Aviones ilimitados" cambia el precio (85.000 → 55.000) y la fila de aviones pasa a "1".
 - [ ] Sin sesión, los botones llevan a crear la cuenta; con una cuenta Base, "Suscribirme"; como admin, "Como admin tenés todo incluido".

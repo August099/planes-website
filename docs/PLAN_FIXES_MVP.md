@@ -1722,6 +1722,15 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
   candado, filas propias con flechas, lista de cambios, vista previa y CONFIRMAR al cambiar un precio con
   suscriptores). Admins: "Admin", Broker completo, sin cortesía ni suscripción. Textos (FAQ, términos,
   arrepentimiento, `/howtopublish`, perfil): borrador para revisar. `scripts/verify-quota.ts` 23/23.
-- **VA-167 a VA-175:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
+- **VA-167 (19/10/2026):** ✅ hecho en local. Migración `va167_republicar` (`lastPublishedAt` en avisos y
+  repuestos, igual a `createdAt` en los existentes, y tabla `Republication`). Reglas en `lib/republish.ts`:
+  Base 2 y Pro 5 por año (de la grilla), contando desde el alta de la cuenta o de la suscripción, sin
+  acumular; el mismo aviso, cada 7 días como mucho (`QuotaSettings.republishCooldownDays`); Broker y admins,
+  "Republicar todas" cada 30 días. "Más recientes" (`/aircraft`, `/spareparts`) y "Últimas publicaciones"
+  (Home) ordenan por `lastPublishedAt`; el detalle suma "Actualizado el …". En el perfil: cartel "Tenés N
+  republicaciones disponibles" (se cierra y vuelve cuando cambia el saldo), botón "Republicar" por aviso
+  activo con el saldo, "Republicar todas" del Broker y punto en "Mi Cuenta" del menú; en el detalle propio,
+  una franja con "Republicar". `scripts/verify-republish.ts` 18/18. ❓ Pendiente: mail cuando se reponen.
+- **VA-168 a VA-175:** modelo de datos aprobado el 19/10 (`docs/VA-165_a_175_MODELO_DE_DATOS.md`).
   En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
   prueba). Informe: `scripts/va166-report.ts` (solo lee).

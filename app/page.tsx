@@ -53,7 +53,8 @@ export default async function HomePage() {
         brand: true,
         model: true,
       },
-      orderBy: { createdAt: "desc" },
+      // VA-167: "más recientes" = última publicación (alta o republicación).
+      orderBy: { lastPublishedAt: "desc" },
       take: FEATURED_AIRCRAFT_POOL,
     }),
     // Últimos Repuestos
@@ -63,7 +64,7 @@ export default async function HomePage() {
         images: { orderBy: { order: "asc" }, take: 1 },
         category: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { lastPublishedAt: "desc" },
       take: 6,
     }),
     // Categorías raíz de repuestos y marcas con logo: salen de la taxonomía cacheada (VA-13)
@@ -129,7 +130,7 @@ export default async function HomePage() {
       city: aircraft.city,
       province: aircraft.province,
       imageUrl: aircraft.images[0]?.url ?? PLACEHOLDER_IMAGE,
-      createdAt: aircraft.createdAt,
+      createdAt: aircraft.lastPublishedAt, // VA-167: un republicado vuelve primero
     })
   );
 
@@ -147,7 +148,7 @@ export default async function HomePage() {
       province: part.province,
       inPesos: part.inPesos,
       imageUrl: part.images[0]?.url ?? PLACEHOLDER_IMAGE,
-      createdAt: part.createdAt,
+      createdAt: part.lastPublishedAt, // VA-167
     })
   );
 

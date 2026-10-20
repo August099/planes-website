@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { User, Menu } from "lucide-react";
 import { getHeaderIndicators, type HeaderIndicators } from "@/app/actions/header-actions";
 import { DESKTOP_TRIGGER_CLASS, MOBILE_TRIGGER_CLASS, PendingDot, type PartCategoryLink } from "@/components/ui/header-menu-shared";
+import { isRepublishNoticeDismissed, REPUBLISH_NOTICE_EVENT } from "@/lib/republish-notice";
 
 // Parte del header que depende del usuario (VA-71). Es un componente cliente: así el resto del
 // header (y las páginas sin datos de usuario) pueden ser estáticas y cachearse en el CDN.
@@ -67,18 +68,28 @@ function useHeaderUser() {
     };
   }, [userId, pathname]);
 
+  // VA-167: el punto de republicaciones se apaga si el usuario cerró el cartel con ese mismo saldo.
+  const [, setDismissTick] = useState(0);
+  useEffect(() => {
+    const onDismiss = () => setDismissTick((n) => n + 1);
+    window.addEventListener(REPUBLISH_NOTICE_EVENT, onDismiss);
+    return () => window.removeEventListener(REPUBLISH_NOTICE_EVENT, onDismiss);
+  }, []);
+
   const ind = userId ? indicators : null;
   return {
     status,
     userId,
     isAdmin: !!ind?.isAdmin || !!session?.user?.isAdmin,
     hasUnanswered: !!ind?.hasUnanswered,
+    hasRepublish: !!ind?.republishKey && !isRepublishNoticeDismissed(ind.republishKey),
   };
 }
 
 export function DesktopUserMenu() {
-  const { status, userId, isAdmin, hasUnanswered } = useHeaderUser();
+  const { status, userId, isAdmin, hasUnanswered, hasRepublish } = useHeaderUser();
   const [armed, setArmed] = useState(false);
+  const dot = hasUnanswered || hasRepublish;
 
   // Mientras se resuelve la sesión: un lugar del mismo tamaño, sin saltos.
   if (status === "loading") return <div className="h-9 w-9 rounded-lg bg-slate-200/40" aria-hidden />;
@@ -98,7 +109,7 @@ export function DesktopUserMenu() {
   return (
     <div className="flex items-center gap-3">
       {armed ? (
-        <DesktopDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} />
+        <DesktopDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} hasRepublish={hasRepublish} />
       ) : (
         <button
           type="button"
@@ -107,11 +118,11 @@ export function DesktopUserMenu() {
           onFocus={prefetchMenus}
           aria-haspopup="menu"
           aria-expanded={false}
-          aria-label={hasUnanswered ? "Menú de usuario (tenés consultas sin responder)" : "Menú de usuario"}
+          aria-label={dot ? "Menú de usuario (tenés novedades)" : "Menú de usuario"}
           className={DESKTOP_TRIGGER_CLASS}
         >
           <User className="h-4 w-4" />
-          {hasUnanswered && <PendingDot className="absolute -top-1 -right-1 h-3 w-3 border-2 border-white" />}
+          {dot && <PendingDot className="absolute -top-1 -right-1 h-3 w-3 border-2 border-white" />}
         </button>
       )}
     </div>
@@ -119,12 +130,13 @@ export function DesktopUserMenu() {
 }
 
 export function MobileMenu({ partCategories = [] }: { partCategories?: PartCategoryLink[] }) {
-  const { status, userId, isAdmin, hasUnanswered } = useHeaderUser();
+  const { status, userId, isAdmin, hasUnanswered, hasRepublish } = useHeaderUser();
   const [armed, setArmed] = useState(false);
+  const dot = hasUnanswered || hasRepublish;
 
   if (armed) {
     return (
-      <MobileDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} loading={status === "loading"} partCategories={partCategories} />
+      <MobileDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} hasRepublish={hasRepublish} loading={status === "loading"} partCategories={partCategories} />
     );
   }
 
@@ -137,11 +149,11 @@ export function MobileMenu({ partCategories = [] }: { partCategories?: PartCateg
       onFocus={prefetchMenus}
       aria-haspopup="menu"
       aria-expanded={false}
-      aria-label={hasUnanswered ? "Abrir menú (tenés consultas sin responder)" : "Abrir menú"}
+      aria-label={dot ? "Abrir menú (tenés novedades)" : "Abrir menú"}
       className={MOBILE_TRIGGER_CLASS}
     >
       <Menu className="h-6 w-6" />
-      {hasUnanswered && <PendingDot className="absolute top-1.5 right-1.5 h-2.5 w-2.5 border border-white" />}
+      {dot && <PendingDot className="absolute top-1.5 right-1.5 h-2.5 w-2.5 border border-white" />}
     </button>
   );
 }

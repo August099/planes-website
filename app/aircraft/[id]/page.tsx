@@ -30,6 +30,8 @@ import { aircraftJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { OwnerRepublishBar } from "@/components/ui/listing/OwnerRepublishBar";
+import { getRepublishStatus, republishView } from "@/lib/republish";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -165,6 +167,11 @@ export default async function AircraftDetailsPage({
         </div>
       )}
 
+      {/* VA-167: republicar desde el detalle propio */}
+      {!isInactive && isOwner && (
+        <OwnerRepublishBar view={republishView(await getRepublishStatus(aircraft.sellerId))} id={aircraft.id} kind="AIRCRAFT" profileHref={`/profile/${aircraft.sellerId}`} />
+      )}
+
       {/* VISTA Y FORMATO DE EXPORTACIÓN PDF */}
       <div id="pdf-content" className="hidden print:block font-sans text-slate-900 p-10 max-w-4xl mx-auto space-y-6">
         <div className="flex flex-col items-center justify-center border-b-2 border-[#001F58] pb-4 space-y-2 text-center">
@@ -257,7 +264,7 @@ export default async function AircraftDetailsPage({
           <div className="contents lg:flex lg:w-1/3 lg:flex-col lg:gap-5">
             {/* Resumen: título, precio, acciones y datos clave */}
             <div className="order-2 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-              <PublishedLine createdAt={aircraft.createdAt} location={listingLocation} />
+              <PublishedLine createdAt={aircraft.createdAt} lastPublishedAt={aircraft.lastPublishedAt} location={listingLocation} />
               <AircraftActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url} />
               <Separator />
               <div>

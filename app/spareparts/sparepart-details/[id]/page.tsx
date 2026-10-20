@@ -28,6 +28,8 @@ import { sparePartJsonLd } from "@/lib/structured-data";
 import { formatPrice } from "@/lib/format";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { OwnerRepublishBar } from "@/components/ui/listing/OwnerRepublishBar";
+import { getRepublishStatus, republishView } from "@/lib/republish";
 import { RecommendationRail } from "@/components/ui/recommendations/RecommendationRail";
 import { getAircraftForPart, getSimilarParts } from "@/lib/recommendations";
 
@@ -170,6 +172,11 @@ export default async function SparePartDetailsPage({
         <TrackListingView type="SPARE_PART" id={sparePart.id} />
       )}
 
+      {/* VA-167: republicar desde el detalle propio */}
+      {isListingActive(sparePart) && session?.user?.id === sparePart.sellerId && (
+        <OwnerRepublishBar view={republishView(await getRepublishStatus(sparePart.sellerId))} id={sparePart.id} kind="SPARE_PART" profileHref={`/profile/${sparePart.sellerId}`} />
+      )}
+
       {/* VISTA DE IMPRESIÓN / PDF */}
       <div className="hidden print:block font-sans text-black p-4 space-y-6 max-w-4xl mx-auto">
         <div className="flex justify-between items-end border-b-2 border-black pb-3">
@@ -275,7 +282,7 @@ export default async function SparePartDetailsPage({
 
           <div className="contents lg:flex lg:w-1/3 lg:flex-col lg:gap-5">
             <div className="order-2 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-              <PublishedLine createdAt={sparePart.createdAt} location={locationText} />
+              <PublishedLine createdAt={sparePart.createdAt} lastPublishedAt={sparePart.lastPublishedAt} location={locationText} />
               <AircraftActionsHeader
                 title={sparePart.title}
                 aircraftId={sparePart.id}

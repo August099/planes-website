@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { notFound } from "next/navigation";
 import { ProfileView } from "@/components/ui/ProfileView";
 import { getQuotaUsage } from "@/lib/quota";
+import { getRepublishStatus, republishView } from "@/lib/republish";
 import { moderationInfoFor } from "@/lib/moderation";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { getMissingProfileFieldsCached } from "@/lib/cached-data";
@@ -152,6 +153,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         hasPassword={isOwner ? Boolean((await prisma.user.findUnique({ where: { id }, select: { passwordHash: true } }))?.passwordHash) : false}
         hasSellerMetrics={isOwner ? await hasSellerMetrics(id) : false}
         quota={isOwner ? quotaForView(await getQuotaUsage(id)) : null}
+        republish={isOwner ? republishView(await getRepublishStatus(id)) : null}
         moderation={
           isOwner
             ? await moderationInfoFor([

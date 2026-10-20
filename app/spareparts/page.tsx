@@ -66,7 +66,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
   const orderByMap: Record<string, Prisma.SparePartOrderByWithRelationInput> = {
     price_desc: { price: "desc" },
     price_asc: { price: "asc" },
-    recent: { createdAt: "desc" },
+    recent: { lastPublishedAt: "desc" }, // VA-167: alta o republicación
     oldest: { createdAt: "asc" },
     az: { title: "asc" },
     za: { title: "desc" },

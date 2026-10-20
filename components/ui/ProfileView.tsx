@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ProfileListings, type ModerationMap, type ProfileQuota, type StatusTarget } from "@/components/ui/profile/ProfileListings";
+import type { RepublishView } from "@/lib/republish";
 import { requestReviewAction } from "@/app/actions/moderation-actions";
 import dynamic from "next/dynamic";
 
@@ -117,6 +118,8 @@ interface Props {
   hasSellerMetrics?: boolean;
   // VA-152: uso del cupo (solo el dueño).
   quota?: ProfileQuota | null;
+  // VA-167: saldo de republicaciones del dueño.
+  republish?: RepublishView | null;
   // VA-154: avisos pausados por moderación (motivo y si pidió revisión), solo el dueño.
   moderation?: ModerationMap;
 }
@@ -133,6 +136,7 @@ export function ProfileView({
   hasPassword = false,
   hasSellerMetrics = false,
   quota = null,
+  republish = null,
   moderation = {},
   initialTab,
 }: Props) {
@@ -567,6 +571,7 @@ export function ProfileView({
             isOwner={isOwner}
             favIds={currentUserFavIds}
             quota={quota}
+            republish={republish}
             moderation={moderation}
             onStatus={handleStatus}
             onRequestReview={handleRequestReview}
