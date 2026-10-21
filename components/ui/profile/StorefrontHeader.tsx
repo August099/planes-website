@@ -36,7 +36,7 @@ type Props = {
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 
-export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, location, memberSince, instagram, facebook, isOwner, editHref }: Props) {
+export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, location, memberSince, instagram, facebook, isOwner }: Props) {
   const name = storefront.businessName || fallbackName;
   const websiteLabel = storefront.website?.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
   const contacts = [
@@ -92,12 +92,6 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
             {userTypeLabel} · Miembro desde {memberSince}
           </p>
           {storefront.bio && <p className="mt-4 max-w-2xl whitespace-pre-line text-sm leading-relaxed text-slate-700">{storefront.bio}</p>}
-          {isOwner && editHref && (
-            <Link href={editHref} className="mt-5 inline-flex items-center gap-2 rounded-md border border-[#001F58]/20 px-4 py-2 text-xs font-semibold text-[#001F58] hover:bg-slate-50">
-              <Edit className="h-4 w-4" aria-hidden />
-              Editar página
-            </Link>
-          )}
         </div>
 
         {/* Placa de contacto */}
