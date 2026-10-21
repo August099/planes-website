@@ -40,6 +40,20 @@ function formatTruncatedBreadcrumbs(breadcrumbs?: ReactNode): ReactNode {
   return cloneElement(element, { items: truncatedItems });
 }
 
+function useIsMobile(breakpoint = 640) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const update = () => setIsMobile(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
 export function BrokerDetailHeader({
   broker,
   phone,
@@ -60,7 +74,10 @@ export function BrokerDetailHeader({
   breadcrumbs?: ReactNode;
 }) {
   const [showSticky, setShowSticky] = useState(false);
-  const formattedBreadcrumbs = formatTruncatedBreadcrumbs(breadcrumbs);
+  const isMobile = useIsMobile(); // 640px = breakpoint `sm` de Tailwind
+  const formattedBreadcrumbs = isMobile
+    ? formatTruncatedBreadcrumbs(breadcrumbs)
+    : breadcrumbs;
 
   useEffect(() => {
     let lastScrollY = window.scrollY;

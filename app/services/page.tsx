@@ -68,10 +68,7 @@ export default async function ServicesPage() {
         {/* Disponible ahora: toda la pieza lleva a las guías (link que la cubre); el índice y el botón
             quedan por encima. Al pasar, borde rojo (sin elevación, por las pautas). */}
         <section aria-labelledby="available-now" className="space-y-4">
-          <h2 id="available-now" className={`${LABEL} flex items-center gap-2 text-[#001F58]`}>
-            <span className="h-2 w-2 rounded-full bg-emerald-600" aria-hidden />
-            Disponible ahora
-          </h2>
+         
           <div className="group relative grid gap-6 rounded-lg border border-[#001F58]/15 p-6 transition-colors hover:border-[#E70F1F] sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-10">
             <Link href={GUIDES_PATH} className="absolute inset-0 rounded-lg" aria-label="Ver las guías para comprar y vender" />
             <div className="space-y-3">
@@ -117,7 +114,6 @@ export default async function ServicesPage() {
             <span className="rounded-sm bg-[#E70F1F] px-2 py-1 text-[10px] font-black tracking-[0.14em] text-white">
               Próximamente
             </span>
-            En camino
           </h2>
           <ol className="grid border-t border-[#001F58]/12 md:grid-cols-2 md:gap-x-10">
             {upcomingServices.map((service, i) => (
