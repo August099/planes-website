@@ -30,11 +30,9 @@ import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { OwnerRepublishBar } from "@/components/ui/listing/OwnerRepublishBar";
 import { BrokerDetailHeader } from "@/components/ui/listing/BrokerDetailHeader";
-import { BigFacts, type BigFact } from "@/components/ui/listing/BigFacts";
 import { getBrokerDetail } from "@/lib/broker-detail";
 import { youtubeId } from "@/lib/youtube";
 import { getMoreFromSeller } from "@/lib/recommendations";
-import { Hash, MapPin, Plane, ShieldCheck } from "lucide-react";
 import { getRepublishStatus, republishView } from "@/lib/republish";
 import { RecommendationRail } from "@/components/ui/recommendations/RecommendationRail";
 import { getAircraftForPart, getSimilarParts } from "@/lib/recommendations";
@@ -55,7 +53,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: url },
-    // Vencida, vendida o pendiente de pago: no se indexa.
     robots: isListingActive(sparePart) ? undefined : { index: false, follow: true },
     openGraph: {
       title,
@@ -73,19 +70,16 @@ export default async function SparePartDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  // Sesión y publicación (con el vendedor incluido) en paralelo (VA-13).
   const [session, sparePart] = await Promise.all([auth(), getSparePartDetail(id)]);
 
   if (!sparePart) notFound();
 
-  // Vencida o pausada: solo la ve el dueño, como en el detalle de avión (VA-14).
   if (!isListingActive(sparePart) && session?.user?.id !== sparePart.sellerId) {
     return <InactiveListingNotice backHref="/spareparts" backLabel="Ver otros repuestos" background="spareparts" />;
   }
 
   const seller = sparePart.seller;
 
-  // Comprobar si la publicación está guardada en los favoritos del usuario actual
   let isFavoriteInitial = false;
   if (session?.user?.id) {
     const fav = await prisma.favorite.findFirst({
@@ -109,24 +103,14 @@ export default async function SparePartDetailsPage({
     ? `https://wa.me/${cleanPhone}?text=${body}`
     : null;
 
-  // Formato explícito de precio (AR$ o US$)
   const formattedPrice = formatPrice(sparePart.price, { inPesos: sparePart.inPesos });
-
-  // Ubicación del vendedor / producto
   const locationText = `${sparePart.city}, ${sparePart.province}`;
   const sellerLocation = [seller.city, seller.province].filter(Boolean).join(", ");
 
-  // VA-57: características e "Información adicional" (incluye atributos y aeronaves
-  // compatibles), ya sin vacíos.
   const features = sparePartFeatures(sparePart);
-  // Web: la ficha no repite lo del resumen. Impresión: ficha completa.
   const sections = sparePartSections(sparePart, { omitSummary: true });
   const printSections = sparePartSections(sparePart);
 
-  // Reconstrucción de la jerarquía de categorías del repuesto.
-  // sparePart.category es siempre el nivel más específico que eligió el vendedor:
-  // puede ser la Subcategoría (2 niveles) o la Sección (3 niveles, sub-subcategoría).
-  // VA-88: bloque A (repuestos similares) y bloque B (aeronaves del modelo o la marca asociados).
   const recSource = {
     id: sparePart.id,
     title: sparePart.title,
@@ -138,15 +122,8 @@ export default async function SparePartDetailsPage({
   };
   const [similarParts, relatedAircraft] = await Promise.all([getSimilarParts(recSource), getAircraftForPart(recSource)]);
 
-  // VA-170: detalle de un Broker (detalles personalizados). La ficha y lo demás, igual al común.
   const broker = await getBrokerDetail(sparePart.sellerId);
   const moreFromSeller = broker ? await getMoreFromSeller(sparePart.sellerId, sparePart.id, broker.name) : null;
-  const bigFacts: BigFact[] = [
-    { icon: ShieldCheck, label: "Condición", value: sparePart.condition ? sparePartConditionLabel(sparePart.condition) : null },
-    { icon: Hash, label: "P/N", value: sparePart.partNumber },
-    { icon: Plane, label: "Compatible con", value: sparePart.aircrafts.length ? sparePart.aircrafts.slice(0, 2).join(", ") + (sparePart.aircrafts.length > 2 ? ` y ${sparePart.aircrafts.length - 2} más` : "") : null },
-    { icon: MapPin, label: "Ubicación", value: [sparePart.city, sparePart.province].filter(Boolean).join(", ") || null },
-  ];
 
   const leafCategory = sparePart.category;
   const midCategory = leafCategory?.parent ?? null;
@@ -157,22 +134,17 @@ export default async function SparePartDetailsPage({
   let subcategory: CategoryRef = null;
 
   if (rootCategory) {
-    // Categoría (raíz) > Subcategoría (mid) > Sección (leaf)
     category = rootCategory;
     subcategory = midCategory;
   } else if (midCategory) {
-    // Categoría (mid) > Subcategoría (leaf) — no hay Sección
     category = midCategory;
     subcategory = leafCategory;
   } else if (leafCategory) {
-    // Solo hay categoría raíz
     category = leafCategory;
   }
   const subcategoryName = subcategory?.name ?? null;
-  // VA-108 / VA-117: debajo del título, solo el link a la categoría principal (listado filtrado).
   const categoryLinks = category ? [{ label: category.name, href: `/spareparts?category=${encodeURIComponent(category.id)}` }] : [];
 
-  // Datos clave del resumen (VA-41): grilla de 2 columnas.
   const keyFacts: KeyFact[] = [
     { label: "Marca", value: sparePart.brand },
     { label: "Estado", value: sparePart.condition ? sparePartConditionLabel(sparePart.condition) : null },
@@ -182,13 +154,13 @@ export default async function SparePartDetailsPage({
 
   return (
     <>
-      {/* Datos estructurados: solo para avisos visibles al público */}
+      {/* Datos estructurados */}
       {isListingActive(sparePart) && <JsonLd data={sparePartJsonLd(sparePart)} />}
       {isListingActive(sparePart) && session?.user?.id !== sparePart.sellerId && (
         <TrackListingView type="SPARE_PART" id={sparePart.id} />
       )}
 
-      {/* VA-167: republicar desde el detalle propio */}
+      {/* Bar para republicar (dueño) */}
       {isListingActive(sparePart) && session?.user?.id === sparePart.sellerId && (
         <OwnerRepublishBar view={republishView(await getRepublishStatus(sparePart.sellerId))} id={sparePart.id} kind="SPARE_PART" profileHref={`/profile/${sparePart.sellerId}`} />
       )}
@@ -200,7 +172,6 @@ export default async function SparePartDetailsPage({
             <p className="text-xl font-bold tracking-tight text-slate-900 uppercase">
               Ventas Aeronáuticas
             </p>
-            {/* VA-170: el logo del Broker junto al de VA. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {broker?.logoUrl && <img src={broker.logoUrl} alt={`Logo de ${broker.name}`} className="mt-1 h-10 w-auto max-w-[140px] object-contain" />}
             <p className="text-xs text-slate-500">Ficha Técnica de Repuesto</p>
@@ -260,7 +231,7 @@ export default async function SparePartDetailsPage({
         </div>
       </div>
 
-      {/* VA-152: aviso para el dueño cuando su repuesto no está visible (pausado o vendido). */}
+      {/* Aviso de inactividad para el dueño */}
       {!isListingActive(sparePart) && (
         <div className="bg-amber-500 text-white text-xs font-semibold py-3 px-4 text-center flex items-center justify-center gap-2 print:hidden">
           <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -275,12 +246,39 @@ export default async function SparePartDetailsPage({
         </div>
       )}
 
-      {/* VISTA WEB — VA-41: un solo árbol, mismo orden que el detalle de avión. En celular:
-          fotos → título y precio → vendedor → descripción → ficha. Desde lg: dos columnas. */}
+      {/* BANNER SOLO PARA BROKERS (FUERA DEL CONTAINER DE MAIN) */}
+      {broker && (
+        <BrokerDetailHeader
+          broker={broker}
+          phone={seller.phone}
+          email={seller.email}
+          whatsappUrl={whatsappUrl}
+          emailUrl={emailUrl}
+          entityId={sparePart.id}
+          entityType="SPARE_PART"
+          breadcrumbs={
+            <Breadcrumbs 
+              items={[{ label: "Repuestos", href: "/spareparts" }, { label: sparePart.title }]} 
+              jsonLd={false} 
+              className="text-white/80 hover:text-white"
+            />
+          }
+        />
+      )}
+
+      {/* VISTA WEB */}
       <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
         <PageBackground page="spareparts" />
-        <Breadcrumbs items={[{ label: "Repuestos", href: "/spareparts" }, { label: sparePart.title }]} jsonLd={false} className="-mt-4 -mb-6" />
-        {broker && <BrokerDetailHeader broker={broker} />}
+
+        {/* BREADCRUMBS SOLO SI NO ES BROKER (PÁGINA COMÚN) */}
+        {!broker && (
+          <Breadcrumbs 
+            items={[{ label: "Repuestos", href: "/spareparts" }, { label: sparePart.title }]} 
+            jsonLd={false} 
+            className="-mt-4 -mb-6" 
+          />
+        )}
+
         <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
           <div className="contents lg:flex lg:w-2/3 lg:flex-col lg:gap-8">
             <div className="order-1 lg:order-none">
@@ -293,7 +291,6 @@ export default async function SparePartDetailsPage({
               </div>
             )}
 
-            {/* VA-57: características con íconos + tablas (sin repetir lo del resumen) */}
             <div className="order-5 lg:order-none flex flex-col gap-5 lg:gap-8">
               <FeaturesCard title="Características del repuesto" features={features} />
               <DetailSections sections={sections} />
@@ -301,6 +298,7 @@ export default async function SparePartDetailsPage({
           </div>
 
           <div className="contents lg:flex lg:w-1/3 lg:flex-col lg:gap-5">
+            {/* Tarjeta con los Detalles Principales del Repuesto */}
             <div className="order-2 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
               <PublishedLine createdAt={sparePart.createdAt} lastPublishedAt={sparePart.lastPublishedAt} location={locationText} />
               <AircraftActionsHeader
@@ -315,21 +313,23 @@ export default async function SparePartDetailsPage({
                 <CategoryLinks items={categoryLinks} />
                 <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
               </div>
-              {broker && <BigFacts facts={bigFacts} accent={broker.accent} />}
               <Separator />
               <KeyFacts title="Detalles principales" facts={keyFacts} />
             </div>
 
-            <SellerContactCard
-              className="order-3 lg:order-none"
-              seller={seller}
-              whatsappUrl={whatsappUrl}
-              emailUrl={emailUrl}
-              entityId={sparePart.id}
-              entityType="SPARE_PART"
-            />
+            {/* TARJETA DE VENDEDOR COMÚN (SOLO SI NO ES BROKER) */}
+            {!broker && (
+              <SellerContactCard
+                className="order-3 lg:order-none"
+                seller={seller}
+                whatsappUrl={whatsappUrl}
+                emailUrl={emailUrl}
+                entityId={sparePart.id}
+                entityType="SPARE_PART"
+              />
+            )}
 
-            {/* VA-83: zona aproximada (centroide de la localidad, círculo de ~5 km) */}
+            {/* Mapa de ubicación */}
             <ListingLocationMap
               className="order-3 lg:order-none"
               latitude={sparePart.latitude}
@@ -350,8 +350,7 @@ export default async function SparePartDetailsPage({
           currentUserId={session?.user?.id}
         />
 
-        {/* VA-88: recomendaciones, al pie (después de las preguntas) */}
-        {/* VA-170: "Más de [Broker]", antes de las recomendaciones generales. */}
+        {/* Recomendaciones */}
         {moreFromSeller?.parts && <RecommendationRail kind="sparePart" id="mas-del-vendedor" block={moreFromSeller.parts} />}
         {moreFromSeller?.aircraft && <RecommendationRail kind="aircraft" id="aviones-del-vendedor" block={moreFromSeller.aircraft} />}
         {similarParts && <RecommendationRail kind="sparePart" id="similares" block={similarParts} />}
