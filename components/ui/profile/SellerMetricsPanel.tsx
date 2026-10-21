@@ -409,19 +409,6 @@ function FullSections({ full, days }: { full: FullMetrics; days: number }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Stat label="Clics desde tu Página VA a tus avisos" total={full.profileListingClicks} days={days} />
-        <div className={`${BOX} p-4`}>
-          <p className="text-xs text-slate-600">Efecto de tus republicaciones (vistas 7 días antes y después)</p>
-          <p className="mt-1 text-2xl font-bold tabular-nums text-[#001F58]">
-            {NUM.format(full.republish.totalBefore)} → {NUM.format(full.republish.totalAfter)}
-          </p>
-          <p className="mt-1 text-[11px] text-slate-500">
-            {full.republish.items.length ? `${full.republish.items.length} republicaciones en el período` : "Sin republicaciones en el período"}
-          </p>
-        </div>
-      </div>
-
       {full.republish.items.length > 0 && (
         <div className={BOX}>
           <p className={`border-b border-[#001F58]/10 px-4 py-3 sm:px-5 ${LABEL}`}>Republicaciones</p>
