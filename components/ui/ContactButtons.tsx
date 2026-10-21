@@ -1,7 +1,7 @@
 "use client";
 
 import { Phone, MessageCircle, Mail } from "lucide-react";
-import { logContactClick } from "@/app/actions/analytics-actions"; // Ajusta la ruta si es necesario
+import { logContactClick } from "@/app/actions/analytics-actions";
 import { ensureAnalyticsCookies } from "@/lib/analytics-client";
 
 interface ContactButtonsProps {
@@ -11,6 +11,8 @@ interface ContactButtonsProps {
   emailUrl?: string | null;
   entityId: string;
   entityType: "AIRCRAFT" | "SPARE_PART" | "HANGAR";
+  className?: string;
+  compact?: boolean;
 }
 
 export function ContactButtons({
@@ -20,47 +22,51 @@ export function ContactButtons({
   emailUrl,
   entityId,
   entityType,
+  className = "",
+  compact = false,
 }: ContactButtonsProps) {
-  
   const handleTrack = (eventType: "PHONE_CLICK" | "WHATSAPP_CLICK" | "EMAIL_CLICK") => {
-    // Se ejecuta en segundo plano, no bloquea que se abra el link
     ensureAnalyticsCookies();
     logContactClick(entityId, entityType, eventType);
   };
 
   return (
-    <div className="space-y-2 pt-2">
+    <div className={`flex items-center gap-1.5 sm:gap-2 ${className}`}>
       {phone && (
-        <div className="flex gap-2">
-          <a
-            onClick={() => handleTrack("PHONE_CLICK")}
-            href={`tel:${phone}`}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs rounded-xl transition-colors"
-          >
-            <Phone className="w-4 h-4" /> Llamar
-          </a>
+        <a
+          onClick={() => handleTrack("PHONE_CLICK")}
+          href={`tel:${phone}`}
+          className="flex items-center justify-center gap-1.5 py-2 px-2.5 sm:px-3 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs rounded-xl transition-colors shrink-0"
+          title="Llamar"
+        >
+          <Phone className="w-4 h-4 shrink-0" />
+          <span className={compact ? "hidden sm:inline" : "inline"}>Llamar</span>
+        </a>
+      )}
 
-          {whatsappUrl && (
-            <a
-              onClick={() => handleTrack("WHATSAPP_CLICK")}
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-500 text-white hover:bg-emerald-600 font-semibold text-xs rounded-xl transition-colors shadow-xs"
-            >
-              <MessageCircle className="w-4 h-4" /> WhatsApp
-            </a>
-          )}
-        </div>
+      {phone && whatsappUrl && (
+        <a
+          onClick={() => handleTrack("WHATSAPP_CLICK")}
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-1.5 py-2 px-2.5 sm:px-3 bg-emerald-500 text-white hover:bg-emerald-600 font-semibold text-xs rounded-xl transition-colors shadow-xs shrink-0"
+          title="WhatsApp"
+        >
+          <MessageCircle className="w-4 h-4 shrink-0" />
+          <span className={compact ? "hidden sm:inline" : "inline"}>WhatsApp</span>
+        </a>
       )}
 
       {email && emailUrl && (
         <a
           onClick={() => handleTrack("EMAIL_CLICK")}
           href={emailUrl}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-3 border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-xs rounded-xl transition-colors"
+          className="flex items-center justify-center gap-1.5 py-2 px-2.5 sm:px-3 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-xs rounded-xl transition-colors shadow-xs shrink-0"
+          title="Enviar Correo"
         >
-          <Mail className="w-4 h-4 text-slate-500" /> Enviar Correo
+          <Mail className="w-4 h-4 text-slate-500 shrink-0" />
+          <span className={compact ? "hidden sm:inline" : "inline"}>Enviar Correo</span>
         </a>
       )}
     </div>

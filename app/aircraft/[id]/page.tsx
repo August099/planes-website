@@ -32,11 +32,9 @@ import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { OwnerRepublishBar } from "@/components/ui/listing/OwnerRepublishBar";
 import { BrokerDetailHeader } from "@/components/ui/listing/BrokerDetailHeader";
-import { BigFacts, type BigFact } from "@/components/ui/listing/BigFacts";
 import { getBrokerDetail } from "@/lib/broker-detail";
 import { youtubeId } from "@/lib/youtube";
 import { getMoreFromSeller } from "@/lib/recommendations";
-import { Calendar, Cog, Gauge, MapPin, Tag, Timer } from "lucide-react";
 import { getRepublishStatus, republishView } from "@/lib/republish";
 
 type Props = { params: Promise<{ id: string }> };
@@ -55,7 +53,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: url },
-    // Pausada, vencida, vendida o pendiente de pago: no se indexa.
     robots: isListingActive(aircraft) ? undefined : { index: false, follow: true },
     openGraph: {
       title,
@@ -73,12 +70,10 @@ export default async function AircraftDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  // Sesión y publicación (con el vendedor incluido) en paralelo (VA-13).
   const [session, aircraft] = await Promise.all([auth(), getAircraftDetail(id)]);
 
   if (!aircraft) notFound();
 
-  // VALIDACIÓN DE VENCIMIENTO / PAUSA
   const isOwner = session?.user?.id === aircraft.sellerId;
   const isInactive = !isListingActive(aircraft);
 
@@ -109,35 +104,13 @@ export default async function AircraftDetailsPage({
   const cleanPhone = seller.phone ? seller.phone.replace(/\D/g, "") : "";
   const whatsappUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${body}` : null;
 
-  // Recuadro "Motor" del resumen: un solo motor y nunca en Bimotor (VA-41).
   const singleEngine = showsEngineSummary(aircraft) ? aircraft.engines[0] : null;
-
   const formattedPrice = formatPrice(aircraft.price);
-
-  // VA-44: las horas son opcionales en Agrícola, Experimental y Proyecto.
   const tboText = (tbo: number | null) => (tbo != null ? `${tbo} hs` : "No informado");
 
-  // VA-57: características e "Información adicional", ya sin vacíos.
   const features = aircraftFeatures(aircraft);
-  // VA-88: "Aeronaves similares" (unifica el "Comparar con similares" de VA-83) y "Repuestos para…".
-  // VA-170: detalle de un Broker (detalles personalizados): portada, degradé, datos clave grandes, video y
-  // "Más de…". Lo demás (ficha, galería, zoom, preguntas, etc.) es igual al detalle común.
   const broker = await getBrokerDetail(aircraft.sellerId);
   const moreFromSeller = broker ? await getMoreFromSeller(aircraft.sellerId, aircraft.id, broker.name) : null;
-  const firstEngine = aircraft.engines[0];
-  const fmt = new Intl.NumberFormat("es-AR");
-  const bigFacts: BigFact[] = [
-    { icon: Calendar, label: "Año", value: aircraft.year ? String(aircraft.year) : null },
-    { icon: Gauge, label: "Horas totales", value: aircraft.totalTimeHours != null ? `${fmt.format(aircraft.totalTimeHours)} hs` : null },
-    { icon: Cog, label: "Motor", value: firstEngine ? [firstEngine.brand, firstEngine.model].filter(Boolean).join(" ") || null : null },
-    {
-      icon: Timer,
-      label: "TBO restante",
-      value: firstEngine?.TBO != null && firstEngine.engineHours != null ? `${fmt.format(Math.max(0, firstEngine.TBO - firstEngine.engineHours))} hs` : null,
-    },
-    { icon: Tag, label: "Categoría", value: aircraft.category?.name ?? null },
-    { icon: MapPin, label: "Ubicación", value: [aircraft.city, aircraft.province].filter(Boolean).join(", ") || null },
-  ];
 
   const [similar, parts] = await Promise.all([
     getSimilarAircraft({
@@ -151,17 +124,14 @@ export default async function AircraftDetailsPage({
     }),
     getPartsForAircraft({ id: aircraft.id, brandName: aircraft.brand?.name ?? null, modelName: aircraft.model?.name ?? null }),
   ]);
-  // Web: la ficha no repite lo del resumen. Impresión: ficha completa.
+
   const sections = aircraftSections(aircraft, { omitSummary: true });
   const printSections = aircraftSections(aircraft);
   const listingLocation = [aircraft.city, aircraft.province].filter(Boolean).join(", ");
 
-  // VA-83: los datos del resumen salen de la misma lista que la ficha y el comparador.
-  // VA-113 / VA-131: "Estado" y "Categoría" no van en "Datos de la aeronave" (la categoría ya es el link
-  // de arriba); los dos están en la grilla "General" de la ficha.
   const keyFacts: KeyFact[] = AIRCRAFT_FIELDS.filter((f) => f.inDetail === "summary" && f.key !== "condition" && f.key !== "category").map((f) => ({ label: f.label, value: f.value?.(aircraft) }));
-  // Recuadro "Motor" junto a las fotos: marca, modelo y TBO, en ese orden (pedido del socio, 9/10).
-  // Todos los datos del motor siguen en la ficha de abajo.
+
+  // Datos del Motor
   const engineSummary: KeyFact[] | null = singleEngine
     ? [
         { label: "Marca", value: singleEngine.brand },
@@ -173,11 +143,9 @@ export default async function AircraftDetailsPage({
 
   return (
     <>
-      {/* Datos estructurados: solo para avisos visibles al público */}
       {!isInactive && <JsonLd data={aircraftJsonLd(aircraft)} />}
       {!isInactive && !isOwner && <TrackListingView type="AIRCRAFT" id={aircraft.id} />}
 
-      {/* BANNER AVISO DE PAUSA SOLO PARA EL DUEÑO */}
       {isInactive && isOwner && (
         <div className="bg-amber-500 text-white text-xs font-semibold py-3 px-4 text-center flex items-center justify-center gap-2 print:hidden">
           <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -192,20 +160,16 @@ export default async function AircraftDetailsPage({
         </div>
       )}
 
-      {/* VA-167: republicar desde el detalle propio */}
       {!isInactive && isOwner && (
         <OwnerRepublishBar view={republishView(await getRepublishStatus(aircraft.sellerId))} id={aircraft.id} kind="AIRCRAFT" profileHref={`/profile/${aircraft.sellerId}`} />
       )}
 
-      {/* VISTA Y FORMATO DE EXPORTACIÓN PDF */}
+      {/* VISTA DE IMPRESIÓN PDF */}
       <div id="pdf-content" className="hidden print:block font-sans text-slate-900 p-10 max-w-4xl mx-auto space-y-6">
         <div className="flex flex-col items-center justify-center border-b-2 border-[#001F58] pb-4 space-y-2 text-center">
-          {/* Vista de impresión: <img> a propósito; next/image cargaría diferido dentro de un bloque
-              oculto y las fotos podrían salir en blanco en el PDF. */}
           <div className="flex items-center justify-center gap-6">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-full.png" alt="Ventas Aeronáuticas" className="h-14 w-auto object-contain" />
-            {/* VA-170: el logo del Broker junto al de VA. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {broker?.logoUrl && <img src={broker.logoUrl} alt={`Logo de ${broker.name}`} className="h-14 w-auto max-w-[160px] object-contain" />}
           </div>
@@ -232,7 +196,7 @@ export default async function AircraftDetailsPage({
             <div className="grid grid-cols-3 gap-3">
               {aircraft.images.slice(0, 3).map((img, idx) => (
                 <div key={img.id || idx} className="h-36 relative rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- vista de impresión (ver arriba) */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={img.url} alt={`${aircraft.title} – foto ${idx + 1}`} className="w-full h-full object-cover" />
                 </div>
               ))}
@@ -265,14 +229,38 @@ export default async function AircraftDetailsPage({
         </div>
       </div>
 
-      {/* VISTA WEB — VA-41: un solo árbol, sin copias mobile/desktop. En celular las dos columnas son
-          "contents" y los bloques se ordenan con order-*: fotos → título y precio → vendedor →
-          descripción → ficha técnica → documentos. Desde lg: izquierda (fotos, descripción, ficha) y
-          derecha (resumen, vendedor, documentos). */}
+      {/* BANNER SOLO PARA BROKERS (FUERA DEL CONTAINER DE MAIN) */}
+      {broker && (
+        <BrokerDetailHeader
+          broker={broker}
+          phone={seller.phone}
+          email={seller.email}
+          whatsappUrl={whatsappUrl}
+          emailUrl={emailUrl}
+          entityId={aircraft.id}
+          entityType="AIRCRAFT"
+          breadcrumbs={
+            <Breadcrumbs 
+              items={[{ label: "Aviones", href: "/aircraft" }, { label: aircraft.title }]} 
+              jsonLd={false} 
+              className="text-white/80 hover:text-white"
+            />
+          }
+        />
+      )}
+
       <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
         <PageBackground page="aircraftDetail" />
-        <Breadcrumbs items={[{ label: "Aviones", href: "/aircraft" }, { label: aircraft.title }]} jsonLd={false} className="-mt-4 -mb-6" />
-        {broker && <BrokerDetailHeader broker={broker} />}
+
+        {/* BREADCRUMBS SOLO SI NO ES BROKER (PÁGINA COMÚN) */}
+        {!broker && (
+          <Breadcrumbs 
+            items={[{ label: "Aviones", href: "/aircraft" }, { label: aircraft.title }]} 
+            jsonLd={false} 
+            className="-mt-4 -mb-6" 
+          />
+        )}
+
         <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
           <div className="contents lg:flex lg:w-2/3 lg:flex-col lg:gap-8">
             <div className="order-1 lg:order-none">
@@ -285,7 +273,6 @@ export default async function AircraftDetailsPage({
               </div>
             )}
 
-            {/* VA-57: características con íconos + tablas (sin repetir lo del resumen) */}
             <div className="order-5 lg:order-none flex flex-col gap-5 lg:gap-8">
               <FeaturesCard title="Características de la aeronave" features={features} />
               <DetailSections sections={sections} />
@@ -293,7 +280,7 @@ export default async function AircraftDetailsPage({
           </div>
 
           <div className="contents lg:flex lg:w-1/3 lg:flex-col lg:gap-5">
-            {/* Resumen: título, precio, acciones y datos clave */}
+            {/* Tarjeta con los Datos de la Aeronave */}
             <div className="order-2 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
               <PublishedLine createdAt={aircraft.createdAt} lastPublishedAt={aircraft.lastPublishedAt} location={listingLocation} />
               <AircraftActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url} />
@@ -305,9 +292,10 @@ export default async function AircraftDetailsPage({
                 )}
                 <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
               </div>
-              {broker && <BigFacts facts={bigFacts} accent={broker.accent} />}
               <Separator />
               <KeyFacts title="Datos de la aeronave" facts={keyFacts} />
+              
+              {/* Recuadro del Motor (se muestra si existe) */}
               {engineSummary && (
                 <div className="pt-3 border-t border-slate-100">
                   <KeyFacts title="Motor" facts={engineSummary} />
@@ -315,16 +303,18 @@ export default async function AircraftDetailsPage({
               )}
             </div>
 
-            <SellerContactCard
-              className="order-3 lg:order-none"
-              seller={seller}
-              whatsappUrl={whatsappUrl}
-              emailUrl={emailUrl}
-              entityId={aircraft.id}
-              entityType="AIRCRAFT"
-            />
+            {/* TARJETA DE VENDEDOR COMÚN (SOLO PARA PÁGINAS QUE NO SEAN BROKER) */}
+            {!broker && (
+              <SellerContactCard
+                className="order-3 lg:order-none"
+                seller={seller}
+                whatsappUrl={whatsappUrl}
+                emailUrl={emailUrl}
+                entityId={aircraft.id}
+                entityType="AIRCRAFT"
+              />
+            )}
 
-            {/* VA-78: link discreto a la guía de pre-compra */}
             <p className="order-3 lg:order-none -mt-2 px-1 text-xs text-slate-500">
               ¿Primera compra?{" "}
               <Link href="/services/guides/buying-a-used-aircraft" className="font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
@@ -332,7 +322,6 @@ export default async function AircraftDetailsPage({
               </Link>
             </p>
 
-            {/* VA-83: zona aproximada (centroide de la localidad, círculo de ~5 km) */}
             <ListingLocationMap
               className="order-3 lg:order-none"
               latitude={aircraft.latitude}
@@ -341,8 +330,6 @@ export default async function AircraftDetailsPage({
               province={aircraft.province}
             />
 
-            {/* Pedido del socio (19/10): la documentación es pública (antes, VA-105 · 5.7, solo dueño y admins).
-                Se sigue abriendo con un link firmado de 60 s, sin publicar la URL del archivo. */}
             {aircraft.documents.length > 0 && (
               <div className="order-6 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-3">
                 <h2 className="font-bold text-[#001F58] text-sm">Documentación adjunta</h2>
@@ -359,7 +346,6 @@ export default async function AircraftDetailsPage({
           </div>
         </section>
 
-        {/* Sección Preguntas y Respuestas */}
         <QnaSection
           entityId={aircraft.id}
           entityType="AIRCRAFT"
@@ -369,11 +355,9 @@ export default async function AircraftDetailsPage({
           currentUserId={session?.user?.id}
         />
 
-        {/* VA-170: "Más de [Broker]", antes de las recomendaciones generales. */}
         {moreFromSeller?.aircraft && <RecommendationRail kind="aircraft" id="mas-del-vendedor" block={moreFromSeller.aircraft} />}
         {moreFromSeller?.parts && <RecommendationRail kind="sparePart" id="repuestos-del-vendedor" block={moreFromSeller.parts} />}
 
-        {/* VA-88: recomendaciones, al pie (después de las preguntas) */}
         {similar && (
           <RecommendationRail
             kind="aircraft"

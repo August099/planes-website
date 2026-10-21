@@ -25,7 +25,7 @@ export function HeaderLogo() {
           manda la versión final, se reemplazan con el mismo nombre. Aspecto 1032×276 (≈ 3,74:1). */}
       <div className="block md:hidden">
         <Image
-          src={isHome ? "/logo-va-white.png" : "/logo-va-color.png"}
+          src={isHome ? "/logo-va-white.svg" : "/logo-va-color.png"}
           alt="Ventas Aeronáuticas"
           width={127}
           height={34}

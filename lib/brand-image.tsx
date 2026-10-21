@@ -5,7 +5,7 @@ import { BRAND_COLORS } from "@/lib/site";
 
 // Logo "VA//" en blanco (con la barra roja) como data URL, para usar dentro de ImageResponse.
 export async function whiteLogoDataUrl(): Promise<string> {
-  const data = await readFile(join(process.cwd(), "public", "logo-va-white.png"), "base64");
+  const data = await readFile(join(process.cwd(), "public", "logo-va-white.svg"), "base64");
   return `data:image/png;base64,${data}`;
 }
 
