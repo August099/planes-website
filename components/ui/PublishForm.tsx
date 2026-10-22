@@ -21,10 +21,12 @@ import Image from "next/image";
 import Link from "next/link";
 import Stepper, { Step } from "@/components/ui/Stepper";
 import { PageBackground } from "@/components/ui/PageBackground";
-import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle, Send, AlertCircle, Upload, Paperclip, Search, X, GripHorizontal, Rocket } from "lucide-react";
+import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle, Send, AlertCircle, Upload, Paperclip, Search, X, GripHorizontal } from "lucide-react";
 import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
 import { DescriptionTextarea } from "@/components/ui/DescriptionTextarea";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
+import { LocalityInput } from "@/components/ui/LocalityInput";
+import { cityConflictsWithProvince } from "@/lib/localities";
 
 export interface CategoryOption { 
     id: string; 
@@ -1297,12 +1299,12 @@ export default function PublishForm({
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Ciudad *</label>
-                                                <input type="text" placeholder="Ej: San Fernando" value={aircraftForm.city} onChange={e => setAircraftForm({...aircraftForm, city: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <LocalityInput placeholder="Ej: San Fernando" value={aircraftForm.city} province={aircraftForm.province} onChange={city => setAircraftForm(f => ({...f, city}))} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.city} />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Provincia *</label>
-                                                <ProvinceSelect required value={aircraftForm.province} onChange={(province) => setAircraftForm({...aircraftForm, province})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <ProvinceSelect required value={aircraftForm.province} onChange={(province) => { setAircraftForm(f => ({...f, province})); cityConflictsWithProvince(aircraftForm.city, province).then(conflict => conflict && setAircraftForm(f => ({...f, city: ""}))); }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.province} />
                                             </div>
                                         </div>
@@ -1347,7 +1349,7 @@ export default function PublishForm({
                                                 disabled={isPublishing || !!compressing} 
                                                 className="px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl flex items-center gap-2 shadow-lg disabled:opacity-50 transition-colors"
                                             >
-                                                <Rocket className="w-5 h-5" /> {isPublishing ? publishStatus ?? "Publicando..." : compressing ? "Optimizando fotos..." : isEditing ? "Guardar cambios" : "Finalizar y Publicar"}
+                                                <Plane className="w-5 h-5" /> {isPublishing ? publishStatus ?? "Publicando..." : compressing ? "Optimizando fotos..." : isEditing ? "Guardar cambios" : "Finalizar y Publicar"}
                                             </button>
                                         </div>
                                     </div>
@@ -1478,12 +1480,12 @@ export default function PublishForm({
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Ciudad *</label>
-                                                <input type="text" placeholder="Ej: Morón" value={partsForm.city} onChange={e => setPartsForm({...partsForm, city: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <LocalityInput placeholder="Ej: Morón" value={partsForm.city} province={partsForm.province} onChange={city => setPartsForm(f => ({...f, city}))} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.city} />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Provincia *</label>
-                                                <ProvinceSelect required value={partsForm.province} onChange={(province) => setPartsForm({...partsForm, province})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <ProvinceSelect required value={partsForm.province} onChange={(province) => { setPartsForm(f => ({...f, province})); cityConflictsWithProvince(partsForm.city, province).then(conflict => conflict && setPartsForm(f => ({...f, city: ""}))); }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.province} />
                                             </div>
                                         </div>
@@ -1634,7 +1636,7 @@ export default function PublishForm({
                                                 disabled={isPublishing || !!compressing} 
                                                 className="px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl flex items-center gap-2 shadow-lg disabled:opacity-50 transition-colors"
                                             >
-                                                <Rocket className="w-5 h-5" /> {isPublishing ? publishStatus ?? "Publicando..." : compressing ? "Optimizando fotos..." : isEditing ? "Guardar cambios" : "Finalizar y Publicar"}
+                                                <Plane className="w-5 h-5" /> {isPublishing ? publishStatus ?? "Publicando..." : compressing ? "Optimizando fotos..." : isEditing ? "Guardar cambios" : "Finalizar y Publicar"}
                                             </button>
                                         </div>
                                     </div>

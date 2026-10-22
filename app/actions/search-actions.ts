@@ -81,17 +81,17 @@ export async function searchGlobal(
       take: 5,
     });
 
-    results = results.concat(aircrafts.map((a): SearchResultItem => ({
-      id: a.id,
-      title: a.title,
-      type: "Aeronave",
-      subtitle: `${a.city ?? "Ubicación no especificada"}${
-        a.province ? `, ${a.province}` : ""
-      } • ${
-        formatPrice(a.price)
-      }`,
-      url: `/aircraft/${a.id}`,
-    })));
+    results = results.concat(
+      aircrafts.map((a): SearchResultItem => ({
+        id: a.id,
+        title: a.title,
+        type: "Aeronave",
+        subtitle: `${a.city ?? "Ubicación no especificada"}${
+          a.province ? `, ${a.province}` : ""
+        } · ${formatPrice(a.price)}`,
+        url: `/aircraft/${a.id}`,
+      }))
+    );
   }
 
   // ============================================================
@@ -129,19 +129,23 @@ export async function searchGlobal(
       take: 5,
     });
 
-    results = results.concat(spareParts.map((s): SearchResultItem => ({
-      id: s.id,
-      title: s.title,
-      type: "Repuesto",
-      subtitle: `${s.city ?? "Ubicación no especificada"} • ${
-        formatPrice(s.price, { inPesos: s.inPesos })
-      }`,
-      url: `/spareparts/sparepart-details/${s.id}`,
-    })));
+    results = results.concat(
+      spareParts.map((s): SearchResultItem => ({
+        id: s.id,
+        title: s.title,
+        type: "Repuesto",
+        subtitle: `${s.city ?? "Ubicación no especificada"} · ${formatPrice(
+          s.price,
+          { inPesos: s.inPesos }
+        )}`,
+        url: `/spareparts/sparepart-details/${s.id}`,
+      }))
+    );
   }
 
   return results;
 }
+
 // ============================================================
 // VA-172: VENDEDORES (Brokers y admins con Página VA publicada)
 // ============================================================
@@ -154,14 +158,18 @@ export interface SellerResult {
 }
 
 /**
- * Brokers por nombre comercial (o nombre). Sin cuentas Base ni Pro: solo las que tienen la Página VA
- * completa (suscripción vigente a un plan con vaPageLevel FULL, o admins con su página publicada). El
- * filtro por plan acota a pocas cuentas antes de buscar el texto; se llama con el mismo debounce de hoy.
+ * Busca brokers por nombre comercial o nombre personal.
+ * Muestra como máximo los 2 resultados más cercanos para no saturar el menú desplegable.
  */
-export async function searchSellers(query: string, take = 4): Promise<SellerResult[]> {
+export async function searchSellers(query: string, take = 2): Promise<SellerResult[]> {
   const q = query.trim();
   if (q.length < 2) return [];
+  
   const now = new Date();
+  
+  // Forzamos que el límite máximo sea estrictamente 2 resultados
+  const limit = Math.min(Math.max(1, take), 2);
+
   const users = await prisma.user.findMany({
     where: {
       OR: [
@@ -176,17 +184,30 @@ export async function searchSellers(query: string, take = 4): Promise<SellerResu
           },
         },
       ],
-      AND: [{ OR: [{ businessName: { contains: q, mode: "insensitive" } }, { name: { contains: q, mode: "insensitive" } }] }],
+      AND: [
+        {
+          OR: [
+            { businessName: { contains: q, mode: "insensitive" } },
+            { name: { contains: q, mode: "insensitive" } },
+          ],
+        },
+      ],
     },
     select: {
       id: true,
       name: true,
       businessName: true,
       logoUrl: true,
-      _count: { select: { aircrafts: { where: activeListingWhere() }, spareParts: { where: activeListingWhere() } } },
+      _count: {
+        select: {
+          aircrafts: { where: activeListingWhere() },
+          spareParts: { where: activeListingWhere() },
+        },
+      },
     },
-    take: Math.min(Math.max(1, take), 20),
+    take: limit,
   });
+
   return users.map((u) => ({
     id: u.id,
     name: u.businessName || u.name || "Vendedor",

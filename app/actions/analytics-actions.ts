@@ -173,6 +173,6 @@ export async function logProfileListingClick(profileUserId: string, entityType: 
     const target = entityType === "AIRCRAFT" ? { aircraftId: entityId } : { sparePartId: entityId };
     await prisma.analyticsEvent.create({ data: { eventType: AnalyticsEventType.PROFILE_LISTING_CLICK, userId, ...context, profileUserId, ...target } });
   } catch (error) {
-    console.error("Error al registrar el clic desde la Página VA:", error);
+    console.error("Error al registrar el clic desde el perfil:", error);
   }
 }

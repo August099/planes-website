@@ -123,7 +123,7 @@ export default function SellerMetricsPanel() {
             <Stat label="Contactos" total={data.totals.contacts} days={data.days} />
             <Stat label="Favoritos nuevos" total={data.totals.favorites} days={data.days} />
             <Stat
-              label="Visitas a tu Página VA"
+              label="Visitas a tu Página"
               total={data.totals.profileVisits}
               days={data.days}
               note={data.profileVisitsSince ? `Desde el ${SINCE_FMT.format(new Date(data.profileVisitsSince))}` : "Se cuentan desde ahora"}
@@ -410,7 +410,7 @@ function FullSections({ full, days }: { full: FullMetrics; days: number }) {
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Stat label="Clics desde tu Página VA a tus avisos" total={full.profileListingClicks} days={days} />
+        <Stat label="Clics desde tu Página a tus avisos" total={full.profileListingClicks} days={days} />
         <div className={`${BOX} p-4`}>
           <p className="text-xs text-slate-600">Efecto de tus republicaciones (vistas 7 días antes y después)</p>
           <p className="mt-1 text-2xl font-bold tabular-nums text-[#001F58]">
@@ -483,7 +483,7 @@ function exportCsv(data: SellerMetrics) {
     ["Vistas", data.totals.views.current],
     ["Contactos", data.totals.contacts.current],
     ["Favoritos nuevos", data.totals.favorites.current],
-    ["Visitas a la Página VA", data.totals.profileVisits.current],
+    ["Visitas a la Página", data.totals.profileVisits.current],
     [],
     ["Aviso", "Tipo", "Estado", "Vistas", "Contactos", "Favoritos", "Tasa de contacto (%)", "Comparador"],
     ...data.listings.map((l) => [l.title, l.kind === "AIRCRAFT" ? "Aeronave" : "Repuesto", STATUS_LABEL[l.status] ?? l.status, l.views, l.contacts, l.favorites, l.contactRate ?? "", l.compares]),

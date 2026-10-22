@@ -25,7 +25,7 @@ export function SellerResults({ sellers, query, onSelect, max = 3 }: { sellers: 
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-bold text-[#001F58]">{s.name}</span>
                 <span className="block text-[11px] text-slate-500">
-                  {s.listings} aviso{s.listings === 1 ? "" : "s"} · Página VA
+                  {s.listings} aviso{s.listings === 1 ? "" : "s"} · Página personalizada
                 </span>
               </span>
             </Link>

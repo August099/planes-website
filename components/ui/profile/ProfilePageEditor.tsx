@@ -71,7 +71,7 @@ export function ProfilePageEditor({ initial, listings, profileUserId, onClose }:
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#001F58]/12 bg-white p-4">
         <div>
-          <p className={LABEL}>Editando tu Página VA</p>
+          <p className={LABEL}>Editando tu página personalizada</p>
           <p className="text-sm text-slate-600">Elegí qué secciones se ven y en qué orden. La portada, el logo y los datos se cambian en Ajustes.</p>
         </div>
         <div className="flex flex-wrap gap-2">

@@ -24,6 +24,7 @@ import { ProvinceExplorer, type ProvinceCounts } from "@/components/ui/ProvinceE
 import { provinceByName } from "@/lib/provinces";
 import { BrandSlashes } from "@/components/ui/BrandSlashes";
 import { getFeaturedSellerIds } from "@/lib/featured";
+import { ScrollToTop } from "@/components/ui/ScrollToTop";
 
 // Título y descripción salen del layout; acá solo el canonical.
 export const metadata: Metadata = {
@@ -226,6 +227,7 @@ export default async function HomePage() {
           <GuidesSection />
           <HomeServicesCards />
         </div>
+        <ScrollToTop />
       </main>
       </FavoriteIdsProvider>
     </>

@@ -323,7 +323,7 @@ export default async function AircraftDetailsPage({
             </p>
 
             <ListingLocationMap
-              className="order-3 lg:order-none"
+              className="order-7 lg:order-none"
               latitude={aircraft.latitude}
               longitude={aircraft.longitude}
               city={aircraft.city}
