@@ -293,7 +293,7 @@ export function ProfileView({
       {isOwner && !storefront && !subscription?.active && (
         <aside className="flex flex-col gap-3 rounded-lg border border-[#001F58]/12 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-slate-700">
-            <span className="font-semibold text-[#001F58]">Con la Página VA</span> tu perfil pasa a ser tu página: portada, logo, nombre
+            <span className="font-semibold text-[#001F58]">Con la página personalizada</span> tu perfil pasa a ser tu página: portada, logo, nombre
             comercial y WhatsApp.
           </p>
           <Link href="/plans" className="shrink-0 text-sm font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">

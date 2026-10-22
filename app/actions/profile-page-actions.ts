@@ -14,7 +14,7 @@ type Result = { ok: true } | { ok: false; error: string };
 export async function saveProfilePageAction(sections: PageSection[], publish: boolean): Promise<Result> {
   const user = await getCurrentUser();
   if (!user?.id) return { ok: false, error: "Tenés que iniciar sesión." };
-  if ((await getAccountPlan(user.id)).vaPage !== "FULL") return { ok: false, error: "Tu plan no incluye la Página VA completa." };
+  if ((await getAccountPlan(user.id)).vaPage !== "FULL") return { ok: false, error: "Tu plan no incluye la página personalizada completa." };
   const parsed = sectionsSchema.safeParse(sections);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Revisá las secciones." };
 

@@ -293,7 +293,7 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
       </Section>
 
       {storefront && (
-        <Section id="pagina-va" title="Página VA">
+        <Section id="pagina-va" title="Página personalizada">
           <StorefrontEditor storefront={storefront} />
         </Section>
       )}

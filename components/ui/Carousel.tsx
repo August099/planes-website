@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Parallax, Zoom, Thumbs, Keyboard } from "swiper/modules";
@@ -10,16 +11,12 @@ import "swiper/css/thumbs";
 import "swiper/css/zoom";
 
 import { AppImage } from "@/components/ui/AppImage";
-import { X, Maximize, Play } from "lucide-react";
+import { X, Maximize, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { youtubeEmbedUrl } from "@/lib/youtube";
-import { CarouselArrow } from "@/components/ui/home/CarouselArrow";
 
 type GalleryProps = {
   images: { url: string; alt?: string | null }[];
-  // Título del aviso: se usa para el alt de cada foto ("{título} – foto {n}").
   title: string;
-  // VA-170 (detalle del Broker): id de un video de YouTube, como una miniatura más al final (el
-  // reproductor se carga recién al tocarlo, con youtube-nocookie), y el degradé de la foto hacia abajo.
   video?: string | null;
   fade?: boolean;
 };
@@ -34,20 +31,16 @@ export function AircraftGallery({ images, title, video = null, fade = false }: G
   const photoAlt = (image: { alt?: string | null }, index: number) => image.alt || `${title} – foto ${index + 1}`;
 
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
-  // VA-160: flechas propias (las mismas de la Home) en vez de las de Swiper.
   const mainSwiperRef = useRef<SwiperType | null>(null);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // --- Lightbox ---
   const lightboxSwiperRef = useRef<SwiperType | null>(null);
   const lightboxContainerRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const lightboxZoomLevel = useRef(1);
   const [lightboxCurrentZoom, setLightboxCurrentZoom] = useState(1);
 
-  // Lightbox abierto: bloquear el scroll del fondo, zoom con rueda (solo acá: en el carrusel
-  // principal secuestraba el scroll de la página, VA-42) y Escape para cerrar.
   useEffect(() => {
     if (!isFullscreenOpen) return;
 
@@ -91,88 +84,97 @@ export function AircraftGallery({ images, title, video = null, fade = false }: G
 
   return (
     <>
-      {/* Mismo fondo que el resto de las tarjetas del detalle (VA-32): antes era transparente
-          y alrededor de la foto y de las miniaturas se veía el fondo de la página. */}
       <div className={`relative w-full rounded-2xl overflow-hidden bg-white ${fade ? "" : "shadow-sm border border-slate-200"}`}>
-        {/* Carrusel principal. Tocar o hacer clic en la foto abre la pantalla completa (VA-42):
-            Swiper solo dispara onClick si no hubo arrastre, así que deslizar no la abre. */}
         <div className="relative">
-        <Swiper
-          onSwiper={(swiper) => (mainSwiperRef.current = swiper)}
-          onClick={(swiper) => {
-            if (swiper.activeIndex < images.length) handleOpenFullscreen(swiper.activeIndex);
-          }}
-          modules={[Autoplay, Parallax, Thumbs]}
-          spaceBetween={10}
-          slidesOffsetBefore={10}
-          slidesOffsetAfter={10}
-          speed={500}
-          rewind
-          parallax
-          autoplay={{ delay: 5000, pauseOnMouseEnter: true }}
-          thumbs={{ swiper: thumbsSwiper }}
-          className="w-full aspect-[4/3] max-h-[520px]"
-        >
-          {images.map((image, index) => (
-            <SwiperSlide key={index} className="flex items-center justify-center cursor-zoom-in">
-              <div className="relative w-full h-full flex items-center justify-center group">
-                {/* AppImage: si la foto no carga, muestra el placeholder en vez de un ícono roto. */}
-                <AppImage
-                  src={image.url}
-                  alt={photoAlt(image, index)}
-                  width={1200}
-                  height={900}
-                  priority={index === 0}
-                  className="object-contain w-full h-full max-h-[520px]"
-                />
-
-                {/* Siempre visible en pantallas táctiles (no hay hover); en escritorio, al pasar el mouse. */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenFullscreen(index);
-                  }}
-                  aria-label="Ver foto en pantalla completa"
-                  className="absolute bottom-3 right-3 flex h-11 w-11 items-center justify-center bg-black/60 text-white rounded-full opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity z-2 cursor-pointer"
-                >
-                  <Maximize className="w-5 h-5" />
-                </button>
-              </div>
-            </SwiperSlide>
-          ))}
-          {video && (
-            <SwiperSlide key="video" className="flex items-center justify-center">
-              <div className="relative flex h-full w-full items-center justify-center bg-[#001331]">
-                {playing ? (
-                  <iframe
-                    src={youtubeEmbedUrl(video)}
-                    title={`Video de ${title}`}
-                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                    allowFullScreen
-                    className="h-full w-full border-0"
+          <Swiper
+            onSwiper={(swiper) => (mainSwiperRef.current = swiper)}
+            onClick={(swiper) => {
+              // En modo loop, se usa realIndex para obtener la foto correcta
+              if (swiper.realIndex < images.length) handleOpenFullscreen(swiper.realIndex);
+            }}
+            modules={[Autoplay, Parallax, Thumbs]}
+            spaceBetween={10}
+            slidesOffsetBefore={10}
+            slidesOffsetAfter={10}
+            speed={500}
+            loop={slideCount > 1} // <-- CAMBIO CLAVE: Permite desplazamiento infinito en la misma dirección
+            parallax
+            autoplay={{ delay: 5000, pauseOnMouseEnter: true }}
+            thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+            className="w-full aspect-[4/3] max-h-[520px]"
+          >
+            {images.map((image, index) => (
+              <SwiperSlide key={index} className="flex items-center justify-center cursor-zoom-in">
+                <div className="relative w-full h-full flex items-center justify-center group">
+                  <AppImage
+                    src={image.url}
+                    alt={photoAlt(image, index)}
+                    width={1200}
+                    height={900}
+                    priority={index === 0}
+                    className="object-contain w-full h-full max-h-[520px]"
                   />
-                ) : (
-                  <button type="button" onClick={(e) => { e.stopPropagation(); setPlaying(true); }} className="flex flex-col items-center gap-3 text-white cursor-pointer">
-                    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#E70F1F]">
-                      <Play className="ml-1 h-7 w-7" fill="currentColor" />
-                    </span>
-                    <span className="text-sm font-semibold">Ver video</span>
-                    <span className="text-[11px] text-white/70">Se carga desde YouTube al tocarlo</span>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenFullscreen(index);
+                    }}
+                    aria-label="Ver foto en pantalla completa"
+                    className="absolute bottom-3 right-3 flex h-11 w-11 items-center justify-center bg-black/60 text-white rounded-full opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity z-2 cursor-pointer"
+                  >
+                    <Maximize className="w-5 h-5" />
                   </button>
-                )}
-              </div>
-            </SwiperSlide>
+                </div>
+              </SwiperSlide>
+            ))}
+            {video && (
+              <SwiperSlide key="video" className="flex items-center justify-center">
+                <div className="relative flex h-full w-full items-center justify-center bg-[#001331]">
+                  {playing ? (
+                    <iframe
+                      src={youtubeEmbedUrl(video)}
+                      title={`Video de ${title}`}
+                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                      allowFullScreen
+                      className="h-full w-full border-0"
+                    />
+                  ) : (
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setPlaying(true); }} className="flex flex-col items-center gap-3 text-white cursor-pointer">
+                      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#E70F1F]">
+                        <Play className="ml-1 h-7 w-7" fill="currentColor" />
+                      </span>
+                      <span className="text-sm font-semibold">Ver video</span>
+                      <span className="text-[11px] text-white/70">Se carga desde YouTube al tocarlo</span>
+                    </button>
+                  )}
+                </div>
+              </SwiperSlide>
+            )}
+          </Swiper>
+
+          {/* Flechas de navegación redondas */}
+          {slideCount > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => mainSwiperRef.current?.slidePrev()}
+                aria-label="Anterior"
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/80 transition-colors shadow-md cursor-pointer"
+              >
+                <ChevronLeft className="h-6 w-6 pr-0.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => mainSwiperRef.current?.slideNext()}
+                aria-label="Siguiente"
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/80 transition-colors shadow-md cursor-pointer"
+              >
+                <ChevronRight className="h-6 w-6 pl-0.5" />
+              </button>
+            </>
           )}
-        </Swiper>
-        {/* VA-170: degradé de la foto hacia abajo (solo decoración: la foto se ve entera al tocarla). */}
-        {fade && <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-1/4 bg-gradient-to-b from-transparent to-white" />}
-        {slideCount > 1 && (
-          <>
-            <CarouselArrow direction="prev" placement="inside" onClick={() => mainSwiperRef.current?.slidePrev()} />
-            <CarouselArrow direction="next" placement="inside" onClick={() => mainSwiperRef.current?.slideNext()} />
-          </>
-        )}
         </div>
 
         {/* Miniaturas */}
@@ -191,8 +193,6 @@ export function AircraftGallery({ images, title, video = null, fade = false }: G
               className="w-full"
             >
               {images.map((image, index) => (
-                // Ancho inicial igual al de slidesPerView (5 / 7 / 9): antes de que Swiper se inicialice,
-                // la primera miniatura ocupaba todo el ancho y la tira "saltaba" (VA-32).
                 <SwiperSlide key={index} className="cursor-pointer opacity-70 hover:opacity-100 transition-opacity !w-[calc((100%-32px)/5)] sm:!w-[calc((100%-48px)/7)] lg:!w-[calc((100%-64px)/9)]">
                   <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-slate-50 border-0 shadow-none">
                     <AppImage
@@ -252,10 +252,11 @@ export function AircraftGallery({ images, title, video = null, fade = false }: G
                 lightboxZoomLevel.current = scale;
                 setLightboxCurrentZoom(scale);
               }}
-              onSlideChange={(swiper) => setActiveImageIndex(swiper.activeIndex)}
+              onSlideChange={(swiper) => setActiveImageIndex(swiper.realIndex)}
               modules={[Zoom, Keyboard]}
               keyboard={{ enabled: true }}
               zoom={{ maxRatio: MAX_ZOOM, minRatio: MIN_ZOOM, toggle: true }}
+              loop={images.length > 1} // <-- También en el visor fullscreen
               initialSlide={activeImageIndex}
               className="w-full h-full"
             >
@@ -275,8 +276,22 @@ export function AircraftGallery({ images, title, video = null, fade = false }: G
             </Swiper>
             {images.length > 1 && (
               <>
-                <CarouselArrow direction="prev" placement="inside" onClick={() => lightboxSwiperRef.current?.slidePrev()} />
-                <CarouselArrow direction="next" placement="inside" onClick={() => lightboxSwiperRef.current?.slideNext()} />
+                <button
+                  type="button"
+                  onClick={() => lightboxSwiperRef.current?.slidePrev()}
+                  aria-label="Anterior"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-slate-800/80 text-white hover:bg-slate-700 transition-colors shadow-lg cursor-pointer"
+                >
+                  <ChevronLeft className="h-7 w-7 pr-0.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => lightboxSwiperRef.current?.slideNext()}
+                  aria-label="Siguiente"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-slate-800/80 text-white hover:bg-slate-700 transition-colors shadow-lg cursor-pointer"
+                >
+                  <ChevronRight className="h-7 w-7 pl-0.5" />
+                </button>
               </>
             )}
           </div>

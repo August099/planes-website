@@ -250,7 +250,7 @@ export function PlanGridEditor({ initial, ids, subscribers }: { initial: PlansGr
       case "branding":
         return (
           <div className="space-y-1.5">
-            <select aria-label={`${GRID_COLUMN_LABEL[c]}: Página VA`} value={b.vaPage} onChange={(e) => setB({ vaPage: e.target.value as VaPage })} className={INPUT}>
+            <select aria-label={`${GRID_COLUMN_LABEL[c]}: Página personalizada`} value={b.vaPage} onChange={(e) => setB({ vaPage: e.target.value as VaPage })} className={INPUT}>
               {VA_PAGES.map((v) => <option key={v} value={v}>{VA_PAGE_LABEL[v]}</option>)}
             </select>
             <label className="flex items-center gap-2 text-xs text-slate-600">

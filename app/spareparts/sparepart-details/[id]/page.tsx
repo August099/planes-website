@@ -331,7 +331,7 @@ export default async function SparePartDetailsPage({
 
             {/* Mapa de ubicación */}
             <ListingLocationMap
-              className="order-3 lg:order-none"
+              className="order-7 lg:order-none"
               latitude={sparePart.latitude}
               longitude={sparePart.longitude}
               city={sparePart.city}

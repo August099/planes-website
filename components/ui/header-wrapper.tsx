@@ -8,7 +8,7 @@ import { useIsHome } from "@/lib/use-is-home";
 // (ahí ya existe la barra pegajosa de contacto)
 const EXCLUDED_PATHS = [
   /^\/aircraft\/[^/]+\/?$/,                    // aircraft/[id]
-  /^\/sparepart\/sparepart-details\/[^/]+\/?$/ // sparepart-details/[id]
+  /^\/spareparts\/sparepart-details\/[^/]+\/?$/ // sparepart-details/[id]
 ];
 
 export function HeaderWrapper({ children }: { children: React.ReactNode }) {
@@ -48,7 +48,7 @@ export function HeaderWrapper({ children }: { children: React.ReactNode }) {
   return (
     <header
       className={`w-full z-40 duration-300 transition-colors ${positionClass} ${
-        scrollUpEnabled && !visible ? "-translate-y-full" : "translate-y-0"
+        scrollUpEnabled && !visible ? "-translate-y-full" : ""
       }`}
     >
       {children}

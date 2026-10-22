@@ -102,7 +102,7 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
     <section className="space-y-5 rounded-lg border border-[#001F58]/12 bg-white p-6">
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Beneficio de tu plan</p>
-        <h2 className="mt-1 text-lg font-bold text-[#001F58]">Página VA</h2>
+        <h2 className="mt-1 text-lg font-bold text-[#001F58]">Página personalizada</h2>
         <p className="mt-1 text-sm text-slate-600">Así ven tu perfil los compradores: portada, logo, nombre comercial y contacto.</p>
       </div>
 
@@ -110,7 +110,7 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
         <ImageField kind="cover" label="Portada" hint="Ancha, por ejemplo 1600 × 400 px." current={storefront.coverUrl} />
         <ImageField kind="logo" label="Logo" hint="Cuadrado, con fondo claro." current={storefront.logoUrl} />
         {storefront.customDetail && (
-          <ImageField kind="detailCover" label="Portada de tus avisos" hint="Opcional: si no subís una, se usa la de tu Página VA." current={storefront.detailCoverUrl ?? null} />
+          <ImageField kind="detailCover" label="Portada de tus avisos" hint="Opcional: si no subís una, se usa la de tu Página." current={storefront.detailCoverUrl ?? null} />
         )}
       </div>
 
