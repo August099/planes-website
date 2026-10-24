@@ -90,7 +90,7 @@ export async function updateProfileAction(formData: FormData) {
   }
 
   revalidatePath(`/profile/${user.id}`);
-  // Punto rojo del header por perfil incompleto (VA-46).
+  revalidatePath("/settings"); // VA-185: el cartel de datos faltantes vive ahí
   return { success: true };
 }
 

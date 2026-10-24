@@ -89,13 +89,14 @@ function useHeaderUser() {
     isAdmin: !!ind?.isAdmin || !!session?.user?.isAdmin,
     hasUnanswered: !!ind?.hasUnanswered,
     hasRepublish: !!ind?.republishKey && !isRepublishNoticeDismissed(ind.republishKey),
+    hasMissingProfile: !!ind?.missingProfile,
   };
 }
 
 export function DesktopUserMenu() {
-  const { status, userId, isAdmin, hasUnanswered, hasRepublish } = useHeaderUser();
+  const { status, userId, isAdmin, hasUnanswered, hasRepublish, hasMissingProfile } = useHeaderUser();
   const [armed, setArmed] = useState(false);
-  const dot = hasUnanswered || hasRepublish;
+  const dot = hasUnanswered || hasRepublish || hasMissingProfile;
 
   // Mientras se resuelve la sesión: un lugar del mismo tamaño, sin saltos.
   if (status === "loading") return <div className="h-9 w-9 rounded-lg bg-slate-200/40" aria-hidden />;
@@ -115,7 +116,7 @@ export function DesktopUserMenu() {
   return (
     <div className="flex items-center gap-3">
       {armed ? (
-        <DesktopDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} hasRepublish={hasRepublish} />
+        <DesktopDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} hasRepublish={hasRepublish} hasMissingProfile={hasMissingProfile} />
       ) : (
         <button
           type="button"
@@ -136,13 +137,13 @@ export function DesktopUserMenu() {
 }
 
 export function MobileMenu({ partCategories = [] }: { partCategories?: PartCategoryLink[] }) {
-  const { status, userId, isAdmin, hasUnanswered, hasRepublish } = useHeaderUser();
+  const { status, userId, isAdmin, hasUnanswered, hasRepublish, hasMissingProfile } = useHeaderUser();
   const [armed, setArmed] = useState(false);
-  const dot = hasUnanswered || hasRepublish;
+  const dot = hasUnanswered || hasRepublish || hasMissingProfile;
 
   if (armed) {
     return (
-      <MobileDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} hasRepublish={hasRepublish} loading={status === "loading"} partCategories={partCategories} />
+      <MobileDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} hasRepublish={hasRepublish} hasMissingProfile={hasMissingProfile} loading={status === "loading"} partCategories={partCategories} />
     );
   }
 

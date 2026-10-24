@@ -9,7 +9,7 @@ import { moderationInfoFor } from "@/lib/moderation";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { getSubscriptionSummary, hasCustomPage, hasSellerMetrics, hasVerifiedBadge } from "@/lib/subscriptions";
 import { TrackProfileView } from "@/components/ui/profile/TrackProfileView";
-import { missingProfileFields, quotaForView } from "@/lib/account-data";
+import { quotaForView } from "@/lib/account-data";
 import { getAccountPlan } from "@/lib/plan-benefits";
 import { parseSections, DEFAULT_SECTIONS } from "@/lib/profile-page";
 import type { PageCard } from "@/components/ui/profile/ProfilePageSections";
@@ -198,7 +198,6 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         profileUser={profileUser}
         isOwner={isOwner}
         currentUserFavIds={currentUserFavIds}
-        missingProfileFields={isOwner ? await missingProfileFields(id) : []}
         storefront={storefront}
         subscription={isOwner ? await getSubscriptionSummary(id) : null}
         hasSellerMetrics={isOwner ? await hasSellerMetrics(id) : false}

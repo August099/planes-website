@@ -18,7 +18,6 @@ const SellerMetricsPanel = dynamic(() => import("@/components/ui/profile/SellerM
 });
 import { deleteListingAction, setListingStatusAction } from "@/app/actions/listing-actions";
 import { BarChart3, MapPin, Calendar, Phone, Mail, Edit, Plane } from "lucide-react";
-import { PROFILE_FIELD_LABELS, type ProfileField } from "@/lib/profile";
 import { USER_TYPE_LABELS } from "@/lib/user-types";
 import { StorefrontHeader, type StorefrontData } from "@/components/ui/profile/StorefrontHeader";
 import type { SubscriptionSummary } from "@/lib/subscriptions";
@@ -77,8 +76,6 @@ interface Props {
   profileUser: ProfileUserData;
   isOwner: boolean;
   currentUserFavIds: string[];
-  // VA-46: campos que le faltan al dueño (se calculan en el servidor, ver lib/profile.ts).
-  missingProfileFields?: ProfileField[];
   // VA-87: datos de la página personalizada; null si el vendedor no tiene el beneficio del plan.
   storefront?: StorefrontData | null;
   // VA-80: plan del dueño del perfil (solo se pasa cuando lo mira el dueño).
@@ -99,7 +96,6 @@ export function ProfileView({
   profileUser,
   isOwner,
   currentUserFavIds,
-  missingProfileFields = [],
   storefront = null,
   subscription = null,
   hasSellerMetrics = false,
@@ -279,27 +275,6 @@ export function ProfileView({
         </div>
       )}
 
-      {/* VA-46: aviso de perfil incompleto (solo el dueño) */}
-      {isOwner && missingProfileFields.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
-          <div className="flex items-start gap-2">
-            <span className="mt-1.5 inline-block w-2.5 h-2.5 shrink-0 rounded-full bg-red-600" />
-            <div>
-              <p className="text-sm font-semibold text-red-800">Completá tu perfil para que te puedan contactar</p>
-              <p className="text-xs text-red-700">
-                Falta: {missingProfileFields.map((f) => PROFILE_FIELD_LABELS[f]).join(", ")}.
-                {missingProfileFields.includes("phone") && " Sin teléfono no se puede publicar."}
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/settings#datos"
-            className="flex min-h-11 shrink-0 items-center rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
-          >
-            Completar ahora
-          </Link>
-        </div>
-      )}
 
       {/* VA-94: CTA para el dueño sin plan: beneficios de la Página VA (discreto, sin pop-up). VA-105: "Pro" pasó a "Página VA". */}
       {isOwner && !storefront && !subscription?.active && (
@@ -378,7 +353,6 @@ export function ProfileView({
           >
             <Edit className="w-4 h-4" />
             Ajustes
-            {missingProfileFields.length > 0 && <span className="w-2 h-2 rounded-full bg-red-600" aria-label="Perfil incompleto" />}
           </Link>
         )}
       </div>
