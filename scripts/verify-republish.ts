@@ -62,6 +62,10 @@ async function main() {
   check("2. El republicado queda primero en Más recientes", a1, await firstRecent());
   const again = await republishListing(base, "AIRCRAFT", a1);
   check("3. Mismo aviso antes de 7 días: no", false, again.ok);
+  const sw = await getRepublishStatus(base);
+  const wait = sw.mode === "COUNT" ? sw.waiting[a1] : undefined;
+  check("3. VA-178: el republicado figura en espera 7 días (el detalle oculta la franja)", 7, wait ? Math.round((wait.getTime() - Date.now()) / DAY) : null);
+  check("3. VA-178: otro aviso no está en espera", undefined, sw.mode === "COUNT" ? sw.waiting[p1] : "?");
   check("1. Base: 2.ª republicación (otro aviso)", true, (await republishListing(base, "SPARE_PART", p1)).ok);
   const third = await republishListing(base, "SPARE_PART", p2);
   check("1. Base: la 3.ª no", false, third.ok);

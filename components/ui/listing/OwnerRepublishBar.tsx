@@ -6,6 +6,9 @@ import type { RepublishView } from "@/lib/republish";
 // "Republicar todas" del perfil (Broker y admins). No se imprime en el PDF.
 export function OwnerRepublishBar({ view, id, kind, profileHref }: { view: RepublishView; id: string; kind: "AIRCRAFT" | "SPARE_PART"; profileHref: string }) {
   if (view.mode === "NONE") return null;
+  // Durante la espera no hay nada para hacer desde acá: la franja no se muestra (VA-178).
+  if (view.mode === "COUNT" && view.waiting[id]) return null;
+  if (view.mode === "ALL" && view.availableAt) return null;
   return (
     <div className="border-b border-[#001F58]/10 bg-white print:hidden">
       <div className="container mx-auto flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-xs text-slate-600">

@@ -52,6 +52,7 @@ function useHeaderUser() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const [indicators, setIndicators] = useState<HeaderIndicators | null>(null);
+  const [tick, setTick] = useState(0);
   const userId = session?.user?.id;
 
   // Se vuelven a pedir al navegar (por ejemplo, después de responder una pregunta).
@@ -66,12 +67,11 @@ function useHeaderUser() {
     return () => {
       cancelled = true;
     };
-  }, [userId, pathname]);
+  }, [userId, pathname, tick]);
 
-  // VA-167: el punto de republicaciones se apaga si el usuario cerró el cartel con ese mismo saldo.
-  const [, setDismissTick] = useState(0);
+  // VA-167: el punto se apaga si el usuario cerró el cartel con ese saldo. VA-178: y se vuelve a pedir al republicar.
   useEffect(() => {
-    const onDismiss = () => setDismissTick((n) => n + 1);
+    const onDismiss = () => setTick((n) => n + 1);
     window.addEventListener(REPUBLISH_NOTICE_EVENT, onDismiss);
     return () => window.removeEventListener(REPUBLISH_NOTICE_EVENT, onDismiss);
   }, []);

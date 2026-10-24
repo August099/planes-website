@@ -19,7 +19,7 @@ const DEFAULT_COOLDOWN = 7;
 
 export type RepublishStatus =
   | { mode: "NONE" }
-  | { mode: "COUNT"; perYear: number; used: number; remaining: number; resetsAt: Date; cooldownDays: number }
+  | { mode: "COUNT"; perYear: number; used: number; remaining: number; resetsAt: Date; cooldownDays: number; waiting: Record<string, Date> }
   | { mode: "ALL"; everyDays: number; lastAt: Date | null; availableAt: Date | null };
 
 /** Comienzo del año en curso contado desde `anchor` (aniversarios). */
@@ -49,7 +49,19 @@ export async function getRepublishStatus(userId: string, db: Db = prisma, now = 
   const resetsAt = new Date(start);
   resetsAt.setFullYear(resetsAt.getFullYear() + 1);
   const used = await db.republication.count({ where: { userId, bulk: false, createdAt: { gte: start } } });
-  return { mode: "COUNT", perYear: plan.republishesPerYear, used, remaining: Math.max(0, plan.republishesPerYear - used), resetsAt, cooldownDays: await cooldownDays(db) };
+  const days = await cooldownDays(db);
+  // Avisos republicados hace menos de `days` días: id → cuándo se pueden volver a republicar (VA-178).
+  const recent = await db.republication.findMany({
+    where: { userId, bulk: false, createdAt: { gt: new Date(now.getTime() - days * DAY) } },
+    select: { aircraftId: true, sparePartId: true, createdAt: true },
+  });
+  const waiting: Record<string, Date> = {};
+  for (const r of recent) {
+    const id = r.aircraftId ?? r.sparePartId;
+    const next = new Date(r.createdAt.getTime() + days * DAY);
+    if (id && (!waiting[id] || waiting[id] < next)) waiting[id] = next;
+  }
+  return { mode: "COUNT", perYear: plan.republishesPerYear, used, remaining: Math.max(0, plan.republishesPerYear - used), resetsAt, cooldownDays: days, waiting };
 }
 
 /** ¿Hay algo para republicar ahora? (para el punto del menú y el cartel de "Mis publicaciones"). */
@@ -67,11 +79,14 @@ export function republishKey(s: RepublishStatus): string {
 /** Para mandar al navegador (fechas como texto). */
 export type RepublishView =
   | { mode: "NONE" }
-  | { mode: "COUNT"; perYear: number; remaining: number; resetsAt: string; cooldownDays: number; key: string }
+  | { mode: "COUNT"; perYear: number; remaining: number; resetsAt: string; cooldownDays: number; waiting: Record<string, string>; key: string }
   | { mode: "ALL"; everyDays: number; availableAt: string | null; key: string };
 
 export function republishView(s: RepublishStatus): RepublishView {
-  if (s.mode === "COUNT") return { mode: "COUNT", perYear: s.perYear, remaining: s.remaining, resetsAt: s.resetsAt.toISOString(), cooldownDays: s.cooldownDays, key: republishKey(s) };
+  if (s.mode === "COUNT") {
+    const waiting = Object.fromEntries(Object.entries(s.waiting).map(([id, d]) => [id, d.toISOString()]));
+    return { mode: "COUNT", perYear: s.perYear, remaining: s.remaining, resetsAt: s.resetsAt.toISOString(), cooldownDays: s.cooldownDays, waiting, key: republishKey(s) };
+  }
   if (s.mode === "ALL") return { mode: "ALL", everyDays: s.everyDays, availableAt: s.availableAt?.toISOString() ?? null, key: republishKey(s) };
   return { mode: "NONE" };
 }
