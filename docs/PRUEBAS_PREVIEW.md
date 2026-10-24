@@ -119,6 +119,7 @@ Marcar cada punto. Celular real para los que dicen 📱.
 ### Lote del 22/10 y 24/10 (VA-176 a VA-191)
 
 - [ ] **Video (VA-176):** en un aviso de Broker con video, tocar "Ver video": el carrusel no cambia solo mientras suena. Pasar a otra foto (flecha, miniatura o deslizando 📱): el video deja de sonar y al volver aparece "Ver video".
+- [ ] **Página personalizada (VA-177):** en `/plans`, `/faq`, Ajustes, el perfil, el buscador y `/admin/plans` no aparece "Página VA".
 
 ### Cuentas y lanzamiento
 - [ ] Registro con email: llega el mail de verificación y el link abre el Preview (no localhost).

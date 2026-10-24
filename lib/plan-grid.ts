@@ -56,7 +56,7 @@ export const formatArs = (n: number) => `AR$ ${NUMBER.format(n)}`;
 
 const METRICS_TEXT: Record<Metrics, string> = { BASIC: "Básicas", PRO: "Algunas", FULL: "Completas" };
 export const METRICS_LABEL: Record<Metrics, string> = { BASIC: "Básicas", PRO: "Pro", FULL: "Completas" };
-export const VA_PAGE_LABEL: Record<VaPage, string> = { NONE: "Sin Página VA", BANNER: "Banner en el perfil", FULL: "Página VA completa" };
+export const VA_PAGE_LABEL: Record<VaPage, string> = { NONE: "Sin página personalizada", BANNER: "Banner en el perfil", FULL: "Página personalizada completa" };
 
 const limitText = (n: number | null) => (n === null ? "Sin límite" : NUMBER.format(n));
 
@@ -83,6 +83,6 @@ export function cellFor(row: GridRow, column: GridColumn, plan: GridPlan | null)
     case "branding":
       if (plan.vaPage === "NONE") return { kind: "no" };
       if (plan.vaPage === "BANNER") return { kind: "text", text: "Banner en el perfil" };
-      return { kind: "yes", text: plan.customDetail ? "Página VA completa y detalles personalizados" : "Página VA completa" };
+      return { kind: "yes", text: plan.customDetail ? "Página personalizada completa y detalles personalizados" : "Página personalizada completa" };
   }
 }

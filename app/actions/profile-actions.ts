@@ -219,7 +219,7 @@ export async function changePasswordAction({ currentPassword, newPassword }: Cha
 export async function uploadStorefrontImageAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) throw new Error("UNAUTHENTICATED");
-  if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye la Página VA.");
+  if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye la página personalizada.");
 
   const kind = formData.get("kind");
   if (kind !== "cover" && kind !== "logo" && kind !== "detailCover") throw new Error("Imagen inválida.");

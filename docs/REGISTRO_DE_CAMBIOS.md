@@ -300,6 +300,7 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 
 | Tarea | Commit | Qué cambió | Dónde verlo |
 |---|---|---|---|
+| VA-177 | ver git log | **Fuera "Página VA" de los textos visibles:** "Página personalizada" en la grilla de `/plans` y del admin ("Página personalizada completa", "Sin página personalizada"), la FAQ y el error de Ajustes. Lo demás ya lo había cambiado el socio. En código y docs internos sigue el nombre "Página VA". La lista vieja `Plan.features` ("Página VA: tu portada…") quedó en la base pero no se muestra en ningún lado. | `/plans`, `/faq`, `/admin/plans` |
 | VA-176 | ver git log | **El video se pausa al cambiar de foto:** mientras suena, el carrusel deja de pasar solo; al ir a otra foto (flechas, miniaturas o deslizando) el reproductor se cierra y vuelve "Ver video" (el loop mueve las diapositivas y un iframe movido se recarga y volvía a sonar fuera de vista). Al abrir una foto a pantalla completa se pausa con la API de iframe de YouTube (`postMessage`, `enablejsapi=1`), sin librerías. | Detalle de un aviso de Broker con video |
 
 ## Lote del 18/10 (VA-152 a VA-164)

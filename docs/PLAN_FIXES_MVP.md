@@ -1840,3 +1840,4 @@ Broker (VA-170, 20/10).
 
 ### Estado del lote del 22/10 y 24/10
 - **VA-176 (24/10/2026):** ✅ hecho en local. Mientras el video suena, el autoplay del carrusel se frena. Al pasar a otra foto, el reproductor se desmonta (el loop de Swiper reordena las diapositivas y un iframe movido se recarga con autoplay, así que pausarlo no alcanzaba). Al abrir el visor a pantalla completa, pausa con `postMessage` (`pauseVideo`, `enablejsapi=1`). El visor no tiene el video.
+- **VA-177 (24/10/2026):** ✅ hecho en local. "Página personalizada" en la grilla (`lib/plan-grid.ts`), la FAQ y el error de Ajustes; el resto ya lo había cambiado el socio. `grep` de "Página VA": solo comentarios, scripts y docs. `Plan.features` (lista vieja de VA-152, en la base) todavía dice "Página VA", pero no se muestra.
