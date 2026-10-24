@@ -20,5 +20,10 @@ export function youtubeId(url: string | null | undefined): string | null {
   return id && ID.test(id) ? id : null;
 }
 
-/** Reproductor sin cookies hasta que se reproduce (youtube-nocookie). */
-export const youtubeEmbedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+/** Reproductor sin cookies hasta que se reproduce (youtube-nocookie). `enablejsapi` permite pausarlo con postMessage. */
+export const youtubeEmbedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&enablejsapi=1`;
+
+/** Pausa un reproductor embebido con la API de iframe de YouTube, sin librerías. */
+export function pauseYoutube(frame: HTMLIFrameElement | null) {
+  frame?.contentWindow?.postMessage(JSON.stringify({ event: "command", func: "pauseVideo", args: [] }), "*");
+}

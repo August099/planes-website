@@ -12,7 +12,7 @@ import "swiper/css/zoom";
 
 import { AppImage } from "@/components/ui/AppImage";
 import { X, Maximize, Play, ChevronLeft, ChevronRight } from "lucide-react";
-import { youtubeEmbedUrl } from "@/lib/youtube";
+import { pauseYoutube, youtubeEmbedUrl } from "@/lib/youtube";
 
 type GalleryProps = {
   images: { url: string; alt?: string | null }[];
@@ -27,6 +27,7 @@ const STEP = 0.15;
 
 export function AircraftGallery({ images, title, video = null, fade = false }: GalleryProps) {
   const [playing, setPlaying] = useState(false);
+  const videoFrameRef = useRef<HTMLIFrameElement | null>(null);
   const slideCount = images.length + (video ? 1 : 0);
   const photoAlt = (image: { alt?: string | null }, index: number) => image.alt || `${title} – foto ${index + 1}`;
 
@@ -76,6 +77,7 @@ export function AircraftGallery({ images, title, video = null, fade = false }: G
   }, [isFullscreenOpen]);
 
   const handleOpenFullscreen = (index: number) => {
+    pauseYoutube(videoFrameRef.current);
     setActiveImageIndex(index);
     lightboxZoomLevel.current = 1;
     setLightboxCurrentZoom(1);
@@ -88,6 +90,10 @@ export function AircraftGallery({ images, title, video = null, fade = false }: G
         <div className="relative">
           <Swiper
             onSwiper={(swiper) => (mainSwiperRef.current = swiper)}
+            onSlideChange={(swiper) => {
+              // El loop reordena las diapositivas y un iframe movido se recarga con autoplay: al salir se desmonta.
+              if (swiper.realIndex !== images.length) setPlaying(false);
+            }}
             onClick={(swiper) => {
               // En modo loop, se usa realIndex para obtener la foto correcta
               if (swiper.realIndex < images.length) handleOpenFullscreen(swiper.realIndex);
@@ -134,6 +140,7 @@ export function AircraftGallery({ images, title, video = null, fade = false }: G
                 <div className="relative flex h-full w-full items-center justify-center bg-[#001331]">
                   {playing ? (
                     <iframe
+                      ref={videoFrameRef}
                       src={youtubeEmbedUrl(video)}
                       title={`Video de ${title}`}
                       allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
@@ -141,7 +148,12 @@ export function AircraftGallery({ images, title, video = null, fade = false }: G
                       className="h-full w-full border-0"
                     />
                   ) : (
-                    <button type="button" onClick={(e) => { e.stopPropagation(); setPlaying(true); }} className="flex flex-col items-center gap-3 text-white cursor-pointer">
+                    <button type="button" onClick={(e) => {
+                        e.stopPropagation();
+                        // Sin esto, el autoplay del carrusel pasa a otra foto en medio del video.
+                        mainSwiperRef.current?.autoplay?.stop();
+                        setPlaying(true);
+                      }} className="flex flex-col items-center gap-3 text-white cursor-pointer">
                       <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#E70F1F]">
                         <Play className="ml-1 h-7 w-7" fill="currentColor" />
                       </span>

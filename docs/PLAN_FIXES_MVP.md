@@ -1837,3 +1837,6 @@ Broker (VA-170, 20/10).
   motivo, íconos que no aportan, contraste bajo, controles sin acción, estados vacíos o de error sin causa).
 - Lista numerada de hallazgos para el socio antes de cambiar nada grande; un commit por grupo.
 - Desde el 24/10, todo código, texto o UI nuevo se escribe ya con estas reglas.
+
+### Estado del lote del 22/10 y 24/10
+- **VA-176 (24/10/2026):** ✅ hecho en local. Mientras el video suena, el autoplay del carrusel se frena. Al pasar a otra foto, el reproductor se desmonta (el loop de Swiper reordena las diapositivas y un iframe movido se recarga con autoplay, así que pausarlo no alcanzaba). Al abrir el visor a pantalla completa, pausa con `postMessage` (`pauseVideo`, `enablejsapi=1`). El visor no tiene el video.

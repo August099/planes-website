@@ -296,6 +296,12 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 | VA-151 | **Métricas de la cuenta VA**: pestaña "Métricas" en el perfil propio (Suscripción VA, también de cortesía) con vistas, contactos (WhatsApp, teléfono, email y preguntas), favoritos nuevos y visitas a la Página VA, con la variación contra el período anterior (7 o 30 días); vistas por día (SVG propio), contactos por canal y rendimiento por aviso (ordenable, más visto y mejor tasa de contacto). Interruptor "Métricas de vendedor" en los planes. Las vistas de los admins ya no cuentan. Migraciones `va151_metricas_vendedor` y `va151_favoritos_fecha`. 16 números verificados contra SQL directo. JS de la Home sin cambios. | Perfil → Métricas |
 | VA-96 | **Todo se llama `aircraft`**: rutas `/aircraft`, `/aircraft/[id]` y `/aircraft/compare`, con redirect 308 desde `/planes`, `/planes/plane-details/[id]` y `/planes/compare` (conserva los filtros). Componentes, funciones, fondos e imágenes renombrados (`AircraftActionsHeader`, `AircraftFiltersSidebar`, `AircraftIcon`, `AgriculturalAircraftIcon`, `aircraft-list.webp`, `experimental-lsa.webp`…). La base ya usaba `Aircraft*`: sin RENAME; la migración `va96_rutas_aircraft` solo actualiza datos (íconos de 2 categorías y links de 7 guías). Sitemap, JSON-LD, PDF y links internos verificados. Los textos en castellano ("Aviones en venta") no cambian. | `/aircraft` |
 
+## Lote del 22/10 y 24/10 (VA-176 a VA-191)
+
+| Tarea | Commit | Qué cambió | Dónde verlo |
+|---|---|---|---|
+| VA-176 | ver git log | **El video se pausa al cambiar de foto:** mientras suena, el carrusel deja de pasar solo; al ir a otra foto (flechas, miniaturas o deslizando) el reproductor se cierra y vuelve "Ver video" (el loop mueve las diapositivas y un iframe movido se recarga y volvía a sonar fuera de vista). Al abrir una foto a pantalla completa se pausa con la API de iframe de YouTube (`postMessage`, `enablejsapi=1`), sin librerías. | Detalle de un aviso de Broker con video |
+
 ## Lote del 18/10 (VA-152 a VA-164)
 
 | Tarea | Commit | Qué cambió | Dónde verlo |

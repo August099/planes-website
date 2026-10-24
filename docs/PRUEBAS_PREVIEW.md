@@ -116,6 +116,10 @@ Esperar el deploy en Vercel (Deployments) y que termine sin errores.
 
 Marcar cada punto. Celular real para los que dicen 📱.
 
+### Lote del 22/10 y 24/10 (VA-176 a VA-191)
+
+- [ ] **Video (VA-176):** en un aviso de Broker con video, tocar "Ver video": el carrusel no cambia solo mientras suena. Pasar a otra foto (flecha, miniatura o deslizando 📱): el video deja de sonar y al volver aparece "Ver video".
+
 ### Cuentas y lanzamiento
 - [ ] Registro con email: llega el mail de verificación y el link abre el Preview (no localhost).
 - [x] Login en el Preview (confirmado por el socio, 17/10). Falta confirmar que fue **con Google** y probar el registro de una cuenta nueva con Google.
