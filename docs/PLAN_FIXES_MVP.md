@@ -1857,3 +1857,13 @@ Broker (VA-170, 20/10).
   | El admin reactiva | Sale de moderación y ventana "reactivado" | ✓ |
 
   `scripts/verify-notifications.ts` 16/16; el punto de preguntas, probado en el navegador con la cuenta Base.
+- **VA-180 (24/10/2026):** ✅ hecho en local. Métrica → panel → SQL (aviso del admin "BELLANCA Decathlon (Mock 3)", 30 días, después de un favorito y un agregado al comparador hechos con la cuenta Base en el navegador):
+  | Métrica | Panel | SQL |
+  |---|---|---|
+  | Vistas | 12 | 12 |
+  | Contactos (clics + preguntas, sin el dueño) | 0 | 0 |
+  | Favoritos (sin el dueño) | 1 | 1 |
+  | Comparador | 1 | 1 |
+  | Comparador de otro aviso, leído a los 3 min | 1 | 1 |
+
+  Totales, variaciones, canales, vistas por día y tasa de contacto: `verify-seller-metrics.ts` 16/16; fuentes, provincias, comparador, clics desde la página y efecto de las republicaciones: `verify-metrics-full.ts` 8/8. Causa de "no andaban": caché de 10 minutos con el período cortado al inicio del tramo; ahora 1 minuto. Además, el comparador (como las vistas) no cuenta a los admins: probando con una cuenta admin da 0. Los contadores de las tarjetas (nivel Base) excluyen favoritos y consultas del dueño.

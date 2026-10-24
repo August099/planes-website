@@ -259,10 +259,11 @@ export type MetricsPeriod = { days: number; endMs?: number };
 
 /** Métricas del vendedor con caché de 10 minutos (por usuario, período y nivel). */
 export function getSellerMetrics(userId: string, period: MetricsPeriod, full = false): Promise<SellerMetrics> {
-  // La hora se redondea a 10 minutos para que la clave de caché no cambie en cada pedido. Un rango
-  // propio termina al final del día elegido (endMs).
-  const bucket = period.endMs ?? Math.floor(Date.now() / 600_000) * 600_000;
-  return unstable_cache(() => compute(userId, period.days, bucket, full), ["seller-metrics", userId, String(period.days), String(bucket), full ? "full" : "pro"], { revalidate: 600 })();
+  // Caché por minuto (VA-180): el período cierra al final del minuto en curso, así un favorito o un agregado
+  // al comparador recién hecho entra en el próximo pedido. Antes, 10 minutos sin verse parecía "no anda".
+  // Un rango propio termina al final del día elegido (endMs).
+  const end = period.endMs ?? (Math.floor(Date.now() / 60_000) + 1) * 60_000;
+  return unstable_cache(() => compute(userId, period.days, end, full), ["seller-metrics", userId, String(period.days), String(end), full ? "full" : "pro"], { revalidate: 60 })();
 }
 
 /** Sin caché: para la verificación contra SQL directo. */

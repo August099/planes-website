@@ -122,6 +122,7 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] **Página personalizada (VA-177):** en `/plans`, `/faq`, Ajustes, el perfil, el buscador y `/admin/plans` no aparece "Página VA".
 - [ ] **Republicar (VA-178):** con una cuenta Base o Pro, en el detalle de un aviso propio tocar "Republicar": la franja desaparece, aparece "Actualizado el …" y, si era la última republicación, se apaga el punto de "Mi Cuenta" sin recargar. En Mi cuenta → Activos, ese aviso dice "Republicado. Otra vez desde el …" (7 días después). Con un Broker, después de "Republicar todas", el detalle no muestra el link.
 - [ ] **Notificaciones (VA-179):** responder una pregunta en `/questions` apaga el punto de "Mi Cuenta" sin recargar. Verificar el email con el link del mail: al volver, Ajustes ya no muestra "Falta: Email verificado".
+- [ ] **Métricas (VA-180):** con una cuenta que no sea admin ni la dueña, marcar como favorito y agregar al comparador un aviso de un Broker. En 1 o 2 minutos, el panel del Broker (Mi cuenta → Métricas, 30 días) lo muestra en la fila de ese aviso (columnas Favoritos y Comparador).
 
 ### Cuentas y lanzamiento
 - [ ] Registro con email: llega el mail de verificación y el link abre el Preview (no localhost).
