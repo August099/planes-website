@@ -1694,9 +1694,9 @@ Probados en celular; verificar también en escritorio.
 | 9 | **VA-172** | Buscar Brokers por nombre comercial en el buscador |
 | 10 | **VA-173** | Admin: cuentas por tipo y gastos fijos (VA-102 pasa al MVP) |
 
-**Preguntas abiertas (se plantean al llegar):** mail cuando se reponen las republicaciones (VA-167);
-etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular del detalle del Broker
-(VA-170, a confirmar).
+**Preguntas abiertas, ya respondidas:** sin mail cuando se reponen las republicaciones (VA-167, 24/10);
+sin etiqueta "Destacado" en las tarjetas (VA-168, 24/10); sin barra fija de contacto en el detalle del
+Broker (VA-170, 20/10).
 
 ### Estado del lote del 19/10
 
@@ -1731,13 +1731,13 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
   (Home) ordenan por `lastPublishedAt`; el detalle suma "Actualizado el …". En el perfil: cartel "Tenés N
   republicaciones disponibles" (se cierra y vuelve cuando cambia el saldo), botón "Republicar" por aviso
   activo con el saldo, "Republicar todas" del Broker y punto en "Mi Cuenta" del menú; en el detalle propio,
-  una franja con "Republicar". `scripts/verify-republish.ts` 18/18. ❓ Pendiente: mail cuando se reponen.
+  una franja con "Republicar". `scripts/verify-republish.ts` 18/18. Sin mail cuando se reponen (decisión del socio, 24/10).
 - **VA-168 (19/10/2026):** ✅ hecho en local. Sin migración. `lib/featured.ts`: las cuentas con el interruptor
   "Destacadas" del plan (Pro, Broker) y los admins (lista cacheada 5 min, se invalida al guardar los planes o
   una cortesía). Home, "Aeronaves destacadas": 6 al azar entre sus avisos y, si faltan, se completa con los
   recientes. `/aircraft` y `/spareparts` en el orden por defecto: primero esos avisos y después el resto
   (cada grupo por `lastPublishedAt`), con una paginación que no repite ni saltea; ordenar por precio, año,
-  etc. no los adelanta. `scripts/verify-featured.ts` 5/5. ❓ Pendiente: etiqueta "Destacado" en la tarjeta.
+  etc. no los adelanta. `scripts/verify-featured.ts` 5/5. Sin etiqueta "Destacado" en la tarjeta (decisión del socio, 24/10).
 - **VA-171 (19/10/2026):** ✅ hecho en local. Migración `va171_metricas` (eventos COMPARE_ADD y
   PROFILE_LISTING_CLICK y `AnalyticsEvent.region`). El nivel sale de la grilla: Base, vistas y contactos por
   aviso (como hoy); Pro, el panel de VA-151 con 7 y 30 días; Broker y admins, además 90 días y rango propio
@@ -1787,3 +1787,53 @@ etiqueta "Destacado" en las tarjetas (VA-168); barra fija de contacto en celular
 - **Lote del 19/10:** completo en local (VA-165 a VA-175).
   En `va_dev`, 6 de 17 cuentas quedan por encima del cupo nuevo (todas ya lo estaban con 1 / 5: datos de
   prueba). Informe: `scripts/va166-report.ts` (solo lee).
+
+**Decisiones de los socios (19/10):**
+- Cupos activos a la vez por tipo.
+- Republicaciones cada 12 meses desde el alta.
+- Precio promo siempre, sin fecha; el tachado es solo marketing.
+- Verificado automático con el plan.
+- En el Broker de un solo rubro, el otro rubro tiene el cupo de Base.
+
+---
+
+## Lote del 22/10 y 24/10 — cierre de funcionalidades del MVP · detalle en `docs/specs/VA-176-a-VA-189-lote-22-10.md`
+
+> Después de lo pendiente de VA-165 a VA-175 y antes de VA-164 (producción). Es el último lote de funcionalidad: después viene el rediseño con el manual de marca.
+
+| Tarea | Qué |
+|---|---|
+| VA-176 | El video de YouTube se pausa al cambiar de foto (galería y visor) |
+| VA-177 | "Página VA" no aparece en ningún texto de la web; se usa "Página personalizada" |
+| VA-178 | Republicar: el botón o aviso no queda pegado en el detalle después de republicar |
+| VA-179 | Revisión de todas las notificaciones del perfil |
+| VA-180 | Revisión de las métricas de cada plan (favoritos y comparador no andaban) contra SQL |
+| VA-181 | Arrepentimiento de suscripciones: 10 días desde el pago; se quita lo obtenido con el plan |
+| VA-182 | Fundadores: las primeras 15 cuentas no admin que publican, con 6 meses bonificados (❓ confirmar qué incluye) y ventana de felicitación |
+| VA-183 | Al marcar vendido: "¿Lo vendiste gracias a VA?" (Sí / No / `null`) y precio opcional; ventas en las estadísticas del admin |
+| VA-184 | "Otras marcas" en aviones |
+| VA-185 | El aviso de datos faltantes pasa a Ajustes |
+| VA-186 | Link a `/plans` en el menú del usuario, en "Mis publicaciones" y en Ajustes |
+| VA-187 | Grilla de planes sin "Branding" |
+| VA-190 | "Otra marca" y "Otro modelo" se guardan en MAYÚSCULAS y se suman a la taxonomía (ver abajo) |
+| VA-188 | Revisión general de todos los flujos en el Preview |
+| VA-189 | Términos y privacidad reescritos según cómo funciona la web hoy |
+| VA-191 | Revisión anti-slop de toda la UI (pedido del socio, 24/10; va última, antes de VA-164) |
+
+### VA-190 · "Otra marca" y "Otro modelo" pasan a la lista, en mayúsculas (socio, 24/10)
+- Cuando un usuario carga una marca o un modelo propio en el formulario (aviones; también repuestos, si aplica), se guarda **en MAYÚSCULAS** y normalizado: sin espacios al principio ni al final y con los espacios dobles colapsados.
+- **Se agrega a la taxonomía:** aparece en los filtros de `/aircraft` y en el formulario, para que los próximos usuarios lo elijan de la lista.
+- **Sin duplicados:** antes de crear, comparar sin distinguir mayúsculas, tildes, espacios ni guiones contra lo que ya existe ("Cessna" = "CESSNA" = "cessna"). Si ya existe, se usa ese.
+- El modelo nuevo queda bajo su marca. La categoría recomendada queda vacía hasta que el admin la complete (VA-165).
+- **Admin:** en `/admin/taxonomy`, marcar las entradas "creadas por usuarios" (con fecha y aviso de origen), y poder editarlas, unirlas a una existente (moviendo los avisos) u ocultarlas.
+- **Datos existentes:** un script (con modo informe primero) que pasa a la taxonomía las marcas y modelos propios ya cargados, con la misma normalización. Mostrar la lista antes de aplicar.
+- Revisar cómo queda "Otras marcas" (VA-184): con esto debería quedar casi vacío. Proponer si se mantiene o se quita.
+- Migración si hace falta (marca de origen y fecha): mostrar el SQL.
+
+### VA-191 · Revisión anti-slop de toda la UI (socio, 24/10)
+- Recorrer todas las pantallas (público, cuenta, admin; escritorio y celular) con el plugin anti-slop.
+- Se mantiene la idea general del diseño (`docs/DESIGN_GUIDELINES.md`): se modifica o se quita solo lo que sea
+  relleno genérico (adornos sin función, textos de plantilla, rótulos en mayúsculas con mucho espaciado sin
+  motivo, íconos que no aportan, contraste bajo, controles sin acción, estados vacíos o de error sin causa).
+- Lista numerada de hallazgos para el socio antes de cambiar nada grande; un commit por grupo.
+- Desde el 24/10, todo código, texto o UI nuevo se escribe ya con estas reglas.
