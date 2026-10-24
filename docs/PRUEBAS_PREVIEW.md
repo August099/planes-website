@@ -125,6 +125,7 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] **Métricas (VA-180):** con una cuenta que no sea admin ni la dueña, marcar como favorito y agregar al comparador un aviso de un Broker. En 1 o 2 minutos, el panel del Broker (Mi cuenta → Métricas, 30 días) lo muestra en la fila de ese aviso (columnas Favoritos y Comparador).
 - [ ] **Arrepentimiento (VA-181):** con una suscripción pagada hace menos de 10 días y más avisos que el cupo de Base, "Arrepentirme" muestra lo que se pierde y la lista para elegir qué avisos quedan (no deja tildar más que el cupo). Confirmar: se devuelve el pago, queda activo solo lo elegido, la cuenta sale de las destacadas de la Home al recargar y la página personalizada deja de verse. 📱 El diálogo entra en el celular sin scroll lateral.
 - [ ] **Datos faltantes (VA-185):** con una cuenta sin ciudad o sin teléfono, el menú del usuario tiene punto y "Ajustes" también; tocarlo lleva a la sección de datos. "Mi cuenta" no muestra el cartel. Completar y guardar: el cartel y los puntos se van sin recargar.
+- [ ] **Planes (VA-186):** "Planes y precios" en el menú del usuario (📱 también); link junto al cupo en Mi cuenta; "Cambiar de plan" en Ajustes con una suscripción activa. Todos llevan a `/plans`.
 
 ### Cuentas y lanzamiento
 - [ ] Registro con email: llega el mail de verificación y el link abre el Preview (no localhost).

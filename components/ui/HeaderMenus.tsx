@@ -73,6 +73,12 @@ export function DesktopDropdown({ userId, isAdmin, hasUnanswered, hasRepublish =
             {hasMissingProfile && <PendingDot className="h-2 w-2" />}
           </Link>
         </DropdownMenuItem>
+        {/* VA-186 */}
+        <DropdownMenuItem className="p-0">
+          <Link href="/plans" className="w-full px-2 py-1.5 text-sm">
+            Planes y precios
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="p-0">
           <button
@@ -148,6 +154,11 @@ export function MobileDropdown({ userId, isAdmin, hasUnanswered, hasRepublish = 
               <Link href={hasMissingProfile ? "/settings#datos" : "/settings"} className="w-full px-2 py-1.5 text-sm font-medium flex items-center justify-between gap-3">
                 <span>Ajustes</span>
                 {hasMissingProfile && <PendingDot className="h-2 w-2" />}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="p-0">
+              <Link href="/plans" className="w-full px-2 py-1.5 text-sm font-medium">
+                Planes y precios
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

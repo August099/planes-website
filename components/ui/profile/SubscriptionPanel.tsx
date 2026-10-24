@@ -89,24 +89,30 @@ export function SubscriptionPanel({ subscription, quota = null }: { subscription
             AR$ {NUMBER.format(subscription.price)} por {per}
           </p>
         </div>
-        {subscription.cancelAtPeriodEnd ? (
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => run(resumeSubscriptionAction)}
-            className="self-start rounded-md border border-[#001F58]/20 px-4 py-2 text-xs font-semibold text-[#001F58] hover:bg-slate-50 cursor-pointer disabled:opacity-50"
-          >
-            Seguir suscripto
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="self-start rounded-md px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 cursor-pointer"
-          >
-            Cancelar suscripción
-          </button>
-        )}
+        <div className="flex flex-wrap items-start gap-2">
+          {/* VA-186 */}
+          <Link href="/plans" className="rounded-md border border-[#001F58]/20 px-4 py-2 text-xs font-semibold text-[#001F58] hover:bg-slate-50">
+            Cambiar de plan
+          </Link>
+          {subscription.cancelAtPeriodEnd ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => run(resumeSubscriptionAction)}
+              className="self-start rounded-md border border-[#001F58]/20 px-4 py-2 text-xs font-semibold text-[#001F58] hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+            >
+              Seguir suscripto
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="self-start rounded-md px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 cursor-pointer"
+            >
+              Cancelar suscripción
+            </button>
+          )}
+        </div>
       </div>
       {/* VA-92: cobro rechazado: sigue con los beneficios hasta graceUntil. */}
       {subscription.graceUntil && (

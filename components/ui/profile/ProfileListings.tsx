@@ -145,11 +145,10 @@ export function ProfileListings({
               {quotaPart("Aviones", quota.aircraft)} · {quotaPart("Repuestos", quota.parts)}
             </span>
           </span>
-          {(full(quota.aircraft) || full(quota.parts)) && (
-            <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
-              Ver planes con más cupo
-            </Link>
-          )}
+          {/* VA-186: siempre, no solo con el cupo lleno. */}
+          <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+            {full(quota.aircraft) || full(quota.parts) ? "Ver planes con más cupo" : "Planes y precios"}
+          </Link>
         </p>
       )}
       {isOwner && republish && <RepublishNotice view={republish} onChooseListings={() => setParam("estado", "activos")} />}
