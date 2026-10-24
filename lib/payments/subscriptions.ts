@@ -9,6 +9,7 @@ import { getBillingSettings } from "@/lib/billing-settings";
 import { queueInvoice, receiverFromProfile } from "@/lib/payments/invoices";
 import { isSubscriptionCurrent } from "@/lib/subscriptions";
 import { enforceQuota } from "@/lib/quota";
+import { invalidateFeaturedSellers } from "@/lib/featured";
 import { sendSubscriptionPaymentFailedEmail } from "@/lib/mail";
 import { processInvoice } from "@/lib/billing/issue";
 import { isTestPayment } from "@/lib/billing/guard";
@@ -241,6 +242,7 @@ async function handleAuthorizedPayment(authorizedPaymentId: string): Promise<Out
       },
     });
     await enforceQuota(sub.userId); // VA-152: si el plan nuevo tiene menos cupo, se pausan los más nuevos
+    invalidateFeaturedSellers();
     await queueInvoice({
       paymentId: claimed.id,
       amount,
@@ -411,6 +413,7 @@ export async function runSubscriptionMaintenance(now = new Date()) {
       if (finalStatus === "CANCELLED") cancelled++;
       else expired++;
       await enforceQuota(s.userId, now); // VA-152: vuelve al cupo Gratis
+      invalidateFeaturedSellers();
     }
   }
   return { expired, cancelled };

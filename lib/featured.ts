@@ -1,5 +1,5 @@
 import "server-only";
-import { unstable_cache } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 // VA-168: destacadas por plan. Los avisos de cuentas con el interruptor "Destacadas" del plan (Pro y Broker,
@@ -9,6 +9,15 @@ import { prisma } from "@/lib/prisma";
 // La lista de cuentas se cachea 5 minutos (tag FEATURED_SELLERS_TAG; la invalidan el admin al guardar
 // los planes y las altas y bajas de suscripciones, y si no, vence sola).
 export const FEATURED_SELLERS_TAG = "featured-sellers";
+
+/** VA-181: al empezar o terminar una suscripción (acción, webhook o cron), sin esperar los 5 minutos. */
+export function invalidateFeaturedSellers() {
+  try {
+    revalidateTag(FEATURED_SELLERS_TAG, { expire: 0 });
+  } catch {
+    // Fuera de Next (scripts): no hay caché que invalidar.
+  }
+}
 
 /** Sin caché (scripts de prueba). */
 export async function loadFeaturedSellerIds(): Promise<string[]> {

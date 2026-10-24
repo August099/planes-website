@@ -208,8 +208,16 @@ pendiente) y después se descarta desde el admin.
 "Mis compras" y le devolvemos el total por Mercado Pago en el momento.
 
 - **Qué pasa:** la suscripción **termina en el momento**, se cancela el débito y la cuenta vuelve al plan
-  Gratis. Si tiene más avisos activos que el cupo Gratis, se pausan los más nuevos (antes de confirmar,
-  el diálogo dice cuántos).
+  Base. Si tiene más avisos activos que el cupo de Base, **elige en el diálogo cuáles quedan activos**
+  (VA-181; arranca tildado lo que quedaría sin elegir: los más viejos) y se pausan los demás. Por webhook
+  (reembolso a mano o contracargo) no hay elección: se pausan los más nuevos.
+- **Lo que pierde (VA-181):** el diálogo y el mail lo listan según su plan: verificado, destacadas (salen de
+  la lista en el momento, sin esperar la caché de 5 minutos), página personalizada (queda guardada sin
+  mostrarse), detalle personalizado con video, republicaciones del plan (quedan las de Base que no usó en el
+  año) y métricas Pro o completas. Todo sale del plan vigente, así que se va solo al terminar la suscripción.
+  Lo ya republicado no vuelve a su lugar anterior en los listados.
+- **Verificación:** `scripts/verify-withdrawal.ts` (día 1, 10 y 11; 2.º cobro; Broker con 30 aviones que
+  elige uno; doble clic con una sola devolución; webhook repetido), sin Mercado Pago ni mails.
 - **Solo el primer cobro** de cada débito (el alta, o el primero del plan nuevo en un cambio de plan). Es
   una constante (`WITHDRAWAL_SUBSCRIPTION_SCOPE` en `lib/payments/withdrawal.ts`): falta confirmarlo con
   el contador o un abogado.

@@ -4,13 +4,21 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { requestWithdrawal, withdrawalPreview, type WithdrawalResult } from "@/lib/payments/withdrawal";
 import { PaymentsConfigError } from "@/lib/mercadopago";
+import type { KeepChoice } from "@/lib/quota";
+
+// VA-181: lo que llega del navegador: solo listas cortas de ids (que sean del usuario lo decide enforceQuota).
+function cleanKeep(raw: unknown): KeepChoice {
+  const ids = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.length <= 40).slice(0, 100) : []);
+  const r = (raw ?? {}) as Record<string, unknown>;
+  return { AIRCRAFT: ids(r.AIRCRAFT), SPARE_PART: ids(r.SPARE_PART) };
+}
 
 // VA-125: "Arrepentirme" en Mis compras.
-export async function requestWithdrawalAction(paymentId: string): Promise<WithdrawalResult> {
+export async function requestWithdrawalAction(paymentId: string, keep?: KeepChoice): Promise<WithdrawalResult> {
   const user = await getCurrentUser();
   if (!user?.id) return { ok: false, error: "Tenés que iniciar sesión." };
   try {
-    const res = await requestWithdrawal(user.id, String(paymentId ?? ""));
+    const res = await requestWithdrawal(user.id, String(paymentId ?? ""), cleanKeep(keep));
     if (res.ok) revalidatePath(`/profile/${user.id}`);
     return res;
   } catch (error) {
