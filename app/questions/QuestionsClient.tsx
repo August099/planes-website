@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AppImage } from "@/components/ui/AppImage";
 import { usePathname } from "next/navigation";
+import { refreshHeaderIndicators } from "@/lib/header-refresh";
 import { 
   MessageSquare, 
   ArrowUpRight, 
@@ -51,6 +52,7 @@ export function QuestionsClient({
       }
       setReplyingToId(null);
       setAnswerText("");
+      refreshHeaderIndicators();
     } catch (err) {
       alert(errorMessage(err) || "Error al responder");
     } finally {

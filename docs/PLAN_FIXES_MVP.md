@@ -1842,3 +1842,18 @@ Broker (VA-170, 20/10).
 - **VA-176 (24/10/2026):** ✅ hecho en local. Mientras el video suena, el autoplay del carrusel se frena. Al pasar a otra foto, el reproductor se desmonta (el loop de Swiper reordena las diapositivas y un iframe movido se recarga con autoplay, así que pausarlo no alcanzaba). Al abrir el visor a pantalla completa, pausa con `postMessage` (`pauseVideo`, `enablejsapi=1`). El visor no tiene el video.
 - **VA-177 (24/10/2026):** ✅ hecho en local. "Página personalizada" en la grilla (`lib/plan-grid.ts`), la FAQ y el error de Ajustes; el resto ya lo había cambiado el socio. `grep` de "Página VA": solo comentarios, scripts y docs. `Plan.features` (lista vieja de VA-152, en la base) todavía dice "Página VA", pero no se muestra.
 - **VA-178 (24/10/2026):** ✅ hecho en local. Causa: la franja y el botón miraban el saldo de la cuenta y no la espera de 7 días del aviso. `getRepublishStatus` suma `waiting` (aviso → fecha en que se puede repetir); el detalle oculta la franja en la espera (y la del Broker hasta que "Republicar todas" vuelve a estar disponible); el perfil muestra la fecha en lugar del botón; el header vuelve a pedir el saldo al republicar. Verificado en el navegador con la cuenta Base y con `verify-republish.ts` 20/20.
+- **VA-179 (24/10/2026):** ✅ hecho en local. Caso → esperado → obtenido:
+  | Caso | Esperado | Obtenido |
+  |---|---|---|
+  | Pregunta sin responder | Punto en "Mi Cuenta" | ✓ |
+  | Responder en `/questions` o en el detalle | El punto se apaga sin navegar | ✗ → arreglado (evento `va-header-refresh`) |
+  | Republicaciones con saldo / sin saldo | Punto y cartel / nada | ✓ (`verify-notifications` y VA-178) |
+  | Cerrar el cartel de republicaciones | No vuelve hasta que cambia el saldo | ✓ |
+  | Datos faltantes desde Ajustes | Cartel y punto de la pestaña se apagan al guardar | ✓ |
+  | Verificar el email por link o restablecer la contraseña | El cartel se apaga en el momento | ✗ (caché de 60 s sin invalidar) → arreglado: sin caché |
+  | Pausa por moderación | "Pausado por moderación" con el motivo y ventana al dueño | ✓ |
+  | Cerrar la ventana (botón o Escape) | No vuelve | ✓ |
+  | "Pedir revisión" | "Revisión pedida", el motivo sigue | ✓ |
+  | El admin reactiva | Sale de moderación y ventana "reactivado" | ✓ |
+
+  `scripts/verify-notifications.ts` 16/16; el punto de preguntas, probado en el navegador con la cuenta Base.

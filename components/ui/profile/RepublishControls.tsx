@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { RefreshCw, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { republishAllAction, republishListingAction } from "@/app/actions/republish-actions";
-import { dismissRepublishNotice, isRepublishNoticeDismissed, notifyRepublished } from "@/lib/republish-notice";
+import { refreshHeaderIndicators } from "@/lib/header-refresh";
+import { dismissRepublishNotice, isRepublishNoticeDismissed } from "@/lib/republish-notice";
 import type { RepublishView } from "@/lib/republish";
 
 // VA-167: republicar desde "Mis publicaciones". Base y Pro: un botón por aviso activo, con el saldo del
@@ -41,7 +42,7 @@ export function RepublishNotice({ view, onChooseListings }: { view: RepublishVie
       setConfirm(false);
       setDone(`Listo: republicaste ${res.republished} aviso${res.republished === 1 ? "" : "s"}. Ya están primeros en Últimas publicaciones.`);
       router.refresh();
-      notifyRepublished();
+      refreshHeaderIndicators();
     };
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#001F58]/12 bg-white px-4 py-3 text-sm">
@@ -122,7 +123,7 @@ export function RepublishButton({ view, id, kind, className }: { view: Republish
     if (!res.ok) return setError(res.error);
     setConfirm(false);
     router.refresh();
-    notifyRepublished();
+    refreshHeaderIndicators();
   };
 
   return (

@@ -6,8 +6,6 @@ import FacebookProvider from "next-auth/providers/facebook";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { revalidateTag } from "next/cache";
-import { profileCompletenessTag } from "@/lib/cached-data";
 import { isValidPasswordChangeProof } from "@/lib/password-proof";
 
 // En Auth.js v5 un throw común en authorize() llega al cliente como "CredentialsSignin".
@@ -91,11 +89,10 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
     async signIn({ user, account, profile }) {
       if (account?.provider !== "google" || !user?.id) return;
       if (!(profile as { email_verified?: boolean } | undefined)?.email_verified) return;
-      const updated = await prisma.user.updateMany({
+      await prisma.user.updateMany({
         where: { id: user.id, emailVerified: null },
         data: { emailVerified: new Date() },
       });
-      if (updated.count > 0) revalidateTag(profileCompletenessTag(user.id), { expire: 0 });
     },
   },
   callbacks: {

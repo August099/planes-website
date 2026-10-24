@@ -7,10 +7,9 @@ import { getQuotaUsage } from "@/lib/quota";
 import { getRepublishStatus, republishView } from "@/lib/republish";
 import { moderationInfoFor } from "@/lib/moderation";
 import { PageBackground } from "@/components/ui/PageBackground";
-import { getMissingProfileFieldsCached } from "@/lib/cached-data";
 import { getSubscriptionSummary, hasCustomPage, hasSellerMetrics, hasVerifiedBadge } from "@/lib/subscriptions";
 import { TrackProfileView } from "@/components/ui/profile/TrackProfileView";
-import { quotaForView } from "@/lib/account-data";
+import { missingProfileFields, quotaForView } from "@/lib/account-data";
 import { getAccountPlan } from "@/lib/plan-benefits";
 import { parseSections, DEFAULT_SECTIONS } from "@/lib/profile-page";
 import type { PageCard } from "@/components/ui/profile/ProfilePageSections";
@@ -197,7 +196,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         profileUser={profileUser}
         isOwner={isOwner}
         currentUserFavIds={currentUserFavIds}
-        missingProfileFields={isOwner ? await getMissingProfileFieldsCached(id) : []}
+        missingProfileFields={isOwner ? await missingProfileFields(id) : []}
         storefront={storefront}
         subscription={isOwner ? await getSubscriptionSummary(id) : null}
         hasSellerMetrics={isOwner ? await hasSellerMetrics(id) : false}

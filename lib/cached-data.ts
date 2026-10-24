@@ -1,7 +1,6 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getMissingProfileFields, type ProfileField } from "@/lib/profile";
 import { sortAircraftCategories } from "@/lib/aircraft-categories";
 
 // Datos que casi no cambian y se pedían en cada request (VA-13). Se cachean con tags y las
@@ -75,23 +74,5 @@ export function hasUnansweredQuestions(userId: string) {
     },
     ["unanswered-questions", userId],
     { tags: [unansweredQuestionsTag(userId)], revalidate: 60 }
-  )();
-}
-
-export const profileCompletenessTag = (userId: string) => `profile-completeness:${userId}`;
-
-// Punto rojo del header por perfil incompleto (VA-46). Cacheado 60 s por usuario; lo invalida
-// updateProfileAction al guardar el perfil.
-export function getMissingProfileFieldsCached(userId: string): Promise<ProfileField[]> {
-  return unstable_cache(
-    async () => {
-      const u = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { phone: true, city: true, province: true, emailVerified: true, passwordHash: true },
-      });
-      return u ? getMissingProfileFields(u) : [];
-    },
-    ["profile-completeness", userId],
-    { tags: [profileCompletenessTag(userId)], revalidate: 60 }
   )();
 }

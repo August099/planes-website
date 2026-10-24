@@ -22,8 +22,3 @@ export function dismissRepublishNotice(key: string) {
   }
   window.dispatchEvent(new Event(REPUBLISH_NOTICE_EVENT));
 }
-
-/** Después de republicar: el header vuelve a pedir el saldo para el punto de "Mi Cuenta" (VA-178). */
-export function notifyRepublished() {
-  window.dispatchEvent(new Event(REPUBLISH_NOTICE_EVENT));
-}

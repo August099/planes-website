@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { User, Menu } from "lucide-react";
 import { getHeaderIndicators, type HeaderIndicators } from "@/app/actions/header-actions";
 import { DESKTOP_TRIGGER_CLASS, MOBILE_TRIGGER_CLASS, PendingDot, type PartCategoryLink } from "@/components/ui/header-menu-shared";
+import { HEADER_REFRESH_EVENT } from "@/lib/header-refresh";
 import { isRepublishNoticeDismissed, REPUBLISH_NOTICE_EVENT } from "@/lib/republish-notice";
 
 // Parte del header que depende del usuario (VA-71). Es un componente cliente: así el resto del
@@ -69,11 +70,16 @@ function useHeaderUser() {
     };
   }, [userId, pathname, tick]);
 
-  // VA-167: el punto se apaga si el usuario cerró el cartel con ese saldo. VA-178: y se vuelve a pedir al republicar.
+  // VA-167: el punto se apaga si el usuario cerró el cartel con ese saldo. VA-179: y se vuelve a pedir cuando
+  // algo lo cambia sin navegar.
   useEffect(() => {
-    const onDismiss = () => setTick((n) => n + 1);
-    window.addEventListener(REPUBLISH_NOTICE_EVENT, onDismiss);
-    return () => window.removeEventListener(REPUBLISH_NOTICE_EVENT, onDismiss);
+    const onChange = () => setTick((n) => n + 1);
+    window.addEventListener(REPUBLISH_NOTICE_EVENT, onChange);
+    window.addEventListener(HEADER_REFRESH_EVENT, onChange);
+    return () => {
+      window.removeEventListener(REPUBLISH_NOTICE_EVENT, onChange);
+      window.removeEventListener(HEADER_REFRESH_EVENT, onChange);
+    };
   }, []);
 
   const ind = userId ? indicators : null;
