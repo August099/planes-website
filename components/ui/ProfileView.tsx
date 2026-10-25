@@ -176,7 +176,6 @@ export function ProfileView({
           instagram={profileUser.instagram}
           facebook={profileUser.facebook}
           isOwner={isOwner}
-          editHref="/settings#pagina-va"
         />
       ) : (
         <div className="p-6 rounded-lg bg-white border border-[#001F58]/12 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6">
@@ -215,17 +214,6 @@ export function ProfileView({
                   </span>
                 </div>
               </div>
-
-              {/* VA-175: "Mi cuenta" es para ver; los datos se cambian en Ajustes. */}
-              {isOwner && (
-                <Link
-                  href="/settings"
-                  className="inline-flex min-h-10 items-center justify-center gap-2 self-center rounded-md border border-[#001F58]/20 px-4 text-xs font-semibold text-[#001F58] hover:bg-slate-50 md:self-auto"
-                >
-                  <Edit className="w-4 h-4" />
-                  Ajustes
-                </Link>
-              )}
             </div>
 
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-slate-500 pt-1">
@@ -350,17 +338,6 @@ export function ProfileView({
             <BarChart3 className="w-4 h-4" />
             Métricas
           </button>
-        )}
-
-        {/* VA-175: la configuración de la cuenta está en Ajustes (/settings). */}
-        {isOwner && (
-          <Link
-            href="/settings"
-            className="pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 border-transparent whitespace-nowrap text-slate-400 hover:text-slate-600"
-          >
-            <Edit className="w-4 h-4" />
-            Ajustes
-          </Link>
         )}
       </div>
 
