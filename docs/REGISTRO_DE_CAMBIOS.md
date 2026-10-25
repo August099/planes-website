@@ -368,6 +368,8 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 
 | Commit | Qué cambió | Dónde verlo |
 |---|---|---|
+| 25/10: el Preview usaba la base de **producción** | — | Las 4 migraciones del lote 22/10 (`va187`, `va182`, `va183`, `va190`) quedaron aplicadas en producción el 24/10 al migrar "el Preview". Sin daño (columnas opcionales; `main` sigue con el código viejo). Backup posterior: `Documents/va-backups/backup-prod-20261025-0023.dump`. Se arma una base aparte para el Preview. | — |
+| 25/10: Next.js 16.4.0 con aviso de seguridad | `c6092d8` | Actualizado a 16.4.3 (en un worktree aparte; tipos, lint y build bien). | `package.json` |
 | `0de86fb` | Editar desde el perfil pisaba campos (condición, checks, descripción). *Después reemplazado por la edición completa de VA-30.* | — |
 | `790eabd` | El perfil muestra los errores de renovar, borrar y editar. | Perfil |
 | `5a7f84f` | **Al borrar un aviso, sus fotos y documentos quedaban en Supabase Storage.** Ahora se borran también. Nuevo `scripts/storage-orphans.mjs` para los huérfanos que ya existen (en producción hay 44, unos 23 MB). Por defecto solo informa; con `--delete` los borra. | Perfil → 🗑️ en un aviso · `app/actions/listing-actions.ts` |
