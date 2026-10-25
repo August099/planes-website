@@ -15,6 +15,11 @@ Anotar cada resultado en `docs/REGISTRO_DE_CAMBIOS.md` → "Pruebas de pagos" (y
 
 **El Preview no puede usar la base de producción** (ver `docs/PAGOS.md` → "Base del Preview").
 
+> **Desde el 25/10/2026 el Preview tiene su propio proyecto de Supabase** (base y storage), cargado con una
+> copia de producción de ese día. Hasta el 24/10 el Preview usaba, por error, la base de producción. Cómo
+> trabajar con cada base (conexiones, migraciones, backups y refrescar el Preview): `docs/BASES_DE_DATOS.md`.
+> Los pasos de abajo quedan para armar un Preview desde cero.
+
 1. Supabase: un proyecto aparte para el Preview (base + storage). Si ya existe, usarlo.
 2. En ese proyecto, Storage: crear los buckets que usa la web, igual que en producción:
    `listings`, `avatars` y `brands` (públicos) y `documents` e `invoices` (privados).

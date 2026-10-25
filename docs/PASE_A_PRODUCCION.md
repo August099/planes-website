@@ -78,7 +78,8 @@ renovación y destacados. Las compras, pagos y facturas no se tocan.
 Migraciones que entran (si no estaban): VA-43, VA-44, VA-54, VA-11, VA-16, VA-87, VA-59, VA-83, VA-85,
 VA-80, VA-84 (dos), VA-92 (dos), VA-105 facturación, contraseña, porcentaje de renovación y compra de
 renovación, y desde el 17/10: VA-150, VA-149, VA-148, VA-151 (dos), VA-96 y VA-152 (`va152_cupos` y
-`va152_limpieza`). Lote del 22/10 y 24/10: `va187_fila_pagina_personalizada` (solo datos: "Branding" →
+`va152_limpieza`). **Ya aplicadas en producción el 24/10** (por error, al migrar el que se creía el Preview; backup posterior en
+`Documents/va-backups/backup-prod-20261025-0023.dump`). Lote del 22/10 y 24/10: `va187_fila_pagina_personalizada` (solo datos: "Branding" →
 "Página personalizada"), `va182_fundadores`, `va183_ventas` (rellena fecha y precio de los ya vendidos) y
 `va190_taxonomia_usuarios`.
 
