@@ -1,6 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
-import { BadgeCheck, Edit, Globe, MapPin, MessageCircle } from "lucide-react";
+import { BadgeCheck, Globe, MapPin, MessageCircle } from "lucide-react";
 import { SiFacebook, SiInstagram } from "@icons-pack/react-simple-icons";
 
 // Encabezado de la "página personalizada" (VA-87): como la tienda oficial de una marca frente al
@@ -36,7 +35,7 @@ type Props = {
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 
-export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, location, memberSince, instagram, facebook, isOwner }: Props) {
+export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, location, memberSince, instagram, facebook }: Props) {
   const name = storefront.businessName || fallbackName;
   const websiteLabel = storefront.website?.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
   const contacts = [
