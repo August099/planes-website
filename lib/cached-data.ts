@@ -16,13 +16,16 @@ export const getAircraftTaxonomy = unstable_cache(
   async () => {
     const [categories, brands] = await Promise.all([
       prisma.aircraftCategory.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }).then(sortAircraftCategories),
+      // VA-190: sin lo que el admin ocultó.
       prisma.aircraftBrand.findMany({
+        where: { hidden: false },
         orderBy: { name: "asc" },
         select: {
           id: true,
           name: true,
           logoUrl: true,
           models: {
+            where: { hidden: false },
             orderBy: { name: "asc" },
             select: {
               id: true,
@@ -40,7 +43,7 @@ export const getAircraftTaxonomy = unstable_cache(
     return { categories, brands };
   },
   // VA-148/VA-149: clave nueva para no servir el orden y los nombres de íconos viejos cacheados.
-  ["aircraft-taxonomy", "va165"], // VA-165: recommendedCategoryId (antes defaultCategoryId)
+  ["aircraft-taxonomy", "va190"], // VA-190: sin las entradas ocultas
   { tags: [AIRCRAFT_TAXONOMY_TAG], revalidate: 3600 }
 );
 

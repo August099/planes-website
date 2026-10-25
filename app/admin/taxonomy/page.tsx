@@ -3,6 +3,8 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import { TaxonomyManager } from "@/components/ui/TaxonomyManager";
 import { sortAircraftCategories } from "@/lib/aircraft-categories";
+import { userCreatedEntries } from "@/lib/taxonomy-admin";
+import { UserTaxonomyReview } from "@/components/admin/UserTaxonomyReview";
 
 export default async function AdminTaxonomyPage() {
   const user = await getCurrentUser();
@@ -105,6 +107,17 @@ export default async function AdminTaxonomyPage() {
 
   const sparePartCategoriesTree = buildCategoryTree(sparePartCategories);
 
+  // VA-190: lo que cargaron los usuarios, para revisar.
+  const userCreated = await userCreatedEntries();
+  const entry = (e: { id: string; name: string; hidden: boolean; userCreatedAt: Date | null; sourceAircraftId: string | null; _count: { aircrafts: number } }) => ({
+    id: e.id,
+    name: e.name,
+    hidden: e.hidden,
+    createdAt: (e.userCreatedAt ?? new Date()).toISOString(),
+    sourceAircraftId: e.sourceAircraftId,
+    listings: e._count.aircrafts,
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -113,6 +126,13 @@ export default async function AdminTaxonomyPage() {
           Agregá, editá y eliminá opciones para los desplegables de publicación y filtros.
         </p>
       </div>
+
+      <UserTaxonomyReview
+        brands={userCreated.brands.map(entry)}
+        models={userCreated.models.map((m) => ({ ...entry(m), brandId: m.brandId, brandName: m.brand.name }))}
+        brandOptions={aircraftBrands.map((b) => ({ id: b.id, name: b.name }))}
+        modelOptions={aircraftBrands.flatMap((b) => b.models.map((m) => ({ id: m.id, name: m.name, brandId: b.id })))}
+      />
 
       <TaxonomyManager
         aircraftCategories={aircraftCategories}

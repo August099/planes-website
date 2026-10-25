@@ -1011,7 +1011,7 @@ export default function PublishForm({
                                                 <select value={aircraftForm.brandId} onChange={(e) => handleBrandChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
                                                     <option value="">Seleccionar Marca</option>
                                                     {brandOptions.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                                    <option value="CUSTOM">Otra Marca...</option>
+                                                    <option value="CUSTOM">Otra marca...</option>
                                                 </select>
                                                 {/* VA-165: los modificados pueden ser de otra categoría que la recomendada. */}
                                                 {(pickedCategoryId || pickedGroup) && (
@@ -1019,7 +1019,13 @@ export default function PublishForm({
                                                         {showAllBrands ? "Ver solo las de este tipo" : "Ver todas las marcas"}
                                                     </button>
                                                 )}
-                                                {aircraftForm.brandId === "CUSTOM" && <input type="text" placeholder="Escribí la marca" value={aircraftForm.customBrand} onChange={e => setAircraftForm({...aircraftForm, customBrand: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white" />}
+                                                {/* VA-190: lo escrito pasa a la lista, en mayúsculas. */}
+                                                {aircraftForm.brandId === "CUSTOM" && (
+                                                    <>
+                                                        <input type="text" placeholder="Escribí la marca" maxLength={100} value={aircraftForm.customBrand} onChange={e => setAircraftForm({...aircraftForm, customBrand: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white uppercase placeholder:normal-case" />
+                                                        <p className="mt-1 text-xs text-slate-500">Se guarda en mayúsculas y queda en la lista para los próximos avisos.</p>
+                                                    </>
+                                                )}
                                                 <FieldError message={fieldErrors.brandId} />
                                             </div>
 
@@ -1030,7 +1036,12 @@ export default function PublishForm({
                                                     {modelOptions.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                                                     <option value="CUSTOM_MODEL">Otro modelo...</option>
                                                 </select>
-                                                {aircraftForm.modelId === "CUSTOM_MODEL" && <input type="text" placeholder="Escribí el modelo" value={aircraftForm.customModel} onChange={e => setAircraftForm({...aircraftForm, customModel: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white" />}
+                                                {aircraftForm.modelId === "CUSTOM_MODEL" && (
+                                                    <>
+                                                        <input type="text" placeholder="Escribí el modelo" maxLength={100} value={aircraftForm.customModel} onChange={e => setAircraftForm({...aircraftForm, customModel: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white uppercase placeholder:normal-case" />
+                                                        <p className="mt-1 text-xs text-slate-500">Se guarda en mayúsculas y queda en la lista para los próximos avisos.</p>
+                                                    </>
+                                                )}
                                                 <FieldError message={fieldErrors.modelId} />
 
                                                 {variantOptions.length > 0 && (
