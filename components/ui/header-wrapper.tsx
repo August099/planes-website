@@ -17,21 +17,20 @@ export function HeaderWrapper({ children }: { children: React.ReactNode }) {
   const scrollUpEnabled =
     !isHome && !EXCLUDED_PATHS.some((re) => re.test(pathname));
 
-  const [visible, setVisible] = useState(true);
+  // Página en la que se ocultó al bajar: al cambiar de página vuelve a verse sola.
+  const [hiddenOn, setHiddenOn] = useState<string | null>(null);
+  const visible = hiddenOn !== pathname;
 
   useEffect(() => {
-    if (!scrollUpEnabled) {
-      setVisible(true);
-      return;
-    }
+    if (!scrollUpEnabled) return;
 
     let lastY = window.scrollY;
 
     const onScroll = () => {
       const y = window.scrollY;
-      if (y < 80) setVisible(true);          // arriba de todo: siempre visible
-      else if (y < lastY) setVisible(true);  // scroll hacia arriba: aparece
-      else if (y > lastY) setVisible(false); // scroll hacia abajo: se oculta
+      if (y < 80) setHiddenOn(null);              // arriba de todo: siempre visible
+      else if (y < lastY) setHiddenOn(null);      // scroll hacia arriba: aparece
+      else if (y > lastY) setHiddenOn(pathname);  // scroll hacia abajo: se oculta
       lastY = y;
     };
 

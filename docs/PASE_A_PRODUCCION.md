@@ -78,7 +78,9 @@ renovación y destacados. Las compras, pagos y facturas no se tocan.
 Migraciones que entran (si no estaban): VA-43, VA-44, VA-54, VA-11, VA-16, VA-87, VA-59, VA-83, VA-85,
 VA-80, VA-84 (dos), VA-92 (dos), VA-105 facturación, contraseña, porcentaje de renovación y compra de
 renovación, y desde el 17/10: VA-150, VA-149, VA-148, VA-151 (dos), VA-96 y VA-152 (`va152_cupos` y
-`va152_limpieza`).
+`va152_limpieza`). Lote del 22/10 y 24/10: `va187_fila_pagina_personalizada` (solo datos: "Branding" →
+"Página personalizada"), `va182_fundadores`, `va183_ventas` (rellena fecha y precio de los ya vendidos) y
+`va190_taxonomia_usuarios`.
 
 ---
 
@@ -93,6 +95,7 @@ después, si el informe está bien, con el flag de aplicar.
 | Planes y cupos (VA-152) | `npx tsx scripts/va152-migrate-data.ts --confirm-production` | `… --apply --confirm-production` | Cupo Gratis 1 / 5; Pro y las 3 opciones del Empresarial **sin precio e inactivos**; las cortesías pasan al Empresarial · Todo ilimitado; los planes viejos sin compras se borran y los demás quedan archivados; cupones de avisos inactivos; lotes de lanzamiento borrados. **Si frena por una suscripción paga en un plan viejo, avisar** |
 | Coordenadas de los avisos viejos | `npx tsx scripts/geocode-listings.ts --allow-remote` | `… --apply --allow-remote` | Los avisos sin latitud/longitud (los de antes de VA-83) toman el centro de su localidad con la API Georef: sin eso, el mapa del detalle muestra la provincia pero no el punto. Los de ciudad ambigua ("Buenos Aires, Buenos Aires") quedan sin resolver: corregir la ciudad del aviso. Correrlo también en el Preview |
 | Planes según la grilla (VA-166, VA-174) | `npx tsx scripts/va166-migrate-data.ts` | `… --apply --confirm-production` | Base 1 / 3 (lo crea la migración), Pro 3 / 10 a AR$ 38.000 (tachado 50.000), Broker 55.000 / 85.000 (tachados 68.000 / 108.000), beneficios de la grilla y la cortesía del admin cerrada. Los planes se activan después en `/admin/plans`. **Si informa suscriptores pagos, frenar y avisar** |
+| Marcas y modelos propios (VA-190) | `npx tsx --require ./scripts/stub-server-only.cjs scripts/va190-report.ts` | `… --apply --confirm-production` | Los avisos con "Otra marca" / "Otro modelo" pasan a la lista en MAYÚSCULAS (sin duplicar) y las marcas de repuestos quedan en mayúsculas. Mandarle el informe a Code antes de aplicar |
 | Categoría de cada modelo (VA-153) | `npx tsx scripts/va153-import-categorias.ts` | `… --apply --confirm-production` | 3 cambios (PC-12 → BT, Duke → BP, C-425 Conquest → BT); nada "en la planilla pero no en la base" ni al revés. Los avisos con categoría distinta a la de su modelo solo se informan |
 | Precios de los planes | `/admin/plans` → Editar | — | Precio de Pro y de las 3 opciones del Empresarial (los definen los socios) y **Activo** en cada uno |
 | Facturación | `/admin/payments` → Configuración | — | Tope del monotributo, alerta, desde qué monto se pide DNI y días de gracia |

@@ -27,6 +27,9 @@ Anotar cada resultado en `docs/REGISTRO_DE_CAMBIOS.md` → "Pruebas de pagos" (y
    npx prisma migrate deploy
    npx prisma migrate status        # "Database schema is up to date!"
    ```
+   **Lote del 22/10 y 24/10:** `npx prisma migrate deploy` aplica 4 nuevas (`va187`, `va182`, `va183`,
+   `va190`). Después, con la misma variable, el informe de marcas propias (solo lee):
+   `npx tsx --require ./scripts/stub-server-only.cjs scripts/va190-report.ts` y, si está bien, `… --apply --confirm-production`.
 4. Datos base, con la misma variable puesta (y `$env:RUNTIME_DATABASE_URL` igual a la de arriba):
    ```powershell
    $env:RUNTIME_DATABASE_URL = $env:DATABASE_URL
