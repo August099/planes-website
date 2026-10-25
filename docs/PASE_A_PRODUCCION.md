@@ -107,6 +107,20 @@ caché: si se cargan los precios de otra forma, `/plans` tarda hasta una hora).
 
 ---
 
+## 3b. Producción sin datos de usuarios (pedido del socio, 25/10)
+
+Antes del lanzamiento se borran todas las cuentas (también las de los admins), los avisos y todo lo que cargaron
+los usuarios, incluidos los datos financieros de prueba. Se conserva la configuración (taxonomía, filtros,
+planes y grilla, guías, ajustes, cupones y gastos fijos). Con producción vacía, el script de VA-190 ya no
+tiene nada que corregir.
+
+1. Backup (`docs/BASES_DE_DATOS.md`, 4.3).
+2. Con `produccion.ps1`: `npx tsx --require ./scripts/stub-server-only.cjs scripts/wipe-user-data.ts` (informe).
+3. Si el informe está bien: el mismo comando con `--apply --confirm-production`.
+4. Archivos del storage (`--storage`): ver antes que el Preview y la base local usan las fotos de producción.
+5. Después del lanzamiento, cada socio se registra y se lo hace admin por SQL (sección 3, "Hacerse admin").
+6. Producción tiene 0 guías: cargarlas con `scripts/seed-guides.ts --allow-remote --apply` (sección 3).
+
 ## 4. Limpieza (solo informe primero)
 
 ```bash
