@@ -61,7 +61,7 @@ export function SubscriptionPanel({ subscription, quota = null }: { subscription
   const end = DATE.format(new Date(subscription.currentPeriodEnd));
   const per = subscription.interval === "YEARLY" ? "año" : "mes";
 
-  // VA-92: cortesía (asignada por el admin): sin precio, sin cobros y sin cancelar.
+  // VA-92: plan bonificado (lo asigna el admin o es de un fundador, VA-182): sin precio, cobros ni cancelar.
   if (subscription.courtesy) {
     return (
       <section className="rounded-lg border border-[#001F58]/12 bg-white">
@@ -69,7 +69,7 @@ export function SubscriptionPanel({ subscription, quota = null }: { subscription
           <p className={LABEL}>Tu plan</p>
           <p className="mt-1 text-lg font-bold text-[#001F58]">{subscription.planName}</p>
           <p className="text-sm text-slate-600">
-            Plan de cortesía, sin cargo
+            {subscription.founding ? "6 meses bonificados por ser miembro fundador" : "Bonificado, sin cargo"}
           </p>
         </div>
         <p className="border-t border-[#001F58]/10 px-5 py-3 text-sm text-slate-600">

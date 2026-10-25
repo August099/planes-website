@@ -23,6 +23,7 @@ import Stepper, { Step } from "@/components/ui/Stepper";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle, Send, AlertCircle, Upload, Paperclip, Search, X, GripHorizontal } from "lucide-react";
 import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
+import { FoundingMemberDialog } from "@/components/ui/FoundingMemberDialog";
 import { DescriptionTextarea } from "@/components/ui/DescriptionTextarea";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
 import { LocalityInput } from "@/components/ui/LocalityInput";
@@ -217,6 +218,8 @@ export default function PublishForm({
     // Candado contra doble clic: el estado de React tarda un render en actualizarse.
     const submittingRef = useRef(false);
     const [publishStatus, setPublishStatus] = useState<string | null>(null);
+    // VA-182: primer aviso de una cuenta fundadora: ventana de bienvenida antes de ir al aviso.
+    const [founder, setFounder] = useState<{ until: string; url: string } | null>(null);
     const [compressing, setCompressing] = useState<{ done: number; total: number } | null>(null);
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
     const [isSubmittingManaged, setIsSubmittingManaged] = useState(false);
@@ -700,6 +703,11 @@ export default function PublishForm({
           return;
         }
 
+        if (!isEditing && "founder" in res && res.founder) {
+          setPublishStatus("¡Publicado!");
+          setFounder({ until: res.founder.until, url: res.url });
+          return;
+        }
         setPublishStatus(
           isEditing ? "¡Guardado! Abriendo tu aviso..." : res.paused ? "¡Guardado como pausado! Abriendo tu aviso..." : "¡Publicado! Abriendo tu aviso..."
         );
@@ -756,6 +764,7 @@ export default function PublishForm({
     return (
     <main className="relative isolate overflow-hidden min-h-screen">
         <PageBackground page="publish" />
+        {founder && <FoundingMemberDialog until={founder.until} onClose={() => router.push(founder.url)} />}
 
         <div className="container mx-auto px-4 pt-16 pb-20 max-w-7xl">
             <div className="text-center max-w-3xl mx-auto mb-10">

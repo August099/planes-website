@@ -223,7 +223,7 @@ export function toFieldErrors(error: z.ZodError): FieldErrors {
 
 export type ListingResult =
   // VA-152: paused si se guardó pausado porque no quedaba cupo (lo pidió el usuario).
-  | { ok: true; id: string; url: string; paused?: boolean }
+  | { ok: true; id: string; url: string; paused?: boolean; founder?: { until: string } }
   // VA-152: quotaFull si no hay cupo y no eligió "Guardar como pausado".
   | { ok: false; error: string; fieldErrors?: FieldErrors; quotaFull?: boolean };
 

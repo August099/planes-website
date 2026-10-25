@@ -19,6 +19,8 @@ import {
   type ListingResult,
 } from "@/lib/listing-schema";
 import { assertListingOwner } from "@/lib/listing-auth";
+import { claimFoundingMembership } from "@/lib/founders";
+import { FEATURED_SELLERS_TAG } from "@/lib/featured";
 import { engineTypeForCategory } from "@/lib/aircraft-categories";
 import {
   createUploadTargets,
@@ -266,7 +268,8 @@ export async function createListing(input: ListingInput, opts: { saveAsPaused?: 
           },
           select: { id: true },
         });
-        return { id: aircraft.id, paused: !room };
+        // VA-182: si es el primer aviso (activo) de la cuenta y hay lugar, queda fundadora.
+        return { id: aircraft.id, paused: !room, founder: room ? await claimFoundingMembership(tx, sellerId, now) : null };
       }
       const sparePart = await tx.sparePart.create({
         data: {
@@ -278,7 +281,7 @@ export async function createListing(input: ListingInput, opts: { saveAsPaused?: 
         },
         select: { id: true },
       });
-      return { id: sparePart.id, paused: !room };
+      return { id: sparePart.id, paused: !room, founder: room ? await claimFoundingMembership(tx, sellerId, now) : null };
     });
 
     if (!created) {
@@ -312,7 +315,14 @@ export async function createListing(input: ListingInput, opts: { saveAsPaused?: 
     revalidatePath("/");
     revalidatePath(listingType === "aircraft" ? "/aircraft" : "/spareparts");
     updateTag(RECOMMENDATIONS_TAG); // VA-88
-    return { ok: true, id, url: listingUrl(listingType, id), ...(created.paused ? { paused: true } : {}) };
+    if (created.founder) updateTag(FEATURED_SELLERS_TAG); // VA-182: el Broker bonificado incluye destacadas
+    return {
+      ok: true,
+      id,
+      url: listingUrl(listingType, id),
+      ...(created.paused ? { paused: true } : {}),
+      ...(created.founder ? { founder: { until: created.founder.until.toISOString() } } : {}),
+    };
   } catch (error) {
     console.error("Error al crear la publicación:", error);
     return fail({ ok: false, error: "No se pudo guardar la publicación. Probá de nuevo." });

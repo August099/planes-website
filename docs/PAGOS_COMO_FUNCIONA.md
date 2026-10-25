@@ -148,6 +148,13 @@ confirmando tu pago…" (y se actualiza sola), "El pago no se completó" (con "I
 
 ---
 
+**Miembros fundadores (VA-182):** las primeras 15 cuentas no admin que publican su primer aviso (límite
+editable en `/admin/users`) reciben **6 meses bonificados** de Broker / Empresa con todo ilimitado: una
+suscripción sin cobro (`MANUAL`, nota "Miembro fundador") hasta esa fecha, que vence sola y vuelve a Base
+como cualquier plan. No pasa por Mercado Pago ni factura, y no cuenta como ingreso. Si la cuenta ya tenía
+una suscripción vigente, no se otorga. Al usuario nunca se le dice "cortesía": se dice "bonificado" (también
+en los planes que asigna el admin).
+
 ## 7. Cupones
 
 **Sin pantallas desde VA-152:** se quitaron la página del admin (el código quedó en

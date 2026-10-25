@@ -64,7 +64,7 @@ export async function grantCourtesyPlan(input: {
 /** Quita una cortesía (solo las MANUAL): queda cancelada desde ahora. */
 export async function revokeCourtesyPlan(userId: string): Promise<CourtesyResult> {
   const sub = await prisma.subscription.findUnique({ where: { userId }, select: { source: true } });
-  if (!sub || sub.source !== "MANUAL") return { ok: false, error: "No tiene un plan de cortesía." };
+  if (!sub || sub.source !== "MANUAL") return { ok: false, error: "No tiene un plan bonificado." };
   await prisma.subscription.update({ where: { userId }, data: { status: "CANCELLED", currentPeriodEnd: new Date() } });
   await enforceQuota(userId); // VA-152: si el plan nuevo tiene menos cupo, se pausan los más nuevos
   return { ok: true };
