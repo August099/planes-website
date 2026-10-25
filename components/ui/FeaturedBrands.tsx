@@ -33,7 +33,7 @@ export function FeaturedBrands({ brands }: FeaturedBrandsProps) {
   return (
     <section className="py-12 overflow-hidden">
 
-      <div className="container mx-auto px-4 mb-6 text-center">
+      <div className="container mx-auto px-4 mb-6">
         <SectionTitle>Explorá por Fabricante</SectionTitle>
       </div>
 

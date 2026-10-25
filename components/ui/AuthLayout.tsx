@@ -20,7 +20,7 @@ export function AuthLayout({
           <path
             d="M2 8 Q 50 -2, 100 6 T 198 4"
             fill="none"
-            stroke="#E70F1F"
+            stroke="#D62828"
             strokeWidth="1.5"
             strokeDasharray="3 4"
             strokeLinecap="round"
@@ -28,7 +28,7 @@ export function AuthLayout({
         </svg>
 
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-heading font-semibold text-[#001F58]">{title}</h1>
+          <h1 className="text-2xl font-heading font-semibold text-[#00205B]">{title}</h1>
           <p className="text-muted-foreground text-sm mt-1">{subtitle}</p>
         </div>
 

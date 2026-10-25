@@ -43,19 +43,19 @@ export default function AboutPage() {
         <div className="grid gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
           <section>
             <p className={LABEL}>Nosotros</p>
-            <h1 className="mt-1 font-heading text-3xl sm:text-4xl font-semibold text-[#001F58]">Nuestra misión</h1>
+            <h1 className="mt-1 font-heading text-3xl sm:text-4xl font-semibold text-[#00205B]">Nuestra misión</h1>
             {/* [COMPLETAR] Misión real de Ventas Aeronáuticas. */}
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-700">
               [COMPLETAR] Hacer que comprar y vender una aeronave en Argentina sea simple, transparente y seguro, conectando a quienes
               vuelan con la información que necesitan para decidir.
             </p>
 
-            <ol className="mt-10 divide-y divide-[#001F58]/10 rounded-lg border border-[#001F58]/12 bg-white">
+            <ol className="mt-10 divide-y divide-[#00205B]/10 rounded-lg border border-[#00205B]/12 bg-white">
               {PILLARS.map((p) => (
                 <li key={p.code} className="flex gap-4 px-5 py-4">
-                  <span className="w-6 shrink-0 font-semibold tabular-nums text-[#E70F1F]">{p.code}</span>
+                  <span className="w-6 shrink-0 font-semibold tabular-nums text-[#D62828]">{p.code}</span>
                   <div>
-                    <h2 className="text-sm font-bold text-[#001F58]">{p.title}</h2>
+                    <h2 className="text-sm font-bold text-[#00205B]">{p.title}</h2>
                     <p className="mt-1 text-sm leading-relaxed text-slate-600">{p.text}</p>
                   </div>
                 </li>
@@ -64,16 +64,16 @@ export default function AboutPage() {
 
             <p className="mt-6 text-sm text-slate-600">
               ¿Tenés una consulta puntual? Mirá las{" "}
-              <Link href="/faq" className="font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
+              <Link href="/faq" className="font-semibold text-[#00205B] hover:text-[#D62828] hover:underline">
                 preguntas frecuentes
               </Link>{" "}
               o escribinos a los datos de contacto del pie de la página.
             </p>
           </section>
 
-          <section aria-labelledby="sugerencias" className="h-fit rounded-lg border border-[#001F58]/12 bg-white p-6">
+          <section aria-labelledby="sugerencias" className="h-fit rounded-lg border border-[#00205B]/12 bg-white p-6">
             <p className={LABEL}>Sugerencias</p>
-            <h2 id="sugerencias" className="mt-1 text-lg font-bold text-[#001F58]">
+            <h2 id="sugerencias" className="mt-1 text-lg font-bold text-[#00205B]">
               Ayudanos a mejorar
             </h2>
             <p className="mt-2 mb-5 text-sm text-slate-600">

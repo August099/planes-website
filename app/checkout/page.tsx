@@ -37,14 +37,14 @@ export default async function CheckoutPage({ searchParams }: Props) {
   if ("error" in product) {
     return (
       <Shell crumbs={crumbs}>
-        <section className="rounded-lg border border-[#001F58]/12 bg-white p-6 sm:p-8">
+        <section className="rounded-lg border border-[#00205B]/12 bg-white p-6 sm:p-8">
           <p className={LABEL}>Pago</p>
-          <h1 className="mt-1 text-2xl font-bold text-[#001F58]">{product.error}</h1>
+          <h1 className="mt-1 text-2xl font-bold text-[#00205B]">{product.error}</h1>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/plans" className="inline-flex min-h-11 items-center rounded-md bg-[#001F58] px-5 text-sm font-bold text-white hover:bg-[#00133A]">
+            <Link href="/plans" className="inline-flex min-h-11 items-center rounded-md bg-[#00205B] px-5 text-sm font-bold text-white hover:bg-[#001331]">
               Ver planes
             </Link>
-            <Link href={`/profile/${user.id}`} className="inline-flex min-h-11 items-center rounded-md border border-[#001F58]/20 px-5 text-sm font-semibold text-[#001F58] hover:bg-slate-50">
+            <Link href={`/profile/${user.id}`} className="inline-flex min-h-11 items-center rounded-md border border-[#00205B]/20 px-5 text-sm font-semibold text-[#00205B] hover:bg-slate-50">
               Ir a mis publicaciones
             </Link>
           </div>
@@ -75,8 +75,8 @@ export default async function CheckoutPage({ searchParams }: Props) {
   return (
     <Shell crumbs={crumbs}>
       {changingFrom && (
-        <p className="mb-4 border-l-2 border-[#E70F1F] bg-white px-4 py-3 text-sm text-slate-700">
-          <strong className="text-[#001F58]">Cambio de plan:</strong> este plan reemplaza a <strong>{changingFrom}</strong> apenas se
+        <p className="mb-4 border-l-2 border-[#D62828] bg-white px-4 py-3 text-sm text-slate-700">
+          <strong className="text-[#00205B]">Cambio de plan:</strong> este plan reemplaza a <strong>{changingFrom}</strong> apenas se
           apruebe el primer pago, y se deja de cobrar el anterior. Lo que queda del período actual no se devuelve. Si no completás el
           pago, seguís con tu plan de siempre. Si el plan nuevo tiene menos cupo y tenés más avisos activos, se pausan los más nuevos
           (después elegís cuáles quedan activos).

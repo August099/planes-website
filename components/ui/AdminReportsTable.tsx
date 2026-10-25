@@ -91,7 +91,7 @@ export function AdminReportsTable({ reports, history = {} }: { reports: ReportIt
               onClick={() => setFilter(st)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
                 filter === st
-                  ? "bg-[#001F58] text-white"
+                  ? "bg-[#00205B] text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >

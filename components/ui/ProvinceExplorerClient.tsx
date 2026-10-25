@@ -38,7 +38,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
   // Resaltado (rojo suave) y seleccionada (rojo lleno). Más específico que las clases base del path.
   const css = [
     hovered && hovered !== selected && `[data-province-map] [data-slug="${hovered}"]{fill:rgb(231 15 31 / 0.45)}`,
-    selected && `[data-province-map] [data-slug="${selected}"]{fill:#E70F1F}`,
+    selected && `[data-province-map] [data-slug="${selected}"]{fill:#D62828}`,
   ]
     .filter(Boolean)
     .join("");
@@ -62,7 +62,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
           <select
             value={selected ?? ""}
             onChange={(e) => setSelected(e.target.value || null)}
-            className="w-full rounded-md border border-slate-300 bg-white p-3 text-sm text-[#001F58]"
+            className="w-full rounded-md border border-slate-300 bg-white p-3 text-sm text-[#00205B]"
           >
             <option value="">Elegí una provincia</option>
             {provinces.map((p) => (
@@ -91,11 +91,11 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
                   aria-pressed={isSelected}
                   className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors duration-150 motion-reduce:transition-none cursor-pointer ${
                     isSelected
-                      ? "bg-[#E70F1F] text-white"
+                      ? "bg-[#D62828] text-white"
                       : isHovered
-                        ? "bg-[#E70F1F]/10 text-[#001F58]"
+                        ? "bg-[#D62828]/10 text-[#00205B]"
                         : total > 0
-                          ? "text-[#001F58] hover:bg-slate-50"
+                          ? "text-[#00205B] hover:bg-slate-50"
                           : "text-slate-500 hover:bg-slate-50"
                   }`}
                 >
@@ -116,18 +116,18 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
           ) : current.aircraft + current.parts === 0 ? (
             <div className="space-y-3">
               <p className="text-sm text-slate-600">
-                Todavía no hay avisos en <strong className="text-[#001F58]">{current.label}</strong>. ¿Tenés algo para vender?
+                Todavía no hay avisos en <strong className="text-[#00205B]">{current.label}</strong>. ¿Tenés algo para vender?
               </p>
               <Link
                 href="/publish"
-                className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#E70F1F] px-5 text-sm font-bold text-white hover:bg-[#C20D1A] transition-colors"
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#D62828] px-5 text-sm font-bold text-white hover:bg-[#B71F1F] transition-colors"
               >
                 Publicar
               </Link>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-base font-bold text-[#001F58]">
+              <p className="text-base font-bold text-[#00205B]">
                 {current.label}
                 <span className="font-medium text-slate-500">
                   {" · "}
@@ -139,13 +139,13 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Link
                   href={`/aircraft?province=${current.slug}`}
-                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md bg-[#E70F1F] px-5 text-sm font-bold text-white hover:bg-[#C20D1A] transition-colors"
+                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md bg-[#D62828] px-5 text-sm font-bold text-white hover:bg-[#B71F1F] transition-colors"
                 >
                   Ver aeronaves
                 </Link>
                 <Link
                   href={`/spareparts?province=${current.slug}`}
-                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-[#001F58]/20 bg-white px-5 text-sm font-bold text-[#001F58] hover:bg-slate-50 transition-colors"
+                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-[#00205B]/20 bg-white px-5 text-sm font-bold text-[#00205B] hover:bg-slate-50 transition-colors"
                 >
                   Ver repuestos
                 </Link>

@@ -2,14 +2,13 @@
 
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { SlidersHorizontal, X, ChevronDown, ChevronRight } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { SlidersHorizontal, X, ChevronDown } from "lucide-react";
 import { PROVINCES, provinceShortName } from "@/lib/provinces";
 
 // Mismo estilo para "Filtros" y "Ordenar" (pedido del socio, 9/10: en celular no eran iguales:
 // fondo, esquinas, peso y color del texto distintos).
 export const TOOLBAR_BUTTON_CLASS =
-  "min-h-11 lg:min-h-0 flex items-center justify-center gap-2 bg-white border border-slate-200 shadow-sm px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer";
+  "min-h-11 lg:min-h-0 flex items-center justify-center gap-2 bg-white border border-[#00205B]/15 px-4 py-2.5 rounded-md text-sm font-semibold text-[#00205B] hover:border-[#00205B]/40 transition-colors cursor-pointer";
 
 // Estructura común de las barras de filtros de /aircraft, /spareparts y /services/hangars (VA-45):
 // en celular, botón "Filtros (n)" que abre un panel lateral; desde lg, barra lateral fija.
@@ -45,7 +44,7 @@ export function FilterShell({
     <button
       type="button"
       onClick={onApply}
-      className="w-full min-h-11 bg-primary text-white py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
+      className="w-full min-h-11 rounded-md bg-[#00205B] py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#D62828] cursor-pointer"
     >
       Aplicar filtros
     </button>
@@ -70,9 +69,9 @@ export function FilterShell({
         </MobileFilterPanel>
       )}
 
-      <aside className="hidden lg:flex w-72 shrink-0 border border-[#001F58]/10 bg-[var(--primary-foreground)] rounded-xl p-5 h-fit flex-col gap-5">
+      <aside className="va-plate hidden h-fit w-72 shrink-0 flex-col gap-4 p-5 lg:flex">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Filtros</h2>
+          <h2 className="va-label">Filtros</h2>
           {clearButton}
         </div>
         {children}
@@ -147,29 +146,30 @@ export function FilterSection({
   onToggle: () => void;
   children: React.ReactNode;
 }) {
+  // Rediseño (25/10): la lista se despliega con una transición de alto (grid 0fr → 1fr). Cerrada queda
+  // inerte, así sus casillas no reciben foco.
   return (
-    <>
-      <Separator />
-      <div className="flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-expanded={open}
-          className="flex items-center justify-between w-full text-left py-1 min-h-11 sm:min-h-0 group cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium group-hover:text-primary transition-colors">{title}</h3>
-            {count > 0 && (
-              <span className="min-w-5 h-5 px-1.5 rounded-full bg-primary text-white text-[11px] font-bold flex items-center justify-center">
-                {count}
-              </span>
-            )}
-          </div>
-          {open ? <ChevronDown className="w-4 h-4 text-gray-500" /> : <ChevronRight className="w-4 h-4 text-gray-500" />}
-        </button>
-        {open && <div className="pt-1">{children}</div>}
+    <div className="border-t border-[#00205B]/10">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="group flex min-h-11 w-full items-center justify-between py-2 text-left cursor-pointer"
+      >
+        <span className="flex items-center gap-2">
+          <span className="text-[13px] font-bold text-[#00205B] transition-colors group-hover:text-[#D62828]">{title}</span>
+          {count > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-sm bg-[#D62828] px-1.5 text-[11px] font-bold text-white tabular-nums">{count}</span>
+          )}
+        </span>
+        <ChevronDown className={`h-4 w-4 text-[#00205B]/60 transition-transform duration-300 ${open ? "" : "-rotate-90"}`} />
+      </button>
+      <div className={`grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+        <div className="overflow-hidden" inert={!open}>
+          <div className="pb-3 pt-0.5">{children}</div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -190,7 +190,7 @@ export function AppliedFilterChips({
           type="button"
           onClick={() => onRemove(chip.key, chip.value)}
           aria-label={`Quitar filtro ${chip.label}`}
-          className="flex items-center gap-1 rounded-full bg-[#001F58]/10 px-2.5 py-1 text-xs font-medium text-[#001F58] hover:bg-[#001F58]/20 transition-colors cursor-pointer"
+          className="flex items-center gap-1 rounded-sm border border-[#00205B]/20 bg-white px-2 py-1 text-xs font-semibold text-[#00205B] transition-colors hover:border-[#D62828] hover:text-[#D62828] cursor-pointer"
         >
           {chip.label}
           <X className="w-3 h-3" />

@@ -43,7 +43,7 @@ export default async function ComparePage({ searchParams }: Props) {
       <div className="container mx-auto px-4 pb-16 pt-6">
         <Breadcrumbs items={[{ label: "Aviones", href: "/aircraft" }, { label: "Comparar" }]} className="mb-6" />
         <div className="mb-6 max-w-2xl">
-          <h1 className="text-2xl font-bold text-[#001F58] sm:text-3xl">Comparar aeronaves</h1>
+          <h1 className="text-2xl font-bold text-[#00205B] sm:text-3xl">Comparar aeronaves</h1>
           <p className="mt-1 text-sm text-slate-600">
             Hasta 3 aeronaves, con todos los datos de cada aviso uno al lado del otro. Copiá el link para compartir esta
             comparación.

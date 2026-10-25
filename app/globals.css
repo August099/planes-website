@@ -165,7 +165,7 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #E70F1F;
+  background: #D62828;
   border-radius: 5px;
 }
 
@@ -175,7 +175,7 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #E70F1F #f1f1f1;
+  scrollbar-color: #D62828 #f1f1f1;
 }
 
 /* Carruseles de la Home (ScrollCarousel): se deslizan sin barra. Va acá y no como utilidad de
@@ -223,15 +223,15 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
    Paleta sacada del hero (backgrounds/home2.webp y home-mobile.webp).
    ========================================================================== */
 .home-theme {
-  --va-navy: #001f58;      /* marca */
+  --va-navy: #00205b;      /* marca */
   --va-navy-deep: #001331; /* sombra del hangar del hero */
   --va-blue: #0a4c96;      /* azul del cielo del hero */
   --va-sky: #cfe3f6;       /* celeste: el cielo del hero aclarado */
   --va-mist: #eef5fc;      /* blanco neblina */
   --va-blush: #fff3f0;     /* blanco con un toque rojo/crema (nubes del hero) */
-  --va-red: #e70f1f;       /* marca */
-  --va-red-hover: #c20d1a;
-  --va-red-soft: rgb(231 15 31 / 0.12);
+  --va-red: #d62828;       /* marca (manual 25/10) */
+  --va-red-hover: #b71f1f;
+  --va-red-soft: rgb(214 40 40 / 0.12);
 }
 
 /* Cada zona pinta su fondo en una capa absoluta detrás del contenido (z -2); los resplandores
@@ -246,18 +246,17 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
   z-index: -2;
   pointer-events: none;
 }
-.home-zone-1 > .home-zone-bg {
-  background: linear-gradient(180deg, var(--va-sky) 0%, var(--va-mist) 100%);
-}
+/* Rediseño (25/10): las zonas claras son blanco papel; la oscura va del azul de marca al del footer. */
+.home-zone-1 > .home-zone-bg,
 .home-zone-2 > .home-zone-bg {
-  background: linear-gradient(180deg, var(--va-mist) 0%, var(--va-blush) 50%, var(--va-mist) 100%);
+  background: var(--va2-paper);
 }
 .home-zone-3 > .home-zone-bg {
   /* El paso de claro a oscuro queda detrás del banner de SellerCta. */
-  background: linear-gradient(180deg, var(--va-mist) 0%, var(--va-mist) 28%, var(--va-blue) 74%, var(--va-blue) 100%);
+  background: linear-gradient(180deg, var(--va2-paper) 0%, var(--va2-paper) 34%, var(--va2-navy) 74%, var(--va2-navy) 100%);
 }
 .home-zone-4 > .home-zone-bg {
-  background: linear-gradient(180deg, var(--va-blue) 0%, var(--va-navy) 42%, var(--va-navy-deep) 100%);
+  background: linear-gradient(180deg, var(--va2-navy) 0%, var(--va2-navy-deep) 100%);
 }
 
 /* Motivo "//" de la marca, muy tenue (components/ui/BrandSlashes.tsx: Home y footer) */
@@ -291,10 +290,125 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
 }
 .va-dot-active {
   width: 20px;
-  background: #e70f1f;
+  background: var(--va2-red);
 }
 @media (prefers-reduced-motion: reduce) {
   .va-dot { transition: none; }
+}
+
+/* ==========================================================================
+   Rediseño (25/10): "carta de navegación". Paleta del manual (docs/DESIGN.md): azul #00205B,
+   rojo #D62828, gris #CFCFCF y blanco #F5F5F5. Superficies: placas blancas con borde fino sobre
+   el blanco papel; el rojo solo marca acciones y estados.
+   ========================================================================== */
+:root {
+  --va2-navy: #00205b;
+  --va2-navy-deep: #001331; /* el del footer, para que la última zona se funda con él */
+  --va2-red: #d62828;
+  --va2-red-hover: #b71f1f;
+  --va2-gray: #cfcfcf;
+  --va2-paper: #f5f5f5;
+  --va2-line: rgb(0 32 91 / 0.14);
+  --va2-line-soft: rgb(0 32 91 / 0.08);
+}
+
+/* Placa: bloque de datos con borde fino, sin sombra. */
+.va-plate {
+  background: #fff;
+  border: 1px solid var(--va2-line);
+  border-radius: 6px;
+}
+
+/* Rótulo técnico, como las placas de un panel de instrumentos. */
+.va-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgb(0 32 91 / 0.62);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cinta de datos de una tarjeta: celdas iguales separadas por una línea fina. */
+.va-tape {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  border-top: 1px solid var(--va2-line-soft);
+  border-bottom: 1px solid var(--va2-line-soft);
+}
+.va-tape > * + * {
+  border-left: 1px solid var(--va2-line-soft);
+}
+
+/* Escala de distancia de las cartas aeronáuticas: el motivo que acompaña a cada título de sección.
+   El primer tramo va en rojo; se dibuja una sola vez al entrar en pantalla. */
+.va-scale {
+  display: block;
+  width: 112px;
+  height: 7px;
+  margin-top: 14px;
+  background:
+    linear-gradient(var(--va2-red), var(--va2-red)) 0 100% / 28px 3px no-repeat,
+    repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 14px) 0 0 / 100% 7px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat;
+  color: rgb(0 32 91 / 0.45);
+  transform-origin: left;
+}
+.va-scale-dark {
+  color: rgb(255 255 255 / 0.5);
+}
+@keyframes va-draw {
+  from { transform: scaleX(0.15); opacity: 0.4; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+@supports (animation-timeline: view()) {
+  .va-scale {
+    animation: va-draw linear both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 25%;
+  }
+}
+
+/* Número de sección automático ("01 //"), en orden de aparición dentro de la Home. */
+.home-theme {
+  counter-reset: va-section;
+}
+.va-section-title {
+  counter-increment: va-section;
+}
+.va-section-index::before {
+  content: counter(va-section, decimal-leading-zero) " //";
+}
+
+/* Tarjeta de aviso: al pasar el mouse crece una línea roja abajo, en vez de elevarse. */
+.va-card {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--va2-line);
+  border-radius: 6px;
+  transition: border-color 200ms;
+}
+.va-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--va2-red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 350ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.group:hover .va-card,
+.group:focus-visible .va-card {
+  border-color: rgb(0 32 91 / 0.32);
+}
+.group:hover .va-card::after,
+.group:focus-visible .va-card::after {
+  transform: scaleX(1);
 }
 
 /* VA-156: atribución del mapa del detalle (OpenFreeMap, OpenMapTiles, OpenStreetMap) visible pero chica. */

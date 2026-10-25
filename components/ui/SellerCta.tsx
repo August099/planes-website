@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 export function SellerCta() {
   return (
     <section className="container mx-auto px-4">
-      <div className="relative isolate flex min-h-[340px] items-end overflow-hidden rounded-lg bg-[#001F58] ring-1 ring-white/10 md:min-h-[380px] md:items-center">
+      <div className="relative isolate flex min-h-[340px] items-end overflow-hidden rounded-md bg-[#00205B] ring-1 ring-white/10 md:min-h-[380px] md:items-center">
         <Image
           src="/backgrounds/cta.webp"
           alt=""
@@ -20,13 +20,13 @@ export function SellerCta() {
         {/* Velo solo detrás del texto */}
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-gradient-to-t from-[#001F58]/95 via-[#001F58]/80 to-[#001F58]/10 md:bg-gradient-to-r md:from-[#001F58]/95 md:via-[#001F58]/80 md:via-50% md:to-[#001F58]/0 md:to-80%"
+          className="absolute inset-0 -z-10 bg-gradient-to-t from-[#00205B]/95 via-[#00205B]/80 to-[#00205B]/10 md:bg-gradient-to-r md:from-[#00205B]/95 md:via-[#00205B]/80 md:via-50% md:to-[#00205B]/0 md:to-80%"
         />
         {/* Acento rojo de marca */}
-        <div aria-hidden className="absolute inset-y-0 left-0 w-1.5 bg-[#E70F1F]" />
+        <div aria-hidden className="absolute inset-y-0 left-0 w-1.5 bg-[#D62828]" />
 
         <div className="flex max-w-xl flex-col items-start space-y-3 px-6 py-8 sm:space-y-4 sm:px-10 md:py-12">
-          <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          <h2 className="text-[1.9rem] leading-[1.08] font-extrabold tracking-[-0.02em] text-white sm:text-[2.35rem]">
             ¿Querés vender tu aeronave?
           </h2>
 
@@ -38,7 +38,7 @@ export function SellerCta() {
             <Link href="/register">
               <Button
                 size="lg"
-                className="cursor-pointer rounded-md border-0 bg-[#E70F1F] px-8 py-6 text-base font-bold text-white transition-colors hover:bg-[#C20D1A] sm:text-lg"
+                className="cursor-pointer rounded-md border-0 bg-[#D62828] px-8 py-6 text-base font-bold text-white transition-colors hover:bg-[#B71F1F] sm:text-lg"
               >
                 Publicar mi avión
               </Button>

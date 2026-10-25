@@ -81,11 +81,12 @@ export function AircraftCard({
     ? categoryName.replace(/_/g, " ")
     : null;
 
-  const specs = [
-    categoryFormatted,
-    year,
-    totalTimeHours != null ? `${totalTimeHours.toLocaleString("es-AR")} hs` : "Horas no informadas",
-  ].filter(Boolean);
+  // Rediseño (25/10): los mismos tres datos de antes (categoría, año y horas), en la cinta de la tarjeta.
+  const tape = [
+    { label: "Categoría", value: categoryFormatted },
+    { label: "Año", value: year != null ? String(year) : null },
+    { label: "Horas", value: totalTimeHours != null ? `${totalTimeHours.toLocaleString("es-AR")} hs` : "Sin dato" },
+  ].filter((cell): cell is { label: string; value: string } => !!cell.value);
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -128,8 +129,8 @@ export function AircraftCard({
   return (
     <>
       <Link href={`/aircraft/${id}`} className="group block h-full">
-        <Card data-card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 transition-colors duration-200">
-          <div className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100">
+        <Card data-card className="va-card h-full flex flex-col gap-0 p-0 rounded-md">
+          <div className="relative w-full aspect-[16/10] overflow-hidden bg-slate-100">
             <ImageCarousel
               images={images}
               fallbackImage={imageUrl}
@@ -146,7 +147,7 @@ export function AircraftCard({
                 type="button"
                 onClick={handleShareClick}
                 aria-label="Compartir"
-                className="p-2 rounded-full bg-white/90 text-slate-700 hover:text-blue-600 hover:bg-white shadow-sm transition-all duration-200 cursor-pointer flex items-center justify-center"
+                className="flex h-9 w-9 items-center justify-center rounded-[4px] bg-white/95 text-[#00205B] transition-colors hover:bg-white hover:text-[#D62828] cursor-pointer"
               >
                 <Share2 className="w-4 h-4" />
               </button>
@@ -156,62 +157,46 @@ export function AircraftCard({
                 onClick={handleFavoriteClick}
                 disabled={loadingFav}
                 aria-label="Añadir a favoritos"
-                className={`p-2 rounded-full shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50 ${
-                  isFavorite
-                    ? "bg-red-50 text-red-600 hover:bg-red-100"
-                    : "bg-white/80 text-slate-700 hover:text-red-600 hover:bg-white"
+                className={`flex h-9 w-9 items-center justify-center rounded-[4px] transition-colors cursor-pointer disabled:opacity-50 ${
+                  isFavorite ? "bg-white text-[#D62828]" : "bg-white/95 text-[#00205B] hover:bg-white hover:text-[#D62828]"
                 }`}
               >
                 {loadingFav ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                  <Loader2 className="w-4 h-4 animate-spin text-[#D62828]" />
                 ) : (
-                  <Heart
-                    className={`w-4 h-4 transition-colors ${
-                      isFavorite ? "fill-red-600 text-red-600" : ""
-                    }`}
-                  />
+                  <Heart className={`w-4 h-4 transition-colors ${isFavorite ? "fill-[#D62828] text-[#D62828]" : ""}`} />
                 )}
               </button>
             </div>
           </div>
 
-          <CardContent className="p-3 pt-4 flex flex-col flex-1 justify-between gap-4">
-            <div className="space-y-1">
-              <h3
-                className="font-heading font-semibold text-base text-[#001F58] line-clamp-1 group-hover:text-primary transition-colors"
-                title={title}
-              >
-                {title}
-              </h3>
+          <CardContent className="flex flex-1 flex-col gap-3 p-0">
+            <h3 className="px-4 pt-3.5 font-heading text-[15px] font-bold leading-snug text-[#00205B] line-clamp-1" title={title}>
+              {title}
+            </h3>
 
-              {specs.length > 0 && (
-                <p className="text-xs text-muted-foreground line-clamp-1 capitalize">
-                  {specs.map((item, index) => (
-                    <span key={index}>
-                      {item}
-                      {index < specs.length - 1 && (
-                        <span className="mx-1.5 text-muted-foreground/40 font-bold">
-                          ·
-                        </span>
-                      )}
-                    </span>
-                  ))}
-                </p>
-              )}
-            </div>
+            {tape.length > 0 && (
+              <dl className="va-tape">
+                {tape.map((cell) => (
+                  <div key={cell.label} className="min-w-0 px-4 py-2">
+                    <dt className="va-label">{cell.label}</dt>
+                    <dd className="truncate text-[13px] font-semibold text-[#00205B] tabular-nums capitalize" title={cell.value}>
+                      {cell.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
 
-            <div className="space-y-0.5">
-              <p className="text-lg font-heading font-bold text-primary tracking-tight">
-                {formattedPrice}
-              </p>
-
+            <div className="mt-auto flex items-end justify-between gap-3 px-4 pb-4">
+              <p className="shrink-0 whitespace-nowrap font-heading text-lg font-extrabold tracking-[-0.01em] text-[#00205B] tabular-nums">{formattedPrice}</p>
               {locationText && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <MapPin className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
-                  <span className="line-clamp-1" title={locationText}>
+                <p className="flex min-w-0 items-center gap-1 text-xs text-slate-600">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-[#D62828]" aria-hidden />
+                  <span className="truncate" title={locationText}>
                     {locationText}
                   </span>
-                </div>
+                </p>
               )}
             </div>
           </CardContent>

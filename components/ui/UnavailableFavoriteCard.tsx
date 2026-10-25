@@ -47,7 +47,7 @@ export function UnavailableFavoriteCard({
           type="button"
           onClick={remove}
           disabled={pending}
-          className="mt-auto inline-flex min-h-10 items-center justify-center rounded-md border border-[#001F58]/20 px-4 text-sm font-semibold text-[#001F58] transition-colors hover:border-[#001F58] disabled:opacity-50"
+          className="mt-auto inline-flex min-h-10 items-center justify-center rounded-md border border-[#00205B]/20 px-4 text-sm font-semibold text-[#00205B] transition-colors hover:border-[#00205B] disabled:opacity-50"
         >
           {pending ? "Quitando…" : "Quitar de favoritos"}
         </button>

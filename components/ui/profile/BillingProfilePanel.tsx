@@ -48,9 +48,9 @@ export function BillingProfilePanel({ initial, saved }: { initial: BillingProfil
   const err = (k: string) => errors[k] && <p className="mt-1 text-xs text-red-700">{errors[k]}</p>;
 
   return (
-    <section className="rounded-lg border border-[#001F58]/12 bg-white p-5 sm:p-6">
+    <section className="rounded-lg border border-[#00205B]/12 bg-white p-5 sm:p-6">
       <p className={LABEL}>Facturación</p>
-      <h2 className="mt-1 text-lg font-bold text-[#001F58]">Datos de facturación</h2>
+      <h2 className="mt-1 text-lg font-bold text-[#00205B]">Datos de facturación</h2>
       <p className="mt-1 text-sm text-slate-600">
         {saved ? "Los usamos para tus facturas: al pagar no tenés que completar nada." : "Guardalos una vez y al pagar no tenés que completar nada."}
       </p>
@@ -71,7 +71,7 @@ export function BillingProfilePanel({ initial, saved }: { initial: BillingProfil
               set("kind", value);
               setErrors({});
             }}
-            className={`min-h-10 rounded text-sm font-medium transition-colors cursor-pointer ${v.kind === value ? "bg-white text-[#001F58] shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+            className={`min-h-10 rounded text-sm font-medium transition-colors cursor-pointer ${v.kind === value ? "bg-white text-[#00205B] shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
           >
             {value === "EMPRESA" ? (
               <>
@@ -141,7 +141,7 @@ export function BillingProfilePanel({ initial, saved }: { initial: BillingProfil
           type="button"
           onClick={save}
           disabled={pending}
-          className="inline-flex min-h-10 items-center rounded-md bg-[#001F58] px-5 text-sm font-bold text-white hover:bg-[#00133A] disabled:opacity-50 cursor-pointer"
+          className="inline-flex min-h-10 items-center rounded-md bg-[#00205B] px-5 text-sm font-bold text-white hover:bg-[#001331] disabled:opacity-50 cursor-pointer"
         >
           Guardar datos
         </button>

@@ -32,7 +32,7 @@ export function CarouselArrow({
       onClick={onClick}
       disabled={disabled}
       aria-label={direction === "prev" ? "Anterior" : "Siguiente"}
-      className={`absolute top-1/2 z-20 flex max-sm:hidden h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-[#001F58]/15 bg-white text-[#001F58] shadow-sm transition-colors hover:border-[#E70F1F] hover:text-[#E70F1F] disabled:pointer-events-none disabled:opacity-0 ${side} ${className}`}
+      className={`absolute top-1/2 z-20 flex max-sm:hidden h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-[#00205B]/15 bg-white text-[#00205B] shadow-sm transition-colors hover:border-[#D62828] hover:text-[#D62828] disabled:pointer-events-none disabled:opacity-0 ${side} ${className}`}
     >
       <Icon className="h-5 w-5" strokeWidth={2} aria-hidden />
     </button>

@@ -426,9 +426,9 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           ) : (
             <>
               <div className="flex items-center gap-2">
-                <span className={depth === 0 ? "text-[#001F58]" : "text-slate-600"}>{node.name}</span>
+                <span className={depth === 0 ? "text-[#00205B]" : "text-slate-600"}>{node.name}</span>
                 {node.icon && (
-                  <span className="text-[#001F58]" title={CATEGORY_ICON_OPTIONS.find((o) => o.value === node.icon)?.label ?? node.icon}>
+                  <span className="text-[#00205B]" title={CATEGORY_ICON_OPTIONS.find((o) => o.value === node.icon)?.label ?? node.icon}>
                     <DynamicCategoryIcon name={node.icon} className="h-4 w-4" />
                   </span>
                 )}
@@ -577,7 +577,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           onClick={() => setActiveTab("aircrafts")}
           className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 cursor-pointer transition-all ${
             activeTab === "aircrafts"
-              ? "border-[#001F58] text-[#001F58]"
+              ? "border-[#00205B] text-[#00205B]"
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
@@ -587,7 +587,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           onClick={() => setActiveTab("spareparts")}
           className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 cursor-pointer transition-all ${
             activeTab === "spareparts"
-              ? "border-[#001F58] text-[#001F58]"
+              ? "border-[#00205B] text-[#00205B]"
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
@@ -607,7 +607,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* CATEGORÍAS */}
           <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
-            <h3 className="font-bold text-sm text-[#001F58]">Categorías de Aeronave</h3>
+            <h3 className="font-bold text-sm text-[#00205B]">Categorías de Aeronave</h3>
             <form onSubmit={handleAddAircraftCategory} className="flex gap-2">
               <input
                 type="text"
@@ -619,7 +619,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 bg-[#001F58] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center gap-1 cursor-pointer"
+                className="px-4 py-2 bg-[#00205B] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center gap-1 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Crear
               </button>
@@ -663,7 +663,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
 
           {/* MARCAS Y LOGO (SUBIR DESDE LA PC) */}
           <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
-            <h3 className="font-bold text-sm text-[#001F58]">Marcas de Aeronave</h3>
+            <h3 className="font-bold text-sm text-[#00205B]">Marcas de Aeronave</h3>
             
             <form onSubmit={handleAddBrand} className="space-y-2">
               <input
@@ -684,7 +684,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-[#001F58] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center gap-1 cursor-pointer"
+                  className="px-4 py-2 bg-[#00205B] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" /> Crear
                 </button>
@@ -771,7 +771,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
 
           {/* MODELOS */}
           <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
-            <h3 className="font-bold text-sm text-[#001F58]">Modelos <span className="font-normal text-[11px] text-slate-500">· a la derecha, su categoría recomendada</span></h3>
+            <h3 className="font-bold text-sm text-[#00205B]">Modelos <span className="font-normal text-[11px] text-slate-500">· a la derecha, su categoría recomendada</span></h3>
             <select
               value={selectedBrandId}
               onChange={(e) => {
@@ -800,7 +800,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
               <button
                 type="submit"
                 disabled={loading || !selectedBrandId}
-                className="px-4 py-2 bg-[#001F58] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 bg-[#00205B] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
               >
                 <Plus className="w-3.5 h-3.5" /> Crear
               </button>
@@ -856,7 +856,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
 
           {/* SUBMODELOS / VARIANTES */}
           <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
-            <h3 className="font-bold text-sm text-[#001F58]">Variantes / Submodelos</h3>
+            <h3 className="font-bold text-sm text-[#00205B]">Variantes / Submodelos</h3>
             <select
               value={selectedModelId}
               onChange={(e) => setSelectedModelId(e.target.value)}
@@ -883,7 +883,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
               <button
                 type="submit"
                 disabled={loading || !selectedModelId}
-                className="px-4 py-2 bg-[#001F58] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 bg-[#00205B] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
               >
                 <Plus className="w-3.5 h-3.5" /> Crear
               </button>
@@ -931,7 +931,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       {activeTab === "spareparts" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
-            <h3 className="font-bold text-sm text-[#001F58]">Nueva Categoría / Subcategoría</h3>
+            <h3 className="font-bold text-sm text-[#00205B]">Nueva Categoría / Subcategoría</h3>
             <form onSubmit={handleAddSpareCategory} className="space-y-3">
               <div>
                 <label className="block text-[11px] font-semibold text-slate-500 mb-1">
@@ -978,7 +978,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2 bg-[#001F58] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                className="w-full py-2 bg-[#00205B] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center justify-center gap-1 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Crear Categoría
               </button>
@@ -986,7 +986,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           </div>
 
           <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
-            <h3 className="font-bold text-sm text-[#001F58]">Categorías Existentes</h3>
+            <h3 className="font-bold text-sm text-[#00205B]">Categorías Existentes</h3>
             <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
               {sparePartCategories.map((parent) => (
                 <CategoryTreeItem
@@ -1008,7 +1008,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
 
           {/* GRUPOS DE FILTROS */}
           <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
-            <h3 className="font-bold text-sm text-[#001F58]">Grupos de Filtros</h3>
+            <h3 className="font-bold text-sm text-[#00205B]">Grupos de Filtros</h3>
 
             <form onSubmit={handleAddFilterGroup} className="space-y-3">
               <input
@@ -1041,7 +1041,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2 bg-[#001F58] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                className="w-full py-2 bg-[#00205B] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center justify-center gap-1 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Crear Grupo
               </button>
@@ -1066,7 +1066,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
 
           {/* FILTROS */}
           <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
-            <h3 className="font-bold text-sm text-[#001F58]">Filtros</h3>
+            <h3 className="font-bold text-sm text-[#00205B]">Filtros</h3>
 
             <select
               value={selectedGroupId}
@@ -1191,7 +1191,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
               <button
                 type="submit"
                 disabled={loading || !selectedGroupId}
-                className="w-full py-2 bg-[#001F58] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                className="w-full py-2 bg-[#00205B] text-white text-xs font-bold rounded-xl hover:bg-blue-950 transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
               >
                 <Plus className="w-3.5 h-3.5" /> Crear Filtro
               </button>
@@ -1245,7 +1245,7 @@ function CategoryIconSelect({
   const current = value ?? own;
   return (
     <div className="flex items-center gap-2">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-[#001F58]" aria-hidden>
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-[#00205B]" aria-hidden>
         {current ? <DynamicCategoryIcon name={current} className="h-5 w-5" /> : null}
       </span>
       <select

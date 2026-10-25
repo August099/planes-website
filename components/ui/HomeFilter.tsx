@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   getAircraftCategories,
@@ -85,89 +85,71 @@ export default function HomeHeroFilter() {
     router.push(`/aircraft${queryString ? `?${queryString}` : ""}`);
   };
 
+  // Rediseño (25/10): una "tira de plan de vuelo" sólida en vez del panel de vidrio. Cada campo lleva su
+  // rótulo arriba; la única sombra separa la tira de la foto del hero.
+  const field = "group/field relative block min-w-0 border-[#00205B]/10 px-4 pt-3 pb-2.5 transition-colors focus-within:bg-[#F5F5F5]";
+  const select = "mt-0.5 w-full min-w-0 appearance-none truncate bg-transparent pr-6 text-sm font-semibold text-[#00205B] focus:outline-none cursor-pointer disabled:cursor-not-allowed disabled:text-[#00205B]/45";
+  const chevron = "pointer-events-none absolute right-3 bottom-3 h-4 w-4 text-[#00205B]/45";
   return (
-    <div className="w-full max-w-4xl mx-auto p-2 sm:p-3 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-        {/* Categoría libre */}
-        <div className="relative">
-          <select
-            value={selectedCategory}
-            onChange={(e) => void handleCategoryChange(e.target.value)}
-            className="w-full h-11 px-4 pr-8 bg-white text-slate-700 text-xs sm:text-sm rounded-xl appearance-none font-medium focus:outline-none cursor-pointer border border-slate-100 shadow-sm"
-          >
-            <option value="">Categoría</option>
+    <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-md bg-white text-left shadow-[0_22px_48px_-28px_rgba(0,19,49,0.75)]">
+      <div className="grid grid-cols-2 md:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
+        <label className={`${field} border-r border-b md:border-b-0`}>
+          <span className="va-label block">Categoría</span>
+          <select value={selectedCategory} onChange={(e) => void handleCategoryChange(e.target.value)} className={select}>
+            <option value="">Todas</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
             ))}
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-        </div>
+          <ChevronDown className={chevron} />
+        </label>
 
-        {/* Marca libre */}
-        <div className="relative">
-          <select
-            value={selectedBrand}
-            onChange={(e) => handleBrandChange(e.target.value)}
-            className="w-full h-11 px-4 pr-8 bg-white text-slate-700 text-xs sm:text-sm rounded-xl appearance-none font-medium focus:outline-none cursor-pointer border border-slate-100 shadow-sm"
-          >
-            <option value="">Marca</option>
+        <label className={`${field} border-b md:border-r md:border-b-0`}>
+          <span className="va-label block">Marca</span>
+          <select value={selectedBrand} onChange={(e) => handleBrandChange(e.target.value)} className={select}>
+            <option value="">Todas</option>
             {brands.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.name}
               </option>
             ))}
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-        </div>
+          <ChevronDown className={chevron} />
+        </label>
 
-        {/* Modelos según la Marca seleccionada */}
-        <div className="relative">
-          <select
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-            disabled={!selectedBrand || loadingModels}
-            className="w-full h-11 px-4 pr-8 bg-white text-slate-700 text-xs sm:text-sm rounded-xl appearance-none font-medium focus:outline-none cursor-pointer border border-slate-100 shadow-sm disabled:opacity-60"
-          >
-            <option value="">
-              {!selectedBrand ? "Elegí una marca" : "Modelo"}
-            </option>
+        <label className={`${field} border-r border-b md:border-b-0`}>
+          <span className="va-label block">Modelo</span>
+          <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} disabled={!selectedBrand || loadingModels} className={select}>
+            <option value="">{!selectedBrand ? "Elegí una marca" : "Todos"}</option>
             {models.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}
               </option>
             ))}
           </select>
-          {loadingModels ? (
-            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-slate-400 pointer-events-none" />
-          ) : (
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-          )}
-        </div>
+          {loadingModels ? <Loader2 className={`${chevron} animate-spin`} /> : <ChevronDown className={chevron} />}
+        </label>
 
-        {/* Rango de Precio */}
-        <div className="relative">
-          <select
-            value={selectedPrice}
-            onChange={(e) => setSelectedPrice(e.target.value)}
-            className="w-full h-11 px-4 pr-8 bg-white text-slate-700 text-xs sm:text-sm rounded-xl appearance-none font-medium focus:outline-none cursor-pointer border border-slate-100 shadow-sm"
-          >
-            <option value="">Precio</option>
+        <label className={`${field} border-b md:border-b-0`}>
+          <span className="va-label block">Precio</span>
+          <select value={selectedPrice} onChange={(e) => setSelectedPrice(e.target.value)} className={select}>
+            <option value="">Cualquiera</option>
             <option value="0-100k">Hasta USD 100.000</option>
             <option value="100k-300k">USD 100.000 - 300.000</option>
             <option value="300k+">Más de USD 300.000</option>
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-        </div>
+          <ChevronDown className={chevron} />
+        </label>
 
-        {/* Botón Buscar */}
         <button
           type="button"
           onClick={handleSearch}
-          className="col-span-2 md:col-span-1 h-11 bg-[#DC2626] hover:bg-red-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+          className="col-span-2 flex min-h-12 items-center justify-center gap-2 bg-[#D62828] px-8 text-sm font-bold text-white transition-colors hover:bg-[#B71F1F] focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white md:col-span-1 cursor-pointer"
         >
-          <span>Buscar</span>
+          <Search className="h-4 w-4" aria-hidden />
+          Buscar aviones
         </button>
       </div>
     </div>

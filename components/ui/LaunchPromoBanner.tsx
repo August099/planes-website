@@ -57,7 +57,7 @@ export function LaunchPromoBanner({ text }: { text: string }) {
 
   return (
     <section aria-label={FREE_QUOTA_PROMO.title} className="container mx-auto px-4 pt-8">
-      <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border-l-2 border-[#E70F1F] bg-[#001F58] px-5 py-5 pr-14 text-white">
+      <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border-l-2 border-[#D62828] bg-[#00205B] px-5 py-5 pr-14 text-white">
         <div className="flex-1">
           <p className="text-xs font-bold uppercase tracking-wider text-[#FF5A64]">{FREE_QUOTA_PROMO.title}</p>
           <p className="text-lg sm:text-xl font-bold">{text}</p>
@@ -65,7 +65,7 @@ export function LaunchPromoBanner({ text }: { text: string }) {
         </div>
         <Link
           href="/register"
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#E70F1F] px-5 text-sm font-bold hover:bg-[#C20D1A] transition-colors"
+          className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#D62828] px-5 text-sm font-bold hover:bg-[#B71F1F] transition-colors"
         >
           Crear cuenta gratis
         </Link>

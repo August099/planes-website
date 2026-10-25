@@ -13,7 +13,7 @@ import { regionName } from "@/lib/ar-regions";
 // Página VA, efecto de las republicaciones y "Exportar CSV".
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
-const BOX = "rounded-lg border border-[#001F58]/12 bg-white";
+const BOX = "rounded-lg border border-[#00205B]/12 bg-white";
 const NUM = new Intl.NumberFormat("es-AR");
 const DAY_FMT = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
 const SINCE_FMT = new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", timeZone: "America/Argentina/Buenos_Aires" });
@@ -72,7 +72,7 @@ export default function SellerMetricsPanel() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className={LABEL}>Cuenta VA</p>
-          <h2 id="metrics-title" className="text-xl font-bold text-[#001F58]">
+          <h2 id="metrics-title" className="text-xl font-bold text-[#00205B]">
             Métricas de tus avisos
           </h2>
         </div>
@@ -83,7 +83,7 @@ export default function SellerMetricsPanel() {
               type="button"
               aria-pressed={days === d}
               onClick={() => changeDays(d)}
-              className={`min-h-9 rounded-md border px-3 text-xs font-semibold transition-colors ${days === d ? "border-[#001F58] bg-[#001F58] text-white" : "border-[#001F58]/20 bg-white text-[#001F58] hover:border-[#001F58]/50"}`}
+              className={`min-h-9 rounded-md border px-3 text-xs font-semibold transition-colors ${days === d ? "border-[#00205B] bg-[#00205B] text-white" : "border-[#00205B]/20 bg-white text-[#00205B] hover:border-[#00205B]/50"}`}
             >
               Últimos {d} días
             </button>
@@ -91,21 +91,21 @@ export default function SellerMetricsPanel() {
           {/* VA-171: rango propio (nivel completo). */}
           {data?.full && (
             <span className="flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
-              <input type="date" aria-label="Desde" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="min-h-9 rounded-md border border-[#001F58]/20 px-2" />
+              <input type="date" aria-label="Desde" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="min-h-9 rounded-md border border-[#00205B]/20 px-2" />
               <span>a</span>
-              <input type="date" aria-label="Hasta" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="min-h-9 rounded-md border border-[#001F58]/20 px-2" />
+              <input type="date" aria-label="Hasta" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="min-h-9 rounded-md border border-[#00205B]/20 px-2" />
               <button
                 type="button"
                 aria-pressed={typeof days !== "number"}
                 onClick={() => changeDays({ ...range })}
-                className={`min-h-9 rounded-md border px-3 font-semibold transition-colors ${typeof days !== "number" ? "border-[#001F58] bg-[#001F58] text-white" : "border-[#001F58]/20 bg-white text-[#001F58] hover:border-[#001F58]/50"}`}
+                className={`min-h-9 rounded-md border px-3 font-semibold transition-colors ${typeof days !== "number" ? "border-[#00205B] bg-[#00205B] text-white" : "border-[#00205B]/20 bg-white text-[#00205B] hover:border-[#00205B]/50"}`}
               >
                 Ver rango
               </button>
             </span>
           )}
           {data?.full && (
-            <button type="button" onClick={() => exportCsv(data)} className="min-h-9 rounded-md border border-[#001F58]/20 bg-white px-3 text-xs font-semibold text-[#001F58] hover:border-[#001F58]/50">
+            <button type="button" onClick={() => exportCsv(data)} className="min-h-9 rounded-md border border-[#00205B]/20 bg-white px-3 text-xs font-semibold text-[#00205B] hover:border-[#00205B]/50">
               Exportar CSV
             </button>
           )}
@@ -147,7 +147,7 @@ export default function SellerMetricsPanel() {
 
           {/* 4. Rendimiento por aviso */}
           <div className={BOX}>
-            <p className={`border-b border-[#001F58]/10 px-4 py-3 sm:px-5 ${LABEL}`}>Rendimiento por aviso</p>
+            <p className={`border-b border-[#00205B]/10 px-4 py-3 sm:px-5 ${LABEL}`}>Rendimiento por aviso</p>
             {listings.length === 0 ? (
               <div className="px-4 py-6 sm:px-5">
                 <Empty text="Todavía no tenés avisos." />
@@ -183,7 +183,7 @@ function Stat({ label, total, days, note }: { label: string; total: MetricsTotal
   return (
     <div className={`${BOX} p-4`}>
       <p className="text-xs text-slate-600">{label}</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums text-[#001F58]">{NUM.format(total.current)}</p>
+      <p className="mt-1 text-2xl font-bold tabular-nums text-[#00205B]">{NUM.format(total.current)}</p>
       <p className={`mt-1 text-[11px] ${total.change == null ? "text-slate-500" : up ? "text-emerald-700" : "text-red-700"}`}>
         {total.change == null ? `Sin datos de los ${days} días anteriores` : `${total.change > 0 ? "+" : ""}${total.change} % vs. ${days} días anteriores`}
       </p>
@@ -221,17 +221,17 @@ function ViewsChart({ points }: { points: { date: string; views: number }[] }) {
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block max-w-full" role="img" aria-label={`Vistas por día: máximo ${max}`}>
       {[0, 0.5, 1].map((t) => (
         <g key={t}>
-          <line x1={pad.l} x2={W - pad.r} y1={y(max * t)} y2={y(max * t)} stroke="#001F58" strokeOpacity="0.08" />
+          <line x1={pad.l} x2={W - pad.r} y1={y(max * t)} y2={y(max * t)} stroke="#00205B" strokeOpacity="0.08" />
           <text x={pad.l - 6} y={y(max * t) + 3} textAnchor="end" fontSize="10" fill="#64748b">
             {Math.round(max * t)}
           </text>
         </g>
       ))}
-      <path d={area} fill="#001F58" fillOpacity="0.06" />
-      <path d={path} fill="none" stroke="#001F58" strokeWidth="2" strokeLinejoin="round" />
+      <path d={area} fill="#00205B" fillOpacity="0.06" />
+      <path d={path} fill="none" stroke="#00205B" strokeWidth="2" strokeLinejoin="round" />
       {points.map((p, i) => (
         <g key={p.date}>
-          <circle cx={x(i)} cy={y(p.views)} r="2.5" fill="#E70F1F">
+          <circle cx={x(i)} cy={y(p.views)} r="2.5" fill="#D62828">
             <title>{`${day(p.date)}: ${p.views} vistas`}</title>
           </circle>
           {i % labelEvery === 0 && (
@@ -256,7 +256,7 @@ function Channels({ channels }: { channels: { key: ChannelKey; count: number }[]
           <li key={c.key} className="grid grid-cols-[7.5rem_minmax(0,1fr)_4.5rem] items-center gap-3 text-sm sm:grid-cols-[11rem_minmax(0,1fr)_5rem]">
             <span className="truncate text-slate-700">{CHANNEL_LABEL[c.key]}</span>
             <span className="h-2.5 overflow-hidden rounded-full bg-slate-100" aria-hidden>
-              <span className="block h-full rounded-full bg-[#001F58]" style={{ width: `${pct}%` }} />
+              <span className="block h-full rounded-full bg-[#00205B]" style={{ width: `${pct}%` }} />
             </span>
             <span className="text-right tabular-nums text-slate-700">
               {NUM.format(c.count)} <span className="text-xs text-slate-500">({pct} %)</span>
@@ -273,7 +273,7 @@ const rate = (r: number | null) => (r == null ? "—" : `${String(r).replace("."
 function Badges({ l, best }: { l: ListingMetrics; best: { mostViewed?: string; bestRate?: string } }) {
   return (
     <>
-      {best.mostViewed === l.id && <span className="rounded-sm bg-[#001F58] px-1.5 py-0.5 text-[10px] font-bold text-white">Más visto</span>}
+      {best.mostViewed === l.id && <span className="rounded-sm bg-[#00205B] px-1.5 py-0.5 text-[10px] font-bold text-white">Más visto</span>}
       {best.bestRate === l.id && <span className="rounded-sm bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">Mejor tasa de contacto</span>}
     </>
   );
@@ -302,7 +302,7 @@ function ListingTable({
 }) {
   const th = (key: SortKey, label: string, align = "text-right") => (
     <th className={`px-4 py-2 font-semibold ${align}`} aria-sort={sort.key === key ? (sort.dir === 1 ? "ascending" : "descending") : "none"}>
-      <button type="button" onClick={() => onSort({ key, dir: sort.key === key ? (sort.dir === 1 ? -1 : 1) : -1 })} className="inline-flex items-center gap-1 hover:text-[#001F58]">
+      <button type="button" onClick={() => onSort({ key, dir: sort.key === key ? (sort.dir === 1 ? -1 : 1) : -1 })} className="inline-flex items-center gap-1 hover:text-[#00205B]">
         {label}
         {sort.key === key ? (sort.dir === 1 ? "↑" : "↓") : ""}
       </button>
@@ -311,7 +311,7 @@ function ListingTable({
   return (
     <div className="hidden overflow-x-auto md:block">
       <table className="w-full text-sm">
-        <thead className={`border-b border-[#001F58]/10 text-left ${LABEL}`}>
+        <thead className={`border-b border-[#00205B]/10 text-left ${LABEL}`}>
           <tr>
             {th("title", "Aviso", "text-left")}
             <th className="px-4 py-2 text-left font-semibold">Estado</th>
@@ -329,7 +329,7 @@ function ListingTable({
                 <span className="flex items-center gap-3">
                   <Thumb url={l.imageUrl} />
                   <span className="min-w-0">
-                    <span className="block truncate font-semibold text-[#001F58]">{l.title}</span>
+                    <span className="block truncate font-semibold text-[#00205B]">{l.title}</span>
                     <span className="mt-0.5 flex flex-wrap gap-1">
                       <Badges l={l} best={best} />
                       {l.views === 0 && <span className="text-[11px] text-slate-500">Probá mejorar las fotos o el precio</span>}
@@ -359,7 +359,7 @@ function ListingCards({ listings, best }: { listings: ListingMetrics[]; best: { 
           <div className="flex items-center gap-3">
             <Thumb url={l.imageUrl} />
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-[#001F58]">{l.title}</p>
+              <p className="truncate text-sm font-semibold text-[#00205B]">{l.title}</p>
               <p className="text-xs text-slate-500">{STATUS_LABEL[l.status] ?? l.status}</p>
             </div>
           </div>
@@ -375,7 +375,7 @@ function ListingCards({ listings, best }: { listings: ListingMetrics[]; best: { 
             ].map(([k, v]) => (
               <div key={k} className="rounded bg-slate-50 px-1 py-1.5">
                 <dt className="text-[10px] text-slate-500">{k}</dt>
-                <dd className="text-sm font-semibold tabular-nums text-[#001F58]">{v}</dd>
+                <dd className="text-sm font-semibold tabular-nums text-[#00205B]">{v}</dd>
               </div>
             ))}
           </dl>
@@ -413,7 +413,7 @@ function FullSections({ full, days }: { full: FullMetrics; days: number }) {
         <Stat label="Clics desde tu Página a tus avisos" total={full.profileListingClicks} days={days} />
         <div className={`${BOX} p-4`}>
           <p className="text-xs text-slate-600">Efecto de tus republicaciones (vistas 7 días antes y después)</p>
-          <p className="mt-1 text-2xl font-bold tabular-nums text-[#001F58]">
+          <p className="mt-1 text-2xl font-bold tabular-nums text-[#00205B]">
             {NUM.format(full.republish.totalBefore)} → {NUM.format(full.republish.totalAfter)}
           </p>
           <p className="mt-1 text-[11px] text-slate-500">
@@ -424,10 +424,10 @@ function FullSections({ full, days }: { full: FullMetrics; days: number }) {
 
       {full.republish.items.length > 0 && (
         <div className={BOX}>
-          <p className={`border-b border-[#001F58]/10 px-4 py-3 sm:px-5 ${LABEL}`}>Republicaciones</p>
+          <p className={`border-b border-[#00205B]/10 px-4 py-3 sm:px-5 ${LABEL}`}>Republicaciones</p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[480px] text-sm">
-              <thead className={`border-b border-[#001F58]/10 text-left ${LABEL}`}>
+              <thead className={`border-b border-[#00205B]/10 text-left ${LABEL}`}>
                 <tr>
                   <th className="px-4 py-2 font-semibold">Fecha</th>
                   <th className="px-4 py-2 font-semibold">Aviso</th>
@@ -439,7 +439,7 @@ function FullSections({ full, days }: { full: FullMetrics; days: number }) {
                 {full.republish.items.map((r, i) => (
                   <tr key={`${r.date}-${i}`}>
                     <td className="px-4 py-2 tabular-nums text-slate-600">{DATE_FMT.format(new Date(r.date))}</td>
-                    <td className="max-w-[18rem] truncate px-4 py-2 text-[#001F58]">{r.title}</td>
+                    <td className="max-w-[18rem] truncate px-4 py-2 text-[#00205B]">{r.title}</td>
                     <td className="px-4 py-2 text-right tabular-nums">{NUM.format(r.before)}</td>
                     <td className="px-4 py-2 text-right tabular-nums">{NUM.format(r.after)}</td>
                   </tr>
@@ -463,7 +463,7 @@ function Bars({ rows }: { rows: { key: string; label: string; count: number }[] 
           <li key={r.key} className="grid grid-cols-[8.5rem_minmax(0,1fr)_4.5rem] items-center gap-3 text-sm">
             <span className="truncate text-slate-700">{r.label}</span>
             <span className="h-2.5 overflow-hidden rounded-full bg-slate-100" aria-hidden>
-              <span className="block h-full rounded-full bg-[#001F58]" style={{ width: `${pct}%` }} />
+              <span className="block h-full rounded-full bg-[#00205B]" style={{ width: `${pct}%` }} />
             </span>
             <span className="text-right tabular-nums text-slate-700">
               {NUM.format(r.count)} <span className="text-xs text-slate-500">({pct} %)</span>

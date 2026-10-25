@@ -52,10 +52,10 @@ export default async function ServicesPage() {
       <PageBackground page="default" />
       <Breadcrumbs items={[{ label: "Servicios" }]} className="mx-auto max-w-5xl -mt-8 mb-4" />
 
-      <div className="mx-auto max-w-5xl space-y-14 rounded-lg border border-[#001F58]/10 bg-white p-6 sm:p-10">
+      <div className="mx-auto max-w-5xl space-y-14 rounded-lg border border-[#00205B]/10 bg-white p-6 sm:p-10">
         {/* Encabezado */}
         <header className="max-w-3xl space-y-4">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#001F58] tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#00205B] tracking-tight">
             Todo el ecosistema aeronáutico, en un solo lugar.
           </h1>
           <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
@@ -69,20 +69,20 @@ export default async function ServicesPage() {
             quedan por encima. Al pasar, borde rojo (sin elevación, por las pautas). */}
         <section aria-labelledby="available-now" className="space-y-4">
          
-          <div className="group relative grid gap-6 rounded-lg border border-[#001F58]/15 p-6 transition-colors hover:border-[#E70F1F] sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-10">
+          <div className="group relative grid gap-6 rounded-lg border border-[#00205B]/15 p-6 transition-colors hover:border-[#D62828] sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-10">
             <Link href={GUIDES_PATH} className="absolute inset-0 rounded-lg" aria-label="Ver las guías para comprar y vender" />
             <div className="space-y-3">
               <span className="inline-block rounded-sm bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-800">
                 Disponible
               </span>
-              <h3 className="text-2xl font-bold text-[#001F58]">Guías para comprar y vender</h3>
+              <h3 className="text-2xl font-bold text-[#00205B]">Guías para comprar y vender</h3>
               <p className="text-sm leading-relaxed text-slate-600">
                 Checklist de pre-compra, cómo vender más rápido, el trámite de transferencia ante ANAC y un glosario con
                 TT, SMOH, TBO y más.
               </p>
               <Link
                 href={GUIDES_PATH}
-                className="relative z-10 mt-2 inline-flex min-h-11 items-center rounded-md bg-[#E70F1F] px-6 text-sm font-bold text-white transition-colors hover:bg-[#C20D1A]"
+                className="relative z-10 mt-2 inline-flex min-h-11 items-center rounded-md bg-[#D62828] px-6 text-sm font-bold text-white transition-colors hover:bg-[#B71F1F]"
               >
                 Ver las guías
               </Link>
@@ -92,16 +92,16 @@ export default async function ServicesPage() {
             </div>
           </div>
           {/* VA-93: el comparador, como franja (no otra tarjeta igual a la de las guías). */}
-          <div className="flex flex-col gap-4 border-y border-[#001F58]/12 py-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 border-y border-[#00205B]/12 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-lg font-bold text-[#001F58]">Comparador de aeronaves</h3>
+              <h3 className="text-lg font-bold text-[#00205B]">Comparador de aeronaves</h3>
               <p className="mt-0.5 text-sm leading-relaxed text-slate-600">
                 Elegí hasta 3 aeronaves publicadas y comparalas dato por dato: horas, motor, aviónica y precio.
               </p>
             </div>
             <Link
               href="/aircraft/compare"
-              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-[#001F58]/20 px-5 text-sm font-semibold text-[#001F58] transition-colors hover:border-[#001F58]"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-[#00205B]/20 px-5 text-sm font-semibold text-[#00205B] transition-colors hover:border-[#00205B]"
             >
               Abrir el comparador
             </Link>
@@ -110,17 +110,17 @@ export default async function ServicesPage() {
 
         {/* Próximamente: solo estas 6 son a futuro */}
         <section aria-labelledby="coming-soon" className="space-y-4">
-          <h2 id="coming-soon" className={`${LABEL} flex items-center gap-2 text-[#001F58]`}>
-            <span className="rounded-sm bg-[#E70F1F] px-2 py-1 text-[10px] font-black tracking-[0.14em] text-white">
+          <h2 id="coming-soon" className={`${LABEL} flex items-center gap-2 text-[#00205B]`}>
+            <span className="rounded-sm bg-[#D62828] px-2 py-1 text-[10px] font-black tracking-[0.14em] text-white">
               Próximamente
             </span>
           </h2>
-          <ol className="grid border-t border-[#001F58]/12 md:grid-cols-2 md:gap-x-10">
+          <ol className="grid border-t border-[#00205B]/12 md:grid-cols-2 md:gap-x-10">
             {upcomingServices.map((service, i) => (
-              <li key={service.title} className="grid grid-cols-[3.5rem_1fr] gap-x-3 border-b border-[#001F58]/12 py-4">
+              <li key={service.title} className="grid grid-cols-[3.5rem_1fr] gap-x-3 border-b border-[#00205B]/12 py-4">
                 <span className={`${LABEL} pt-0.5 text-slate-500 tabular-nums`}>SV-{String(i + 1).padStart(2, "0")}</span>
                 <div>
-                  <h3 className="text-base font-semibold text-[#001F58]">{service.title}</h3>
+                  <h3 className="text-base font-semibold text-[#00205B]">{service.title}</h3>
                   <p className="mt-0.5 text-sm leading-relaxed text-slate-600">{service.description}</p>
                 </div>
               </li>
@@ -129,7 +129,7 @@ export default async function ServicesPage() {
         </section>
 
         {/* Cierre */}
-        <div className="rounded-lg border-l-2 border-[#E70F1F] bg-[#001F58] p-6 text-white sm:p-8">
+        <div className="rounded-lg border-l-2 border-[#D62828] bg-[#00205B] p-6 text-white sm:p-8">
           <h2 className="text-xl font-bold">
             <span aria-hidden className="mr-2 font-black tracking-tighter text-[#FF5A64]">
               {"//"}

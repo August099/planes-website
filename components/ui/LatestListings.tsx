@@ -54,7 +54,7 @@ export function LatestAircraft({ items }: LatestListingsProps) {
             mercado
           </p>
         </div>
-        <div className="flex gap-4 hidden sm:flex text-sm font-semibold text-[#001F58]">
+        <div className="flex gap-4 hidden sm:flex text-sm font-semibold text-[#00205B]">
           <Link href="/aircraft" className="hover:underline">
             Ver aviones
           </Link>

@@ -20,7 +20,7 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
 
   return (
     <main className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center p-6">
-      <h1 className="text-2xl font-bold text-[#001F58]">
+      <h1 className="text-2xl font-bold text-[#00205B]">
         {result === "expired" ? "El link de activación venció" : "El link de activación no es válido"}
       </h1>
       <p className="text-sm text-slate-600 max-w-md">
@@ -28,7 +28,7 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
           ? "Los links duran 24 horas. Pedí uno nuevo desde Iniciar sesión, con \"Reenviar mail de verificación\"."
           : "Puede que ya lo hayas usado o que esté incompleto. Si tu cuenta todavía no está activa, pedí un link nuevo desde Iniciar sesión."}
       </p>
-      <Link href="/login" className="px-6 py-2.5 bg-[#001F58] text-white rounded-xl font-semibold">
+      <Link href="/login" className="px-6 py-2.5 bg-[#00205B] text-white rounded-xl font-semibold">
         Ir a Iniciar sesión
       </Link>
     </main>

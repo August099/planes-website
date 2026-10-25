@@ -122,7 +122,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
       </h1>
 
       {sellers.length > 0 && (
-        <section id="vendedores" className="mb-8 max-w-xl rounded-lg border border-[#001F58]/12 bg-white">
+        <section id="vendedores" className="mb-8 max-w-xl rounded-lg border border-[#00205B]/12 bg-white">
           <SellerResults sellers={sellers} query={query} max={12} />
         </section>
       )}

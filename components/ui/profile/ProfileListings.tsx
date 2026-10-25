@@ -68,9 +68,9 @@ function quotaPart(label: string, q: QuotaLine) {
   return `${label} ${q.used}/${q.limit ?? "∞"}`;
 }
 
-const CHIP = "inline-flex min-h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold transition-colors cursor-pointer";
-const CHIP_ON = "border-[#001F58] bg-[#001F58] text-white";
-const CHIP_OFF = "border-[#001F58]/20 bg-white text-[#001F58] hover:border-[#001F58]/50";
+const CHIP = "inline-flex min-h-9 items-center gap-1.5 rounded-sm border px-3 text-xs font-bold transition-colors cursor-pointer";
+const CHIP_ON = "border-[#00205B] bg-[#00205B] text-white";
+const CHIP_OFF = "border-[#00205B]/20 bg-white text-[#00205B] hover:border-[#D62828] hover:text-[#D62828]";
 
 export function ProfileListings({
   aircrafts,
@@ -138,15 +138,15 @@ export function ProfileListings({
   return (
     <div className="space-y-5">
       {isOwner && quota && (
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-[#001F58]/12 bg-white px-4 py-3 text-sm text-slate-600">
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 va-plate border-l-2 border-l-[#D62828] px-4 py-3 text-sm text-slate-600">
           <span>
-            <span className="font-semibold text-[#001F58]">Plan {quota.planName}</span> ·{" "}
+            <span className="font-semibold text-[#00205B]">Plan {quota.planName}</span> ·{" "}
             <span className="tabular-nums">
               {quotaPart("Aviones", quota.aircraft)} · {quotaPart("Repuestos", quota.parts)}
             </span>
           </span>
           {/* VA-186: siempre, no solo con el cupo lleno. */}
-          <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+          <Link href="/plans" className="font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828]">
             {full(quota.aircraft) || full(quota.parts) ? "Ver planes con más cupo" : "Planes y precios"}
           </Link>
         </p>
@@ -179,7 +179,7 @@ export function ProfileListings({
       </div>
 
       {shown.length === 0 ? (
-        <p className="rounded-lg border border-[#001F58]/12 bg-white px-5 py-8 text-center text-sm text-slate-600">
+        <p className="va-plate px-5 py-8 text-center text-sm text-slate-600">
           {all.length === 0 ? (isOwner ? "Todavía no publicaste nada." : "Este vendedor no tiene publicaciones activas.") : "No hay publicaciones con estos filtros."}
         </p>
       ) : (
@@ -251,7 +251,7 @@ export function ProfileListings({
 }
 
 const ACTION =
-  "inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-1 rounded-lg px-3 py-1 text-xs font-semibold transition-colors disabled:opacity-50 sm:min-h-0 sm:px-2.5 sm:text-[10px]";
+  "inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-1 rounded-[4px] px-3 py-1 text-xs font-semibold transition-colors disabled:opacity-50 sm:min-h-0 sm:px-2.5 sm:text-[10px]";
 
 function OwnerPanel({
   l,
@@ -278,8 +278,8 @@ function OwnerPanel({
   const busy = loadingId === l.id;
 
   return (
-    <div className="space-y-2 rounded-xl border border-slate-200/80 bg-white/90 p-3 text-[11px] text-slate-600 shadow-2xs">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-1.5">
+    <div className="space-y-2 va-plate p-3 text-[11px] text-slate-600">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#00205B]/10 pb-1.5">
         <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${badge.tone}`}>{badge.text}</span>
         <div className="flex items-center gap-1">
           {busy && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" aria-label="Guardando" />}
@@ -288,29 +288,29 @@ function OwnerPanel({
               type="button"
               disabled={busy || moderation.reviewRequested}
               onClick={() => onRequestReview(l.id, type)}
-              className={`${ACTION} bg-[#001F58] text-white hover:bg-blue-900`}
+              className={`${ACTION} bg-[#00205B] text-white hover:bg-[#D62828]`}
               title="Editalo primero y después pedí que lo revisemos"
             >
               {moderation.reviewRequested ? "Revisión pedida" : "Pedir revisión"}
             </button>
           )}
           {!moderation && st === "activos" && republish && (
-            <RepublishButton view={republish} id={l.id} kind={type === "aircraft" ? "AIRCRAFT" : "SPARE_PART"} className={`${ACTION} border border-[#001F58]/20 text-[#001F58] hover:border-[#001F58]`} />
+            <RepublishButton view={republish} id={l.id} kind={type === "aircraft" ? "AIRCRAFT" : "SPARE_PART"} className={`${ACTION} border border-[#00205B]/20 text-[#00205B] hover:border-[#00205B]`} />
           )}
           {!moderation && st === "activos" && (
-            <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "PAUSED")} className={`${ACTION} border border-[#001F58]/20 text-[#001F58] hover:border-[#001F58]`}>
+            <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "PAUSED")} className={`${ACTION} border border-[#00205B]/20 text-[#00205B] hover:border-[#00205B]`}>
               <Pause className="h-3 w-3" />
               Pausar
             </button>
           )}
           {!moderation && st !== "activos" && (
-            <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "ACTIVE")} className={`${ACTION} bg-[#001F58] text-white hover:bg-blue-900`}>
+            <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "ACTIVE")} className={`${ACTION} bg-[#00205B] text-white hover:bg-[#D62828]`}>
               <Play className="h-3 w-3" />
               {st === "vendidos" ? "Volver a publicar" : "Activar"}
             </button>
           )}
           {!moderation && st !== "vendidos" && (
-            <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "SOLD")} className={`${ACTION} border border-[#001F58]/20 text-[#001F58] hover:border-[#001F58]`}>
+            <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "SOLD")} className={`${ACTION} border border-[#00205B]/20 text-[#00205B] hover:border-[#00205B]`}>
               <CheckCircle2 className="h-3 w-3" />
               Vendido
             </button>
@@ -318,8 +318,8 @@ function OwnerPanel({
         </div>
       </div>
       {moderation?.reason && (
-        <p className="border-l-2 border-[#E70F1F] pl-2 text-[11px] leading-snug text-slate-700">
-          <span className="font-semibold text-[#001F58]">Motivo:</span> {moderation.reason}
+        <p className="border-l-2 border-[#D62828] pl-2 text-[11px] leading-snug text-slate-700">
+          <span className="font-semibold text-[#00205B]">Motivo:</span> {moderation.reason}
         </p>
       )}
 
@@ -330,11 +330,11 @@ function OwnerPanel({
             {l._count?.analyticsEvents || 0}
           </span>
           <span className="flex items-center gap-0.5" title="Favoritos">
-            <Heart className="h-3.5 w-3.5 text-red-500" />
+            <Heart className="h-3.5 w-3.5 text-[#D62828]" />
             {l._count?.favorites || 0}
           </span>
           <span className="flex items-center gap-0.5" title="Consultas">
-            <MessageSquare className="h-3.5 w-3.5 text-blue-500" />
+            <MessageSquare className="h-3.5 w-3.5 text-[#00205B]/60" />
             {l._count?.questions || 0}
           </span>
         </div>
@@ -342,7 +342,7 @@ function OwnerPanel({
         <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
           <Link
             href={`/publish?edit=${l.id}&type=${type === "aircraft" ? "aircraft" : "parts"}`}
-            className="cursor-pointer rounded-lg p-3 text-blue-600 hover:bg-blue-50 sm:p-1"
+            className="cursor-pointer rounded-[4px] p-3 text-[#00205B] hover:bg-[#F5F5F5] sm:p-1"
             aria-label="Editar publicación"
             title="Editar publicación"
           >
@@ -351,7 +351,7 @@ function OwnerPanel({
           <button
             type="button"
             onClick={() => onDelete(l.id, type)}
-            className="cursor-pointer rounded-lg p-3 text-red-600 hover:bg-red-50 sm:p-1"
+            className="cursor-pointer rounded-[4px] p-3 text-[#D62828] hover:bg-[#D62828]/8 sm:p-1"
             aria-label="Eliminar publicación"
             title="Eliminar publicación"
           >

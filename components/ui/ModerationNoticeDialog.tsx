@@ -63,29 +63,29 @@ export function ModerationNoticeDialog() {
         close();
       }}
       aria-labelledby="moderation-notice-title"
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-[#001F58]/15 p-0 text-slate-800 backdrop:bg-[#001331]/60"
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-[#00205B]/15 p-0 text-slate-800 backdrop:bg-[#001331]/60"
     >
-      <div className={`space-y-4 border-l-2 p-6 ${reactivated ? "border-[#001F58]" : "border-[#E70F1F]"}`}>
+      <div className={`space-y-4 border-l-2 p-6 ${reactivated ? "border-[#00205B]" : "border-[#D62828]"}`}>
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Moderación <span className="text-[#E70F1F]">{"//"}</span> Ventas Aeronáuticas
+            Moderación <span className="text-[#D62828]">{"//"}</span> Ventas Aeronáuticas
           </p>
-          <h2 id="moderation-notice-title" className="mt-1 font-heading text-xl font-bold text-[#001F58]">
+          <h2 id="moderation-notice-title" className="mt-1 font-heading text-xl font-bold text-[#00205B]">
             {TITLE[notice.action]}
           </h2>
         </div>
-        <p className="text-sm font-semibold text-[#001F58]">“{notice.listingTitle}”</p>
+        <p className="text-sm font-semibold text-[#00205B]">“{notice.listingTitle}”</p>
         <p className="text-sm text-slate-600">{body}</p>
         {notice.message && (
-          <p className="border-l-2 border-[#001F58]/30 pl-3 text-sm text-slate-700">
-            <span className="font-semibold text-[#001F58]">{notice.action === "PAUSE" ? "Motivo" : "Mensaje"}:</span> {notice.message}
+          <p className="border-l-2 border-[#00205B]/30 pl-3 text-sm text-slate-700">
+            <span className="font-semibold text-[#00205B]">{notice.action === "PAUSE" ? "Motivo" : "Mensaje"}:</span> {notice.message}
           </p>
         )}
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={() => close()}
-            className="min-h-11 rounded-md border border-[#001F58]/20 px-4 text-sm font-semibold text-[#001F58] hover:bg-slate-50 cursor-pointer"
+            className="min-h-11 rounded-md border border-[#00205B]/20 px-4 text-sm font-semibold text-[#00205B] hover:bg-slate-50 cursor-pointer"
           >
             Entendido
           </button>
@@ -93,7 +93,7 @@ export function ModerationNoticeDialog() {
             type="button"
             autoFocus
             onClick={() => close(reactivated ? notice.listingHref : notice.editHref)}
-            className="min-h-11 rounded-md bg-[#001F58] px-5 text-sm font-bold text-white hover:bg-[#00133A] cursor-pointer"
+            className="min-h-11 rounded-md bg-[#00205B] px-5 text-sm font-bold text-white hover:bg-[#001331] cursor-pointer"
           >
             {reactivated ? "Ver aviso" : "Editar aviso"}
           </button>

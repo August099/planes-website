@@ -36,8 +36,8 @@ function Cell({ value, best }: { value: CompareCell; best: boolean }) {
     <span className="whitespace-pre-line">{value}</span>
   );
   return (
-    <span className={`flex items-start gap-1.5 ${best ? "font-bold text-[#001F58]" : ""}`}>
-      {best && <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#E70F1F]" />}
+    <span className={`flex items-start gap-1.5 ${best ? "font-bold text-[#00205B]" : ""}`}>
+      {best && <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#D62828]" />}
       <span className="min-w-0">
         {content}
         {best && <span className="sr-only"> (mejor valor)</span>}
@@ -71,7 +71,7 @@ function AddSlot({ ids }: { ids: string[] }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-full min-h-40 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[#001F58]/25 text-sm font-semibold text-[#001F58] hover:border-[#001F58]/50 hover:bg-white"
+        className="flex h-full min-h-40 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[#00205B]/25 text-sm font-semibold text-[#00205B] hover:border-[#00205B]/50 hover:bg-white"
       >
         <Plus className="h-5 w-5" aria-hidden />
         Agregar aeronave
@@ -81,7 +81,7 @@ function AddSlot({ ids }: { ids: string[] }) {
 
   const showResults = q.trim().length >= 2 && searched === q;
   return (
-    <div className="space-y-2 rounded-md border border-[#001F58]/15 bg-white p-2">
+    <div className="space-y-2 rounded-md border border-[#00205B]/15 bg-white p-2">
       <label className="relative block">
         <span className="sr-only">Buscar por título, marca o modelo</span>
         <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
@@ -107,7 +107,7 @@ function AddSlot({ ids }: { ids: string[] }) {
                   {r.image && <AppImage src={r.image} alt="" fill sizes="44px" className="object-cover" />}
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-xs font-semibold text-[#001F58]">{r.title}</span>
+                  <span className="block truncate text-xs font-semibold text-[#00205B]">{r.title}</span>
                   <span className="block text-[11px] tabular-nums text-slate-500">{r.subtitle}</span>
                 </span>
               </button>
@@ -161,8 +161,8 @@ export function CompareTable({ columns, sections }: { columns: CompareColumn[]; 
     .filter((s) => s.rows.length > 0);
 
   return (
-    <div className="rounded-lg border border-[#001F58]/12 bg-white">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#001F58]/10 px-4 py-3">
+    <div className="rounded-lg border border-[#00205B]/12 bg-white">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#00205B]/10 px-4 py-3">
         <p className={LABEL}>
           {columns.length} de {COMPARE_MAX} aeronaves
         </p>
@@ -172,35 +172,35 @@ export function CompareTable({ columns, sections }: { columns: CompareColumn[]; 
             checked={onlyDiff}
             disabled={activeCount < 2}
             onChange={(e) => setOnlyDiff(e.target.checked)}
-            className="h-4 w-4 accent-[#001F58]"
+            className="h-4 w-4 accent-[#00205B]"
           />
           Mostrar solo diferencias
         </label>
       </div>
 
       {/* Encabezado de columnas, fijo arriba */}
-      <div ref={headRef} className="sticky top-0 z-20 overflow-hidden border-b border-[#001F58]/12 bg-white">
+      <div ref={headRef} className="sticky top-0 z-20 overflow-hidden border-b border-[#00205B]/12 bg-white">
         <div className={`${GRID} w-max sm:w-full`}>
           <div className="sticky left-0 z-10 bg-white" />
           {slots.map((c, i) => (
-            <div key={c?.id ?? `slot-${i}`} className="border-l border-[#001F58]/10 p-2 sm:p-3">
+            <div key={c?.id ?? `slot-${i}`} className="border-l border-[#00205B]/10 p-2 sm:p-3">
               {c ? (
                 <div className={`space-y-2 ${c.active ? "" : "opacity-70"}`}>
                   <div className="relative aspect-[16/10] overflow-hidden rounded-md bg-slate-100">
                     {c.image && <AppImage src={c.image} alt={c.title} fill sizes="(min-width: 640px) 25vw, 160px" className="object-cover" />}
                   </div>
-                  <p className="line-clamp-2 text-xs font-bold leading-snug text-[#001F58] sm:text-sm">{c.title}</p>
+                  <p className="line-clamp-2 text-xs font-bold leading-snug text-[#00205B] sm:text-sm">{c.title}</p>
                   {c.active ? (
                     <>
-                      <p className="text-sm font-bold tabular-nums text-[#001F58]">{c.price}</p>
+                      <p className="text-sm font-bold tabular-nums text-[#00205B]">{c.price}</p>
                       <p className="truncate text-[11px] text-slate-500">{c.location}</p>
                     </>
                   ) : (
-                    <p className="text-xs font-semibold text-[#C20D1A]">Este aviso ya no está disponible</p>
+                    <p className="text-xs font-semibold text-[#B71F1F]">Este aviso ya no está disponible</p>
                   )}
                   <div className="flex flex-wrap gap-1.5">
                     {c.active && (
-                      <Link href={c.href} className="rounded-md border border-[#001F58]/20 px-2 py-1 text-[11px] font-semibold text-[#001F58] hover:bg-slate-50">
+                      <Link href={c.href} className="rounded-md border border-[#00205B]/20 px-2 py-1 text-[11px] font-semibold text-[#00205B] hover:bg-slate-50">
                         Ver aviso
                       </Link>
                     )}
@@ -232,16 +232,16 @@ export function CompareTable({ columns, sections }: { columns: CompareColumn[]; 
           )}
           {visibleSections.map((s) => (
             <div key={s.title} className="contents">
-              <div className="sticky left-0 z-10 col-span-1 border-t border-[#001F58]/12 bg-slate-50 px-3 py-2">
+              <div className="sticky left-0 z-10 col-span-1 border-t border-[#00205B]/12 bg-slate-50 px-3 py-2">
                 <p className={LABEL}>{s.title}</p>
               </div>
-              <div className="col-span-3 border-t border-[#001F58]/12 bg-slate-50" />
+              <div className="col-span-3 border-t border-[#00205B]/12 bg-slate-50" />
               {s.rows.map((r) => (
                 <div key={r.key} className="contents">
                   <div className="sticky left-0 z-10 flex items-start gap-1 border-t border-slate-100 bg-white px-3 py-2.5 text-xs font-medium text-slate-500 sm:text-sm">
                     {r.label}
                     {r.helpHref && (
-                      <Link href={r.helpHref} aria-label={`Qué es ${r.label}`} className="mt-0.5 text-slate-400 hover:text-[#001F58]">
+                      <Link href={r.helpHref} aria-label={`Qué es ${r.label}`} className="mt-0.5 text-slate-400 hover:text-[#00205B]">
                         <CircleHelp className="h-3.5 w-3.5" />
                       </Link>
                     )}
@@ -257,8 +257,8 @@ export function CompareTable({ columns, sections }: { columns: CompareColumn[]; 
           ))}
         </div>
       </div>
-      <p className="border-t border-[#001F58]/10 px-4 py-3 text-xs text-slate-500">
-        <span aria-hidden className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-[#E70F1F] align-middle" /> Mejor valor en
+      <p className="border-t border-[#00205B]/10 px-4 py-3 text-xs text-slate-500">
+        <span aria-hidden className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-[#D62828] align-middle" /> Mejor valor en
         precio, año y horas (menos horas totales y desde la última recorrida). Los precios se muestran como los publicó cada
         vendedor, sin convertir.
       </p>

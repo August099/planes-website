@@ -58,7 +58,7 @@ export function DescriptionBody({ text }: { text: string }) {
       {parseDescription(text).map((block, i) => {
         if (block.kind === "heading") {
           return (
-            <h3 key={i} className="font-bold text-[#001F58] text-sm pt-1">
+            <h3 key={i} className="font-bold text-[#00205B] text-sm pt-1">
               {block.text}
             </h3>
           );
@@ -100,7 +100,7 @@ export function ListingDescription({ text, title = "Descripción General" }: { t
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-3 text-[#001F58]">{title}</h2>
+      <h2 className="text-xl font-bold mb-3 text-[#00205B]">{title}</h2>
       <div className="relative">
         {/* 6 líneas de text-sm/leading-relaxed ≈ 8.5rem. Desde lg se ve completa. */}
         <div ref={bodyRef} className={expanded ? "" : "max-lg:max-h-[8.5rem] max-lg:overflow-hidden"}>

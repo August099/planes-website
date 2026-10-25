@@ -44,7 +44,7 @@ export function HangarCard({ hangar }: { hangar: HangarCardData }) {
   return (
     <>
       <Link href={href} className="group block h-full">
-        <Card data-card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 transition-colors duration-200">
+        <Card data-card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#00205B]/10 hover:border-[#00205B]/30 transition-colors duration-200">
           <div className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100">
             <ImageCarousel images={hangar.images} fallbackImage={PLACEHOLDER_IMAGE} alt={hangar.title} />
             <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
@@ -65,7 +65,7 @@ export function HangarCard({ hangar }: { hangar: HangarCardData }) {
 
           <CardContent className="p-3 pt-4 flex flex-col flex-1 justify-between gap-4">
             <div className="space-y-1">
-              <h3 className="font-heading font-semibold text-base text-[#001F58] line-clamp-1 group-hover:text-primary transition-colors" title={hangar.title}>
+              <h3 className="font-heading font-semibold text-base text-[#00205B] line-clamp-1 group-hover:text-primary transition-colors" title={hangar.title}>
                 {hangar.title}
               </h3>
               <p className="text-xs text-muted-foreground line-clamp-1">{offerLabel(hangar)}</p>

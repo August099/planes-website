@@ -53,7 +53,7 @@ export default function FAQPage() {
         <Breadcrumbs items={[{ label: "Preguntas frecuentes" }]} className="mb-8 sm:mb-12" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           
-          <aside className="hidden md:col-span-1 md:flex flex-col gap-2 border-l border-[#001F58]/20 pl-4 md:sticky md:top-24">
+          <aside className="hidden md:col-span-1 md:flex flex-col gap-2 border-l border-[#00205B]/20 pl-4 md:sticky md:top-24">
             {groups.map((group) => (
               <div key={group} className="mb-2">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{group}</p>
@@ -63,7 +63,7 @@ export default function FAQPage() {
                     <a
                       key={faq.id}
                       href={`#${faq.id}`}
-                      className="block text-sm py-1 font-medium text-[#001F58]/70 hover:text-[#001F58] transition-colors"
+                      className="block text-sm py-1 font-medium text-[#00205B]/70 hover:text-[#00205B] transition-colors"
                     >
                       {faq.question}
                     </a>
@@ -73,23 +73,23 @@ export default function FAQPage() {
           </aside>
 
           <section className="md:col-span-3">
-            <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-[#001F58] mb-2">
+            <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-[#00205B] mb-2">
               Preguntas frecuentes
             </h1>
-            <p className="text-sm text-[#001F58]/60 mb-12 border-b border-[#001F58]/20 pb-4">
+            <p className="text-sm text-[#00205B]/60 mb-12 border-b border-[#00205B]/20 pb-4">
               Todo lo que necesitás saber antes de comprar o publicar
             </p>
 
             <div className="flex flex-col gap-14">
               {groups.map((group) => (
                 <div key={group} className="flex flex-col gap-8">
-                  <h2 className="border-b border-[#001F58]/15 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{group}</h2>
+                  <h2 className="border-b border-[#00205B]/15 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{group}</h2>
                   {faqs
                     .filter((f) => f.group === group)
                     .map((faq) => (
                       <div key={faq.id} id={faq.id} className="flex flex-col gap-2 scroll-mt-24">
-                        <h3 className="font-heading text-lg font-semibold text-[#001F58]">{faq.question}</h3>
-                        <p className="font-sans text-sm text-[#001F58]/80 leading-relaxed max-w-3xl">{faq.answer}</p>
+                        <h3 className="font-heading text-lg font-semibold text-[#00205B]">{faq.question}</h3>
+                        <p className="font-sans text-sm text-[#00205B]/80 leading-relaxed max-w-3xl">{faq.answer}</p>
                       </div>
                     ))}
                 </div>

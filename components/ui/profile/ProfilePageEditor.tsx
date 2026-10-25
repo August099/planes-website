@@ -14,7 +14,7 @@ import { AIRCRAFT_CATEGORIES, ENGINE_LABELS } from "@/lib/aircraft-categories";
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 const INPUT = "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm";
-const BTN = "inline-flex min-h-10 items-center gap-1.5 rounded-md border border-[#001F58]/20 px-3 text-sm font-semibold text-[#001F58] hover:bg-slate-50 disabled:opacity-40 cursor-pointer";
+const BTN = "inline-flex min-h-10 items-center gap-1.5 rounded-md border border-[#00205B]/20 px-3 text-sm font-semibold text-[#00205B] hover:bg-slate-50 disabled:opacity-40 cursor-pointer";
 const TYPE_LABEL: Record<PageSection["type"], string> = { carousel: "Carrusel", grid: "Grilla de avisos", text: "Texto" };
 const categoryLabel = (id: string) => {
   const c = AIRCRAFT_CATEGORIES.find((x) => x.id === id);
@@ -69,13 +69,13 @@ export function ProfilePageEditor({ initial, listings, profileUserId, onClose }:
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#001F58]/12 bg-white p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#00205B]/12 bg-white p-4">
         <div>
           <p className={LABEL}>Editando tu página personalizada</p>
           <p className="text-sm text-slate-600">Elegí qué secciones se ven y en qué orden. La portada, el logo y los datos se cambian en Ajustes.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" disabled={pending} onClick={() => save(true)} className="min-h-10 rounded-md bg-[#001F58] px-4 text-sm font-bold text-white hover:bg-[#00133A] disabled:opacity-60 cursor-pointer">
+          <button type="button" disabled={pending} onClick={() => save(true)} className="min-h-10 rounded-md bg-[#00205B] px-4 text-sm font-bold text-white hover:bg-[#001331] disabled:opacity-60 cursor-pointer">
             Publicar cambios
           </button>
           <button type="button" disabled={pending} onClick={() => save(false)} className={BTN}>
@@ -86,21 +86,21 @@ export function ProfilePageEditor({ initial, listings, profileUserId, onClose }:
           </button>
         </div>
         {error && <p className="w-full text-sm text-red-700">{error}</p>}
-        {notice && <p className="w-full text-sm text-[#001F58]">{notice}</p>}
+        {notice && <p className="w-full text-sm text-[#00205B]">{notice}</p>}
       </div>
 
       <ol className="space-y-3">
         {sections.map((s, i) => (
-          <li key={s.id} className={`rounded-lg border border-[#001F58]/12 bg-white p-4 ${s.hidden ? "opacity-70" : ""}`}>
+          <li key={s.id} className={`rounded-lg border border-[#00205B]/12 bg-white p-4 ${s.hidden ? "opacity-70" : ""}`}>
             <div className="flex flex-wrap items-center gap-2">
               <span className={LABEL}>
                 {i + 1} {"//"} {TYPE_LABEL[s.type]}
                 {s.hidden && " · oculta"}
               </span>
               <span className="ml-auto flex gap-1">
-                <button type="button" aria-label="Subir" disabled={i === 0} onClick={() => move(i, -1)} className="p-2 text-slate-500 hover:text-[#001F58] disabled:opacity-30 cursor-pointer"><ArrowUp className="h-4 w-4" /></button>
-                <button type="button" aria-label="Bajar" disabled={i === sections.length - 1} onClick={() => move(i, 1)} className="p-2 text-slate-500 hover:text-[#001F58] disabled:opacity-30 cursor-pointer"><ArrowDown className="h-4 w-4" /></button>
-                <button type="button" aria-label={s.hidden ? "Mostrar" : "Ocultar"} onClick={() => update(i, { hidden: !s.hidden })} className="p-2 text-slate-500 hover:text-[#001F58] cursor-pointer">{s.hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</button>
+                <button type="button" aria-label="Subir" disabled={i === 0} onClick={() => move(i, -1)} className="p-2 text-slate-500 hover:text-[#00205B] disabled:opacity-30 cursor-pointer"><ArrowUp className="h-4 w-4" /></button>
+                <button type="button" aria-label="Bajar" disabled={i === sections.length - 1} onClick={() => move(i, 1)} className="p-2 text-slate-500 hover:text-[#00205B] disabled:opacity-30 cursor-pointer"><ArrowDown className="h-4 w-4" /></button>
+                <button type="button" aria-label={s.hidden ? "Mostrar" : "Ocultar"} onClick={() => update(i, { hidden: !s.hidden })} className="p-2 text-slate-500 hover:text-[#00205B] cursor-pointer">{s.hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</button>
                 <button type="button" aria-label="Borrar sección" onClick={() => setSections(sections.filter((_, k) => k !== i))} className="p-2 text-slate-400 hover:text-red-600 cursor-pointer"><Trash2 className="h-4 w-4" /></button>
               </span>
             </div>
@@ -137,7 +137,7 @@ export function ProfilePageEditor({ initial, listings, profileUserId, onClose }:
                       {listings.length === 0 && <p className="text-sm text-slate-500">No tenés avisos activos.</p>}
                       {listings.map((l) => (
                         <label key={l.key} className="flex min-h-9 items-center gap-2 text-sm">
-                          <input type="checkbox" checked={s.ids.includes(l.key)} onChange={() => toggleId(i, l.key)} className="h-4 w-4 accent-[#001F58]" />
+                          <input type="checkbox" checked={s.ids.includes(l.key)} onChange={() => toggleId(i, l.key)} className="h-4 w-4 accent-[#00205B]" />
                           <span className="truncate">{l.title}</span>
                         </label>
                       ))}
@@ -182,12 +182,12 @@ export function ProfilePageEditor({ initial, listings, profileUserId, onClose }:
         <span className="text-xs text-slate-500">Hasta {MAX_SECTIONS} secciones.</span>
       </div>
 
-      <section className="space-y-3 rounded-lg border border-dashed border-[#001F58]/25 p-4">
+      <section className="space-y-3 rounded-lg border border-dashed border-[#00205B]/25 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className={LABEL}>Vista previa</p>
           <div className="flex gap-2" role="group" aria-label="Pantalla de la vista previa">
             {(["desktop", "mobile"] as const).map((v) => (
-              <button key={v} type="button" aria-pressed={preview === v} onClick={() => setPreview(v)} className={`min-h-9 rounded-md border px-3 text-xs font-semibold ${preview === v ? "border-[#001F58] bg-[#001F58] text-white" : "border-[#001F58]/20 text-[#001F58]"} cursor-pointer`}>
+              <button key={v} type="button" aria-pressed={preview === v} onClick={() => setPreview(v)} className={`min-h-9 rounded-md border px-3 text-xs font-semibold ${preview === v ? "border-[#00205B] bg-[#00205B] text-white" : "border-[#00205B]/20 text-[#00205B]"} cursor-pointer`}>
                 {v === "desktop" ? "Escritorio" : "Celular"}
               </button>
             ))}

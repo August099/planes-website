@@ -8,11 +8,14 @@ export function DetailSections({ sections }: { sections: DetailSection[] }) {
 
   return (
     <section className="flex flex-col gap-6">
-      <h2 className="text-2xl font-bold text-[#001F58]">Información Adicional</h2>
+      <div>
+        <h2 className="text-[1.6rem] leading-tight font-extrabold tracking-[-0.015em] text-[#00205B]">Información Adicional</h2>
+        <span aria-hidden className="va-scale" />
+      </div>
       {sections.map((s) => (
         <div key={s.title} className="space-y-2">
-          <h3 className="text-lg font-semibold text-slate-800">{s.title}</h3>
-          <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
+          <h3 className="va-label">{s.title}</h3>
+          <div className="va-plate overflow-hidden">
             {s.rows.map((row, i) => (
               <DetailRow
                 key={row.label}
@@ -46,7 +49,7 @@ export function PrintSections({ sections }: { sections: DetailSection[] }) {
     <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-xs">
       {sections.map((s) => (
         <div key={s.title} className="border border-slate-200 rounded-xl p-3 bg-white break-inside-avoid">
-          <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-100">{s.title}</h3>
+          <h3 className="text-xs font-bold uppercase text-[#00205B] border-b pb-1 mb-1.5 border-slate-100">{s.title}</h3>
           {s.rows.map((row) => (
             <p key={row.label} className="flex justify-between gap-3">
               <span className="font-semibold text-slate-500 shrink-0">{row.label}:</span>

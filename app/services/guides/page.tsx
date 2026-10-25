@@ -37,7 +37,7 @@ export default async function GuidesIndexPage() {
         {/* VA-85: asimétrico. A la izquierda la presentación, a la derecha el índice numerado. */}
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-14">
           <div>
-            <h1 className="font-heading text-3xl font-semibold text-[#001F58] sm:text-4xl">
+            <h1 className="font-heading text-3xl font-semibold text-[#00205B] sm:text-4xl">
               Guías para comprar y vender aeronaves
             </h1>
             <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-700">
@@ -47,7 +47,7 @@ export default async function GuidesIndexPage() {
               {guides.length} guías{lastReview ? ` · Última revisión el ${formatGuideDate(lastReview)}` : ""}
             </p>
           </div>
-          <div className="rounded-lg border border-[#001F58]/10 bg-white px-5 sm:px-6">
+          <div className="rounded-lg border border-[#00205B]/10 bg-white px-5 sm:px-6">
             <GuideIndex guides={guides} headingLevel="h2" />
           </div>
         </div>

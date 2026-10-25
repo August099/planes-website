@@ -70,8 +70,8 @@ export default async function SettingsPage() {
       <PageBackground page="profile" />
       <Breadcrumbs items={[{ label: "Mi cuenta", href: `/profile/${id}` }, { label: "Ajustes" }]} className="-mt-4 mb-2" />
       <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-heading text-3xl font-bold text-[#001F58]">Ajustes</h1>
-        <Link href={`/profile/${id}`} className="text-sm font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+        <h1 className="font-heading text-3xl font-bold text-[#00205B]">Ajustes</h1>
+        <Link href={`/profile/${id}`} className="text-sm font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828]">
           Ver mi cuenta
         </Link>
       </div>

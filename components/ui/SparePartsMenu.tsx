@@ -27,15 +27,15 @@ export function SparePartsMenu({ linkClass, categories }: { linkClass: string; c
         <ChevronDown className="h-3.5 w-3.5 transition-transform group-hover:rotate-180 group-focus-within:rotate-180" aria-hidden />
       </Link>
 
-      <div className="invisible absolute inset-x-0 top-full z-50 border-t border-[#001F58]/10 bg-white text-slate-800 opacity-0 shadow-sm transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 motion-reduce:transition-none">
+      <div className="invisible absolute inset-x-0 top-full z-50 border-t border-[#00205B]/10 bg-white text-slate-800 opacity-0 shadow-sm transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 motion-reduce:transition-none">
         <div className="container mx-auto grid gap-10 px-4 py-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1.5fr)]">
           {/* Presentación */}
-          <div className="border-r border-[#001F58]/10 pr-8">
+          <div className="border-r border-[#00205B]/10 pr-8">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Repuestos</p>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
               Repuestos, instrumentos y equipamiento aeronáutico, nuevos y usados, de vendedores de todo el país.
             </p>
-            <Link href="/spareparts" className="mt-4 inline-block text-sm font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
+            <Link href="/spareparts" className="mt-4 inline-block text-sm font-semibold text-[#00205B] hover:text-[#D62828] hover:underline">
               Ver todos los repuestos
             </Link>
           </div>
@@ -44,8 +44,8 @@ export function SparePartsMenu({ linkClass, categories }: { linkClass: string; c
             <ul key={c} className="space-y-2.5">
               {column.map((cat, i) => (
                 <li key={cat.id}>
-                  <Link href={sparePartsCategoryHref(cat.id)} className="group/link flex gap-3 text-sm text-slate-700 hover:text-[#001F58]">
-                    <span className="w-5 shrink-0 font-semibold tabular-nums text-[#E70F1F]">
+                  <Link href={sparePartsCategoryHref(cat.id)} className="group/link flex gap-3 text-sm text-slate-700 hover:text-[#00205B]">
+                    <span className="w-5 shrink-0 font-semibold tabular-nums text-[#D62828]">
                       {String(c * half + i + 1).padStart(2, "0")}
                     </span>
                     <span className="group-hover/link:underline">{cat.name}</span>

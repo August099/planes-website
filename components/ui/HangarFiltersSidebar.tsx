@@ -169,7 +169,7 @@ function HangarFiltersForm() {
                 aria-checked={currency === c}
                 onClick={() => setCurrency(c)}
                 className={`min-h-9 rounded text-sm font-medium cursor-pointer transition-colors ${
-                  currency === c ? "bg-white text-[#001F58] shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  currency === c ? "bg-white text-[#00205B] shadow-sm" : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 {c === "ARS" ? "Pesos" : "Dólares"}

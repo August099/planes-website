@@ -6,8 +6,8 @@ import type { PdfSeller } from "@/lib/pdf-assets";
 // Mismo lenguaje que la web: azul de marca, rótulos en mayúsculas chicas, placas con borde fino.
 // El QR va en el pie de la primera página; las demás llevan solo el número de página.
 
-const NAVY = "#001F58";
-const RED = "#E70F1F";
+const NAVY = "#00205B";
+const RED = "#D62828";
 const MUTED = "#64748b";
 const LINE = "#d9e0ea";
 const QR_SIZE = 71; // 2,5 cm
@@ -23,7 +23,7 @@ const s = StyleSheet.create({
   title: { fontSize: 17, fontFamily: "Helvetica-Bold", color: NAVY, flex: 1 },
   price: { fontSize: 16, fontFamily: "Helvetica-Bold", color: NAVY },
   meta: { fontSize: 8.5, color: MUTED, marginTop: 4 },
-  inactive: { marginTop: 6, fontSize: 8.5, fontFamily: "Helvetica-Bold", color: "#C20D1A" },
+  inactive: { marginTop: 6, fontSize: 8.5, fontFamily: "Helvetica-Bold", color: "#B71F1F" },
   mainPhoto: { width: "100%", height: 250, objectFit: "cover", marginTop: 12, borderRadius: 3 },
   thumbs: { flexDirection: "row", gap: 6, marginTop: 6 },
   thumb: { width: "24%", height: 72, objectFit: "cover", borderRadius: 2 },

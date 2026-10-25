@@ -219,10 +219,13 @@ export default async function AircraftListPage({ searchParams }: Props) {
       <Breadcrumbs items={[{ label: "Aviones" }]} className="-mt-4 mb-2" />
 
       {/* Encabezado: Título a la izquierda, Sort (solo Desktop) a la derecha */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-        <h1 className="text-2xl font-medium">
-          Aviones en venta <span className="text-slate-500 font-normal text-lg">({totalAircrafts})</span>
-        </h1>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-[1.9rem] leading-[1.08] font-extrabold tracking-[-0.02em] text-[#00205B] sm:text-[2.2rem]">
+            Aviones en venta <span className="text-base font-semibold tracking-normal text-[#00205B]/55 tabular-nums">({totalAircrafts})</span>
+          </h1>
+          <span aria-hidden className="va-scale" />
+        </div>
         <div className="hidden lg:block">
           <SortDropdown />
         </div>
@@ -242,7 +245,7 @@ export default async function AircraftListPage({ searchParams }: Props) {
 
         <div className="w-full flex-1">
           {aircrafts.length === 0 ? (
-            <div className="py-20 text-center text-slate-500 bg-white rounded-lg border border-slate-200 px-4">
+            <div className="va-plate py-20 text-center text-slate-500 px-4">
               No se encontraron aeronaves con los criterios de búsqueda seleccionados.
             </div>
           ) : (
@@ -269,16 +272,16 @@ export default async function AircraftListPage({ searchParams }: Props) {
 
           {/* Paginación */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-8 border-t border-slate-200/80 pt-6 flex-wrap">
+            <div className="flex justify-center items-center gap-2 mt-8 border-t border-[#00205B]/10 pt-6 flex-wrap">
               {hasPrevPage ? (
                 <Link
                   href={createPageUrl(currentPage - 1)}
-                  className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors bg-white/80"
+                  className="px-3 py-2 border border-[#00205B]/15 rounded-md text-sm font-semibold text-[#00205B] transition-colors bg-white hover:border-[#D62828] hover:text-[#D62828]"
                 >
                   Anterior
                 </Link>
               ) : (
-                <span className="px-3 py-2 border rounded-md text-neutral-400 text-sm font-medium cursor-not-allowed bg-neutral-50">
+                <span className="px-3 py-2 border border-[#00205B]/10 rounded-md text-[#00205B]/35 text-sm font-semibold cursor-not-allowed bg-white">
                   Anterior
                 </span>
               )}
@@ -292,10 +295,10 @@ export default async function AircraftListPage({ searchParams }: Props) {
                   <Link
                     key={`page-${page}`}
                     href={createPageUrl(Number(page))}
-                    className={`px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
+                    className={`min-w-10 px-3 py-2 border rounded-md text-center text-sm font-bold tabular-nums transition-colors ${
                       page === currentPage
-                        ? "bg-neutral-900 text-white border-neutral-900 pointer-events-none"
-                        : "hover:bg-neutral-100 text-neutral-700 bg-white/80"
+                        ? "bg-[#00205B] text-white border-[#00205B] shadow-[inset_0_-2px_0_#D62828] pointer-events-none"
+                        : "border-[#00205B]/15 text-[#00205B] bg-white hover:border-[#D62828] hover:text-[#D62828]"
                     }`}
                   >
                     {page}
@@ -306,12 +309,12 @@ export default async function AircraftListPage({ searchParams }: Props) {
               {hasNextPage ? (
                 <Link
                   href={createPageUrl(currentPage + 1)}
-                  className="px-3 py-2 border rounded-md hover:bg-neutral-100 text-sm font-medium transition-colors bg-white/80"
+                  className="px-3 py-2 border border-[#00205B]/15 rounded-md text-sm font-semibold text-[#00205B] transition-colors bg-white hover:border-[#D62828] hover:text-[#D62828]"
                 >
                   Siguiente
                 </Link>
               ) : (
-                <span className="px-3 py-2 border rounded-md text-neutral-400 text-sm font-medium cursor-not-allowed bg-neutral-50">
+                <span className="px-3 py-2 border border-[#00205B]/10 rounded-md text-[#00205B]/35 text-sm font-semibold cursor-not-allowed bg-white">
                   Siguiente
                 </span>
               )}

@@ -59,7 +59,7 @@ export default async function FavoritesPage() {
           <Heart className="w-6 h-6 fill-red-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-[#001F58]">Mis Favoritos</h1>
+          <h1 className="text-2xl font-bold text-[#00205B]">Mis Favoritos</h1>
           <p className="text-xs text-slate-500">
             Publicaciones guardadas ({favorites.length})
           </p>

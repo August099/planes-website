@@ -28,7 +28,7 @@ export function SoldDialog({ kind, id, currency, onClose }: { kind: "AIRCRAFT" |
       type="button"
       aria-pressed={viaVA === value}
       onClick={() => setViaVA(value)}
-      className={`min-h-11 flex-1 rounded-md border text-sm font-semibold cursor-pointer ${viaVA === value ? "border-[#001F58] bg-[#001F58] text-white" : "border-[#001F58]/20 text-[#001F58] hover:bg-slate-50"}`}
+      className={`min-h-11 flex-1 rounded-md border text-sm font-semibold cursor-pointer ${viaVA === value ? "border-[#00205B] bg-[#00205B] text-white" : "border-[#00205B]/20 text-[#00205B] hover:bg-slate-50"}`}
     >
       {label}
     </button>

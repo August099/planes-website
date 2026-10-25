@@ -21,7 +21,7 @@ export function HowItWorks() {
   return (
     <section className="w-full text-white py-16">
       <div className="container mx-auto px-4">
-        <SectionTitle tone="dark" className="mb-10 text-center">
+        <SectionTitle tone="dark" className="mb-10">
           Cómo funciona
         </SectionTitle>
         <ol className="relative grid gap-10 md:grid-cols-3 md:gap-8">
@@ -35,9 +35,9 @@ export function HowItWorks() {
               {/* Waypoint */}
               <span
                 aria-hidden
-                className="absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white/80 bg-[#0A4C96]"
+                className="absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white/80 bg-[#00205B]"
               >
-                <span className="h-2 w-2 rounded-full bg-[#E70F1F]" />
+                <span className="h-2 w-2 rounded-full bg-[#D62828]" />
               </span>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FFC2C7] tabular-nums">
                 Paso {String(i + 1).padStart(2, "0")}

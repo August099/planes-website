@@ -13,8 +13,8 @@ import { PlanCardAction } from "./PlanCardAction";
 // (lib/plans.ts, /admin/plans). Lo del usuario (plan actual, admin, visitante) se pide en el navegador:
 // la página es estática.
 
-const SECONDARY = "flex min-h-11 w-full items-center justify-center rounded-md border border-[#001F58]/25 px-4 text-sm font-bold text-[#001F58] hover:bg-[#001F58]/5";
-const NOTE = "flex min-h-11 w-full items-center justify-center rounded-md border border-[#001F58]/15 px-4 text-center text-sm font-semibold text-slate-600";
+const SECONDARY = "flex min-h-11 w-full items-center justify-center rounded-md border border-[#00205B]/25 px-4 text-sm font-bold text-[#00205B] hover:bg-[#00205B]/5";
+const NOTE = "flex min-h-11 w-full items-center justify-center rounded-md border border-[#00205B]/15 px-4 text-center text-sm font-semibold text-slate-600";
 
 export function PlansClient({ data }: { data: PlansGrid }) {
   const [viewer, setViewer] = useState<PlansViewer>({ loggedIn: false, isAdmin: false, plan: null });
@@ -44,7 +44,7 @@ export function PlansClient({ data }: { data: PlansGrid }) {
       <div className="container mx-auto max-w-6xl px-4 pb-20 pt-6">
         <Breadcrumbs items={[{ label: "Planes" }]} className="mb-8" />
         <header className="mb-8 max-w-3xl space-y-3">
-          <h1 className="font-heading text-3xl font-bold text-[#001F58] sm:text-5xl">Planes</h1>
+          <h1 className="font-heading text-3xl font-bold text-[#00205B] sm:text-5xl">Planes</h1>
           <p className="text-sm leading-relaxed text-slate-700 sm:text-base">
             Todas las cuentas publican gratis. Tus avisos no vencen: cuentan los que están activos, y si pausás uno, liberás su
             lugar. Si necesitás más, pasate a Pro o armá tu plan Broker / Empresa. Precios en pesos, por mes, y cancelás cuando quieras.
@@ -63,7 +63,7 @@ export function PlansClient({ data }: { data: PlansGrid }) {
             }
             if (!viewer.loggedIn) {
               return (
-                <Link href="/register" className="flex min-h-11 w-full items-center justify-center rounded-md bg-[#001F58] px-4 text-sm font-bold text-white hover:bg-[#00133A]">
+                <Link href="/register" className="flex min-h-11 w-full items-center justify-center rounded-md bg-[#00205B] px-4 text-sm font-bold text-white hover:bg-[#001331]">
                   Suscribirme
                 </Link>
               );
@@ -72,7 +72,7 @@ export function PlansClient({ data }: { data: PlansGrid }) {
           }}
         />
 
-        <p className="mt-6 max-w-3xl border-l-2 border-[#001F58]/30 pl-3 text-sm leading-relaxed text-slate-600">
+        <p className="mt-6 max-w-3xl border-l-2 border-[#00205B]/30 pl-3 text-sm leading-relaxed text-slate-600">
           Si cancelás o pasás a un plan con menos cupo y tenés más avisos activos, se pausan los más nuevos. Después elegís
           cuáles quedan activos desde tu perfil. Los cambios de plan son inmediatos y sin prorrateo.
         </p>

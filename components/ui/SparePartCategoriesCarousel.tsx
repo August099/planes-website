@@ -30,7 +30,7 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
         <Link
           href="/spareparts"
           // VA-162: el mismo azul que los demás links de la Home ("Ver Aviones →").
-          className="text-sm font-semibold text-[#001F58] hover:underline hidden sm:block"
+          className="text-sm font-semibold text-[#00205B] hover:underline hidden sm:block"
         >
           Ver todo el catálogo
         </Link>
@@ -43,20 +43,14 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
         gapClassName="gap-3 min-[480px]:gap-4 md:gap-5"
         slideClassName="w-[calc((100%-15.6px)/2.3)] min-[480px]:w-[calc((100%-36.8px)/3.3)] sm:w-[calc((100%-48px)/4)] md:w-[calc((100%-80px)/5)] lg:w-[calc((100%-100px)/6)]"
       >
-        {categories.map((cat) => (
-          <Link
-            key={cat.id}
-            href={`/spareparts?category=${cat.id}`}
-            className="block h-full"
-          >
-            <Card className="home-card group/card flex h-full min-h-28 w-full flex-col justify-between gap-3 rounded-lg border-slate-200 bg-white p-4 shadow-sm transition-colors duration-200 hover:border-[#E70F1F] cursor-pointer">
-              <DynamicCategoryIcon
-                name={cat.icon}
-                className="h-6 w-6 text-[#001F58] transition-colors group-hover/card:text-[#E70F1F]"
-              />
-              <span className="line-clamp-2 text-left text-xs font-semibold leading-snug text-slate-800 sm:text-sm">
-                {cat.name}
+        {categories.map((cat, i) => (
+          <Link key={cat.id} href={`/spareparts?category=${cat.id}`} className="group block h-full">
+            <Card className="va-card flex h-full min-h-32 w-full flex-col justify-between gap-3 rounded-md p-4 shadow-none cursor-pointer">
+              <span className="flex items-start justify-between">
+                <DynamicCategoryIcon name={cat.icon} className="h-6 w-6 text-[#00205B] transition-colors group-hover:text-[#D62828]" />
+                <span className="text-[10px] font-semibold tracking-[0.16em] text-[#00205B]/45 tabular-nums">{String(i + 1).padStart(2, "0")}</span>
               </span>
+              <span className="line-clamp-2 text-left text-xs font-bold leading-snug text-[#00205B] sm:text-sm">{cat.name}</span>
             </Card>
           </Link>
         ))}

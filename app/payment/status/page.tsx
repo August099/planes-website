@@ -66,9 +66,9 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
         ? "pending"
         : "confirming";
 
-  const box = "rounded-lg border border-[#001F58]/12 bg-white p-6 sm:p-8";
-  const primary = "inline-flex min-h-11 items-center rounded-md bg-[#001F58] px-5 text-sm font-bold text-white hover:bg-[#00133A]";
-  const secondary = "inline-flex min-h-11 items-center rounded-md border border-[#001F58]/20 px-5 text-sm font-semibold text-[#001F58] hover:bg-slate-50";
+  const box = "rounded-lg border border-[#00205B]/12 bg-white p-6 sm:p-8";
+  const primary = "inline-flex min-h-11 items-center rounded-md bg-[#00205B] px-5 text-sm font-bold text-white hover:bg-[#001331]";
+  const secondary = "inline-flex min-h-11 items-center rounded-md border border-[#00205B]/20 px-5 text-sm font-semibold text-[#00205B] hover:bg-slate-50";
 
   return (
     <main className="relative isolate min-h-[calc(100vh-80px)] px-4 pb-20 pt-6">
@@ -80,7 +80,7 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
 
           {state === "active" && (
             <>
-              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#001F58]">
+              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#00205B]">
                 <CheckCircle2 className="h-7 w-7 shrink-0 text-emerald-600" aria-hidden />
                 {total === 0 ? "¡Listo! Lo activamos sin cargo." : "¡Pago acreditado!"}
               </h1>
@@ -116,8 +116,8 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
 
           {state === "confirming" && (
             <>
-              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#001F58]">
-                <Clock className="h-7 w-7 shrink-0 text-[#001F58]" aria-hidden />
+              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#00205B]">
+                <Clock className="h-7 w-7 shrink-0 text-[#00205B]" aria-hidden />
                 Estamos confirmando tu pago…
               </h1>
               <p className="mt-3 text-sm text-slate-600">
@@ -129,7 +129,7 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
 
           {state === "pending" && (
             <>
-              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#001F58]">
+              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#00205B]">
                 <Clock className="h-7 w-7 shrink-0 text-amber-600" aria-hidden />
                 Tu pago está pendiente
               </h1>
@@ -143,8 +143,8 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
 
           {state === "failed" && (
             <>
-              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#001F58]">
-                <XCircle className="h-7 w-7 shrink-0 text-[#E70F1F]" aria-hidden />
+              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#00205B]">
+                <XCircle className="h-7 w-7 shrink-0 text-[#D62828]" aria-hidden />
                 El pago no se completó
               </h1>
               <p className="mt-3 text-sm text-slate-600">
@@ -164,14 +164,14 @@ export default async function PaymentStatusPage({ searchParams }: Props) {
 
           {state === "refunded" && (
             <>
-              <h1 className="mt-2 text-2xl font-bold text-[#001F58]">Pago reintegrado</h1>
+              <h1 className="mt-2 text-2xl font-bold text-[#00205B]">Pago reintegrado</h1>
               <p className="mt-3 text-sm text-slate-600">Este pago se devolvió y la compra quedó sin efecto.</p>
             </>
           )}
 
-          <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-2 border-t border-[#001F58]/10 pt-4 text-sm">
+          <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-2 border-t border-[#00205B]/10 pt-4 text-sm">
             <dt className="text-slate-500">Total</dt>
-            <dd className="text-right font-semibold tabular-nums text-[#001F58]">{total === 0 ? "Sin cargo" : `AR$ ${NUMBER.format(total)}`}</dd>
+            <dd className="text-right font-semibold tabular-nums text-[#00205B]">{total === 0 ? "Sin cargo" : `AR$ ${NUMBER.format(total)}`}</dd>
             <dt className="text-slate-500">Referencia</dt>
             <dd className="text-right font-mono text-xs text-slate-600">{purchase.id.slice(-8).toUpperCase()}</dd>
           </dl>
@@ -190,9 +190,9 @@ async function SubscriptionStatus({ id, userId, isAdmin }: { id: string; userId:
   if (!sub || (sub.userId !== userId && !isAdmin)) notFound();
   const now = new Date();
   const active = (sub.status === "ACTIVE" && sub.currentPeriodEnd > now) || (sub.status === "PAST_DUE" && !!sub.graceUntil && sub.graceUntil > now);
-  const box = "rounded-lg border border-[#001F58]/12 bg-white p-6 sm:p-8";
-  const primary = "inline-flex min-h-11 items-center rounded-md bg-[#001F58] px-5 text-sm font-bold text-white hover:bg-[#00133A]";
-  const secondary = "inline-flex min-h-11 items-center rounded-md border border-[#001F58]/20 px-5 text-sm font-semibold text-[#001F58] hover:bg-slate-50";
+  const box = "rounded-lg border border-[#00205B]/12 bg-white p-6 sm:p-8";
+  const primary = "inline-flex min-h-11 items-center rounded-md bg-[#00205B] px-5 text-sm font-bold text-white hover:bg-[#001331]";
+  const secondary = "inline-flex min-h-11 items-center rounded-md border border-[#00205B]/20 px-5 text-sm font-semibold text-[#00205B] hover:bg-slate-50";
 
   return (
     <main className="relative isolate min-h-[calc(100vh-80px)] px-4 pb-20 pt-6">
@@ -203,7 +203,7 @@ async function SubscriptionStatus({ id, userId, isAdmin }: { id: string; userId:
           <p className={LABEL}>Plan {sub.plan.name}</p>
           {active ? (
             <>
-              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#001F58]">
+              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#00205B]">
                 <CheckCircle2 className="h-7 w-7 shrink-0 text-emerald-600" aria-hidden />
                 ¡Tu suscripción está activa!
               </h1>
@@ -221,8 +221,8 @@ async function SubscriptionStatus({ id, userId, isAdmin }: { id: string; userId:
             </>
           ) : sub.status === "PENDING" ? (
             <>
-              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#001F58]">
-                <Clock className="h-7 w-7 shrink-0 text-[#001F58]" aria-hidden />
+              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#00205B]">
+                <Clock className="h-7 w-7 shrink-0 text-[#00205B]" aria-hidden />
                 Estamos confirmando tu suscripción…
               </h1>
               <p className="mt-3 text-sm text-slate-600">
@@ -232,8 +232,8 @@ async function SubscriptionStatus({ id, userId, isAdmin }: { id: string; userId:
             </>
           ) : (
             <>
-              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#001F58]">
-                <XCircle className="h-7 w-7 shrink-0 text-[#E70F1F]" aria-hidden />
+              <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#00205B]">
+                <XCircle className="h-7 w-7 shrink-0 text-[#D62828]" aria-hidden />
                 La suscripción no está activa
               </h1>
               <p className="mt-3 text-sm text-slate-600">Podés volver a suscribirte cuando quieras.</p>

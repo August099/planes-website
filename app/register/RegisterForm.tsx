@@ -52,12 +52,12 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
       <PageBackground page="register" />
 
       <div className="container mx-auto px-4 max-w-lg">
-        <div className="bg-white border border-[#001F58]/12 rounded-lg p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="bg-white border border-[#00205B]/12 rounded-lg p-6 sm:p-8 shadow-sm space-y-6">
           <div className="space-y-1.5">
-            <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#001F58]">
+            <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#00205B]">
               Crear cuenta
             </h1>
-            <p className="text-xs sm:text-sm text-[#001F58]/70">
+            <p className="text-xs sm:text-sm text-[#00205B]/70">
               Ingresá tus datos para comenzar a publicar en Ventas Aeronáuticas
             </p>
           </div>
@@ -109,7 +109,7 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
           <form method="post" onSubmit={handleSubmit} className="space-y-4">
             {/* NOMBRE COMPLETO */}
             <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-xs font-semibold text-[#001F58]">
+              <Label htmlFor="name" className="text-xs font-semibold text-[#00205B]">
                 Nombre completo
               </Label>
               <Input
@@ -117,13 +117,13 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
                 name="name"
                 type="text"
                 required
-                className="bg-white/80 border-[#001F58]/20 focus-visible:ring-[#001F58]"
+                className="bg-white/80 border-[#00205B]/20 focus-visible:ring-[#00205B]"
               />
             </div>
 
             {/* EMAIL */}
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-xs font-semibold text-[#001F58]">
+              <Label htmlFor="email" className="text-xs font-semibold text-[#00205B]">
                 Email
               </Label>
               <Input
@@ -131,20 +131,20 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
                 name="email"
                 type="email"
                 required
-                className="bg-white/80 border-[#001F58]/20 focus-visible:ring-[#001F58]"
+                className="bg-white/80 border-[#00205B]/20 focus-visible:ring-[#00205B]"
               />
             </div>
 
             {/* TIPO DE CUENTA */}
             <div className="space-y-1.5">
-              <Label htmlFor="userType" className="text-xs font-semibold text-[#001F58]">
+              <Label htmlFor="userType" className="text-xs font-semibold text-[#00205B]">
                 Tipo de Cuenta
               </Label>
               <select
                 id="userType"
                 name="userType"
                 defaultValue="PARTICULAR"
-                className="w-full px-3 py-2 text-xs sm:text-sm rounded-md border border-[#001F58]/20 bg-white/80 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#001F58] font-medium"
+                className="w-full px-3 py-2 text-xs sm:text-sm rounded-md border border-[#00205B]/20 bg-white/80 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00205B] font-medium"
               >
                 {USER_TYPE_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -156,7 +156,7 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
 
             {/* CONTRASEÑA */}
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-xs font-semibold text-[#001F58]">
+              <Label htmlFor="password" className="text-xs font-semibold text-[#00205B]">
                 Contraseña
               </Label>
               <div className="relative">
@@ -166,12 +166,12 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
                   type={showPassword ? "text" : "password"}
                   minLength={8}
                   required
-                  className="bg-white/80 border-[#001F58]/20 focus-visible:ring-[#001F58] pr-10"
+                  className="bg-white/80 border-[#00205B]/20 focus-visible:ring-[#00205B] pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#001F58] transition-colors p-1"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#00205B] transition-colors p-1"
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -180,7 +180,7 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
                   )}
                 </button>
               </div>
-              <p className="text-[10px] text-[#001F58]/60">
+              <p className="text-[10px] text-[#00205B]/60">
                 Mínimo 8 caracteres, al menos 1 mayúscula, 1 número y 1 símbolo.
               </p>
             </div>
@@ -188,21 +188,21 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
             {/* MINI VENTANA DE TÉRMINOS Y CONDICIONES CON SCROLL */}
             <div className="space-y-2 pt-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold text-[#001F58] flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-[#001F58]/70" />
+                <Label className="text-xs font-semibold text-[#00205B] flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-[#00205B]/70" />
                   Términos y Condiciones de Uso
                 </Label>
                 <Link
                   href="/terms"
                   target="_blank"
-                  className="text-[11px] text-[#E70F1F] hover:underline font-medium"
+                  className="text-[11px] text-[#D62828] hover:underline font-medium"
                 >
                   Abrir página completa ↗
                 </Link>
               </div>
 
               {/* Ventana con Scroll Interno */}
-              <div className="h-32 w-full overflow-y-auto rounded-xl border border-[#001F58]/20 bg-slate-50/90 p-3 text-[11px] shadow-inner focus:outline-none focus:ring-1 focus:ring-[#001F58]">
+              <div className="h-32 w-full overflow-y-auto rounded-xl border border-[#00205B]/20 bg-slate-50/90 p-3 text-[11px] shadow-inner focus:outline-none focus:ring-1 focus:ring-[#00205B]">
                 <TermsContent />
               </div>
 
@@ -214,15 +214,15 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
                   name="terms"
                   checked={acceptedTerms}
                   onChange={(e) => setAcceptedTerms(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-[#001F58]/30 text-[#001F58] focus:ring-[#001F58] cursor-pointer"
+                  className="mt-0.5 h-4 w-4 rounded border-[#00205B]/30 text-[#00205B] focus:ring-[#00205B] cursor-pointer"
                   required
                 />
                 <label
                   htmlFor="terms"
-                  className="text-xs text-[#001F58]/80 leading-snug cursor-pointer select-none"
+                  className="text-xs text-[#00205B]/80 leading-snug cursor-pointer select-none"
                 >
                   He leído y acepto los{" "}
-                  <Link href="/terms" target="_blank" className="font-semibold text-[#001F58] underline">
+                  <Link href="/terms" target="_blank" className="font-semibold text-[#00205B] underline">
                     Términos y Condiciones
                   </Link>{" "}
                   de Ventas Aeronáuticas.
@@ -233,17 +233,17 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
             <Button
               type="submit"
               disabled={loading || !acceptedTerms}
-              className="w-full mt-2 bg-[#E70F1F] hover:bg-[#c00d1a] text-white font-medium py-2.5 rounded-xl shadow-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full mt-2 bg-[#D62828] hover:bg-[#c00d1a] text-white font-medium py-2.5 rounded-xl shadow-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Creando cuenta..." : "Crear cuenta"}
             </Button>
           </form>
 
-          <p className="text-xs sm:text-sm text-[#001F58]/70 pt-2 border-t border-[#001F58]/10">
+          <p className="text-xs sm:text-sm text-[#00205B]/70 pt-2 border-t border-[#00205B]/10">
             ¿Ya tenés cuenta?{" "}
             <Link
               href="/login"
-              className="text-[#E70F1F] font-semibold hover:underline transition-colors"
+              className="text-[#D62828] font-semibold hover:underline transition-colors"
             >
               Ingresá
             </Link>

@@ -12,8 +12,8 @@ export function SuggestionForm() {
 
   if (state.status === "sent") {
     return (
-      <p role="status" className="border-l-2 border-[#001F58] pl-3 text-sm text-slate-700">
-        <strong className="text-[#001F58]">¡Gracias!</strong> Recibimos tu sugerencia. La leemos con el equipo y, si dejaste tu email,
+      <p role="status" className="border-l-2 border-[#00205B] pl-3 text-sm text-slate-700">
+        <strong className="text-[#00205B]">¡Gracias!</strong> Recibimos tu sugerencia. La leemos con el equipo y, si dejaste tu email,
         te respondemos.
       </p>
     );
@@ -54,7 +54,7 @@ export function SuggestionForm() {
       <button
         type="submit"
         disabled={pending}
-        className="min-h-11 rounded-md bg-[#001F58] px-5 text-sm font-bold text-white hover:bg-[#00133A] disabled:opacity-60 cursor-pointer"
+        className="min-h-11 rounded-md bg-[#00205B] px-5 text-sm font-bold text-white hover:bg-[#001331] disabled:opacity-60 cursor-pointer"
       >
         {pending ? "Enviando…" : "Enviar sugerencia"}
       </button>

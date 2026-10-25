@@ -42,7 +42,7 @@ export function WithdrawalButton({ paymentId, until, description }: { paymentId:
 
   return (
     <>
-      <button type="button" onClick={openDialog} className="text-xs font-semibold text-[#E70F1F] hover:underline cursor-pointer">
+      <button type="button" onClick={openDialog} className="text-xs font-semibold text-[#D62828] hover:underline cursor-pointer">
         Arrepentirme
       </button>
       <ConfirmDialog
@@ -68,10 +68,10 @@ export function WithdrawalButton({ paymentId, until, description }: { paymentId:
       >
         <div className="space-y-2 text-left text-sm text-slate-600">
           <p>
-            <strong className="text-[#001F58]">{description}</strong>
+            <strong className="text-[#00205B]">{description}</strong>
           </p>
           <p>
-            {detail ? <>Se devuelven <strong className="text-[#001F58]">AR$ {MONEY.format(detail.amount)}</strong></> : "Te devolvemos el total"} por Mercado Pago
+            {detail ? <>Se devuelven <strong className="text-[#00205B]">AR$ {MONEY.format(detail.amount)}</strong></> : "Te devolvemos el total"} por Mercado Pago
             (puede tardar unos días en verse según el medio de pago) y se retira lo que obtuviste con este pago, aunque ya lo hayas usado:
           </p>
           {!detail && !error && <p className="text-xs text-slate-500">Armando el detalle…</p>}
@@ -87,7 +87,7 @@ export function WithdrawalButton({ paymentId, until, description }: { paymentId:
             const chosen = keep[o.kind] ?? [];
             return (
               <fieldset key={o.kind} className="space-y-2 rounded-md border border-slate-200 p-3">
-                <legend className="px-1 text-sm font-semibold text-[#001F58]">¿Qué {KIND_TEXT[o.kind]} quedan activos?</legend>
+                <legend className="px-1 text-sm font-semibold text-[#00205B]">¿Qué {KIND_TEXT[o.kind]} quedan activos?</legend>
                 <p className="text-xs text-slate-500">
                   Con el plan Base quedan hasta {o.limit}. Elegidos: {chosen.length} de {o.limit}. Los demás se pausan y los podés activar después si liberás lugar.
                 </p>
@@ -100,7 +100,7 @@ export function WithdrawalButton({ paymentId, until, description }: { paymentId:
                           checked={chosen.includes(l.id)}
                           disabled={!chosen.includes(l.id) && chosen.length >= o.limit}
                           onChange={() => toggle(o, l.id)}
-                          className="h-4 w-4 shrink-0 accent-[#001F58]"
+                          className="h-4 w-4 shrink-0 accent-[#00205B]"
                         />
                         <span className="truncate">{l.title}</span>
                       </label>

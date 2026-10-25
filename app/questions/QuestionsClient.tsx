@@ -64,7 +64,7 @@ export function QuestionsClient({
     <div className="space-y-6">
       {/* Título de la página */}
       <div>
-        <h1 className="text-2xl font-bold text-[#001F58] flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-[#00205B] flex items-center gap-2">
           <MessageSquare className="w-6 h-6 text-blue-600" />
           Mis Consultas
         </h1>
@@ -79,7 +79,7 @@ export function QuestionsClient({
           onClick={() => setActiveTab("received")}
           className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
             activeTab === "received"
-              ? "border-[#001F58] text-[#001F58]"
+              ? "border-[#00205B] text-[#00205B]"
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
@@ -89,7 +89,7 @@ export function QuestionsClient({
           {pendingReceivedCount > 0 && (
             <span
               aria-label={`${pendingReceivedCount} sin responder`}
-              className="px-2 py-0.5 rounded-full bg-[#E70F1F] text-white text-[11px] font-bold whitespace-nowrap"
+              className="px-2 py-0.5 rounded-full bg-[#D62828] text-white text-[11px] font-bold whitespace-nowrap"
             >
               {pendingReceivedCount}<span className="hidden sm:inline"> sin responder</span>
             </span>
@@ -100,7 +100,7 @@ export function QuestionsClient({
           onClick={() => setActiveTab("sent")}
           className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
             activeTab === "sent"
-              ? "border-[#001F58] text-[#001F58]"
+              ? "border-[#00205B] text-[#00205B]"
               : "border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
@@ -143,7 +143,7 @@ export function QuestionsClient({
                       <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
                         <AppImage src={imageUrl} alt={item?.title || "Producto"} fill sizes="64px" className="object-cover" />
                       </div>
-                      <span className="text-sm font-bold text-[#001F58] line-clamp-1">
+                      <span className="text-sm font-bold text-[#00205B] line-clamp-1">
                         {item?.title}
                       </span>
                     </div>
@@ -205,7 +205,7 @@ export function QuestionsClient({
                                 type="button"
                                 disabled={isAnswering || !answerText.trim()}
                                 onClick={() => handleAnswerSubmit(q.id)}
-                                className="px-4 py-1.5 text-xs font-bold bg-[#001F58] text-white rounded-lg hover:bg-blue-900 disabled:opacity-50 flex items-center gap-1.5"
+                                className="px-4 py-1.5 text-xs font-bold bg-[#00205B] text-white rounded-lg hover:bg-blue-900 disabled:opacity-50 flex items-center gap-1.5"
                               >
                                 <Reply className="w-3.5 h-3.5" />
                                 {isAnswering ? "Enviando..." : "Responder"}
@@ -261,7 +261,7 @@ export function QuestionsClient({
                         <AppImage src={imageUrl} alt={item?.title || "Producto"} fill sizes="64px" className="object-cover" />
                       </div>
                       <div>
-                        <span className="text-sm font-bold text-[#001F58] line-clamp-1">
+                        <span className="text-sm font-bold text-[#00205B] line-clamp-1">
                           {item?.title}
                         </span>
                         <span className="text-[11px] text-slate-400 block">

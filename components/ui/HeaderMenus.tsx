@@ -40,7 +40,7 @@ export function DesktopDropdown({ userId, isAdmin, hasUnanswered, hasRepublish =
             <DropdownMenuItem className="p-0">
               <Link
                 href="/admin"
-                className="w-full px-2 py-1.5 text-sm font-bold text-[#E70F1F] hover:bg-red-50 flex items-center gap-2"
+                className="w-full px-2 py-1.5 text-sm font-bold text-[#D62828] hover:bg-red-50 flex items-center gap-2"
               >
                 <ShieldCheck className="h-4 w-4" />
                 Panel Admin
@@ -126,7 +126,7 @@ export function MobileDropdown({ userId, isAdmin, hasUnanswered, hasRepublish = 
               <DropdownMenuItem className="p-0">
                 <Link
                   href="/admin"
-                  className="w-full px-2 py-1.5 text-sm font-bold text-[#E70F1F] bg-red-50/50 hover:bg-red-50 flex items-center gap-2 rounded-md"
+                  className="w-full px-2 py-1.5 text-sm font-bold text-[#D62828] bg-red-50/50 hover:bg-red-50 flex items-center gap-2 rounded-md"
                 >
                   <ShieldCheck className="h-4 w-4" />
                   Panel Admin
@@ -176,7 +176,7 @@ export function MobileDropdown({ userId, isAdmin, hasUnanswered, hasRepublish = 
           <DropdownMenuItem className="p-0">
             <Link
               href="/login"
-              className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-semibold bg-[#E70F1F] text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-semibold bg-[#D62828] text-white rounded-lg hover:bg-red-700 transition-colors"
             >
               <User className="h-4 w-4" />
               Ingresar a mi cuenta
@@ -215,7 +215,7 @@ function SparePartsGroup({ label, categories }: { label: string; categories: Non
           <DropdownMenuItem key={c.id} className="p-0">
             <Link
               href={`/spareparts?category=${encodeURIComponent(c.id)}`}
-              className="w-full border-l-2 border-[#001F58]/15 py-1 pl-4 pr-2 text-sm text-slate-600"
+              className="w-full border-l-2 border-[#00205B]/15 py-1 pl-4 pr-2 text-sm text-slate-600"
             >
               {c.name}
             </Link>

@@ -21,7 +21,7 @@ export function RecommendationRail(props: Props) {
     <section id={id} aria-labelledby={headingId} className="space-y-4 print:hidden">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h2 id={headingId} className="text-xl sm:text-2xl font-bold text-[#001F58]">
+          <h2 id={headingId} className="text-xl sm:text-2xl font-bold text-[#00205B]">
             {block.title}
           </h2>
         </div>
@@ -73,7 +73,7 @@ export function CompareSimilarLink({ currentId, items }: { currentId: string; it
   return (
     <Link
       href={`/aircraft/compare?ids=${ids.map(encodeURIComponent).join(",")}`}
-      className="inline-flex min-h-11 items-center rounded-md bg-[#001F58] px-4 text-sm font-semibold text-white hover:bg-[#00133A]"
+      className="inline-flex min-h-11 items-center rounded-md bg-[#00205B] px-4 text-sm font-semibold text-white hover:bg-[#001331]"
     >
       Comparar estas aeronaves
     </Link>

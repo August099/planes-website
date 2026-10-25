@@ -32,7 +32,7 @@ const NUMBER = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 2 });
 const money = (n: number) => (n === 0 ? "Sin cargo" : `AR$ ${NUMBER.format(n)}`);
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 const FIELD_LABEL = "block text-xs font-semibold text-slate-600 mb-1";
-const INPUT = "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#001F58] focus:outline-none focus:ring-2 focus:ring-[#001F58]/15";
+const INPUT = "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#00205B] focus:outline-none focus:ring-2 focus:ring-[#00205B]/15";
 
 export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, initialCoupon = "", recurring }: Props) {
   const [kind, setKind] = useState<Kind>(defaults.kind);
@@ -120,9 +120,9 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
 
   return (
     <form onSubmit={submit} noValidate className="grid gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-      <section className="rounded-lg border border-[#001F58]/12 bg-white p-5 sm:p-8">
+      <section className="rounded-lg border border-[#00205B]/12 bg-white p-5 sm:p-8">
         <p className={LABEL}>{editing ? "Datos de facturación" : "Confirmá tu compra"}</p>
-        <h1 className="mt-1 text-2xl font-bold text-[#001F58]">{editing ? "¿A nombre de quién va la factura?" : product.name}</h1>
+        <h1 className="mt-1 text-2xl font-bold text-[#00205B]">{editing ? "¿A nombre de quién va la factura?" : product.name}</h1>
         <p className="mt-2 text-sm text-slate-600">
           {editing ? "Te enviamos la factura C por email. Guardamos estos datos para tu próxima compra." : product.includes}
         </p>
@@ -130,13 +130,13 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
         {/* VA-92 (pedido del socio, 13/10): facturar sin formulario cuando se puede. Con nombre y email
             (del perfil o de la compra anterior) se muestra un resumen y solo se edita con "Cambiar". */}
         {!editing && (
-          <div className="mt-6 flex flex-wrap items-start justify-between gap-3 rounded-md border border-[#001F58]/12 bg-slate-50 px-4 py-3 text-sm">
+          <div className="mt-6 flex flex-wrap items-start justify-between gap-3 rounded-md border border-[#00205B]/12 bg-slate-50 px-4 py-3 text-sm">
             <p className="min-w-0 text-slate-700">
-              <span className="font-semibold text-[#001F58]">Factura C</span> a nombre de <strong>{name}</strong>
+              <span className="font-semibold text-[#00205B]">Factura C</span> a nombre de <strong>{name}</strong>
               {kind === "EMPRESA" && docNumber ? ` (CUIT ${docNumber})` : ""}
               <span className="block break-all text-slate-500">Se envía a {email}</span>
             </p>
-            <button type="button" onClick={() => setEditing(true)} className="text-sm font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F] cursor-pointer">
+            <button type="button" onClick={() => setEditing(true)} className="text-sm font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828] cursor-pointer">
               Cambiar
             </button>
           </div>
@@ -161,7 +161,7 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
                 setErrors({});
               }}
               className={`min-h-10 rounded text-sm font-medium transition-colors cursor-pointer ${
-                kind === value ? "bg-white text-[#001F58] shadow-sm" : "text-slate-600 hover:text-slate-900"
+                kind === value ? "bg-white text-[#00205B] shadow-sm" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               {value === "EMPRESA" ? (
@@ -241,7 +241,7 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
         )}
 
         {recurring && (
-          <div className="mt-6 border-t border-[#001F58]/10 pt-6">
+          <div className="mt-6 border-t border-[#00205B]/10 pt-6">
             <label htmlFor="mp-email" className={FIELD_LABEL}>
               Email de tu cuenta de Mercado Pago
             </label>
@@ -260,7 +260,7 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
         <button
           type="submit"
           disabled={submitting}
-          className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-[#E70F1F] px-5 text-sm font-bold text-white hover:bg-[#C20D1A] disabled:opacity-60 sm:w-auto cursor-pointer"
+          className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-[#D62828] px-5 text-sm font-bold text-white hover:bg-[#B71F1F] disabled:opacity-60 sm:w-auto cursor-pointer"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
           {total === 0 ? "Confirmar sin cargo" : "Pagar"}
@@ -275,12 +275,12 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
       </section>
 
       {/* VA-132: en celular el resumen (con el cupón) va primero; en escritorio sigue a la derecha. */}
-      <aside className="order-first self-start rounded-lg border border-[#001F58]/12 bg-white md:order-none">
-        <p className={`border-b border-[#001F58]/10 px-5 py-3 ${LABEL}`}>Elegiste</p>
-        <dl className="divide-y divide-[#001F58]/10 text-sm">
+      <aside className="order-first self-start rounded-lg border border-[#00205B]/12 bg-white md:order-none">
+        <p className={`border-b border-[#00205B]/10 px-5 py-3 ${LABEL}`}>Elegiste</p>
+        <dl className="divide-y divide-[#00205B]/10 text-sm">
           <div className="px-5 py-3">
             <dt className="text-slate-500">Plan</dt>
-            <dd className="font-semibold text-[#001F58]">{product.name}</dd>
+            <dd className="font-semibold text-[#00205B]">{product.name}</dd>
           </div>
           <div className="px-5 py-3">
             <dt className="text-slate-500">Incluye</dt>
@@ -302,15 +302,15 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
             </div>
           )}
           <div className="flex items-baseline justify-between gap-3 px-5 py-3">
-            <dt className="font-semibold text-[#001F58]">Total</dt>
-            <dd className="text-lg font-bold tabular-nums text-[#001F58]">
+            <dt className="font-semibold text-[#00205B]">Total</dt>
+            <dd className="text-lg font-bold tabular-nums text-[#00205B]">
               {money(total)}
               {recurring && <span className="text-xs font-normal text-slate-500"> por {recurring.per}</span>}
             </dd>
           </div>
         </dl>
         {!recurring && (
-        <div className="border-t border-[#001F58]/10 px-5 py-4">
+        <div className="border-t border-[#00205B]/10 px-5 py-4">
           <label htmlFor="coupon" className={FIELD_LABEL}>
             Cupón de descuento
           </label>
@@ -331,7 +331,7 @@ export function CheckoutForm({ productKey, product, defaults, dniRequiredFrom, i
               type="button"
               onClick={applyCoupon}
               disabled={checkingCoupon || !couponInput.trim()}
-              className="inline-flex min-h-10 shrink-0 items-center rounded-md border border-[#001F58]/20 px-4 text-sm font-semibold text-[#001F58] hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+              className="inline-flex min-h-10 shrink-0 items-center rounded-md border border-[#00205B]/20 px-4 text-sm font-semibold text-[#00205B] hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
             >
               {checkingCoupon ? <Loader2 className="h-4 w-4 animate-spin" aria-label="Verificando" /> : "Aplicar"}
             </button>

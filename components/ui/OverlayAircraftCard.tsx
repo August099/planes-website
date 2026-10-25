@@ -51,49 +51,45 @@ export function OverlayAircraftCard({
 
   return (
     <Link href={`/aircraft/${id}`} className="group block h-full">
-      <Card className="relative w-full aspect-[4/3] sm:aspect-[16/11] overflow-hidden rounded-lg border-0 shadow-sm bg-slate-900">
-        {/* BADGE DESTACADO */}
+      {/* Rediseño (25/10): la foto manda; abajo, un fundido al azul de marca (no negro) y los datos
+          alineados a la izquierda con sus rótulos, como la placa de un instrumento. */}
+      <Card className="va-card relative w-full aspect-[4/3] sm:aspect-[16/11] rounded-md border-0 bg-[#00205B]">
         <div className="absolute top-3 right-3 z-10">
           <CompareButton variant="overlay" item={{ id, title: displayTitle, image: imageUrl ?? null }} />
         </div>
         {featuredBadge && (
-          <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-red-600 text-white text-[11px] font-bold rounded-lg shadow-md uppercase tracking-wide">
+          <div className="absolute top-3 left-3 z-10 rounded-sm bg-[#D62828] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
             {featuredBadge}
           </div>
         )}
 
-        {/* IMAGEN CON ZOOM EN HOVER */}
         <AppImage
           src={imageUrl}
           alt={displayTitle}
           fill
           // VA-73: 1 card por fila en celular y 2 desde 640 px (FeaturedAircraftCarousel), dentro del container.
           sizes="(max-width: 640px) 100vw, (max-width: 1536px) 50vw, 768px"
-          className="object-cover"
+          className="object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
         />
 
-        {/* GRADIENTE INFERIOR PARA LECTURA DEL TEXTO */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent pointer-events-none" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#001331]/90 via-[#00205B]/30 to-transparent" />
 
-        {/* MARCA + MODELO CENTRADO Y MÁS ARRIBA */}
-        <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 z-10 flex flex-col justify-end text-white">
-          <h3
-            className="font-bold text-xl sm:text-2xl text-white drop-shadow-md line-clamp-1 tracking-tight text-center mb-3"
-            title={displayTitle}
-          >
+        <div className="absolute inset-x-0 bottom-0 z-10 p-4 text-white sm:p-6">
+          <h3 className="line-clamp-1 text-xl font-extrabold tracking-[-0.01em] text-white sm:text-[1.65rem]" title={displayTitle}>
             {displayTitle}
           </h3>
-
-          <div className="flex items-center justify-between pt-1">
-            <span className="font-semibold text-lg sm:text-xl text-white/95 drop-shadow-sm">
-              {formattedPrice}
-            </span>
+          <dl className="mt-3 flex items-end justify-between gap-4 border-t border-white/25 pt-3 tabular-nums">
+            <div>
+              <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/65">Precio</dt>
+              <dd className="text-lg font-bold sm:text-xl">{formattedPrice}</dd>
+            </div>
             {year != null && (
-              <span className="font-semibold text-base sm:text-lg text-white/90 drop-shadow-sm">
-                {year}
-              </span>
+              <div className="text-right">
+                <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/65">Año</dt>
+                <dd className="text-lg font-bold sm:text-xl">{year}</dd>
+              </div>
             )}
-          </div>
+          </dl>
         </div>
       </Card>
     </Link>

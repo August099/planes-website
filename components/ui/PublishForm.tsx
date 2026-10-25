@@ -755,7 +755,7 @@ export default function PublishForm({
     if (userId === null) {
       return (
         <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center p-4">
-          <h2 className="text-2xl font-bold text-[#001F58]">Debes iniciar sesión</h2>
+          <h2 className="text-2xl font-bold text-[#00205B]">Debes iniciar sesión</h2>
           <Link href="/login" className="px-6 py-2.5 bg-red-600 text-white rounded-xl font-semibold">Iniciar Sesión</Link>
         </div>
       );
@@ -768,16 +768,16 @@ export default function PublishForm({
 
         <div className="container mx-auto px-4 pt-16 pb-20 max-w-7xl">
             <div className="text-center max-w-3xl mx-auto mb-10">
-              <h1 className="font-heading text-3xl sm:text-5xl font-semibold text-[#001F58] mb-4">
+              <h1 className="font-heading text-3xl sm:text-5xl font-semibold text-[#00205B] mb-4">
                 {isEditing ? "EDITAR PUBLICACIÓN" : "PUBLICAR PRODUCTO"}
               </h1>
             </div>
 
             {/* VA-152: cupo de la cuenta. Sin lugar libre se avisa al empezar (no al final), con las salidas. */}
             {!isEditing && quota && quotaLine && !quotaFull && quotaLine.limit !== null && (
-              <p className="max-w-2xl mx-auto mb-6 border-l-2 border-[#001F58]/30 pl-3 text-sm text-slate-600">
+              <p className="max-w-2xl mx-auto mb-6 border-l-2 border-[#00205B]/30 pl-3 text-sm text-slate-600">
                 Plan {quota.planName}:{" "}
-                <span className="font-semibold tabular-nums text-[#001F58]">
+                <span className="font-semibold tabular-nums text-[#00205B]">
                   {quotaLine.used} de {quotaLine.limit}
                 </span>{" "}
                 {activeTab === "aircraft" ? "aviones" : "repuestos"} activos. Tus avisos no vencen.
@@ -786,19 +786,19 @@ export default function PublishForm({
             {quotaFull && quota && quotaLine && (
               <section
                 aria-labelledby="quota-full-title"
-                className="max-w-2xl mx-auto mb-6 rounded-lg border border-[#001F58]/15 border-l-2 border-l-[#E70F1F] bg-white p-5 space-y-3"
+                className="max-w-2xl mx-auto mb-6 rounded-lg border border-[#00205B]/15 border-l-2 border-l-[#D62828] bg-white p-5 space-y-3"
               >
-                <h2 id="quota-full-title" className="text-base font-bold leading-snug text-[#001F58] sm:text-lg">
+                <h2 id="quota-full-title" className="text-base font-bold leading-snug text-[#00205B] sm:text-lg">
                   {quotaFullText(activeTab, quotaLine.used, quotaLine.limit ?? 0, quota.planName)}
                 </h2>
                 {saveAsPaused[activeTab] ? (
                   <p className="text-sm text-slate-600">
-                    Este aviso se va a guardar <strong className="text-[#001F58]">pausado</strong>: no se ve hasta que lo actives desde tu
+                    Este aviso se va a guardar <strong className="text-[#00205B]">pausado</strong>: no se ve hasta que lo actives desde tu
                     perfil, cuando tengas lugar.{" "}
                     <button
                       type="button"
                       onClick={() => setSaveAsPaused({ ...saveAsPaused, [activeTab]: false })}
-                      className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F] cursor-pointer"
+                      className="font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828] cursor-pointer"
                     >
                       Cambiar
                     </button>
@@ -809,14 +809,14 @@ export default function PublishForm({
                     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                       <Link
                         href={`/profile/${userId}?tipo=${activeTab === "aircraft" ? "aeronaves" : "repuestos"}&estado=activos`}
-                        className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#001F58]/20 px-4 text-sm font-semibold text-[#001F58] hover:border-[#001F58]"
+                        className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#00205B]/20 px-4 text-sm font-semibold text-[#00205B] hover:border-[#00205B]"
                       >
                         Pausar uno de mis avisos
                       </Link>
                       {plansAvailable && (
                         <Link
                           href="/plans"
-                          className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#E70F1F] px-4 text-sm font-bold text-white hover:bg-[#C20D1A]"
+                          className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#D62828] px-4 text-sm font-bold text-white hover:bg-[#B71F1F]"
                         >
                           {quota.tier === "BASE" ? "Pasarme a Pro" : "Ver planes con más cupo"}
                         </Link>
@@ -827,7 +827,7 @@ export default function PublishForm({
                           setSaveAsPaused({ ...saveAsPaused, [activeTab]: true });
                           setFormError(null);
                         }}
-                        className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#001F58]/20 px-4 text-sm font-semibold text-[#001F58] hover:border-[#001F58] cursor-pointer"
+                        className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#00205B]/20 px-4 text-sm font-semibold text-[#00205B] hover:border-[#00205B] cursor-pointer"
                       >
                         Guardar como pausado
                       </button>
@@ -848,7 +848,7 @@ export default function PublishForm({
 
             {/* En la edición no se puede cambiar el tipo de publicación */}
             <div className={isEditing ? "hidden" : "flex justify-center mb-8"}>
-              <div className="bg-white p-1.5 rounded-lg border border-[#001F58]/20 flex gap-2 shadow-sm">
+              <div className="bg-white p-1.5 rounded-lg border border-[#00205B]/20 flex gap-2 shadow-sm">
                 <button
                   type="button"
                   onClick={() => { 
@@ -858,7 +858,7 @@ export default function PublishForm({
                       setStepAttempted(false);
                   }}
                   className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                    activeTab === "aircraft" ? "bg-[#001F58] text-white shadow-md" : "text-[#001F58]/70 hover:text-[#001F58] hover:bg-[#001F58]/5"
+                    activeTab === "aircraft" ? "bg-[#00205B] text-white shadow-md" : "text-[#00205B]/70 hover:text-[#00205B] hover:bg-[#00205B]/5"
                   }`}
                 >
                   <Plane className="w-4 h-4" /> Aeronaves
@@ -872,7 +872,7 @@ export default function PublishForm({
                       setStepAttempted(false);
                   }}
                   className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                    activeTab === "parts" ? "bg-[#001F58] text-white shadow-md" : "text-[#001F58]/70 hover:text-[#001F58] hover:bg-[#001F58]/5"
+                    activeTab === "parts" ? "bg-[#00205B] text-white shadow-md" : "text-[#00205B]/70 hover:text-[#00205B] hover:bg-[#00205B]/5"
                   }`}
                 >
                   <Wrench className="w-4 h-4" /> Repuestos
@@ -882,7 +882,7 @@ export default function PublishForm({
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div className="lg:col-span-2">
-                    <div className="bg-white border border-[#001F58]/12 rounded-lg p-6 sm:p-8 shadow-sm text-[#001F58]">
+                    <div className="bg-white border border-[#00205B]/12 rounded-lg p-6 sm:p-8 shadow-sm text-[#00205B]">
                         
                         {/* ======================= FORMULARIO AVIONES ======================= */}
                         {activeTab === "aircraft" ? (
@@ -899,7 +899,7 @@ export default function PublishForm({
                                 nextButtonProps={{ 
                                     type: "button", 
                                     title: "Avanzar al siguiente paso",
-                                    className: "px-6 py-2.5 rounded-xl font-bold transition-all shadow-md bg-[#001F58] text-white hover:bg-blue-900",
+                                    className: "px-6 py-2.5 rounded-xl font-bold transition-all shadow-md bg-[#00205B] text-white hover:bg-blue-900",
                                     style: currentStep === 4 ? { display: 'none' } : {},
                                     onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
                                         const err = validateStep(activeTab, currentStep);
@@ -959,7 +959,7 @@ export default function PublishForm({
                                                 <label className="block text-xs font-bold uppercase mb-1">Precio (USD) *</label>
                                                 <input type="number" min="0" disabled={aircraftForm.priceOnRequest} placeholder={aircraftForm.priceOnRequest ? "A Consultar" : "Ej: 150000"} value={aircraftForm.price} onChange={e => setAircraftForm({...aircraftForm, price: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white disabled:bg-slate-100" />
                                                 <label className="flex items-center gap-2 mt-2 text-xs font-semibold cursor-pointer">
-                                                    <input type="checkbox" checked={aircraftForm.priceOnRequest} onChange={e => setAircraftForm({...aircraftForm, priceOnRequest: e.target.checked, price: ""})} className="rounded text-[#001F58]" /> 
+                                                    <input type="checkbox" checked={aircraftForm.priceOnRequest} onChange={e => setAircraftForm({...aircraftForm, priceOnRequest: e.target.checked, price: ""})} className="rounded text-[#00205B]" /> 
                                                     Precio a Consultar
                                                 </label>
                                                 <FieldError message={fieldErrors.price} />
@@ -992,13 +992,13 @@ export default function PublishForm({
 
                                             {selectedGroup && groupHasEngines(selectedGroup) && (
                                             <div className="sm:col-span-2 bg-blue-50/60 p-3.5 rounded-xl border border-blue-100 space-y-1.5">
-                                                <label className="block text-xs font-bold uppercase tracking-wider text-[#001F58]">
+                                                <label className="block text-xs font-bold uppercase tracking-wider text-[#00205B]">
                                                 Motorización *
                                                 </label>
                                                 <div className="flex gap-6 text-sm font-medium">
                                                     {categoriesInGroup(selectedGroup).map(c => c.engine && (
                                                         <label key={c.id} className="flex items-center gap-2 cursor-pointer">
-                                                            <input type="radio" name="engine" checked={selectedEngine === c.engine} onChange={() => handleEngineChange(c.engine!)} className="w-4 h-4 text-[#001F58]" />
+                                                            <input type="radio" name="engine" checked={selectedEngine === c.engine} onChange={() => handleEngineChange(c.engine!)} className="w-4 h-4 text-[#00205B]" />
                                                             {ENGINE_LABELS[c.engine]}
                                                         </label>
                                                     ))}
@@ -1015,7 +1015,7 @@ export default function PublishForm({
                                                 </select>
                                                 {/* VA-165: los modificados pueden ser de otra categoría que la recomendada. */}
                                                 {(pickedCategoryId || pickedGroup) && (
-                                                    <button type="button" onClick={() => setShowAllBrands(!showAllBrands)} className="mt-1 text-[11px] font-semibold text-[#001F58] underline hover:text-[#C20D1A] cursor-pointer">
+                                                    <button type="button" onClick={() => setShowAllBrands(!showAllBrands)} className="mt-1 text-[11px] font-semibold text-[#00205B] underline hover:text-[#B71F1F] cursor-pointer">
                                                         {showAllBrands ? "Ver solo las de este tipo" : "Ver todas las marcas"}
                                                     </button>
                                                 )}
@@ -1055,10 +1055,10 @@ export default function PublishForm({
                                             <div className="sm:col-span-2 pt-4 border-t border-slate-100">
                                                 <label className="block text-xs font-bold uppercase mb-2">Opciones de Negociación</label>
                                                 <div className="flex flex-wrap gap-6 text-sm font-medium">
-                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.financing} onChange={e => setAircraftForm({...aircraftForm, financing: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Permite Financiación</label>
-                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.trade} onChange={e => setAircraftForm({...aircraftForm, trade: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Acepta Permuta</label>
-                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.rent} onChange={e => setAircraftForm({...aircraftForm, rent: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Disponible p/ Alquiler</label>
-                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.negotiable} onChange={e => setAircraftForm({...aircraftForm, negotiable: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Precio negociable</label>
+                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.financing} onChange={e => setAircraftForm({...aircraftForm, financing: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Permite Financiación</label>
+                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.trade} onChange={e => setAircraftForm({...aircraftForm, trade: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Acepta Permuta</label>
+                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.rent} onChange={e => setAircraftForm({...aircraftForm, rent: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Disponible p/ Alquiler</label>
+                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.negotiable} onChange={e => setAircraftForm({...aircraftForm, negotiable: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Precio negociable</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -1086,21 +1086,21 @@ export default function PublishForm({
 
                                         {/* AVIONICA */}
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Aviónica / Radio / Equipamiento</h4>
+                                            <h4 className="font-bold uppercase text-xs text-[#00205B]">Aviónica / Radio / Equipamiento</h4>
                                             <div>
                                                 <label className="block text-xs font-bold mb-1">Descripción del panel{requiredMark("avDescription", aircraftForm.categoryId)}</label>
                                                 <textarea rows={3} placeholder="Ej: Garmin G1000, 2 NAV/COM, Transponder GXR..." value={aircraftForm.avDescription} onChange={e => setAircraftForm({...aircraftForm, avDescription: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.avDescription} />
                                             </div>
                                             <div className="flex gap-6 text-sm font-medium">
-                                                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.avAaptoifr} onChange={e => setAircraftForm({...aircraftForm, avAaptoifr: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Apto IFR</label>
-                                                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.avAutopilot} onChange={e => setAircraftForm({...aircraftForm, avAutopilot: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Autopilot</label>
+                                                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.avAaptoifr} onChange={e => setAircraftForm({...aircraftForm, avAaptoifr: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Apto IFR</label>
+                                                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.avAutopilot} onChange={e => setAircraftForm({...aircraftForm, avAutopilot: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Autopilot</label>
                                             </div>
                                         </div>
 
                                         {/* EQUIPAMIENTO ADICIONAL */}
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Equipamiento adicional (opcional)</h4>
+                                            <h4 className="font-bold uppercase text-xs text-[#00205B]">Equipamiento adicional (opcional)</h4>
                                             <textarea rows={3} placeholder={"Un ítem por línea, por ejemplo:\nEncendido electrónico\nSlats\nCubiertas Alaskan 38\""} value={aircraftForm.extraEquipment} onChange={e => setAircraftForm({...aircraftForm, extraEquipment: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-sm" />
                                             <p className="text-[10px] text-slate-500">Cada línea se muestra como un ítem de la lista en tu aviso.</p>
                                         </div>
@@ -1108,7 +1108,7 @@ export default function PublishForm({
                                         {/* IMPLEMENTOS AGRÍCOLAS: solo en categoría Agrícola */}
                                         {aircraftForm.categoryId === "A" && (
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Implementos agrícolas (opcional)</h4>
+                                            <h4 className="font-bold uppercase text-xs text-[#00205B]">Implementos agrícolas (opcional)</h4>
                                             <textarea rows={3} placeholder="Ej: Tolva de 1.500 l, barra de 18 m, banderillero satelital..." value={aircraftForm.agEquipment} onChange={e => setAircraftForm({...aircraftForm, agEquipment: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-sm" />
                                         </div>
                                         )}
@@ -1116,14 +1116,14 @@ export default function PublishForm({
                                         {/* MOTOR */}
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
                                             <div className="flex justify-between items-center">
-                                                <h4 className="font-bold uppercase text-xs text-[#001F58]">Motor{requiredMark("engines", aircraftForm.categoryId)}</h4>
-                                                <button type="button" onClick={addEngine} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#001F58]/10 text-[#001F58] hover:bg-[#001F58]/20 transition-colors">
+                                                <h4 className="font-bold uppercase text-xs text-[#00205B]">Motor{requiredMark("engines", aircraftForm.categoryId)}</h4>
+                                                <button type="button" onClick={addEngine} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#00205B]/10 text-[#00205B] hover:bg-[#00205B]/20 transition-colors">
                                                     <Plus className="w-4 h-4" /> Agregar Motor
                                                 </button>
                                             </div>
                                             {engines.map((eng, idx) => (
                                                 <div key={idx} className="bg-white p-3 rounded-lg border border-slate-200 grid grid-cols-2 gap-3 relative pt-7">
-                                                    <span className="absolute top-2 left-3 text-[10px] font-bold text-[#001F58] uppercase bg-blue-50 px-2 py-0.5 rounded">Motor #{idx + 1}</span>
+                                                    <span className="absolute top-2 left-3 text-[10px] font-bold text-[#00205B] uppercase bg-blue-50 px-2 py-0.5 rounded">Motor #{idx + 1}</span>
                                                     <button type="button" onClick={() => removeEngine(idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold text-[10px] uppercase flex items-center gap-1"><Trash2 className="w-3 h-3" /> Quitar</button>
                                                     
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.brand`]} /></div>
@@ -1142,16 +1142,16 @@ export default function PublishForm({
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
                                             <div className="flex justify-between items-center">
                                                 <div>
-                                                    <h4 className="font-bold uppercase text-xs text-[#001F58]">Hélice</h4>
+                                                    <h4 className="font-bold uppercase text-xs text-[#00205B]">Hélice</h4>
                                                     <p className="text-[10px] text-slate-400 font-normal">Máximo {engines.length} {engines.length === 1 ? 'hélice' : 'hélices'} (igual o menor al N° de motores)</p>
                                                 </div>
-                                                <button type="button" onClick={addPropeller} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#001F58]/10 text-[#001F58] hover:bg-[#001F58]/20 transition-colors">
+                                                <button type="button" onClick={addPropeller} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#00205B]/10 text-[#00205B] hover:bg-[#00205B]/20 transition-colors">
                                                     <Plus className="w-4 h-4" /> Agregar Hélice
                                                 </button>
                                             </div>
                                             {propellers.map((prop, idx) => (
                                                 <div key={idx} className="bg-white p-3 rounded-lg border border-slate-200 grid grid-cols-2 gap-3 relative pt-7">
-                                                    <span className="absolute top-2 left-3 text-[10px] font-bold text-[#001F58] uppercase bg-blue-50 px-2 py-0.5 rounded">Hélice #{idx + 1}</span>
+                                                    <span className="absolute top-2 left-3 text-[10px] font-bold text-[#00205B] uppercase bg-blue-50 px-2 py-0.5 rounded">Hélice #{idx + 1}</span>
                                                     <button type="button" onClick={() => removePropeller(idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold text-[10px] uppercase flex items-center gap-1"><Trash2 className="w-3 h-3" /> Quitar</button>
 
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Hartzell" value={prop.brand} onChange={e => updatePropeller(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
@@ -1183,7 +1183,7 @@ export default function PublishForm({
                                             </h3>
                                             <p className="text-xs text-slate-500 mt-1">Mostrale al comprador el estado real de tu aeronave. La primera foto será la portada.</p>
                                             {/* VA-126 (socio, 14/10): por ahora, sin las plantillas dibujadas de VA-124 (PhotoGuide queda en components/ui/publish). */}
-                                            <p className="mt-2 border-l-2 border-[#E70F1F] pl-3 text-xs text-slate-600">
+                                            <p className="mt-2 border-l-2 border-[#D62828] pl-3 text-xs text-slate-600">
                                                 Sacá buenas fotos: con luz de día, nítidas y de todos los ángulos (exterior, cabina, tablero y motor). Podés subir hasta {MAX_LISTING_IMAGES}.
                                             </p>
                                         </div>
@@ -1194,7 +1194,7 @@ export default function PublishForm({
                                                 <span className="text-[10px] text-slate-500 font-medium">Mantén apretado y arrastrá para reordenar</span>
                                             </div>
                                             {compressing && (
-                                                <p className="text-xs font-semibold text-[#001F58] mb-2">Optimizando fotos {compressing.done}/{compressing.total}...</p>
+                                                <p className="text-xs font-semibold text-[#00205B] mb-2">Optimizando fotos {compressing.done}/{compressing.total}...</p>
                                             )}
                                             <FieldError message={fieldErrors.images} />
                                             
@@ -1213,13 +1213,13 @@ export default function PublishForm({
                                                             <GripHorizontal className="w-6 h-6 text-white" />
                                                         </div>
                                                         <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-600 rounded-lg p-1.5 text-white shadow-md z-10 hover:bg-red-700"><Trash2 className="w-4 h-4" /></button>
-                                                        {idx === 0 && <span className="absolute bottom-1 left-1 right-1 text-center bg-[#001F58] text-white text-[10px] font-bold py-0.5 rounded shadow">PORTADA</span>}
+                                                        {idx === 0 && <span className="absolute bottom-1 left-1 right-1 text-center bg-[#00205B] text-white text-[10px] font-bold py-0.5 rounded shadow">PORTADA</span>}
                                                     </div>
                                                 ))}
                                                 {images.length < MAX_LISTING_IMAGES && !compressing && (
-                                                    <label className="w-28 h-28 rounded-xl border-2 border-dashed border-[#001F58]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#001F58]/60 bg-slate-50 hover:bg-slate-100 transition-colors">
-                                                        <Upload className="w-6 h-6 text-[#001F58]/50 mb-1" />
-                                                        <span className="text-[10px] font-bold text-[#001F58]">Agregar Foto</span>
+                                                    <label className="w-28 h-28 rounded-xl border-2 border-dashed border-[#00205B]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#00205B]/60 bg-slate-50 hover:bg-slate-100 transition-colors">
+                                                        <Upload className="w-6 h-6 text-[#00205B]/50 mb-1" />
+                                                        <span className="text-[10px] font-bold text-[#00205B]">Agregar Foto</span>
                                                         <input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handleImageUpload} className="hidden" />
                                                     </label>
                                                 )}
@@ -1237,17 +1237,17 @@ export default function PublishForm({
                                         )}
 
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4 mt-6">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Documentación</h4>
+                                            <h4 className="font-bold uppercase text-xs text-[#00205B]">Documentación</h4>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-[10px] font-bold uppercase mb-1">Estado de Habilitación *</label>
                                                     <div className="flex items-center gap-6 mt-2 text-sm font-medium">
                                                         <label className="flex items-center gap-2 cursor-pointer">
-                                                            <input type="radio" name="certified" checked={aircraftForm.certified === true} onChange={() => setAircraftForm({...aircraftForm, certified: true})} className="w-4 h-4 text-[#001F58]" />
+                                                            <input type="radio" name="certified" checked={aircraftForm.certified === true} onChange={() => setAircraftForm({...aircraftForm, certified: true})} className="w-4 h-4 text-[#00205B]" />
                                                             Sí, con anual al día
                                                         </label>
                                                         <label className="flex items-center gap-2 cursor-pointer">
-                                                            <input type="radio" name="certified" checked={aircraftForm.certified === false} onChange={() => setAircraftForm({...aircraftForm, certified: false})} className="w-4 h-4 text-[#001F58]" />
+                                                            <input type="radio" name="certified" checked={aircraftForm.certified === false} onChange={() => setAircraftForm({...aircraftForm, certified: false})} className="w-4 h-4 text-[#00205B]" />
                                                             No
                                                         </label>
                                                     </div>
@@ -1267,7 +1267,7 @@ export default function PublishForm({
 
                                             <div className="border-t border-slate-200 pt-3">
                                                 <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold cursor-pointer hover:bg-slate-50 shadow-sm transition-colors">
-                                                    <Paperclip className="w-4 h-4 text-[#001F58]" /> Adjuntar Fichas o Informes (PDF/Docs)
+                                                    <Paperclip className="w-4 h-4 text-[#00205B]" /> Adjuntar Fichas o Informes (PDF/Docs)
                                                     <input type="file" multiple accept=".pdf,.doc,.docx,image/*" onChange={handleDocumentUpload} className="hidden" />
                                                 </label>
                                                 {/* Pedido del socio (19/10): la documentación adjunta es pública. */}
@@ -1310,7 +1310,7 @@ export default function PublishForm({
                                             {/* VA-78: guía para vender */}
                                             <p className="text-xs text-slate-500 mt-1">
                                                 ¿Qué conviene contar en el aviso?{" "}
-                                                <Link href="/services/guides/selling-your-aircraft" target="_blank" className="font-semibold text-[#E70F1F] hover:underline">
+                                                <Link href="/services/guides/selling-your-aircraft" target="_blank" className="font-semibold text-[#D62828] hover:underline">
                                                     Leé la guía para vender tu avión
                                                 </Link>
                                             </p>
@@ -1330,7 +1330,7 @@ export default function PublishForm({
                                         </div>
 
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Interior</h4>
+                                            <h4 className="font-bold uppercase text-xs text-[#00205B]">Interior</h4>
                                             <div>
                                                 <label className="block text-[10px] font-bold uppercase mb-1">Descripción del Interior</label>
                                                 <textarea rows={2} placeholder="Ej: Tapizados de cuero beige 9/10, alfombras nuevas en 2021." value={aircraftForm.intDescription} onChange={e => setAircraftForm({...aircraftForm, intDescription: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 text-sm bg-white" />
@@ -1342,14 +1342,14 @@ export default function PublishForm({
                                                     <FieldError message={fieldErrors.passengers} />
                                                 </div>
                                                 <div className="flex flex-col justify-center gap-3 mt-4 sm:col-span-2 sm:flex-row sm:justify-start">
-                                                    <label className="flex items-center gap-2 text-sm font-medium cursor-pointer"><input type="checkbox" checked={aircraftForm.airconditioner} onChange={e => setAircraftForm({...aircraftForm, airconditioner: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Aire Acondicionado</label>
-                                                    <label className="flex items-center gap-2 text-sm font-medium cursor-pointer"><input type="checkbox" checked={aircraftForm.oxygen} onChange={e => setAircraftForm({...aircraftForm, oxygen: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Sist. de Oxígeno</label>
+                                                    <label className="flex items-center gap-2 text-sm font-medium cursor-pointer"><input type="checkbox" checked={aircraftForm.airconditioner} onChange={e => setAircraftForm({...aircraftForm, airconditioner: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Aire Acondicionado</label>
+                                                    <label className="flex items-center gap-2 text-sm font-medium cursor-pointer"><input type="checkbox" checked={aircraftForm.oxygen} onChange={e => setAircraftForm({...aircraftForm, oxygen: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Sist. de Oxígeno</label>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Exterior</h4>
+                                            <h4 className="font-bold uppercase text-xs text-[#00205B]">Exterior</h4>
                                             <div>
                                                 <label className="block text-[10px] font-bold uppercase mb-1">Descripción de Pintura / Exterior</label>
                                                 <textarea rows={2} placeholder="Ej: Esquema original blanco con franjas azules, pintado en 2018." value={aircraftForm.extDescription} onChange={e => setAircraftForm({...aircraftForm, extDescription: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 text-sm bg-white" />
@@ -1390,7 +1390,7 @@ export default function PublishForm({
                                 nextButtonProps={{ 
                                     type: "button", 
                                     title: "Avanzar al siguiente paso",
-                                    className: "px-6 py-2.5 rounded-xl font-bold transition-all shadow-md bg-[#001F58] text-white hover:bg-blue-900",
+                                    className: "px-6 py-2.5 rounded-xl font-bold transition-all shadow-md bg-[#00205B] text-white hover:bg-blue-900",
                                     style: currentStep === 3 ? { display: 'none' } : {},
                                     onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
                                         const err = validateStep(activeTab, currentStep);
@@ -1441,7 +1441,7 @@ export default function PublishForm({
                                                     </select>
                                                 </div>
                                                 <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
-                                                    <input type="checkbox" checked={partsForm.priceOnRequest} onChange={e => setPartsForm({...partsForm, priceOnRequest: e.target.checked, price: ""})} className="rounded text-[#001F58]" /> 
+                                                    <input type="checkbox" checked={partsForm.priceOnRequest} onChange={e => setPartsForm({...partsForm, priceOnRequest: e.target.checked, price: ""})} className="rounded text-[#00205B]" /> 
                                                     Precio a Consultar
                                                 </label>
                                                 <FieldError message={fieldErrors.price} />
@@ -1474,7 +1474,7 @@ export default function PublishForm({
                                                 <span className="text-[10px] text-slate-500 font-medium">Mantén apretado para reordenar</span>
                                             </div>
                                             {compressing && (
-                                                <p className="text-xs font-semibold text-[#001F58] mb-2">Optimizando fotos {compressing.done}/{compressing.total}...</p>
+                                                <p className="text-xs font-semibold text-[#00205B] mb-2">Optimizando fotos {compressing.done}/{compressing.total}...</p>
                                             )}
                                             <FieldError message={fieldErrors.images} />
                                             <div className="flex flex-wrap gap-3">
@@ -1488,9 +1488,9 @@ export default function PublishForm({
                                                     </div>
                                                 ))}
                                                 {images.length < MAX_LISTING_IMAGES && !compressing && (
-                                                    <label className="w-24 h-24 rounded-xl border-2 border-dashed border-[#001F58]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#001F58]/60 bg-slate-50 transition-colors">
-                                                        <Upload className="w-6 h-6 text-[#001F58]/50 mb-1" />
-                                                        <span className="text-[10px] font-bold text-[#001F58]">Agregar</span>
+                                                    <label className="w-24 h-24 rounded-xl border-2 border-dashed border-[#00205B]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#00205B]/60 bg-slate-50 transition-colors">
+                                                        <Upload className="w-6 h-6 text-[#00205B]/50 mb-1" />
+                                                        <span className="text-[10px] font-bold text-[#00205B]">Agregar</span>
                                                         <input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handleImageUpload} className="hidden" />
                                                     </label>
                                                 )}
@@ -1587,9 +1587,9 @@ export default function PublishForm({
                                             )}
                                         </div>
 
-                                        <div className="p-5 bg-blue-50/60 rounded-xl border-2 border-[#001F58]/20">
+                                        <div className="p-5 bg-blue-50/60 rounded-xl border-2 border-[#00205B]/20">
                                             {/* VA-88: más visible; con esto el repuesto aparece recomendado en los avisos de ese modelo */}
-                                            <h4 className="font-bold text-base text-[#001F58]">¿Para qué aeronave es?</h4>
+                                            <h4 className="font-bold text-base text-[#00205B]">¿Para qué aeronave es?</h4>
                                             <p className="text-sm text-slate-600 mt-1 mb-4">Así aparece recomendado en los avisos de ese modelo. Podés elegir varias (ideal para motores, hélices, tren de aterrizaje, frenos, cubiertas y agrícolas).</p>
                                             
                                             <div className="relative max-w-lg">
@@ -1624,9 +1624,9 @@ export default function PublishForm({
                                             </div>
 
                                             {compatibleModels.length > 0 && (
-                                                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#001F58]/10">
+                                                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#00205B]/10">
                                                     {compatibleModels.map(m => (
-                                                        <span key={m} className="inline-flex items-center gap-1.5 bg-white border border-[#001F58]/20 text-[#001F58] px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">
+                                                        <span key={m} className="inline-flex items-center gap-1.5 bg-white border border-[#00205B]/20 text-[#00205B] px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">
                                                             {m}
                                                             <button type="button" onClick={() => removeCompatibleModel(m)} className="hover:bg-red-50 hover:text-red-600 rounded p-0.5 transition-colors"><X className="w-3.5 h-3.5" /></button>
                                                         </span>
@@ -1668,7 +1668,7 @@ export default function PublishForm({
 
                 {/* Sidebar Asistencia */}
                 <div className="lg:col-span-1 hidden lg:block">
-                  <div className="bg-[#001F58] text-white rounded-lg p-6 border border-white/10 sticky top-24">
+                  <div className="bg-[#00205B] text-white rounded-lg p-6 border border-white/10 sticky top-24">
                     <div className="flex items-center gap-2 text-red-500 font-bold text-xs uppercase tracking-wider mb-2">
                       <HelpCircle className="w-4 h-4" /> ¿Preferís que nos encarguemos?
                     </div>
@@ -1691,7 +1691,7 @@ export default function PublishForm({
                           </select>
                         </div>
                         <div><textarea rows={3} placeholder="Descripción, ubicación o enlace a fotos del producto..." value={managedListingForm.description} onChange={e => setManagedListingForm({...managedListingForm, description: e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm" /></div>
-                        <button type="submit" disabled={isSubmittingManaged} className="w-full py-3 rounded-xl bg-white text-[#001F58] font-bold flex items-center justify-center gap-2 hover:bg-slate-100 disabled:opacity-50 shadow-md">
+                        <button type="submit" disabled={isSubmittingManaged} className="w-full py-3 rounded-xl bg-white text-[#00205B] font-bold flex items-center justify-center gap-2 hover:bg-slate-100 disabled:opacity-50 shadow-md">
                             <Send className="w-4 h-4 text-red-600" /> Solicitar Asistencia
                         </button>
                       </form>

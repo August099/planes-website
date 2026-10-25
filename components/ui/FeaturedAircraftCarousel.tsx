@@ -54,23 +54,17 @@ function FeaturedCarousel({ aircrafts }: Props) {
   return (
     <section className="py-8 relative">
       {/* ENCABEZADO */}
-      <div className="text-center mb-8">
-        <SectionTitle>Aeronaves Destacadas</SectionTitle>
-      </div>
+      <SectionTitle className="mb-8">Aeronaves Destacadas</SectionTitle>
 
-      {/* VA-139: en celular se asoma la tarjeta siguiente (1,12 por pantalla); desde sm, 2. */}
+      {/* VA-139: en celular se asoma la tarjeta siguiente (1,12 por pantalla); desde sm, 2.
+          VA-168 (socio, 24/10): sin etiqueta "Destacado" en las tarjetas. */}
       <ScrollCarousel
         label="Aeronaves destacadas"
-        className="sm:px-10"
         gapClassName="gap-3 sm:gap-6"
         slideClassName="w-[calc((100%-1.44px)/1.12)] sm:w-[calc((100%-24px)/2)]"
       >
-        {selectedAircrafts.map((aircraft, index) => (
-          <OverlayAircraftCard
-            key={aircraft.id}
-            {...aircraft}
-            featuredBadge={index === 0 ? "Dato Destacado" : undefined}
-          />
+        {selectedAircrafts.map((aircraft) => (
+          <OverlayAircraftCard key={aircraft.id} {...aircraft} />
         ))}
       </ScrollCarousel>
     </section>

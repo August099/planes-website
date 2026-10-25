@@ -114,7 +114,7 @@ export function ShareDialog({
         onClick={stop}
       >
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="font-bold text-[#001F58] text-base">{heading}</h3>
+          <h3 className="font-bold text-[#00205B] text-base">{heading}</h3>
           <button
             ref={closeRef}
             type="button"
@@ -164,7 +164,7 @@ export function ShareDialog({
             <button
               type="button"
               onClick={handleCopy}
-              className="min-h-10 px-3 py-1.5 bg-[#001F58] hover:bg-blue-900 text-white font-semibold text-xs rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+              className="min-h-10 px-3 py-1.5 bg-[#00205B] hover:bg-blue-900 text-white font-semibold text-xs rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
             >
               {copied ? (
                 <>

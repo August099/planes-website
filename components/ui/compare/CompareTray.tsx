@@ -40,7 +40,7 @@ export function CompareTray() {
       aria-disabled={!ready}
       onClick={(e) => !ready && e.preventDefault()}
       className={`inline-flex min-h-10 shrink-0 items-center rounded-md px-4 text-xs font-bold ${
-        ready ? "bg-[#E70F1F] text-white hover:bg-[#C20D1A]" : "cursor-not-allowed bg-white/15 text-white/60"
+        ready ? "bg-[#D62828] text-white hover:bg-[#B71F1F]" : "cursor-not-allowed bg-white/15 text-white/60"
       }`}
     >
       Comparar ({items.length})
@@ -90,7 +90,7 @@ export function CompareTray() {
     <div aria-hidden className="h-16 sm:h-[76px] print:hidden" />
     <div role="region" aria-label="Comparación de aeronaves" className="fixed inset-x-0 bottom-[var(--va-consent-h,0px)] z-40 border-t border-white/10 bg-[#001331] text-white shadow-[0_-4px_16px_rgba(0,0,0,0.25)] print:hidden">
       {notice && (
-        <p role="status" className="border-b border-white/10 bg-[#E70F1F] px-4 py-2 text-center text-xs font-semibold">
+        <p role="status" className="border-b border-white/10 bg-[#D62828] px-4 py-2 text-center text-xs font-semibold">
           Podés comparar hasta 3. Quitá una para agregar otra.
         </p>
       )}
