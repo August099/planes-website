@@ -2,7 +2,7 @@
 // así no suma JS al cliente.
 import Link from "next/link";
 import Image from "next/image";
-import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
 
 export type BrandItem = {
   id: string;
@@ -31,16 +31,17 @@ export function FeaturedBrands({ brands }: FeaturedBrandsProps) {
   ];
 
   return (
-    <section className="py-12 overflow-hidden">
+    // Rediseño (25/10, v2): la marquesina es una cinta blanca entre dos reglas azules.
+    <section className="overflow-hidden py-20">
 
-      <div className="container mx-auto px-4 mb-6">
-        <SectionTitle>Explorá por Fabricante</SectionTitle>
+      <div className="container mx-auto px-4 mb-10">
+        <DisplayTitle>Explorá por Fabricante</DisplayTitle>
       </div>
 
       {/* CONTENEDOR MÓVIL */}
       {/* VA-79: los bordes se esfuman con una máscara (antes, degradés con #FAF5F5 fijo), así funciona
           sobre cualquier fondo. */}
-      <div className="relative w-full flex overflow-hidden py-4 [mask-image:linear-gradient(to_right,transparent,black_4rem,black_calc(100%-4rem),transparent)] sm:[mask-image:linear-gradient(to_right,transparent,black_6rem,black_calc(100%-6rem),transparent)]">
+      <div className="relative w-full flex overflow-hidden border-y-2 border-[#00205B] bg-white [mask-image:linear-gradient(to_right,transparent,black_4rem,black_calc(100%-4rem),transparent)] sm:[mask-image:linear-gradient(to_right,transparent,black_6rem,black_calc(100%-6rem),transparent)]">
 
         {/* PISTA DE MARQUESINA */}
         <div className="flex w-max items-center animate-[marquee_60s_linear_infinite] hover:[animation-play-state:paused]">
@@ -54,7 +55,7 @@ export function FeaturedBrands({ brands }: FeaturedBrandsProps) {
               href={`/aircraft?brand=${encodeURIComponent(brand.id)}&page=1`}
               aria-hidden={isCopy || undefined}
               tabIndex={isCopy ? -1 : undefined}
-              className="flex items-center justify-center mx-6 sm:mx-10 w-28 sm:w-36 h-16 sm:h-20 transition-transform duration-300 hover:scale-110 shrink-0 cursor-pointer overflow-visible"
+              className="group/brand relative flex items-center justify-center w-44 sm:w-56 h-24 sm:h-28 px-8 shrink-0 cursor-pointer after:absolute after:right-0 after:translate-x-1/2 after:font-heading after:text-lg after:font-black after:text-[#D62828] after:content-['//']"
             >
               <div className="relative w-full h-full flex items-center justify-center">
                 {/* VA-73: next/image con tamaño fijo chico (antes <img> directo a Supabase, en tamaño
@@ -66,7 +67,7 @@ export function FeaturedBrands({ brands }: FeaturedBrandsProps) {
                   width={144}
                   height={80}
                   loading="lazy"
-                  className="max-w-full max-h-full w-auto h-auto object-contain filter grayscale opacity-75 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+                  className="max-w-full max-h-14 sm:max-h-16 w-auto h-auto object-contain grayscale opacity-70 transition-all duration-300 group-hover/brand:grayscale-0 group-hover/brand:opacity-100 group-hover/brand:scale-105"
                 />
               </div>
             </Link>

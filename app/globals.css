@@ -411,6 +411,109 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
   transform: scaleX(1);
 }
 
+/* ==========================================================================
+   Rediseño de la Home v2 (25/10): títulos de revista, bandas planas y esquinas rectas.
+   ========================================================================== */
+/* Número de sección calado (components/ui/home/DisplayTitle.tsx). */
+.va-num {
+  font-family: var(--font-display);
+  font-weight: 900;
+  line-height: 0.8;
+  letter-spacing: -0.05em;
+  /* Relleno tenue, sin contorno: el contorno de Montserrat variable deja ver los trazos internos. */
+  color: rgb(0 32 91 / 0.13);
+  -webkit-text-stroke: 0;
+  font-variant-numeric: tabular-nums;
+}
+.va-num::before {
+  content: counter(va-section, decimal-leading-zero);
+}
+.va-num-dark {
+  color: rgb(255 255 255 / 0.16);
+  -webkit-text-stroke: 0;
+}
+/* Regla bajo el título: línea de marca con el primer tramo en rojo, que crece al entrar en pantalla. */
+.va-rule {
+  position: relative;
+  display: block;
+  height: 2px;
+  background: var(--va2-navy);
+}
+.va-rule-dark {
+  background: rgb(255 255 255 / 0.3);
+}
+.va-rule::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 96px;
+  background: var(--va2-red);
+  transform-origin: left;
+}
+@keyframes va-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+/* Avión que recorre la ruta de "Cómo funciona" con el scroll: la estela roja es el tramo hecho. */
+@keyframes va-fly {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.va-flight {
+  transform: translateX(-30%);
+}
+@supports (animation-timeline: view()) {
+  .va-rule::before {
+    animation: va-grow linear both;
+    animation-timeline: view();
+    animation-range: entry 20% cover 35%;
+  }
+  .va-flight {
+    animation: va-fly linear both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 55%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .va-rule::before,
+  .va-flight,
+  .va-scale {
+    animation: none !important;
+    transform: none;
+  }
+}
+/* Banda azul de la Home (Destacadas): los puntos del carrusel pasan a blanco. */
+.home-band-dark .va-dot {
+  background: rgb(255 255 255 / 0.3);
+}
+.home-band-dark .va-dot-active {
+  background: var(--va2-red);
+}
+
+/* Header transparente de la Home: al abrir el menú de Repuestos, el header se vuelve azul y el panel
+   sigue en el mismo azul, así forman una sola pieza sobre el hero. En el resto del sitio, blanco. */
+header[data-home] {
+  transition: background-color 200ms;
+}
+header[data-home]:has(.va-mega:hover),
+header[data-home]:has(.va-mega:focus-within) {
+  background-color: var(--va2-navy);
+}
+.va-mega-panel {
+  --mega-bg: #fff;
+  --mega-fg: var(--va2-navy);
+  --mega-muted: rgb(51 65 85);
+  --mega-line: rgb(0 32 91 / 0.12);
+  --mega-num: var(--va2-red);
+}
+header[data-home] .va-mega-panel {
+  --mega-bg: var(--va2-navy);
+  --mega-fg: #fff;
+  --mega-muted: rgb(255 255 255 / 0.78);
+  --mega-line: rgb(255 255 255 / 0.16);
+  --mega-num: rgb(255 255 255 / 0.55);
+}
+
 /* VA-156: atribución del mapa del detalle (OpenFreeMap, OpenMapTiles, OpenStreetMap) visible pero chica. */
 .maplibregl-ctrl.maplibregl-ctrl-attrib {
   font-size: 10px;

@@ -188,40 +188,36 @@ export default async function HomePage() {
         {/* Zona 1 · Cielo: hero + tipos de aeronave + destacadas.
             VA-147 (socio, 17/10): hero, tipos, destacadas, últimas, repuestos por categoría,
             fabricantes, mapa, CTA de vendedores, cómo funciona, guías y secciones. */}
+        {/* Rediseño (25/10, v2): bandas planas en el mismo orden (VA-147): hero, aviso de cupo, tipos,
+            destacadas (banda azul), últimas, repuestos por categoría, fabricantes, mapa, CTA de vendedores
+            (banda roja), cómo funciona, guías y servicios (azul que sigue en el footer). */}
         <HeroBanner />
+        {/* VA-47: invitación a registrarse, solo para visitantes sin cuenta (se decide en el navegador) */}
+        <LaunchPromoBanner text={freeQuotaText(await getCachedFreeQuota())} />
         <div className="home-zone home-zone-1">
           <div aria-hidden className="home-zone-bg" />
-          {/* VA-47: invitación a registrarse, solo para visitantes sin cuenta (se decide en el navegador) */}
-          <LaunchPromoBanner text={freeQuotaText(await getCachedFreeQuota())} />
           <AircraftTypesSection counts={categoryCounts} />
-          <div className="container mx-auto px-4 pb-12">
-            <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
-          </div>
         </div>
 
-        {/* Zona 2 · Altura: últimas publicaciones + repuestos por categoría + fabricantes + mapa */}
+        <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
+
         <div className="home-zone home-zone-2">
           <div aria-hidden className="home-zone-bg" />
-          <div className="container mx-auto px-4 pt-8 space-y-16">
+          <div className="container mx-auto px-4 pt-20 space-y-20">
             <LatestAircraft items={combinedLatestListings} />
             <SparePartCategoriesCarousel categories={sparePartCategories} />
           </div>
           <FeaturedBrands brands={featuredBrandsFromDb} />
-          <div className="container mx-auto px-4 pb-8">
+          <div className="container mx-auto px-4 pb-16">
             <ProvinceExplorer counts={provinceCounts} />
           </div>
         </div>
 
-        {/* Zona 3 · Puente: SellerCta flota mientras el fondo pasa de claro a oscuro */}
-        <div className="home-zone home-zone-3 pt-8 pb-20">
-          <div aria-hidden className="home-zone-bg" />
-          <SellerCta />
-        </div>
+        <SellerCta />
 
-        {/* Zona 4 · Estratósfera: cómo funciona + guías + servicios; el footer sigue el mismo color */}
+        {/* Cómo funciona + guías + servicios; el footer sigue el mismo color */}
         <div className="home-zone home-zone-4 pb-8">
           <div aria-hidden className="home-zone-bg" />
-          <BrandSlashes className="-top-6 right-[-4rem] w-72 sm:w-[28rem]" />
           <BrandSlashes className="bottom-24 -left-24 w-64 sm:w-96" />
           <HowItWorks />
           <GuidesSection />

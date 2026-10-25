@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
 
 // "Explorá por tipo de aeronave" (VA-86). Server component, sin JS de cliente. Ajuste del socio
 // (10/10): en celular, grilla de 2 por fila (la séptima sola y centrada); imágenes y textos un 15 %
@@ -64,42 +64,44 @@ const hrefFor = (categories: string[]) => `/aircraft?${categories.map((c) => `ca
 
 export function AircraftTypesSection({ counts }: { counts: Record<string, number> }) {
   return (
-    <section className="py-14" aria-labelledby="aircraft-types-title">
+    <section className="py-16 sm:py-20" aria-labelledby="aircraft-types-title">
       <div className="container mx-auto px-4">
-        <SectionTitle id="aircraft-types-title" className="mb-8">
+        <DisplayTitle id="aircraft-types-title" align="center" className="mb-12">
           Explorá por tipo de aeronave
-        </SectionTitle>
+        </DisplayTitle>
 
-        {/* Rediseño (25/10): una tira de instrumentos. Celdas iguales con líneas finas: 7 en una fila
-            desde lg, 4 + 3 en tablet y 2 por fila en celular. Cada celda lleva su número de orden. */}
-        <ul className="grid grid-cols-2 overflow-hidden rounded-md border border-[#00205B]/14 bg-white md:grid-cols-4 lg:grid-cols-7">
-          {TYPES.map((type, i) => {
+        {/* Celular: 2 por fila y la última centrada. Desde md: 3 por fila; desde lg: 4 + 3 centradas,
+            como la referencia. */}
+        <ul className="flex flex-wrap justify-center gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-12">
+          {TYPES.map((type) => {
             const total = type.categories.reduce((sum, id) => sum + (counts[id] ?? 0), 0);
             return (
-              <li key={type.name} className="-mb-px -mr-px border-r border-b border-[#00205B]/10">
+              <li key={type.name} className="w-[calc((100%-1rem)/2)] md:w-[calc((100%-3rem)/3)] lg:w-[calc((100%-4.5rem)/4)]">
                 <Link
                   href={hrefFor(type.categories)}
-                  className="group relative flex h-full flex-col px-4 pt-3 pb-4 outline-none transition-colors hover:bg-[#F5F5F5] focus-visible:bg-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#D62828]"
+                  className="group block rounded-md text-center outline-none focus-visible:ring-2 focus-visible:ring-[#D62828] focus-visible:ring-offset-4 focus-visible:ring-offset-transparent"
                 >
-                  <span className="flex items-center justify-between text-[10px] font-semibold tracking-[0.16em] tabular-nums">
-                    <span className="text-[#D62828]">{String(i + 1).padStart(2, "0")}</span>
-                    <span className={total > 0 ? "text-[#00205B]/70" : "text-slate-500"}>{total > 0 ? `${total} ${total === 1 ? "AVISO" : "AVISOS"}` : "SIN AVISOS"}</span>
-                  </span>
                   {/* Caja de altura fija y la aeronave apoyada en la base, así los nombres quedan alineados. */}
-                  <div className="relative mt-3 h-[4.5rem] w-full transition-transform duration-300 ease-out group-hover:translate-x-1.5 group-focus-visible:translate-x-1.5 motion-reduce:transition-none sm:h-[5.5rem]">
+                  <div className="relative mx-auto h-[4.25rem] w-[85%] transition-transform duration-200 ease-out group-hover:translate-x-1.5 group-focus-visible:translate-x-1.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0 motion-reduce:group-focus-visible:translate-x-0 sm:h-[6.8rem] lg:h-[7.65rem]">
                     <Image
                       src={`/aircraft-types/${type.image}.webp`}
                       alt=""
                       fill
-                      sizes="(min-width: 1024px) 160px, (min-width: 768px) 22vw, 42vw"
+                      // En celular la caja mide ~35vw (85% de media columna): así baja la de 256 px y no la de 384.
+                      sizes="(min-width: 1280px) 250px, (min-width: 1024px) 20vw, (min-width: 768px) 27vw, 35vw"
                       className="object-contain object-bottom"
                     />
                   </div>
-                  <h3 className="mt-3 text-[0.95rem] leading-snug font-bold text-[#00205B]">
-                    <span className="bg-[linear-gradient(#D62828,#D62828)] bg-[length:0%_2px] bg-left-bottom bg-no-repeat pb-0.5 transition-[background-size] duration-300 group-hover:bg-[length:100%_2px] group-focus-visible:bg-[length:100%_2px]">
-                      {type.name}
-                    </span>
+                  <h3 className="mt-3 text-[0.95rem] leading-snug font-bold text-[#00205B] decoration-[#D62828] decoration-2 underline-offset-4 group-hover:underline group-focus-visible:underline">
+                    {type.name}
                   </h3>
+                  <p
+                    className={`mt-2 text-[0.6rem] font-semibold uppercase tracking-[0.14em] tabular-nums ${
+                      total > 0 ? "text-[#00205B]" : "text-slate-500"
+                    }`}
+                  >
+                    {total > 0 ? `${total} ${total === 1 ? "aviso" : "avisos"}` : "Sin avisos por ahora"}
+                  </p>
                 </Link>
               </li>
             );

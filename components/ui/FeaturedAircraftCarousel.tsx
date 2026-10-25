@@ -5,7 +5,8 @@ import {
   OverlayAircraftCard,
   AircraftCardProps,
 } from "@/components/ui/OverlayAircraftCard";
-import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
+import { BrandSlashes } from "@/components/ui/BrandSlashes";
 import { ScrollCarousel } from "@/components/ui/home/ScrollCarousel";
 import { FEATURED_AIRCRAFT_COUNT } from "@/lib/constants";
 
@@ -52,9 +53,11 @@ function FeaturedCarousel({ aircrafts }: Props) {
   const [selectedAircrafts] = useState(() => pickFeatured(aircrafts));
 
   return (
-    <section className="py-8 relative">
-      {/* ENCABEZADO */}
-      <SectionTitle className="mb-8">Aeronaves Destacadas</SectionTitle>
+    // Rediseño (25/10, v2): banda azul a todo el ancho entre las zonas claras ("el hangar de noche").
+    <section className="home-band-dark relative isolate overflow-hidden bg-[#00205B] py-16 sm:py-20">
+      <BrandSlashes className="-top-10 right-[-6rem] w-80 sm:w-[30rem]" />
+      <div className="container mx-auto px-4">
+      <DisplayTitle tone="dark" className="mb-10">Aeronaves Destacadas</DisplayTitle>
 
       {/* VA-139: en celular se asoma la tarjeta siguiente (1,12 por pantalla); desde sm, 2.
           VA-168 (socio, 24/10): sin etiqueta "Destacado" en las tarjetas. */}
@@ -67,6 +70,7 @@ function FeaturedCarousel({ aircrafts }: Props) {
           <OverlayAircraftCard key={aircraft.id} {...aircraft} />
         ))}
       </ScrollCarousel>
+      </div>
     </section>
   );
 }

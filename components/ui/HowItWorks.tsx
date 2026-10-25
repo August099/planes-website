@@ -1,4 +1,5 @@
-import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { Plane } from "lucide-react";
+import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
 
 const STEPS = [
   {
@@ -15,35 +16,38 @@ const STEPS = [
   },
 ];
 
-// VA-85: los tres pasos como una ruta de carta de navegación (waypoints numerados unidos por una
-// línea punteada), en vez de tres tarjetas iguales con ícono. Horizontal desde md, vertical en celular.
+// VA-85: los tres pasos como una ruta. Rediseño (25/10, v2): números calados gigantes en columnas
+// separadas por filetes, y un avión que recorre la ruta con el scroll (la estela roja es el tramo hecho;
+// sin animación queda quieto al comienzo).
 export function HowItWorks() {
   return (
-    <section className="w-full text-white py-16">
+    <section className="w-full py-20 text-white">
       <div className="container mx-auto px-4">
-        <SectionTitle tone="dark" className="mb-10">
-          Cómo funciona
-        </SectionTitle>
-        <ol className="relative grid gap-10 md:grid-cols-3 md:gap-8">
-          {/* Ruta punteada: vertical en celular, horizontal desde md */}
-          <span
-            aria-hidden
-            className="absolute left-[11px] top-3 bottom-3 border-l border-dashed border-white/35 md:left-3 md:right-[calc(33%-1rem)] md:top-[11px] md:bottom-auto md:border-l-0 md:border-t"
-          />
+        <DisplayTitle tone="dark">Cómo funciona</DisplayTitle>
+
+        <div aria-hidden className="relative mt-12 hidden h-6 overflow-hidden md:block">
+          <span className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/35" />
+          <span className="va-flight absolute inset-0 flex items-center">
+            <span className="h-0.5 flex-1 bg-[#D62828]" />
+            <Plane className="h-5 w-5 shrink-0 rotate-45 fill-white text-white" />
+          </span>
+        </div>
+
+        <ol className="mt-8 grid border-t border-white/15 md:mt-6 md:grid-cols-3 md:border-t-0">
           {STEPS.map((step, i) => (
-            <li key={step.title} className="relative pl-10 md:pl-0 md:pt-10">
-              {/* Waypoint */}
+            <li
+              key={step.title}
+              className="border-b border-white/15 py-8 md:border-b-0 md:border-l md:px-8 md:py-2 md:first:border-l-0 md:first:pl-0"
+            >
               <span
                 aria-hidden
-                className="absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white/80 bg-[#00205B]"
+                className="block font-heading text-[5rem] leading-[0.8] font-black tracking-[-0.05em] tabular-nums text-white/16 sm:text-[6.5rem]"
               >
-                <span className="h-2 w-2 rounded-full bg-[#D62828]" />
+                {String(i + 1).padStart(2, "0")}
               </span>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FFC2C7] tabular-nums">
-                Paso {String(i + 1).padStart(2, "0")}
-              </p>
-              <h3 className="mt-1 text-lg font-semibold text-white">{step.title}</h3>
-              <p className="mt-1 max-w-xs text-sm leading-relaxed text-white/75">{step.description}</p>
+              <p className="va-label mt-6 text-white/75">Paso {String(i + 1).padStart(2, "0")}</p>
+              <h3 className="mt-1 font-heading text-2xl font-black uppercase tracking-[-0.01em]">{step.title}</h3>
+              <p className="mt-2 max-w-xs text-sm leading-relaxed text-white/80">{step.description}</p>
             </li>
           ))}
         </ol>

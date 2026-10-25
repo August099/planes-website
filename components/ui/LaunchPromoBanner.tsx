@@ -55,29 +55,32 @@ export function LaunchPromoBanner({ text }: { text: string }) {
     setVisible(false);
   };
 
+  // Rediseño (25/10, v2): banda roja a todo el ancho, pegada al hero.
   return (
-    <section aria-label={FREE_QUOTA_PROMO.title} className="container mx-auto px-4 pt-8">
-      <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border-l-2 border-[#D62828] bg-[#00205B] px-5 py-5 pr-14 text-white">
+    <section aria-label={FREE_QUOTA_PROMO.title} className="relative bg-[#D62828] text-white">
+      <div className="container mx-auto flex flex-col gap-4 px-4 py-6 pr-16 sm:flex-row sm:items-center sm:gap-8">
+        <p className="shrink-0 self-start bg-[#00205B] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.16em] sm:self-center">
+          {FREE_QUOTA_PROMO.title}
+        </p>
         <div className="flex-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-[#FF5A64]">{FREE_QUOTA_PROMO.title}</p>
-          <p className="text-lg sm:text-xl font-bold">{text}</p>
-          <p className="mt-1 text-sm text-white/80">Creá tu cuenta y publicá en minutos.</p>
+          <p className="font-heading text-xl leading-tight font-black uppercase tracking-[-0.01em] sm:text-2xl">{text}</p>
+          <p className="mt-1 text-sm text-white">Creá tu cuenta y publicá en minutos.</p>
         </div>
         <Link
           href="/register"
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#D62828] px-5 text-sm font-bold hover:bg-[#B71F1F] transition-colors"
+          className="inline-flex min-h-12 shrink-0 items-center justify-center border-2 border-white px-6 text-sm font-bold uppercase tracking-[0.06em] transition-colors hover:bg-white hover:text-[#D62828]"
         >
           Crear cuenta gratis
         </Link>
-        <button
-          type="button"
-          onClick={dismiss}
-          aria-label="Cerrar aviso"
-          className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 cursor-pointer"
-        >
-          <X className="h-5 w-5" />
-        </button>
       </div>
+      <button
+        type="button"
+        onClick={dismiss}
+        aria-label="Cerrar aviso"
+        className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center text-white hover:bg-white/15 cursor-pointer"
+      >
+        <X className="h-5 w-5" />
+      </button>
     </section>
   );
 }
