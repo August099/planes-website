@@ -52,10 +52,10 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
       <PageBackground page="register" />
 
       <div className="container mx-auto px-4 max-w-lg">
-        <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl space-y-6">
-          <div className="text-center space-y-1.5">
+        <div className="bg-white border border-[#001F58]/12 rounded-lg p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="space-y-1.5">
             <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#001F58]">
-              CREAR CUENTA
+              Crear cuenta
             </h1>
             <p className="text-xs sm:text-sm text-[#001F58]/70">
               Ingresá tus datos para comenzar a publicar en Ventas Aeronáuticas
@@ -239,7 +239,7 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
             </Button>
           </form>
 
-          <p className="text-center text-xs sm:text-sm text-[#001F58]/70 pt-2 border-t border-[#001F58]/10">
+          <p className="text-xs sm:text-sm text-[#001F58]/70 pt-2 border-t border-[#001F58]/10">
             ¿Ya tenés cuenta?{" "}
             <Link
               href="/login"

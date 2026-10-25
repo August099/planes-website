@@ -21,7 +21,7 @@ const withListingsIn = (categoryId?: string) =>
 
 export async function getBrands(categoryId?: string) {
   return prisma.aircraftBrand.findMany({
-    where: withListingsIn(categoryId),
+    where: { hidden: false, ...withListingsIn(categoryId) },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
@@ -31,7 +31,7 @@ export async function getModelsByBrand(brandId: string, categoryId?: string) {
   if (!brandId) return [];
 
   return prisma.aircraftModel.findMany({
-    where: { brandId, ...withListingsIn(categoryId) },
+    where: { brandId, hidden: false, ...withListingsIn(categoryId) },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });

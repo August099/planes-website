@@ -46,7 +46,7 @@ export default function PrivacidadPage() {
           {/* CUERPO PRINCIPAL: Contenido de la Política de Privacidad */}
           <section className="md:col-span-3">
             <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-[#001F58] mb-2">
-              POLÍTICA DE PRIVACIDAD
+              Política de privacidad
             </h1>
             <p className="text-sm text-[#001F58]/60 mb-12 border-b border-[#001F58]/20 pb-4">
               <strong>Última actualización:</strong> Octubre 2026.
@@ -66,7 +66,10 @@ export default function PrivacidadPage() {
                 <p>Dependiendo de cómo uses la plataforma, recolectamos la siguiente información:</p>
                 <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
                   <li><strong>Datos de cuenta:</strong> nombre, correo electrónico, contraseña (guardada cifrada, nunca en texto), teléfono, ciudad y provincia, tipo de cuenta (particular o empresa) y foto de perfil. Si iniciás sesión con <strong>Google</strong>, recibimos de Google tu nombre, tu correo y tu foto de perfil; no accedemos a tu contraseña de Google ni a otros datos de tu cuenta.</li>
-                  <li><strong>Datos de las publicaciones:</strong> detalles técnicos de las aeronaves y repuestos, precio, ubicación, fotografías y los documentos que decidas adjuntar.</li>
+                  <li><strong>Datos de las publicaciones:</strong> detalles técnicos de las aeronaves y repuestos, precio, ubicación, fotografías, el link de YouTube si agregás un video y los documentos que decidas adjuntar.</li>
+                  {/* VA-189 */}
+                  <li><strong>Página personalizada:</strong> si tu plan la incluye, la portada, el logo, el nombre comercial, el WhatsApp, la web, la descripción y las secciones que armes.</li>
+                  <li><strong>Ventas:</strong> si al marcar un aviso como vendido nos contás si fue gracias a un contacto del sitio y por cuánto, guardamos esa respuesta y la fecha de la venta.</li>
                   <li><strong>Preguntas en los avisos:</strong> el texto de las preguntas y respuestas que dejás en una publicación, que se muestran públicamente junto a tu nombre.</li>
                   <li><strong>Reportes y sugerencias:</strong> los motivos y detalles que escribís al reportar una publicación, y lo que nos mandás desde el formulario de sugerencias (con tu nombre y correo, si decidís dejarlos).</li>
                   <li><strong>Pagos y facturación:</strong> el estado de tus pagos e identificadores de las operaciones que nos informa Mercado Pago, y los datos de facturación que cargás (nombre o razón social, DNI o CUIT, condición frente al IVA, domicilio y correo). <strong>Ventas Aeronáuticas no almacena ni tiene acceso a los datos de tus tarjetas o cuentas bancarias:</strong> el pago se hace dentro de Mercado Pago.</li>
@@ -87,6 +90,8 @@ export default function PrivacidadPage() {
                   <li>Enviarte correos operativos: verificación de cuenta, cambio de contraseña, estado de pagos y avisos sobre tu suscripción.</li>
                   <li>Mantener la seguridad del sitio: revisar reportes, evitar abusos y limitar pedidos repetidos.</li>
                   <li>Medir el uso del sitio de forma agregada para mejorarlo (qué se busca, qué se ve, de dónde llegan las visitas).</li>
+                  <li>Mostrarle a cada vendedor las métricas de sus avisos y de su página, siempre sumadas: cuántas vistas, contactos, favoritos y veces en el comparador, y desde qué provincias y sitios llegan. Nunca quién fue.</li>
+                  <li>Armar estadísticas internas de ventas (cuántas y por cuánto, en total) y llevar la cuenta de los miembros fundadores.</li>
                 </ul>
               </div>
 
@@ -96,8 +101,8 @@ export default function PrivacidadPage() {
                   3. Qué se publica y qué no
                 </h2>
                 <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
-                  <li><strong>Público:</strong> el contenido de tus avisos (título, datos técnicos, precio, fotos, la matrícula si la cargás, ciudad y provincia, y una zona aproximada en un mapa, nunca la dirección exacta), tu nombre de vendedor, tu tipo de cuenta y los medios de contacto que figuran en tu aviso (teléfono, WhatsApp y correo), y las preguntas y respuestas.</li>
-                  <li><strong>Privado:</strong> los documentos que adjuntes a una publicación (por ejemplo, certificados o historiales de mantenimiento) solo los ven vos y el equipo de Ventas Aeronáuticas. También son privados tus datos de facturación y tus pagos.</li>
+                  <li><strong>Público:</strong> el contenido de tus avisos (título, datos técnicos, precio, fotos, video, la matrícula si la cargás, ciudad y provincia, y una zona aproximada en un mapa, nunca la dirección exacta), los documentos que adjuntes (cualquier visitante los puede ver y descargar, como avisa el formulario), tu nombre de vendedor, tu tipo de cuenta, los medios de contacto que figuran en tu aviso (teléfono, WhatsApp y correo), tu página personalizada si la tenés, y las preguntas y respuestas.</li>
+                  <li><strong>Privado:</strong> tus datos de facturación y tus pagos, lo que nos contás sobre tus ventas y los reportes que hacés.</li>
                   <li><strong>Responsabilidad del vendedor:</strong> es responsabilidad del vendedor no incluir en fotos, descripciones o documentos datos personales de terceros sin su consentimiento.</li>
                 </ul>
               </div>
@@ -175,6 +180,12 @@ export default function PrivacidadPage() {
                         <td className="py-2 align-top">Hasta que borres los datos del navegador</td>
                       </tr>
                       <tr>
+                        <td className="py-2 pr-3 align-top font-mono text-xs">va_republish_dismissed (almacenamiento local)</td>
+                        <td className="py-2 pr-3 align-top">Necesaria</td>
+                        <td className="py-2 pr-3 align-top">Si cerraste el aviso de republicaciones disponibles, para no mostrarlo hasta que cambie tu saldo</td>
+                        <td className="py-2 align-top">Hasta que borres los datos del navegador</td>
+                      </tr>
+                      <tr>
                         <td className="py-2 pr-3 align-top font-mono text-xs">Marcas de visita (almacenamiento de la pestaña)</td>
                         <td className="py-2 pr-3 align-top">Necesaria</td>
                         <td className="py-2 pr-3 align-top">Contar una sola vez la visita a un aviso o a un perfil en la misma pestaña. No llevan ningún identificador</td>
@@ -196,7 +207,7 @@ export default function PrivacidadPage() {
                   </table>
                 </div>
                 {/* VA-171 */}
-                <p>Para las métricas de los vendedores registramos la provincia aproximada desde la que se ve un aviso, a partir de la conexión y sin guardar la dirección IP. Se muestra solo sumada (por ejemplo, &quot;30 vistas desde Córdoba&quot;), nunca quién visitó. Estos datos se conservan hasta 13 meses.</p>
+                <p>Para las métricas de los vendedores registramos la provincia aproximada desde la que se ve un aviso, a partir de la conexión y sin guardar la dirección IP, y cuándo se agrega un aviso al comparador o se toca desde una página personalizada. Se muestra solo sumado (por ejemplo, &quot;30 vistas desde Córdoba&quot;), nunca quién visitó. Las visitas del propio vendedor y del equipo no se cuentan. Estos datos se conservan hasta 13 meses.</p>
                 <p>Al iniciar sesión con Google o al pagar con Mercado Pago, esos servicios usan sus propias cookies en sus sitios, según sus políticas. Las métricas de rendimiento de Vercel (Speed Insights) no usan cookies ni identifican al visitante.</p>
                 <p>También podés borrar o bloquear las cookies desde la configuración de tu navegador; si bloqueás las necesarias, no vas a poder iniciar sesión.</p>
               </div>
@@ -213,7 +224,7 @@ export default function PrivacidadPage() {
               </div>
 
               {/* Marco Legal Oficial Destacado */}
-              <div className="bg-[#001F58]/5 border-l-4 border-[#001F58] p-5 mt-4 rounded-r-xl italic text-xs text-[#001F58]/90 space-y-3">
+              <div className="bg-[#001F58]/5 border-l-2 border-[#001F58] p-5 mt-4 rounded-r-md italic text-xs text-[#001F58]/90 space-y-3">
                 <p>
                   “El titular de los datos personales tiene la facultad de ejercer el derecho de acceso a los mismos en forma gratuita a intervalos no inferiores a seis meses, salvo que se acredite un interés legítimo al efecto conforme lo establecido en el artículo 14, inciso 3 de la Ley Nº 25.326.”
                 </p>

@@ -15,7 +15,7 @@ import {
 
 // DICCIONARIO DE DESCRIPCIONES DE LAS MÉTRICAS
 const METRIC_DESCRIPTIONS: Record<string, string> = {
-  "Ingresos Mensuales (MRR)": "Ingreso recurrente mensual de las suscripciones pagas vigentes (Pro y Broker / Empresa; sin cortesías ni admins).",
+  "Ingresos Mensuales (MRR)": "Ingreso recurrente mensual de las suscripciones pagas vigentes (Pro y Broker / Empresa; sin bonificados ni admins).",
   "Ingresos Anuales (ARR)": "Proyección anualizada de los ingresos recurrentes (MRR × 12).",
   "Margen EBITDA": "Porcentaje de rentabilidad operativa antes de intereses, impuestos, depreciación y amortización. Todavía no se calcula: el sistema no tiene cargados los costos.",
   "Crecimiento (Mes/Año)": "Variación de lo cobrado en suscripciones este mes respecto del mes anterior (sin pagos de prueba).",
@@ -141,7 +141,7 @@ function KpiCard({ title, value, trend, icon, isCritical }: { title: string, val
   const description = METRIC_DESCRIPTIONS[title];
 
   return (
-    <div className={`p-5 rounded-2xl border bg-white shadow-sm transition-all hover:shadow-md ${isCritical ? 'border-red-200 bg-red-50/10' : 'border-slate-200'}`}>
+    <div className={`p-5 rounded-lg border bg-white shadow-sm transition-all hover:shadow-md ${isCritical ? 'border-red-200 bg-red-50/10' : 'border-slate-200'}`}>
       <div className="flex justify-between items-start mb-2 gap-2">
         
         {/* TÍTULO CON TOOLTIP EN HOVER */}

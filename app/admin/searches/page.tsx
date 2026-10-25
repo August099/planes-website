@@ -26,7 +26,7 @@ export default function AdminSearchesPage() {
         <p className="text-xs text-slate-500 mt-1">Descubrí qué están buscando los compradores en la plataforma.</p>
       </div>
 
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between max-w-sm">
+      <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between max-w-sm">
         <div>
           <p className="text-xs font-semibold text-slate-400 uppercase">Total Búsquedas (30 días)</p>
           <h3 className="text-2xl font-bold text-[#001F58] mt-1">{data?.totalSearches || 0}</h3>
@@ -36,7 +36,7 @@ export default function AdminSearchesPage() {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
         <h3 className="font-bold text-[#001F58] text-sm flex items-center gap-2">
           <Hash className="w-4 h-4 text-red-600" />
           Términos de Búsqueda más Frecuentes

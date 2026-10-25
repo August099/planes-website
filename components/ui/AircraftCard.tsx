@@ -128,7 +128,7 @@ export function AircraftCard({
   return (
     <>
       <Link href={`/aircraft/${id}`} className="group block h-full">
-        <Card data-card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <Card data-card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 transition-colors duration-200">
           <div className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100">
             <ImageCarousel
               images={images}
@@ -146,7 +146,7 @@ export function AircraftCard({
                 type="button"
                 onClick={handleShareClick}
                 aria-label="Compartir"
-                className="p-2 rounded-full bg-white/80 backdrop-blur-md text-slate-700 hover:text-blue-600 hover:bg-white shadow-sm transition-all duration-200 cursor-pointer flex items-center justify-center"
+                className="p-2 rounded-full bg-white/90 text-slate-700 hover:text-blue-600 hover:bg-white shadow-sm transition-all duration-200 cursor-pointer flex items-center justify-center"
               >
                 <Share2 className="w-4 h-4" />
               </button>
@@ -156,7 +156,7 @@ export function AircraftCard({
                 onClick={handleFavoriteClick}
                 disabled={loadingFav}
                 aria-label="Añadir a favoritos"
-                className={`p-2 rounded-full backdrop-blur-md shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50 ${
+                className={`p-2 rounded-full shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50 ${
                   isFavorite
                     ? "bg-red-50 text-red-600 hover:bg-red-100"
                     : "bg-white/80 text-slate-700 hover:text-red-600 hover:bg-white"

@@ -45,7 +45,7 @@ export function FeaturesCard({ title, features }: { title: string; features: Fea
   if (features.length === 0) return null;
 
   return (
-    <section className="border border-slate-200 rounded-2xl bg-slate-50 p-5 sm:p-6 shadow-sm">
+    <section className="border border-slate-200 rounded-lg bg-slate-50 p-5 sm:p-6 shadow-sm">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

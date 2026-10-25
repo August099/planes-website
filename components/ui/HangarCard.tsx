@@ -44,7 +44,7 @@ export function HangarCard({ hangar }: { hangar: HangarCardData }) {
   return (
     <>
       <Link href={href} className="group block h-full">
-        <Card data-card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <Card data-card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 transition-colors duration-200">
           <div className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100">
             <ImageCarousel images={hangar.images} fallbackImage={PLACEHOLDER_IMAGE} alt={hangar.title} />
             <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
@@ -56,7 +56,7 @@ export function HangarCard({ hangar }: { hangar: HangarCardData }) {
                   setShareOpen(true);
                 }}
                 aria-label="Compartir"
-                className="p-2 rounded-full bg-white/80 backdrop-blur-md text-slate-700 hover:text-blue-600 hover:bg-white shadow-sm transition-all duration-200 cursor-pointer flex items-center justify-center"
+                className="p-2 rounded-full bg-white/90 text-slate-700 hover:text-blue-600 hover:bg-white shadow-sm transition-all duration-200 cursor-pointer flex items-center justify-center"
               >
                 <Share2 className="w-4 h-4" />
               </button>

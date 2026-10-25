@@ -4,8 +4,9 @@ import { prisma } from "@/lib/prisma";
 
 // VA-173: cuentas por tipo (para el resumen del admin y el filtro de /admin/users) y gastos fijos.
 
-export type AccountType = "base" | "pro" | "broker" | "admin" | "cortesia";
-export const ACCOUNT_TYPE_LABEL: Record<AccountType, string> = { base: "Base", pro: "Pro", broker: "Broker", admin: "Admin", cortesia: "Cortesía" };
+// VA-182: "fundador" es solo filtro de /admin/users (no suma en el resumen por tipo).
+export type AccountType = "base" | "pro" | "broker" | "admin" | "bonificado" | "fundador";
+export const ACCOUNT_TYPE_LABEL: Record<AccountType, string> = { base: "Base", pro: "Pro", broker: "Broker", admin: "Admin", bonificado: "Bonificado", fundador: "Fundadores" };
 
 const currentSub = (now: Date) => ({
   OR: [
@@ -23,7 +24,9 @@ export function accountTypeWhere(type: AccountType, now = new Date()): Prisma.Us
       return { isAdmin: false, Subscription: { is: { ...currentSub(now), plan: { tier: "PRO" } } } };
     case "broker":
       return { isAdmin: false, Subscription: { is: { ...currentSub(now), plan: { tier: "BUSINESS" } } } };
-    case "cortesia":
+    case "fundador":
+      return { isFoundingMember: true };
+    case "bonificado":
       return { isAdmin: false, Subscription: { is: { ...currentSub(now), source: "MANUAL" } } };
     default:
       return { isAdmin: false, NOT: { Subscription: { is: currentSub(now) } } };
@@ -38,7 +41,7 @@ export type AccountCounts = {
 /** Cuántas cuentas hay de cada tipo y cuántas entraron este mes (altas o suscripciones nuevas). */
 export async function getAccountCounts(now = new Date()): Promise<AccountCounts> {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const types: AccountType[] = ["base", "pro", "broker", "admin", "cortesia"];
+  const types: AccountType[] = ["base", "pro", "broker", "admin", "bonificado"];
   const rows = [];
   for (const type of types) {
     const where = accountTypeWhere(type, now);

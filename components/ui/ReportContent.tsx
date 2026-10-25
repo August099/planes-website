@@ -100,10 +100,10 @@ export function ReportContent() {
         <PageBackground page="report" />
 
         <div className="container mx-auto px-4 max-w-md">
-          <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-8 backdrop-blur-sm shadow-xl text-center space-y-6">
+          <div className="bg-white border border-[#001F58]/12 rounded-lg p-8 shadow-sm text-center space-y-6">
             <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
             <h2 className="font-heading text-2xl font-semibold text-[#001F58]">
-              REPORTE ENVIADO
+              Reporte enviado
             </h2>
             <p className="text-xs sm:text-sm text-[#001F58]/70">
               Gracias por colaborar con la seguridad y transparencia de la comunidad. Revisaremos la publicación a la brevedad.
@@ -126,9 +126,9 @@ export function ReportContent() {
       <PageBackground page="report" />
 
       <div className="container mx-auto px-4 max-w-lg">
-        <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl space-y-6">
+        <div className="bg-white border border-[#001F58]/12 rounded-lg p-6 sm:p-8 shadow-sm space-y-6">
           <div className="text-center space-y-1.5">
-            <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#001F58] uppercase">
+            <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#001F58]">
               Reportar
             </h1>
             <p className="text-xs sm:text-sm text-[#001F58]/70">

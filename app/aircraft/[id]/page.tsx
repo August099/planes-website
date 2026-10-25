@@ -268,7 +268,7 @@ export default async function AircraftDetailsPage({
             </div>
 
             {aircraft.description && (
-              <div className="order-4 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
+              <div className="order-4 lg:order-none border border-slate-200 rounded-lg bg-white p-6 shadow-sm">
                 <ListingDescription text={aircraft.description} />
               </div>
             )}
@@ -281,7 +281,7 @@ export default async function AircraftDetailsPage({
 
           <div className="contents lg:flex lg:w-1/3 lg:flex-col lg:gap-5">
             {/* Tarjeta con los Datos de la Aeronave */}
-            <div className="order-2 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
+            <div className="order-2 lg:order-none border border-slate-200 rounded-lg bg-white p-6 shadow-sm space-y-4">
               <PublishedLine createdAt={aircraft.createdAt} lastPublishedAt={aircraft.lastPublishedAt} location={listingLocation} />
               <AircraftActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url} />
               <Separator />
@@ -331,7 +331,7 @@ export default async function AircraftDetailsPage({
             />
 
             {aircraft.documents.length > 0 && (
-              <div className="order-6 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-3">
+              <div className="order-6 lg:order-none border border-slate-200 rounded-lg bg-white p-6 shadow-sm space-y-3">
                 <h2 className="font-bold text-[#001F58] text-sm">Documentación adjunta</h2>
                 <div className="space-y-2">
                   {aircraft.documents.map((doc) => (

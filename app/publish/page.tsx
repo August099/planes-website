@@ -51,11 +51,14 @@ export default async function PublishPage({ searchParams }: Props) {
     redirect("/onboarding/account-type?from=publish");
   }
 
+  // VA-190: sin lo que el admin ocultó.
   const rawBrands = await prisma.aircraftBrand.findMany({
+    where: { hidden: false },
     select: {
       id: true,
       name: true,
       models: {
+        where: { hidden: false },
         // recommendedCategoryId y las variantes permiten sugerir el tipo de aeronave al elegir el modelo.
         select: {
           id: true,

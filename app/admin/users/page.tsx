@@ -8,6 +8,8 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { UserTypeSelect } from "@/components/admin/UserTypeSelect";
 import { CourtesyPlanControl } from "@/components/admin/CourtesyPlanControl";
 import { getQuotaUsage } from "@/lib/quota";
+import { FOUNDING_NOTE, foundingCount } from "@/lib/founders";
+import { FoundingLimitForm } from "@/components/admin/FoundingLimitForm";
 
 const PAGE_SIZE = 50;
 
@@ -20,7 +22,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
 
   const { q = "", page: pageParam, plan: planParam } = await searchParams;
   // VA-173: filtro por tipo de cuenta (desde el resumen del admin).
-  const plan = (["base", "pro", "broker", "admin", "cortesia"] as const).find((t) => t === planParam) ?? null;
+  const plan = (["base", "pro", "broker", "admin", "bonificado", "fundador"] as const).find((t) => t === planParam) ?? null;
   const query = q.trim();
   const page = Math.max(1, Number(pageParam) || 1);
 
@@ -50,12 +52,15 @@ export default async function AdminUsersPage({ searchParams }: Props) {
         isAdmin: true,
         userType: true,
         userTypeConfirmed: true,
+        isFoundingMember: true,
+        foundingMemberAt: true,
         _count: { select: { aircrafts: true, spareParts: true, accounts: true } },
-        Subscription: { select: { source: true, status: true, currentPeriodEnd: true, plan: { select: { name: true } } } },
+        Subscription: { select: { source: true, status: true, currentPeriodEnd: true, note: true, plan: { select: { name: true } } } },
       },
     }),
     prisma.user.count({ where }),
   ]);
+  const founding = await foundingCount();
   // VA-92: planes para "Asignar plan de cortesía" (también inactivos, no archivados). VA-166: Pro o
   // una opción del Broker / Empresa (Base es el de toda cuenta sin plan).
   const subscriptionPlans = await prisma.plan.findMany({
@@ -100,6 +105,8 @@ export default async function AdminUsersPage({ searchParams }: Props) {
           <p className="mt-1 text-sm text-slate-600">
             El tipo de cuenta alimenta el filtro “Publica”; “Fábrica” solo se asigna desde acá.
           </p>
+          {/* VA-182 */}
+          <FoundingLimitForm count={founding.count} limit={founding.limit} />
           {plan && (
             <p className="mt-2 text-sm">
               Mostrando: <span className="font-semibold text-[#001F58]">{ACCOUNT_TYPE_LABEL[plan]}</span> ·{" "}
@@ -124,7 +131,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
         </button>
       </form>
 
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table className="w-full min-w-[1100px] text-sm">
           <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
             <tr>
@@ -136,12 +143,13 @@ export default async function AdminUsersPage({ searchParams }: Props) {
               <th className="px-4 py-3 text-center" title="Pagos con pedido de arrepentimiento (VA-150). Solo informativo.">Arrepent.</th>
               <th className="px-4 py-3">Tipo de cuenta</th>
               <th className="px-4 py-3">Plan</th>
+              <th className="px-4 py-3" title="VA-182: primeras cuentas que publicaron, con 6 meses bonificados">Fundador</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {users.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-10 text-center text-slate-500">
+                <td colSpan={10} className="px-4 py-10 text-center text-slate-500">
                   No hay usuarios con esa búsqueda.
                 </td>
               </tr>
@@ -217,6 +225,17 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                           : null
                       }
                     />
+                    )}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-600">
+                    {u.isFoundingMember ? (
+                      <>
+                        <span className="font-semibold text-[#001F58]">Sí</span>
+                        {u.foundingMemberAt && <> · desde {dateFmt.format(u.foundingMemberAt)}</>}
+                        {u.Subscription?.note === FOUNDING_NOTE && <p>Bonificado hasta {dateFmt.format(u.Subscription.currentPeriodEnd)}</p>}
+                      </>
+                    ) : (
+                      "—"
                     )}
                   </td>
                 </tr>

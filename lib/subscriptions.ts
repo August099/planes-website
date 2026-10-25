@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { FOUNDING_NOTE } from "@/lib/founders";
 
 // Regla única de "suscripción vigente" (VA-80 / VA-92): ACTIVE con el período pagado sin terminar
 // (si se pidió cancelar, sigue vigente hasta currentPeriodEnd), o PAST_DUE (cobro rechazado) mientras
@@ -55,6 +56,7 @@ export async function getSubscriptionSummary(userId: string) {
       currentPeriodEnd: true,
       cancelAtPeriodEnd: true,
       source: true,
+      note: true,
       graceUntil: true,
       mpSubscriptionId: true,
       planId: true,
@@ -77,6 +79,8 @@ export async function getSubscriptionSummary(userId: string) {
     cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
     // VA-92: plan de cortesía asignado por un admin (no se cobra, no se renueva ni se cancela).
     courtesy: sub.source === "MANUAL",
+    // VA-182: los 6 meses bonificados de un miembro fundador.
+    founding: sub.source === "MANUAL" && sub.note === FOUNDING_NOTE,
   };
 }
 export type SubscriptionSummary = NonNullable<Awaited<ReturnType<typeof getSubscriptionSummary>>>;

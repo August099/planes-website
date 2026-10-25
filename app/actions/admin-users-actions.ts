@@ -61,3 +61,14 @@ export async function revokeCourtesyPlanAction(userId: string): Promise<{ ok: tr
   }
   return res;
 }
+
+// VA-182: cuántas cuentas pueden ser fundadoras. No quita el beneficio a las que ya lo tienen.
+export async function updateFoundingLimitAction(limit: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  const admin = await getCurrentUser();
+  if (!admin?.isAdmin) return { ok: false, error: "No autorizado." };
+  const n = Math.trunc(Number(limit));
+  if (!Number.isFinite(n) || n < 0 || n > 1000) return { ok: false, error: "Poné un número entre 0 y 1000." };
+  await prisma.quotaSettings.upsert({ where: { id: "default" }, create: { id: "default", foundingMembersLimit: n, updatedById: admin.id }, update: { foundingMembersLimit: n, updatedById: admin.id } });
+  revalidatePath("/admin/users");
+  return { ok: true };
+}

@@ -2,7 +2,8 @@ import "server-only";
 import { PreApproval } from "mercadopago";
 import { prisma } from "@/lib/prisma";
 import { mpClient } from "@/lib/mercadopago";
-import { enforceQuota, excessFor, limitsWithoutPlan, type QuotaKind } from "@/lib/quota";
+import { enforceQuota, excessFor, limitsWithoutPlan, type KeepChoice, type QuotaKind } from "@/lib/quota";
+import { invalidateFeaturedSellers } from "@/lib/featured";
 
 // Reembolso de un cobro de suscripción (botón de arrepentimiento, reembolso a mano en Mercado Pago o
 // contracargo). La suscripción termina en el momento y se cancela el débito. VA-152: con cupos fijos
@@ -35,7 +36,7 @@ export async function previewSubscriptionReversal(paymentId: string): Promise<Re
 }
 
 /** Termina la suscripción del cobro reembolsado. Idempotente. Devuelve lo que se pausó. */
-export async function revertSubscriptionCharge(paymentId: string): Promise<Record<QuotaKind, number> | null> {
+export async function revertSubscriptionCharge(paymentId: string, keep: KeepChoice = {}): Promise<Record<QuotaKind, number> | null> {
   const payment = await prisma.payment.findUnique({ where: { id: paymentId }, select: { subscriptionId: true, raw: true } });
   if (!payment?.subscriptionId) return null;
   const sub = await prisma.subscription.findUnique({ where: { id: payment.subscriptionId }, select: { id: true, userId: true, mpSubscriptionId: true, mpStatus: true, status: true } });
@@ -46,10 +47,10 @@ export async function revertSubscriptionCharge(paymentId: string): Promise<Recor
     console.warn(`[suscripciones] reembolso del débito ${preapproval}, que ya no es el vigente (${sub.mpSubscriptionId}): no se termina el plan`);
     return null;
   }
-  return endSubscriptionNow(sub);
+  return endSubscriptionNow(sub, keep);
 }
 
-export async function endSubscriptionNow(sub: { id: string; userId: string; mpSubscriptionId: string | null; mpStatus: string | null; status?: string }) {
+export async function endSubscriptionNow(sub: { id: string; userId: string; mpSubscriptionId: string | null; mpStatus: string | null; status?: string }, keep: KeepChoice = {}) {
   if (sub.mpSubscriptionId && sub.mpStatus !== "cancelled") {
     try {
       await new PreApproval(mpClient()).update({ id: sub.mpSubscriptionId, body: { status: "cancelled" } });
@@ -68,6 +69,9 @@ export async function endSubscriptionNow(sub: { id: string; userId: string; mpSu
       pendingMpSubscriptionId: null,
     },
   });
-  // VA-152: vuelve al cupo Gratis; lo que sobra se pausa (los más nuevos).
-  return enforceQuota(sub.userId);
+  // VA-152: vuelve al cupo Gratis; lo que sobra se pausa (VA-181: lo que no eligió conservar, o los más nuevos).
+  const paused = await enforceQuota(sub.userId, new Date(), keep);
+  // VA-181: sin el plan, sus avisos dejan de salir primero en el momento.
+  invalidateFeaturedSellers();
+  return paused;
 }

@@ -102,7 +102,7 @@ export function AdminReportsTable({ reports, history = {} }: { reports: ReportIt
       </div>
 
       {/* Tabla */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-xs">
         {filteredReports.length === 0 ? (
           <div className="p-8 text-center text-slate-400 text-xs">
             No hay reportes para mostrar en esta categoría.

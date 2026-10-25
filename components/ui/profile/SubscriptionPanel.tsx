@@ -61,7 +61,7 @@ export function SubscriptionPanel({ subscription, quota = null }: { subscription
   const end = DATE.format(new Date(subscription.currentPeriodEnd));
   const per = subscription.interval === "YEARLY" ? "año" : "mes";
 
-  // VA-92: cortesía (asignada por el admin): sin precio, sin cobros y sin cancelar.
+  // VA-92: plan bonificado (lo asigna el admin o es de un fundador, VA-182): sin precio, cobros ni cancelar.
   if (subscription.courtesy) {
     return (
       <section className="rounded-lg border border-[#001F58]/12 bg-white">
@@ -69,7 +69,7 @@ export function SubscriptionPanel({ subscription, quota = null }: { subscription
           <p className={LABEL}>Tu plan</p>
           <p className="mt-1 text-lg font-bold text-[#001F58]">{subscription.planName}</p>
           <p className="text-sm text-slate-600">
-            Plan de cortesía, sin cargo
+            {subscription.founding ? "6 meses bonificados por ser miembro fundador" : "Bonificado, sin cargo"}
           </p>
         </div>
         <p className="border-t border-[#001F58]/10 px-5 py-3 text-sm text-slate-600">
@@ -89,24 +89,30 @@ export function SubscriptionPanel({ subscription, quota = null }: { subscription
             AR$ {NUMBER.format(subscription.price)} por {per}
           </p>
         </div>
-        {subscription.cancelAtPeriodEnd ? (
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => run(resumeSubscriptionAction)}
-            className="self-start rounded-md border border-[#001F58]/20 px-4 py-2 text-xs font-semibold text-[#001F58] hover:bg-slate-50 cursor-pointer disabled:opacity-50"
-          >
-            Seguir suscripto
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="self-start rounded-md px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 cursor-pointer"
-          >
-            Cancelar suscripción
-          </button>
-        )}
+        <div className="flex flex-wrap items-start gap-2">
+          {/* VA-186 */}
+          <Link href="/plans" className="rounded-md border border-[#001F58]/20 px-4 py-2 text-xs font-semibold text-[#001F58] hover:bg-slate-50">
+            Cambiar de plan
+          </Link>
+          {subscription.cancelAtPeriodEnd ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => run(resumeSubscriptionAction)}
+              className="self-start rounded-md border border-[#001F58]/20 px-4 py-2 text-xs font-semibold text-[#001F58] hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+            >
+              Seguir suscripto
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="self-start rounded-md px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 cursor-pointer"
+            >
+              Cancelar suscripción
+            </button>
+          )}
+        </div>
       </div>
       {/* VA-92: cobro rechazado: sigue con los beneficios hasta graceUntil. */}
       {subscription.graceUntil && (

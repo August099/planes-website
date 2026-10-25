@@ -86,7 +86,7 @@ export default function HomeHeroFilter() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-2 sm:p-3 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl">
+    <div className="w-full max-w-4xl mx-auto p-2 sm:p-3 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         {/* Categoría libre */}
         <div className="relative">

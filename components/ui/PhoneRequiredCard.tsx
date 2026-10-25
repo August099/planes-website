@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Phone, Loader2 } from "lucide-react";
 import { updateProfileAction } from "@/app/actions/profile-actions";
+import { refreshHeaderIndicators } from "@/lib/header-refresh";
 
 // VA-46 (decisión D7): sin teléfono no se puede publicar, porque sin él no hay botón de WhatsApp.
 // Se carga acá mismo y queda guardado en el perfil.
@@ -23,6 +24,7 @@ export function PhoneRequiredCard({ onSaved }: { onSaved: () => void }) {
       const fd = new FormData();
       fd.set("phone", phone.trim());
       await updateProfileAction(fd);
+      refreshHeaderIndicators();
       onSaved();
     } catch {
       setError("No se pudo guardar el teléfono. Probá de nuevo.");
@@ -32,7 +34,7 @@ export function PhoneRequiredCard({ onSaved }: { onSaved: () => void }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 space-y-3">
+    <div className="max-w-2xl mx-auto mb-6 rounded-lg border border-amber-300 bg-amber-50 p-5 space-y-3">
       <div className="flex items-start gap-3">
         <Phone className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
         <div>

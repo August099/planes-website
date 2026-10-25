@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { RefreshCw, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { republishAllAction, republishListingAction } from "@/app/actions/republish-actions";
+import { refreshHeaderIndicators } from "@/lib/header-refresh";
 import { dismissRepublishNotice, isRepublishNoticeDismissed } from "@/lib/republish-notice";
 import type { RepublishView } from "@/lib/republish";
 
@@ -41,6 +42,7 @@ export function RepublishNotice({ view, onChooseListings }: { view: RepublishVie
       setConfirm(false);
       setDone(`Listo: republicaste ${res.republished} aviso${res.republished === 1 ? "" : "s"}. Ya están primeros en Últimas publicaciones.`);
       router.refresh();
+      refreshHeaderIndicators();
     };
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#001F58]/12 bg-white px-4 py-3 text-sm">
@@ -109,6 +111,8 @@ export function RepublishButton({ view, id, kind, className }: { view: Republish
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   if (view.mode !== "COUNT") return null;
+  // Recién republicado: en lugar del botón, cuándo se puede repetir (VA-178).
+  if (view.waiting[id]) return <span className="self-center text-[11px] text-slate-500">Republicado. Otra vez desde el {dd(view.waiting[id])}</span>;
   const left = view.remaining > 0 ? `Te ${view.remaining === 1 ? "queda" : "quedan"} ${plural(view.remaining)} hasta el ${dd(view.resetsAt)}` : `Se reponen el ${dd(view.resetsAt)}`;
 
   const run = async () => {
@@ -119,6 +123,7 @@ export function RepublishButton({ view, id, kind, className }: { view: Republish
     if (!res.ok) return setError(res.error);
     setConfirm(false);
     router.refresh();
+    refreshHeaderIndicators();
   };
 
   return (

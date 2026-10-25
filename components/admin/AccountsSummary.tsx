@@ -9,7 +9,7 @@ import { getAdminSummaryAction } from "@/app/actions/admin-expenses-actions";
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 const NUM = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
-const NAMES: Record<string, string> = { base: "Base", pro: "Pro", broker: "Broker", admin: "Admin", cortesia: "Cortesías" };
+const NAMES: Record<string, string> = { base: "Base", pro: "Pro", broker: "Broker", admin: "Admin", bonificado: "Bonificados" };
 
 type Summary = NonNullable<Awaited<ReturnType<typeof getAdminSummaryAction>>>;
 

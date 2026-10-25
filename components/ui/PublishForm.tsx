@@ -23,6 +23,7 @@ import Stepper, { Step } from "@/components/ui/Stepper";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle, Send, AlertCircle, Upload, Paperclip, Search, X, GripHorizontal } from "lucide-react";
 import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
+import { FoundingMemberDialog } from "@/components/ui/FoundingMemberDialog";
 import { DescriptionTextarea } from "@/components/ui/DescriptionTextarea";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
 import { LocalityInput } from "@/components/ui/LocalityInput";
@@ -217,6 +218,8 @@ export default function PublishForm({
     // Candado contra doble clic: el estado de React tarda un render en actualizarse.
     const submittingRef = useRef(false);
     const [publishStatus, setPublishStatus] = useState<string | null>(null);
+    // VA-182: primer aviso de una cuenta fundadora: ventana de bienvenida antes de ir al aviso.
+    const [founder, setFounder] = useState<{ until: string; url: string } | null>(null);
     const [compressing, setCompressing] = useState<{ done: number; total: number } | null>(null);
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
     const [isSubmittingManaged, setIsSubmittingManaged] = useState(false);
@@ -700,6 +703,11 @@ export default function PublishForm({
           return;
         }
 
+        if (!isEditing && "founder" in res && res.founder) {
+          setPublishStatus("¡Publicado!");
+          setFounder({ until: res.founder.until, url: res.url });
+          return;
+        }
         setPublishStatus(
           isEditing ? "¡Guardado! Abriendo tu aviso..." : res.paused ? "¡Guardado como pausado! Abriendo tu aviso..." : "¡Publicado! Abriendo tu aviso..."
         );
@@ -756,6 +764,7 @@ export default function PublishForm({
     return (
     <main className="relative isolate overflow-hidden min-h-screen">
         <PageBackground page="publish" />
+        {founder && <FoundingMemberDialog until={founder.until} onClose={() => router.push(founder.url)} />}
 
         <div className="container mx-auto px-4 pt-16 pb-20 max-w-7xl">
             <div className="text-center max-w-3xl mx-auto mb-10">
@@ -777,7 +786,7 @@ export default function PublishForm({
             {quotaFull && quota && quotaLine && (
               <section
                 aria-labelledby="quota-full-title"
-                className="max-w-2xl mx-auto mb-6 rounded-lg border border-[#001F58]/15 border-l-4 border-l-[#E70F1F] bg-white p-5 space-y-3"
+                className="max-w-2xl mx-auto mb-6 rounded-lg border border-[#001F58]/15 border-l-2 border-l-[#E70F1F] bg-white p-5 space-y-3"
               >
                 <h2 id="quota-full-title" className="text-base font-bold leading-snug text-[#001F58] sm:text-lg">
                   {quotaFullText(activeTab, quotaLine.used, quotaLine.limit ?? 0, quota.planName)}
@@ -839,7 +848,7 @@ export default function PublishForm({
 
             {/* En la edición no se puede cambiar el tipo de publicación */}
             <div className={isEditing ? "hidden" : "flex justify-center mb-8"}>
-              <div className="bg-white/80 p-1.5 rounded-2xl border border-[#001F58]/20 flex gap-2 shadow-sm backdrop-blur-sm">
+              <div className="bg-white p-1.5 rounded-lg border border-[#001F58]/20 flex gap-2 shadow-sm">
                 <button
                   type="button"
                   onClick={() => { 
@@ -873,7 +882,7 @@ export default function PublishForm({
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div className="lg:col-span-2">
-                    <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl text-[#001F58]">
+                    <div className="bg-white border border-[#001F58]/12 rounded-lg p-6 sm:p-8 shadow-sm text-[#001F58]">
                         
                         {/* ======================= FORMULARIO AVIONES ======================= */}
                         {activeTab === "aircraft" ? (
@@ -1002,7 +1011,7 @@ export default function PublishForm({
                                                 <select value={aircraftForm.brandId} onChange={(e) => handleBrandChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
                                                     <option value="">Seleccionar Marca</option>
                                                     {brandOptions.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                                    <option value="CUSTOM">Otra Marca...</option>
+                                                    <option value="CUSTOM">Otra marca...</option>
                                                 </select>
                                                 {/* VA-165: los modificados pueden ser de otra categoría que la recomendada. */}
                                                 {(pickedCategoryId || pickedGroup) && (
@@ -1010,7 +1019,13 @@ export default function PublishForm({
                                                         {showAllBrands ? "Ver solo las de este tipo" : "Ver todas las marcas"}
                                                     </button>
                                                 )}
-                                                {aircraftForm.brandId === "CUSTOM" && <input type="text" placeholder="Escribí la marca" value={aircraftForm.customBrand} onChange={e => setAircraftForm({...aircraftForm, customBrand: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white" />}
+                                                {/* VA-190: lo escrito pasa a la lista, en mayúsculas. */}
+                                                {aircraftForm.brandId === "CUSTOM" && (
+                                                    <>
+                                                        <input type="text" placeholder="Escribí la marca" maxLength={100} value={aircraftForm.customBrand} onChange={e => setAircraftForm({...aircraftForm, customBrand: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white uppercase placeholder:normal-case" />
+                                                        <p className="mt-1 text-xs text-slate-500">Se guarda en mayúsculas y queda en la lista para los próximos avisos.</p>
+                                                    </>
+                                                )}
                                                 <FieldError message={fieldErrors.brandId} />
                                             </div>
 
@@ -1021,7 +1036,12 @@ export default function PublishForm({
                                                     {modelOptions.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                                                     <option value="CUSTOM_MODEL">Otro modelo...</option>
                                                 </select>
-                                                {aircraftForm.modelId === "CUSTOM_MODEL" && <input type="text" placeholder="Escribí el modelo" value={aircraftForm.customModel} onChange={e => setAircraftForm({...aircraftForm, customModel: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white" />}
+                                                {aircraftForm.modelId === "CUSTOM_MODEL" && (
+                                                    <>
+                                                        <input type="text" placeholder="Escribí el modelo" maxLength={100} value={aircraftForm.customModel} onChange={e => setAircraftForm({...aircraftForm, customModel: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white uppercase placeholder:normal-case" />
+                                                        <p className="mt-1 text-xs text-slate-500">Se guarda en mayúsculas y queda en la lista para los próximos avisos.</p>
+                                                    </>
+                                                )}
                                                 <FieldError message={fieldErrors.modelId} />
 
                                                 {variantOptions.length > 0 && (
@@ -1588,7 +1608,7 @@ export default function PublishForm({
                                                 {showModelDropdown && (
                                                     <>
                                                         <div className="fixed inset-0 z-10" onClick={() => setShowModelDropdown(false)} />
-                                                        <div className="absolute top-full mt-2 w-full max-h-56 overflow-y-auto bg-white border border-slate-200 shadow-xl rounded-xl z-20">
+                                                        <div className="absolute top-full mt-2 w-full max-h-56 overflow-y-auto bg-white border border-slate-200 shadow-lg rounded-lg z-20">
                                                             {filteredModels.length === 0 ? (
                                                                 <div className="p-4 text-xs text-slate-500 text-center">No se encontraron modelos.</div>
                                                             ) : (
@@ -1648,7 +1668,7 @@ export default function PublishForm({
 
                 {/* Sidebar Asistencia */}
                 <div className="lg:col-span-1 hidden lg:block">
-                  <div className="bg-[#001F58] text-white rounded-2xl p-6 shadow-xl border border-white/10 sticky top-24">
+                  <div className="bg-[#001F58] text-white rounded-lg p-6 border border-white/10 sticky top-24">
                     <div className="flex items-center gap-2 text-red-500 font-bold text-xs uppercase tracking-wider mb-2">
                       <HelpCircle className="w-4 h-4" /> ¿Preferís que nos encarguemos?
                     </div>

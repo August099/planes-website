@@ -56,11 +56,11 @@ export function LatestAircraft({ items }: LatestListingsProps) {
         </div>
         <div className="flex gap-4 hidden sm:flex text-sm font-semibold text-[#001F58]">
           <Link href="/aircraft" className="hover:underline">
-            Ver Aviones →
+            Ver aviones
           </Link>
           <span className="text-slate-300">•</span>
           <Link href="/spareparts" className="hover:underline">
-            Ver Repuestos →
+            Ver repuestos
           </Link>
         </div>
       </div>

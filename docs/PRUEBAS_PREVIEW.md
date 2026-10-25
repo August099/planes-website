@@ -27,6 +27,9 @@ Anotar cada resultado en `docs/REGISTRO_DE_CAMBIOS.md` → "Pruebas de pagos" (y
    npx prisma migrate deploy
    npx prisma migrate status        # "Database schema is up to date!"
    ```
+   **Lote del 22/10 y 24/10:** `npx prisma migrate deploy` aplica 4 nuevas (`va187`, `va182`, `va183`,
+   `va190`). Después, con la misma variable, el informe de marcas propias (solo lee):
+   `npx tsx --require ./scripts/stub-server-only.cjs scripts/va190-report.ts` y, si está bien, `… --apply --confirm-production`.
 4. Datos base, con la misma variable puesta (y `$env:RUNTIME_DATABASE_URL` igual a la de arriba):
    ```powershell
    $env:RUNTIME_DATABASE_URL = $env:DATABASE_URL
@@ -115,6 +118,23 @@ Esperar el deploy en Vercel (Deployments) y que termine sin errores.
 ## 5. Qué probar
 
 Marcar cada punto. Celular real para los que dicen 📱.
+
+### Lote del 22/10 y 24/10 (VA-176 a VA-191)
+
+- [ ] **Video (VA-176):** en un aviso de Broker con video, tocar "Ver video": el carrusel no cambia solo mientras suena. Pasar a otra foto (flecha, miniatura o deslizando 📱): el video deja de sonar y al volver aparece "Ver video".
+- [ ] **Página personalizada (VA-177):** en `/plans`, `/faq`, Ajustes, el perfil, el buscador y `/admin/plans` no aparece "Página VA".
+- [ ] **Republicar (VA-178):** con una cuenta Base o Pro, en el detalle de un aviso propio tocar "Republicar": la franja desaparece, aparece "Actualizado el …" y, si era la última republicación, se apaga el punto de "Mi Cuenta" sin recargar. En Mi cuenta → Activos, ese aviso dice "Republicado. Otra vez desde el …" (7 días después). Con un Broker, después de "Republicar todas", el detalle no muestra el link.
+- [ ] **Notificaciones (VA-179):** responder una pregunta en `/questions` apaga el punto de "Mi Cuenta" sin recargar. Verificar el email con el link del mail: al volver, Ajustes ya no muestra "Falta: Email verificado".
+- [ ] **Métricas (VA-180):** con una cuenta que no sea admin ni la dueña, marcar como favorito y agregar al comparador un aviso de un Broker. En 1 o 2 minutos, el panel del Broker (Mi cuenta → Métricas, 30 días) lo muestra en la fila de ese aviso (columnas Favoritos y Comparador).
+- [ ] **Arrepentimiento (VA-181):** con una suscripción pagada hace menos de 10 días y más avisos que el cupo de Base, "Arrepentirme" muestra lo que se pierde y la lista para elegir qué avisos quedan (no deja tildar más que el cupo). Confirmar: se devuelve el pago, queda activo solo lo elegido, la cuenta sale de las destacadas de la Home al recargar y la página personalizada deja de verse. 📱 El diálogo entra en el celular sin scroll lateral.
+- [ ] **Datos faltantes (VA-185):** con una cuenta sin ciudad o sin teléfono, el menú del usuario tiene punto y "Ajustes" también; tocarlo lleva a la sección de datos. "Mi cuenta" no muestra el cartel. Completar y guardar: el cartel y los puntos se van sin recargar.
+- [ ] **Planes (VA-186):** "Planes y precios" en el menú del usuario (📱 también); link junto al cupo en Mi cuenta; "Cambiar de plan" en Ajustes con una suscripción activa. Todos llevan a `/plans`.
+- [ ] **Grilla (VA-187):** `/plans` y `/admin/plans` sin la fila "Branding"; la fila "Página personalizada" dice Básica (Pro) y Completa (Broker). 📱 Sin scroll lateral.
+- [ ] **Ventas (VA-183):** marcar un aviso como vendido: aparece la ventana; responder Sí con un precio y guardar. Otro: cerrar sin responder (queda vendido). En `/admin`, "Ventas" muestra las dos, el total en dólares y 1 gracias a VA y 1 sin respuesta. "Volver a publicar" uno: deja de contar. 📱 La ventana entra en el celular.
+- [ ] **Fundadores (VA-182):** con una cuenta nueva, publicar el primer aviso: aparece la ventana de 6 meses bonificados con la fecha; "Ver mi aviso" lleva al aviso. En Ajustes, el plan dice "6 meses bonificados por ser miembro fundador". En `/admin/users`, "Fundadores: 1 de 15" y la columna con la fecha de fin. Un segundo aviso no vuelve a mostrar la ventana. En ningún texto aparece "cortesía".
+- [ ] **Otra marca (VA-190):** publicar un avión con "Otra marca..." escrita en minúsculas y "Otro modelo...": el aviso muestra la marca y el modelo en MAYÚSCULAS y aparecen en el formulario y en los filtros de `/aircraft`. Publicar otro con la misma marca escrita distinto (con guion o tilde): no se duplica. En `/admin/taxonomy`, "Cargadas por usuarios" la lista con la fecha y el aviso de origen; ocultarla la saca de los filtros; unirla a otra mueve los avisos.
+- [ ] **Términos y privacidad (VA-189):** leer `/terms` y `/privacy` (también los términos dentro de `/register`); 📱 sin scroll lateral. Para el abogado: arrepentimiento, fundadores, facturación por cada cobro y límites de responsabilidad.
+- [ ] **Repaso visual (VA-191):** recorrer portada, listados, detalle, `/howtopublish`, `/login`, `/register`, una URL que no existe y `/maintenance`, en escritorio y 📱: nada de vidrio salvo el buscador de la portada, tarjetas sin "salto" al pasar el mouse, títulos en minúscula normal y sin scroll lateral.
 
 ### Cuentas y lanzamiento
 - [ ] Registro con email: llega el mail de verificación y el link abre el Preview (no localhost).

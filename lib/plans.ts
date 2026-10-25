@@ -65,6 +65,6 @@ export const getPlansPage = unstable_cache(
       rows,
     };
   },
-  ["plans-page", "va166"],
+  ["plans-page", "va187"],
   { tags: [PLANS_TAG, "quota"], revalidate: 3600 }
 );

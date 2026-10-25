@@ -6,6 +6,7 @@ import { MessageSquare, Reply } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { createQuestionAction, answerQuestionAction } from "@/app/actions/questions";
 import { errorMessage } from "@/lib/errors";
+import { refreshHeaderIndicators } from "@/lib/header-refresh";
 
 export interface QuestionData {
   id: string;
@@ -90,6 +91,7 @@ export function QnaSection({
       }
       setReplyingToId(null);
       setAnswerText("");
+      refreshHeaderIndicators();
     } catch (err) {
       alert(errorMessage(err) || "Error al responder");
     } finally {

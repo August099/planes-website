@@ -74,7 +74,7 @@ export default function AdminListingsPage() {
 
       {/* TOP 5 MÁS VISTAS Y CONTACTADAS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
           <h3 className="font-bold text-[#001F58] text-sm flex items-center gap-2">
             <Eye className="w-4 h-4 text-indigo-600" />
             Top 5 Más Vistas
@@ -94,7 +94,7 @@ export default function AdminListingsPage() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
           <h3 className="font-bold text-[#001F58] text-sm flex items-center gap-2">
             <PhoneCall className="w-4 h-4 text-emerald-600" />
             Top 5 Más Contactadas
@@ -116,7 +116,7 @@ export default function AdminListingsPage() {
       </div>
 
       {/* TABLA PRINCIPAL CON CONTROLES DE PAGINACIÓN */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h3 className="font-bold text-[#001F58] text-sm">Todas las Publicaciones</h3>

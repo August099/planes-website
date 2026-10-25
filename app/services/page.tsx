@@ -29,7 +29,7 @@ const upcomingServices = [
   },
   {
     title: "Eventos y actividades",
-    description: "Descubrí eventos, encuentros, ferias y actividades de la comunidad aeronáutica.",
+    description: "Eventos, encuentros, ferias y actividades de la comunidad aeronáutica.",
   },
   {
     title: "Empresas y servicios",
@@ -84,7 +84,7 @@ export default async function ServicesPage() {
                 href={GUIDES_PATH}
                 className="relative z-10 mt-2 inline-flex min-h-11 items-center rounded-md bg-[#E70F1F] px-6 text-sm font-bold text-white transition-colors hover:bg-[#C20D1A]"
               >
-                Ver las guías →
+                Ver las guías
               </Link>
             </div>
             <div className="relative z-10">
@@ -103,7 +103,7 @@ export default async function ServicesPage() {
               href="/aircraft/compare"
               className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-[#001F58]/20 px-5 text-sm font-semibold text-[#001F58] transition-colors hover:border-[#001F58]"
             >
-              Abrir el comparador →
+              Abrir el comparador
             </Link>
           </div>
         </section>
@@ -129,7 +129,7 @@ export default async function ServicesPage() {
         </section>
 
         {/* Cierre */}
-        <div className="rounded-lg border-l-4 border-[#E70F1F] bg-[#001F58] p-6 text-white sm:p-8">
+        <div className="rounded-lg border-l-2 border-[#E70F1F] bg-[#001F58] p-6 text-white sm:p-8">
           <h2 className="text-xl font-bold">
             <span aria-hidden className="mr-2 font-black tracking-tighter text-[#FF5A64]">
               {"//"}

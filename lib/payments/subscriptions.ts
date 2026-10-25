@@ -9,6 +9,7 @@ import { getBillingSettings } from "@/lib/billing-settings";
 import { queueInvoice, receiverFromProfile } from "@/lib/payments/invoices";
 import { isSubscriptionCurrent } from "@/lib/subscriptions";
 import { enforceQuota } from "@/lib/quota";
+import { invalidateFeaturedSellers } from "@/lib/featured";
 import { sendSubscriptionPaymentFailedEmail } from "@/lib/mail";
 import { processInvoice } from "@/lib/billing/issue";
 import { isTestPayment } from "@/lib/billing/guard";
@@ -48,7 +49,7 @@ export async function startSubscription(input: { userId: string; planId: string;
   // plan inmediato (sin prorrateo): el actual sigue hasta que se aprueba el primer cobro del nuevo.
   const changing = !!current && isSubscriptionCurrent(current) && current.source !== "MANUAL";
   if (current && isSubscriptionCurrent(current)) {
-    if (current.source === "MANUAL") return { ok: false, error: "Ya tenés un plan de cortesía vigente." };
+    if (current.source === "MANUAL") return { ok: false, error: "Ya tenés un plan bonificado vigente." };
     if (current.planId === plan.id) return { ok: false, error: "Ya estás suscripto a este plan." };
   }
 
@@ -241,6 +242,7 @@ async function handleAuthorizedPayment(authorizedPaymentId: string): Promise<Out
       },
     });
     await enforceQuota(sub.userId); // VA-152: si el plan nuevo tiene menos cupo, se pausan los más nuevos
+    invalidateFeaturedSellers();
     await queueInvoice({
       paymentId: claimed.id,
       amount,
@@ -352,7 +354,7 @@ async function openGrace(sub: { id: string; status: string; userId: string; plan
 export async function cancelAtPeriodEnd(userId: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const sub = await prisma.subscription.findUnique({ where: { userId } });
   if (!sub || !isSubscriptionCurrent(sub)) return { ok: false, error: "No tenés una suscripción activa." };
-  if (sub.source === "MANUAL") return { ok: false, error: "Es un plan de cortesía: no tiene cobros que cancelar." };
+  if (sub.source === "MANUAL") return { ok: false, error: "Es un plan bonificado: no tiene cobros que cancelar." };
   if (sub.cancelAtPeriodEnd) return { ok: true };
   if (sub.mpSubscriptionId) await new PreApproval(mpClient()).update({ id: sub.mpSubscriptionId, body: { status: "paused" } });
   await prisma.subscription.update({ where: { id: sub.id }, data: { cancelAtPeriodEnd: true, mpStatus: sub.mpSubscriptionId ? "paused" : sub.mpStatus } });
@@ -411,6 +413,7 @@ export async function runSubscriptionMaintenance(now = new Date()) {
       if (finalStatus === "CANCELLED") cancelled++;
       else expired++;
       await enforceQuota(s.userId, now); // VA-152: vuelve al cupo Gratis
+      invalidateFeaturedSellers();
     }
   }
   return { expired, cancelled };

@@ -49,9 +49,9 @@ export function PlanCardAction({
 
   if (state.courtesy) {
     return isCurrent ? (
-      <p className={`${base} ${secondary} cursor-default`}>Tu plan actual (cortesía)</p>
+      <p className={`${base} ${secondary} cursor-default`}>Tu plan actual (bonificado)</p>
     ) : (
-      <p className={`${base} ${secondary} cursor-default opacity-70`}>Tenés un plan de cortesía</p>
+      <p className={`${base} ${secondary} cursor-default opacity-70`}>Tenés un plan bonificado</p>
     );
   }
 

@@ -3,8 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { validateImage } from "@/lib/upload-validation";
-import { revalidatePath, updateTag } from "next/cache";
-import { profileCompletenessTag } from "@/lib/cached-data";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import { PASSWORD_REGEX } from "@/lib/password-rules";
@@ -91,8 +90,7 @@ export async function updateProfileAction(formData: FormData) {
   }
 
   revalidatePath(`/profile/${user.id}`);
-  // Punto rojo del header por perfil incompleto (VA-46).
-  updateTag(profileCompletenessTag(user.id));
+  revalidatePath("/settings"); // VA-185: el cartel de datos faltantes vive ahí
   return { success: true };
 }
 
@@ -219,7 +217,7 @@ export async function changePasswordAction({ currentPassword, newPassword }: Cha
 export async function uploadStorefrontImageAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) throw new Error("UNAUTHENTICATED");
-  if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye la Página VA.");
+  if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye la página personalizada.");
 
   const kind = formData.get("kind");
   if (kind !== "cover" && kind !== "logo" && kind !== "detailCover") throw new Error("Imagen inválida.");

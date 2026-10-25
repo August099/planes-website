@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Camera, CheckCircle2, Loader2, Lock, Trash2 } from "lucide-react";
 import { updateProfileAction, updateAvatarAction, removeAvatarAction, changePasswordAction } from "@/app/actions/profile-actions";
+import { refreshHeaderIndicators } from "@/lib/header-refresh";
 import { PROFILE_FIELD_LABELS, type ProfileField } from "@/lib/profile";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
 import { USER_TYPE_OPTIONS } from "@/lib/user-types";
@@ -76,6 +77,7 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
     try {
       await updateProfileAction(formData);
       setSaveSuccess(true);
+      refreshHeaderIndicators(); // VA-185: apaga el punto de "Ajustes" si ya no falta nada
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch {
       alert("Error al actualizar los datos.");

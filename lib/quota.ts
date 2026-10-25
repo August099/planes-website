@@ -73,9 +73,12 @@ export async function lockAndCheckRoom(tx: Prisma.TransactionClient, userId: str
  * Baja de plan (fin del período, cobro rechazado sin gracia, arrepentimiento o cambio a un plan con
  * menos cupo): si quedan más avisos activos que el cupo, se pausan los más nuevos en el momento (sin
  * plazo, decisión del 18/10). El dueño después puede pausar otro y activar el que prefiera.
+ * VA-181: con `keep` (lo que eligió en el arrepentimiento) se pausan primero los demás.
  * Devuelve cuántos pausó por tipo.
  */
-export async function enforceQuota(userId: string, now = new Date()): Promise<Record<QuotaKind, number>> {
+export type KeepChoice = Partial<Record<QuotaKind, string[]>>;
+
+export async function enforceQuota(userId: string, now = new Date(), keep: KeepChoice = {}): Promise<Record<QuotaKind, number>> {
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`;
     const ent = await getEntitlement(userId, tx, now);
@@ -83,18 +86,24 @@ export async function enforceQuota(userId: string, now = new Date()): Promise<Re
     const orderBy = [{ listingStartsAt: { sort: "desc" as const, nulls: "last" as const } }, { createdAt: "desc" as const }];
     const limitA = ent.limits.AIRCRAFT;
     if (limitA !== null) {
-      const active = await tx.aircraft.findMany({ where: { sellerId: userId, status: "ACTIVE" }, select: { id: true }, orderBy });
+      const active = keepLast(await tx.aircraft.findMany({ where: { sellerId: userId, status: "ACTIVE" }, select: { id: true }, orderBy }), keep.AIRCRAFT);
       const extra = active.slice(0, Math.max(0, active.length - limitA)).map((a) => a.id);
       if (extra.length) paused.AIRCRAFT = (await tx.aircraft.updateMany({ where: { id: { in: extra } }, data: { status: "PAUSED" } })).count;
     }
     const limitP = ent.limits.SPARE_PART;
     if (limitP !== null) {
-      const active = await tx.sparePart.findMany({ where: { sellerId: userId, status: "ACTIVE" }, select: { id: true }, orderBy });
+      const active = keepLast(await tx.sparePart.findMany({ where: { sellerId: userId, status: "ACTIVE" }, select: { id: true }, orderBy }), keep.SPARE_PART);
       const extra = active.slice(0, Math.max(0, active.length - limitP)).map((p) => p.id);
       if (extra.length) paused.SPARE_PART = (await tx.sparePart.updateMany({ where: { id: { in: extra } }, data: { status: "PAUSED" } })).count;
     }
     return paused;
   });
+}
+
+/** Ordena para pausar: primero los que no eligió conservar (cada grupo, del más nuevo al más viejo). */
+function keepLast<T extends { id: string }>(active: T[], keep: string[] = []): T[] {
+  const kept = new Set(keep);
+  return [...active.filter((a) => !kept.has(a.id)), ...active.filter((a) => kept.has(a.id))];
 }
 
 /** Cuántos avisos se pausarían si la cuenta pasara a estos cupos (para avisar antes de una baja). */
@@ -110,12 +119,12 @@ export async function limitsWithoutPlan(userId: string, db: Db = prisma): Promis
   return user?.isAdmin ? { AIRCRAFT: null, SPARE_PART: null } : getFreeQuota(db);
 }
 
-/** "Se pausan tus 2 aviones más nuevos y 3 repuestos más nuevos" (vacío si no hay que pausar nada). */
+/** "Se pausan 2 aviones y 3 repuestos…" (vacío si no hay que pausar nada). VA-181: los elige el usuario. */
 export function describePaused(p: Record<QuotaKind, number>): string | null {
   const parts = (["AIRCRAFT", "SPARE_PART"] as const)
     .filter((k) => p[k] > 0)
-    .map((k) => `${p[k] === 1 ? `tu ${QUOTA_KIND_TEXT[k].one} más nuevo` : `tus ${p[k]} ${QUOTA_KIND_TEXT[k].many} más nuevos`}`);
-  return parts.length ? `Se pausan ${parts.join(" y ")}, para quedar dentro del cupo. Después podés elegir cuáles quedan activos.` : null;
+    .map((k) => `${p[k]} ${p[k] === 1 ? QUOTA_KIND_TEXT[k].one : QUOTA_KIND_TEXT[k].many}`);
+  return parts.length ? `Se pausan ${parts.join(" y ")} para quedar dentro del cupo de Base: los que no elijas conservar o, si no elegís, los más nuevos.` : null;
 }
 
 /** Cupo de Base cacheado para los carteles de páginas estáticas (se refresca al editarlo, tag "quota"). */

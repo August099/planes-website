@@ -51,7 +51,7 @@ export function OverlayAircraftCard({
 
   return (
     <Link href={`/aircraft/${id}`} className="group block h-full">
-      <Card className="relative w-full aspect-[4/3] sm:aspect-[16/11] overflow-hidden rounded-2xl border-0 shadow-lg group-hover:shadow-2xl transition-all duration-300 bg-slate-900">
+      <Card className="relative w-full aspect-[4/3] sm:aspect-[16/11] overflow-hidden rounded-lg border-0 shadow-sm bg-slate-900">
         {/* BADGE DESTACADO */}
         <div className="absolute top-3 right-3 z-10">
           <CompareButton variant="overlay" item={{ id, title: displayTitle, image: imageUrl ?? null }} />
@@ -69,7 +69,7 @@ export function OverlayAircraftCard({
           fill
           // VA-73: 1 card por fila en celular y 2 desde 640 px (FeaturedAircraftCarousel), dentro del container.
           sizes="(max-width: 640px) 100vw, (max-width: 1536px) 50vw, 768px"
-          className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+          className="object-cover"
         />
 
         {/* GRADIENTE INFERIOR PARA LECTURA DEL TEXTO */}

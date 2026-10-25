@@ -31,7 +31,7 @@ export default async function WithdrawalPage() {
             plan Base. Publicar dentro del cupo de Base no tiene costo.
           </p>
           <ol className="mt-6 divide-y divide-[#001F58]/10 rounded-lg border border-[#001F58]/12 text-sm">
-            {["Iniciá sesión con la cuenta con la que pagaste.", "Entrá a tu perfil → Mis compras.", "En el pago, tocá “Arrepentirme” y confirmá."].map((step, i) => (
+            {["Iniciá sesión con la cuenta con la que pagaste.", "Entrá a Ajustes, en la sección Mis compras.", "En el pago, tocá “Arrepentirme” y confirmá."].map((step, i) => (
               <li key={step} className="flex gap-3 px-4 py-3">
                 <span className="w-5 shrink-0 font-semibold tabular-nums text-[#E70F1F]">{String(i + 1).padStart(2, "0")}</span>
                 <span className="text-slate-700">{step}</span>

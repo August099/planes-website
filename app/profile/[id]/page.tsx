@@ -7,7 +7,6 @@ import { getQuotaUsage } from "@/lib/quota";
 import { getRepublishStatus, republishView } from "@/lib/republish";
 import { moderationInfoFor } from "@/lib/moderation";
 import { PageBackground } from "@/components/ui/PageBackground";
-import { getMissingProfileFieldsCached } from "@/lib/cached-data";
 import { getSubscriptionSummary, hasCustomPage, hasSellerMetrics, hasVerifiedBadge } from "@/lib/subscriptions";
 import { TrackProfileView } from "@/components/ui/profile/TrackProfileView";
 import { quotaForView } from "@/lib/account-data";
@@ -60,8 +59,9 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           ...(isOwner && {
             _count: {
               select: {
-                favorites: true,
-                questions: true,
+                // VA-180: sin los del propio dueño, igual que el panel de métricas.
+                favorites: { where: { userId: { not: id } } },
+                questions: { where: { userId: { not: id } } },
                 // VA-105 · 5.1: solo vistas (ya deduplicadas al registrarlas, VA-17), no clics de contacto.
                 analyticsEvents: { where: { eventType: "AIRCRAFT_VIEW" } },
               },
@@ -78,8 +78,9 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           ...(isOwner && {
             _count: {
               select: {
-                favorites: true,
-                questions: true,
+                // VA-180: sin los del propio dueño, igual que el panel de métricas.
+                favorites: { where: { userId: { not: id } } },
+                questions: { where: { userId: { not: id } } },
                 // VA-105 · 5.1: solo vistas (ya deduplicadas al registrarlas, VA-17), no clics de contacto.
                 analyticsEvents: { where: { eventType: "SPARE_PART_VIEW" } },
               },
@@ -197,7 +198,6 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         profileUser={profileUser}
         isOwner={isOwner}
         currentUserFavIds={currentUserFavIds}
-        missingProfileFields={isOwner ? await getMissingProfileFieldsCached(id) : []}
         storefront={storefront}
         subscription={isOwner ? await getSubscriptionSummary(id) : null}
         hasSellerMetrics={isOwner ? await hasSellerMetrics(id) : false}

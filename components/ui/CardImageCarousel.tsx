@@ -108,7 +108,7 @@ export function ImageCarousel({
             className={`
               absolute left-2 top-1/2 -translate-y-1/2 z-30
               w-7 h-7 rounded-full
-              bg-white/90 backdrop-blur-sm
+              bg-white/90
               text-slate-700 shadow-md
               flex items-center justify-center
               transition-all duration-200
@@ -135,7 +135,7 @@ export function ImageCarousel({
             className={`
               absolute right-2 top-1/2 -translate-y-1/2 z-30
               w-7 h-7 rounded-full
-              bg-white/90 backdrop-blur-sm
+              bg-white/90
               text-slate-700 shadow-md
               flex items-center justify-center
               transition-all duration-200

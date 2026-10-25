@@ -52,7 +52,7 @@ export function CourtesyPlanControl({ userId, userName, subscription, plans }: {
       {subscription ? (
         <p className={subscription.active ? "text-slate-800" : "text-slate-400 line-through"}>
           <span className="font-semibold">{subscription.planName}</span>
-          {subscription.source === "MANUAL" && <span className="ml-1 rounded bg-emerald-50 px-1.5 py-0.5 font-semibold text-emerald-700">Cortesía</span>}
+          {subscription.source === "MANUAL" && <span className="ml-1 rounded bg-emerald-50 px-1.5 py-0.5 font-semibold text-emerald-700">Bonificado</span>}
           <span className="block text-slate-500">hasta {DATE.format(new Date(subscription.until))}</span>
         </p>
       ) : (
@@ -61,7 +61,7 @@ export function CourtesyPlanControl({ userId, userName, subscription, plans }: {
       <div className="mt-1 flex flex-wrap gap-x-3">
         {!paidActive && plans.length > 0 && (
           <button type="button" onClick={() => setOpen("grant")} className="font-semibold text-[#001F58] hover:underline cursor-pointer">
-            Asignar plan de cortesía
+            Asignar plan bonificado
           </button>
         )}
         {subscription?.source === "MANUAL" && subscription.active && (
@@ -73,7 +73,7 @@ export function CourtesyPlanControl({ userId, userName, subscription, plans }: {
 
       <ConfirmDialog
         open={open === "grant"}
-        eyebrow="Plan de cortesía"
+        eyebrow="Plan bonificado"
         title={`Asignar un plan a ${userName}`}
         confirmLabel="Asignar"
         pending={pending}
@@ -106,7 +106,7 @@ export function CourtesyPlanControl({ userId, userName, subscription, plans }: {
 
       <ConfirmDialog
         open={open === "revoke"}
-        eyebrow="Plan de cortesía"
+        eyebrow="Plan bonificado"
         title={`Quitar el plan de ${userName}`}
         confirmLabel="Quitar"
         danger

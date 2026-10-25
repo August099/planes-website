@@ -15,10 +15,16 @@ import {
   toFieldErrors,
   type AircraftListing,
   type SparePartListing,
+  type ListingData,
   type ListingInput,
   type ListingResult,
 } from "@/lib/listing-schema";
 import { assertListingOwner } from "@/lib/listing-auth";
+import { claimFoundingMembership } from "@/lib/founders";
+import { adoptCustomTaxonomy, linkAdoptedSource } from "@/lib/taxonomy-adopt";
+import { normalizeTaxonomyName } from "@/lib/taxonomy-normalize";
+import { AIRCRAFT_TAXONOMY_TAG } from "@/lib/cached-data";
+import { FEATURED_SELLERS_TAG } from "@/lib/featured";
 import { engineTypeForCategory } from "@/lib/aircraft-categories";
 import {
   createUploadTargets,
@@ -74,6 +80,18 @@ async function findRecentDuplicate(listingType: ListingType, sellerId: string, t
 
 const listingUrl = (listingType: ListingType, id: string) =>
   listingType === "aircraft" ? `/aircraft/${id}` : `/spareparts/sparepart-details/${id}`;
+
+// VA-190: "Otra marca" / "Otro modelo" pasan a la lista antes de validar la combinación.
+async function adoptAircraftTaxonomy(data: ListingData) {
+  if (data.listingType !== "aircraft") return null;
+  const adopted = await adoptCustomTaxonomy(data);
+  data.brandId = adopted.brandId ?? "";
+  data.modelId = adopted.modelId ?? "";
+  if (adopted.brandId) data.customBrand = "";
+  if (adopted.modelId) data.customModel = "";
+  if (adopted.createdBrandId || adopted.createdModelId) updateTag(AIRCRAFT_TAXONOMY_TAG); // aparece en los filtros
+  return adopted;
+}
 
 // Campos propios (sin relaciones ni estado/vigencia), iguales en el alta y en la edición.
 function aircraftFields(data: AircraftListing, categoryId: string) {
@@ -140,7 +158,7 @@ function sparePartFields(data: SparePartListing) {
   return {
     title: data.title,
     categoryId: data.categoryId,
-    brand: data.brand || null,
+    brand: data.brand ? normalizeTaxonomyName(data.brand) : null, // VA-190: en MAYÚSCULAS
     partNumber: data.partNumber || null,
     youtubeUrl: data.youtubeUrl || null, // VA-170
     price: data.priceOnRequest ? null : data.price ?? null,
@@ -232,6 +250,7 @@ export async function createListing(input: ListingInput, opts: { saveAsPaused?: 
   const coords = await coordinatesFor(data.city, data.province);
 
   // Las categorías se validan antes de mirar el cupo.
+  const adopted = await adoptAircraftTaxonomy(data);
   const aircraftCategoryId = data.listingType === "aircraft" ? await resolveAircraftCategory(data) : null;
   if (data.listingType === "aircraft" && !aircraftCategoryId) {
     return fail({ ok: false, error: "Revisá la marca, el modelo y la categoría: la combinación no es válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });
@@ -266,7 +285,8 @@ export async function createListing(input: ListingInput, opts: { saveAsPaused?: 
           },
           select: { id: true },
         });
-        return { id: aircraft.id, paused: !room };
+        // VA-182: si es el primer aviso (activo) de la cuenta y hay lugar, queda fundadora.
+        return { id: aircraft.id, paused: !room, founder: room ? await claimFoundingMembership(tx, sellerId, now) : null };
       }
       const sparePart = await tx.sparePart.create({
         data: {
@@ -278,7 +298,7 @@ export async function createListing(input: ListingInput, opts: { saveAsPaused?: 
         },
         select: { id: true },
       });
-      return { id: sparePart.id, paused: !room };
+      return { id: sparePart.id, paused: !room, founder: room ? await claimFoundingMembership(tx, sellerId, now) : null };
     });
 
     if (!created) {
@@ -292,6 +312,7 @@ export async function createListing(input: ListingInput, opts: { saveAsPaused?: 
       });
     }
     const { id } = created;
+    if (adopted) await linkAdoptedSource(adopted, id);
 
     try {
       await prisma.analyticsEvent.create({
@@ -312,7 +333,14 @@ export async function createListing(input: ListingInput, opts: { saveAsPaused?: 
     revalidatePath("/");
     revalidatePath(listingType === "aircraft" ? "/aircraft" : "/spareparts");
     updateTag(RECOMMENDATIONS_TAG); // VA-88
-    return { ok: true, id, url: listingUrl(listingType, id), ...(created.paused ? { paused: true } : {}) };
+    if (created.founder) updateTag(FEATURED_SELLERS_TAG); // VA-182: el Broker bonificado incluye destacadas
+    return {
+      ok: true,
+      id,
+      url: listingUrl(listingType, id),
+      ...(created.paused ? { paused: true } : {}),
+      ...(created.founder ? { founder: { until: created.founder.until.toISOString() } } : {}),
+    };
   } catch (error) {
     console.error("Error al crear la publicación:", error);
     return fail({ ok: false, error: "No se pudo guardar la publicación. Probá de nuevo." });
@@ -409,6 +437,8 @@ export async function updateListing(id: string, input: ListingInput): Promise<Li
 
   try {
     if (data.listingType === "aircraft") {
+      const adopted = await adoptAircraftTaxonomy(data);
+      if (adopted) await linkAdoptedSource(adopted, id);
       const categoryId = await resolveAircraftCategory(data);
       if (!categoryId) {
         return fail({ ok: false, error: "Revisá la marca, el modelo y la categoría: la combinación no es válida.", fieldErrors: { categoryId: "Seleccioná una categoría válida." } });

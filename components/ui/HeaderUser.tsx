@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { User, Menu } from "lucide-react";
 import { getHeaderIndicators, type HeaderIndicators } from "@/app/actions/header-actions";
 import { DESKTOP_TRIGGER_CLASS, MOBILE_TRIGGER_CLASS, PendingDot, type PartCategoryLink } from "@/components/ui/header-menu-shared";
+import { HEADER_REFRESH_EVENT } from "@/lib/header-refresh";
 import { isRepublishNoticeDismissed, REPUBLISH_NOTICE_EVENT } from "@/lib/republish-notice";
 
 // Parte del header que depende del usuario (VA-71). Es un componente cliente: así el resto del
@@ -52,6 +53,7 @@ function useHeaderUser() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const [indicators, setIndicators] = useState<HeaderIndicators | null>(null);
+  const [tick, setTick] = useState(0);
   const userId = session?.user?.id;
 
   // Se vuelven a pedir al navegar (por ejemplo, después de responder una pregunta).
@@ -66,14 +68,18 @@ function useHeaderUser() {
     return () => {
       cancelled = true;
     };
-  }, [userId, pathname]);
+  }, [userId, pathname, tick]);
 
-  // VA-167: el punto de republicaciones se apaga si el usuario cerró el cartel con ese mismo saldo.
-  const [, setDismissTick] = useState(0);
+  // VA-167: el punto se apaga si el usuario cerró el cartel con ese saldo. VA-179: y se vuelve a pedir cuando
+  // algo lo cambia sin navegar.
   useEffect(() => {
-    const onDismiss = () => setDismissTick((n) => n + 1);
-    window.addEventListener(REPUBLISH_NOTICE_EVENT, onDismiss);
-    return () => window.removeEventListener(REPUBLISH_NOTICE_EVENT, onDismiss);
+    const onChange = () => setTick((n) => n + 1);
+    window.addEventListener(REPUBLISH_NOTICE_EVENT, onChange);
+    window.addEventListener(HEADER_REFRESH_EVENT, onChange);
+    return () => {
+      window.removeEventListener(REPUBLISH_NOTICE_EVENT, onChange);
+      window.removeEventListener(HEADER_REFRESH_EVENT, onChange);
+    };
   }, []);
 
   const ind = userId ? indicators : null;
@@ -83,13 +89,14 @@ function useHeaderUser() {
     isAdmin: !!ind?.isAdmin || !!session?.user?.isAdmin,
     hasUnanswered: !!ind?.hasUnanswered,
     hasRepublish: !!ind?.republishKey && !isRepublishNoticeDismissed(ind.republishKey),
+    hasMissingProfile: !!ind?.missingProfile,
   };
 }
 
 export function DesktopUserMenu() {
-  const { status, userId, isAdmin, hasUnanswered, hasRepublish } = useHeaderUser();
+  const { status, userId, isAdmin, hasUnanswered, hasRepublish, hasMissingProfile } = useHeaderUser();
   const [armed, setArmed] = useState(false);
-  const dot = hasUnanswered || hasRepublish;
+  const dot = hasUnanswered || hasRepublish || hasMissingProfile;
 
   // Mientras se resuelve la sesión: un lugar del mismo tamaño, sin saltos.
   if (status === "loading") return <div className="h-9 w-9 rounded-lg bg-slate-200/40" aria-hidden />;
@@ -109,7 +116,7 @@ export function DesktopUserMenu() {
   return (
     <div className="flex items-center gap-3">
       {armed ? (
-        <DesktopDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} hasRepublish={hasRepublish} />
+        <DesktopDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} hasRepublish={hasRepublish} hasMissingProfile={hasMissingProfile} />
       ) : (
         <button
           type="button"
@@ -130,13 +137,13 @@ export function DesktopUserMenu() {
 }
 
 export function MobileMenu({ partCategories = [] }: { partCategories?: PartCategoryLink[] }) {
-  const { status, userId, isAdmin, hasUnanswered, hasRepublish } = useHeaderUser();
+  const { status, userId, isAdmin, hasUnanswered, hasRepublish, hasMissingProfile } = useHeaderUser();
   const [armed, setArmed] = useState(false);
-  const dot = hasUnanswered || hasRepublish;
+  const dot = hasUnanswered || hasRepublish || hasMissingProfile;
 
   if (armed) {
     return (
-      <MobileDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} hasRepublish={hasRepublish} loading={status === "loading"} partCategories={partCategories} />
+      <MobileDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} hasRepublish={hasRepublish} hasMissingProfile={hasMissingProfile} loading={status === "loading"} partCategories={partCategories} />
     );
   }
 

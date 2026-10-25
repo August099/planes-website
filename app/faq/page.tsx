@@ -18,7 +18,7 @@ const faqs: Faq[] = [
   { id: "documentos", group: "Publicar", question: "¿Quién ve la documentación que adjunto?", answer: "Los documentos (por ejemplo, el certificado de aeronavegabilidad o el historial de mantenimiento) no son públicos: solo los ven vos y el equipo de Ventas Aeronáuticas. Si un comprador interesado los necesita, se los mandás vos." },
   { id: "editar-pausar", group: "Publicar", question: "¿Puedo editar o borrar mi aviso?", answer: "Sí. Desde tu perfil, en Mis publicaciones, podés editar todo el aviso (fotos, motor, precio, descripción), pausarlo, volver a activarlo, marcarlo como vendido o borrarlo." },
   // Planes y pagos
-  { id: "planes", group: "Planes y pagos", question: "¿Qué planes hay?", answer: "Base (gratis, para todas las cuentas), Pro (3 aviones y 10 repuestos activos a la vez, usuario verificado, destacadas, banner en tu perfil y métricas) y Broker / Empresa, donde elegís publicar aviones ilimitados, repuestos ilimitados o las dos cosas, con tu Página VA completa, detalles personalizados y métricas completas. Pro y Broker / Empresa son suscripciones mensuales. Los precios están en Planes." },
+  { id: "planes", group: "Planes y pagos", question: "¿Qué planes hay?", answer: "Base (gratis, para todas las cuentas), Pro (3 aviones y 10 repuestos activos a la vez, usuario verificado, destacadas, banner en tu perfil y métricas) y Broker / Empresa, donde elegís publicar aviones ilimitados, repuestos ilimitados o las dos cosas, con tu página personalizada completa, detalles personalizados y métricas completas. Pro y Broker / Empresa son suscripciones mensuales. Los precios están en Planes." },
   { id: "medios-de-pago", group: "Planes y pagos", question: "¿Cómo se paga?", answer: "Con Mercado Pago: tarjeta de crédito o débito, dinero en cuenta y los demás medios que ofrece. Las suscripciones se debitan todos los meses de la cuenta de Mercado Pago que elijas." },
   { id: "cancelar-plan", group: "Planes y pagos", question: "¿Cómo cancelo o cambio mi suscripción?", answer: "Desde Planes y precios o desde tu perfil. Si cancelás, no se te cobra más y el plan sigue hasta el fin del período pagado. Si cambiás de plan, el nuevo empieza apenas se aprueba el pago y deja de cobrarse el anterior; lo que quedaba del período no se devuelve. Si el plan nuevo (o el Gratis) tiene menos cupo y tenés más avisos activos, se pausan los más nuevos y después elegís cuáles quedan activos." },
   { id: "arrepentimiento", group: "Planes y pagos", question: "¿Puedo arrepentirme de una suscripción?", answer: "Sí. Dentro de los 10 días corridos desde el pago de la suscripción podés pedir la devolución con el botón de arrepentimiento, en Mis compras de tu perfil. Te devolvemos el dinero por Mercado Pago, la suscripción termina y volvés al plan Gratis." },
@@ -74,7 +74,7 @@ export default function FAQPage() {
 
           <section className="md:col-span-3">
             <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-[#001F58] mb-2">
-              PREGUNTAS FRECUENTES
+              Preguntas frecuentes
             </h1>
             <p className="text-sm text-[#001F58]/60 mb-12 border-b border-[#001F58]/20 pb-4">
               Todo lo que necesitás saber antes de comprar o publicar

@@ -3,12 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
-import { getMissingProfileFieldsCached } from "@/lib/cached-data";
 import { getSubscriptionSummary, hasCustomPage, hasVerifiedBadge } from "@/lib/subscriptions";
 import { getQuotaUsage } from "@/lib/quota";
 import { getAccountPlan } from "@/lib/plan-benefits";
 import { getUserPurchases } from "@/lib/purchases";
-import { ownerBillingProfile, quotaForView } from "@/lib/account-data";
+import { missingProfileFields, ownerBillingProfile, quotaForView } from "@/lib/account-data";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AccountSettings } from "@/components/ui/settings/AccountSettings";
@@ -89,7 +88,7 @@ export default async function SettingsPage() {
           facebook: user.facebook,
           instagram: user.instagram,
         }}
-        missingProfileFields={await getMissingProfileFieldsCached(id)}
+        missingProfileFields={await missingProfileFields(id)}
         storefront={storefront}
         subscription={await getSubscriptionSummary(id)}
         quota={quotaForView(await getQuotaUsage(id))}
