@@ -1,7 +1,7 @@
 import { PROVINCES, provinceShortName } from "@/lib/provinces";
 import { ARGENTINA_VIEWBOX, CABA_MARKER, PROVINCE_PATHS } from "@/components/ui/argentina-map/paths";
 import { ProvinceExplorerClient, type ProvinceCount } from "@/components/ui/ProvinceExplorerClient";
-import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
 
 // "Explorá por provincia" (VA-77). El mapa SVG se arma en el servidor (los paths van en el HTML,
 // no en el JS del cliente); ProvinceExplorerClient solo maneja hover y selección.
@@ -46,10 +46,10 @@ export function ProvinceExplorer({ counts }: { counts: ProvinceCounts }) {
   );
 
   return (
-    <section className="py-8" aria-labelledby="province-explorer-title">
-      <div className="mb-6">
-        <SectionTitle id="province-explorer-title">Explorá por provincia</SectionTitle>
-        <p className="text-sm text-slate-600 mt-1">Encontrá aeronaves y repuestos cerca tuyo</p>
+    <section aria-labelledby="province-explorer-title">
+      <div className="mb-8">
+        <DisplayTitle id="province-explorer-title">Explorá por provincia</DisplayTitle>
+        <p className="mt-3 text-sm text-slate-600">Encontrá aeronaves y repuestos cerca tuyo</p>
       </div>
       <ProvinceExplorerClient provinces={provinces} map={map} />
     </section>

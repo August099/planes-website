@@ -37,7 +37,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
 
   // Resaltado (rojo suave) y seleccionada (rojo lleno). Más específico que las clases base del path.
   const css = [
-    hovered && hovered !== selected && `[data-province-map] [data-slug="${hovered}"]{fill:rgb(231 15 31 / 0.45)}`,
+    hovered && hovered !== selected && `[data-province-map] [data-slug="${hovered}"]{fill:rgb(214 40 40 / 0.5)}`,
     selected && `[data-province-map] [data-slug="${selected}"]{fill:#D62828}`,
   ]
     .filter(Boolean)
@@ -49,7 +49,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
 
       <div
         data-province-map
-        className="home-card h-[380px] sm:h-[460px] md:h-[600px] rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
+        className="h-[380px] sm:h-[460px] md:h-[600px] border-2 border-[#00205B] bg-white p-3"
         {...mapHandlers}
       >
         {map}
@@ -62,7 +62,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
           <select
             value={selected ?? ""}
             onChange={(e) => setSelected(e.target.value || null)}
-            className="w-full rounded-md border border-slate-300 bg-white p-3 text-sm text-[#00205B]"
+            className="w-full border-2 border-[#00205B] bg-white p-3 text-sm font-semibold text-[#00205B]"
           >
             <option value="">Elegí una provincia</option>
             {provinces.map((p) => (
@@ -74,13 +74,13 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
         </label>
 
         {/* Desktop: lista de las 24, sincronizada con el mapa */}
-        <ul className="home-card hidden md:grid grid-cols-2 gap-1 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+        <ul className="hidden md:grid grid-cols-2 border-2 border-[#00205B] bg-white">
           {provinces.map((p) => {
             const total = p.aircraft + p.parts;
             const isSelected = p.slug === selected;
             const isHovered = p.slug === hovered;
             return (
-              <li key={p.slug}>
+              <li key={p.slug} className="border-b border-[#00205B]/12 odd:border-r [&:nth-last-child(-n+2)]:border-b-0">
                 <button
                   type="button"
                   onClick={() => setSelected(p.slug)}
@@ -89,18 +89,18 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
                   onFocus={() => setHovered(p.slug)}
                   onBlur={() => setHovered(null)}
                   aria-pressed={isSelected}
-                  className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors duration-150 motion-reduce:transition-none cursor-pointer ${
+                  className={`flex w-full items-center justify-between gap-2 px-3.5 py-2 text-left text-sm transition-colors duration-150 motion-reduce:transition-none cursor-pointer ${
                     isSelected
                       ? "bg-[#D62828] text-white"
                       : isHovered
-                        ? "bg-[#D62828]/10 text-[#00205B]"
+                        ? "bg-[#00205B] text-white"
                         : total > 0
-                          ? "text-[#00205B] hover:bg-slate-50"
-                          : "text-slate-500 hover:bg-slate-50"
+                          ? "text-[#00205B]"
+                          : "text-slate-500"
                   }`}
                 >
-                  <span className="truncate font-medium">{p.label}</span>
-                  <span className={`shrink-0 text-xs ${isSelected ? "text-white/90" : ""}`}>
+                  <span className="truncate font-bold uppercase text-[12.5px] tracking-[0.02em]">{p.label}</span>
+                  <span className={`shrink-0 text-xs tabular-nums ${isSelected || isHovered ? "text-white" : ""}`}>
                     {plural(total, "aviso", "avisos")}
                   </span>
                 </button>
@@ -110,7 +110,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
         </ul>
 
         {/* Panel de la provincia elegida */}
-        <div className="home-card rounded-lg border border-slate-200 bg-white p-5 shadow-sm" aria-live="polite">
+        <div className="relative border-2 border-[#00205B] bg-white p-5" aria-live="polite">
           {!current ? (
             <p className="text-sm text-slate-500">Tocá una provincia en el mapa para ver sus avisos</p>
           ) : current.aircraft + current.parts === 0 ? (
@@ -120,16 +120,16 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
               </p>
               <Link
                 href="/publish"
-                className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#D62828] px-5 text-sm font-bold text-white hover:bg-[#B71F1F] transition-colors"
+                className="inline-flex min-h-11 items-center justify-center bg-[#D62828] px-5 text-sm font-bold uppercase tracking-[0.06em] text-white hover:bg-[#B71F1F] transition-colors"
               >
                 Publicar
               </Link>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-base font-bold text-[#00205B]">
+              <p className="font-heading text-lg font-black uppercase tracking-[-0.01em] text-[#00205B]">
                 {current.label}
-                <span className="font-medium text-slate-500">
+                <span className="font-body text-sm font-medium normal-case tracking-normal text-slate-500">
                   {" · "}
                   {plural(current.aircraft, "aeronave", "aeronaves")}
                   {" · "}
@@ -139,13 +139,13 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Link
                   href={`/aircraft?province=${current.slug}`}
-                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md bg-[#D62828] px-5 text-sm font-bold text-white hover:bg-[#B71F1F] transition-colors"
+                  className="inline-flex min-h-11 flex-1 items-center justify-center bg-[#D62828] px-5 text-sm font-bold uppercase tracking-[0.06em] text-white hover:bg-[#B71F1F] transition-colors"
                 >
                   Ver aeronaves
                 </Link>
                 <Link
                   href={`/spareparts?province=${current.slug}`}
-                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-[#00205B]/20 bg-white px-5 text-sm font-bold text-[#00205B] hover:bg-slate-50 transition-colors"
+                  className="inline-flex min-h-11 flex-1 items-center justify-center border-2 border-[#00205B] bg-white px-5 text-sm font-bold uppercase tracking-[0.06em] text-[#00205B] hover:bg-[#00205B] hover:text-white transition-colors"
                 >
                   Ver repuestos
                 </Link>
