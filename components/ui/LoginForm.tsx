@@ -77,11 +77,11 @@ export default function LoginForm({ errorParam = null, successParam = null, call
       <PageBackground page="login" />
 
       <div className="container mx-auto px-4 max-w-md">
-        <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-8 backdrop-blur-sm shadow-xl space-y-6">
+        <div className="bg-white border border-[#001F58]/12 rounded-lg p-8 shadow-sm space-y-6">
           {/* Encabezado */}
-          <div className="text-center space-y-1.5">
+          <div className="space-y-1.5">
             <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#001F58]">
-              BIENVENIDO DE NUEVO
+              Ingresá a tu cuenta
             </h1>
             <p className="text-xs sm:text-sm text-[#001F58]/70">
               Ingresá a tu cuenta para gestionar tus publicaciones
@@ -229,7 +229,7 @@ export default function LoginForm({ errorParam = null, successParam = null, call
             </Button>
           </form>
 
-          <p className="text-center text-xs sm:text-sm text-[#001F58]/70 pt-2 border-t border-[#001F58]/10">
+          <p className="text-xs sm:text-sm text-[#001F58]/70 pt-2 border-t border-[#001F58]/10">
             ¿No tenés cuenta?{" "}
             <Link
               href="/register"

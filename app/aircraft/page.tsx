@@ -242,7 +242,7 @@ export default async function AircraftListPage({ searchParams }: Props) {
 
         <div className="w-full flex-1">
           {aircrafts.length === 0 ? (
-            <div className="py-20 text-center text-slate-500 bg-white/50 backdrop-blur-sm rounded-2xl border border-slate-200 px-4">
+            <div className="py-20 text-center text-slate-500 bg-white rounded-lg border border-slate-200 px-4">
               No se encontraron aeronaves con los criterios de búsqueda seleccionados.
             </div>
           ) : (

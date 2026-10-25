@@ -179,7 +179,7 @@ export function ProfileView({
           editHref="/settings#pagina-va"
         />
       ) : (
-        <div className="p-6 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6">
+        <div className="p-6 rounded-lg bg-white border border-[#001F58]/12 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6">
           <div className="relative group w-24 h-24 rounded-full overflow-hidden bg-slate-200 border-2 border-[#001F58]/10 shrink-0 flex items-center justify-center">
             {profileUser.image ? (
               <Image

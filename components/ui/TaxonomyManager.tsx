@@ -372,7 +372,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
     return categories
       .filter((c) => c.parentId === parentId)
       .flatMap((c) => [
-        { id: c.id, label: `${"— ".repeat(depth)}${c.name}` },
+        { id: c.id, label: `${"· ".repeat(depth)}${c.name}` },
         ...flattenWithDepth(categories, c.id, depth + 1),
       ]);
   }
@@ -566,7 +566,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
   // Lista plana de todas las categorías de repuestos (padres + hijas), para el multi-select de grupos
   const allSpareCategoriesFlat = flattenWithDepth(sparePartCategoriesFlat).map((cat) => ({
     id: cat.id,
-    name: cat.label, // ya viene con la indentación tipo "— — Cilindros"
+    name: cat.label, // ya viene con la indentación tipo "· · Cilindros"
   }));
 
   return (
@@ -606,7 +606,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       {activeTab === "aircrafts" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* CATEGORÍAS */}
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Categorías de Aeronave</h3>
             <form onSubmit={handleAddAircraftCategory} className="flex gap-2">
               <input
@@ -662,7 +662,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           </div>
 
           {/* MARCAS Y LOGO (SUBIR DESDE LA PC) */}
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Marcas de Aeronave</h3>
             
             <form onSubmit={handleAddBrand} className="space-y-2">
@@ -770,7 +770,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           </div>
 
           {/* MODELOS */}
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Modelos <span className="font-normal text-[11px] text-slate-500">· a la derecha, su categoría recomendada</span></h3>
             <select
               value={selectedBrandId}
@@ -855,7 +855,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           </div>
 
           {/* SUBMODELOS / VARIANTES */}
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Variantes / Submodelos</h3>
             <select
               value={selectedModelId}
@@ -930,7 +930,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       {/* VISTA DE REPUESTOS */}
       {activeTab === "spareparts" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Nueva Categoría / Subcategoría</h3>
             <form onSubmit={handleAddSpareCategory} className="space-y-3">
               <div>
@@ -985,7 +985,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
             </form>
           </div>
 
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Categorías Existentes</h3>
             <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
               {sparePartCategories.map((parent) => (
@@ -1007,7 +1007,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           </div>
 
           {/* GRUPOS DE FILTROS */}
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Grupos de Filtros</h3>
 
             <form onSubmit={handleAddFilterGroup} className="space-y-3">
@@ -1065,7 +1065,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           </div>
 
           {/* FILTROS */}
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Filtros</h3>
 
             <select

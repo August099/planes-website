@@ -74,7 +74,7 @@ export default function FAQPage() {
 
           <section className="md:col-span-3">
             <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-[#001F58] mb-2">
-              PREGUNTAS FRECUENTES
+              Preguntas frecuentes
             </h1>
             <p className="text-sm text-[#001F58]/60 mb-12 border-b border-[#001F58]/20 pb-4">
               Todo lo que necesitás saber antes de comprar o publicar

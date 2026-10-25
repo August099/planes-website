@@ -110,7 +110,7 @@ export function ShareDialog({
         role="dialog"
         aria-modal="true"
         aria-label={heading}
-        className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-6 space-y-5 shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-300"
+        className="w-full sm:max-w-md bg-white rounded-t-lg sm:rounded-lg p-6 space-y-5 shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-300"
         onClick={stop}
       >
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -139,7 +139,7 @@ export function ShareDialog({
               onClick={stop}
               className="flex flex-col items-center gap-1.5 group cursor-pointer"
             >
-              <div className={`w-12 h-12 rounded-2xl ${o.tone} flex items-center justify-center group-hover:scale-105 transition-transform`}>
+              <div className={`w-12 h-12 rounded-lg ${o.tone} flex items-center justify-center group-hover:scale-105 transition-transform`}>
                 {o.icon}
               </div>
               <span className="text-[11px] font-semibold text-slate-700">{o.label}</span>

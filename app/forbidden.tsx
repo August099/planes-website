@@ -7,9 +7,8 @@ export default function Forbidden() {
     <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center px-4">
       <PageBackground page="plans" />
 
-      <div className="max-w-xl w-full text-center bg-white/70 backdrop-blur-md border border-[#001F58]/15 rounded-3xl p-8 sm:p-12 shadow-xl my-12">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E70F1F]/10 border border-[#E70F1F]/20 text-[#E70F1F] text-xs font-semibold tracking-wider uppercase mb-6 animate-pulse">
-          <span className="w-2 h-2 rounded-full bg-[#E70F1F]"></span>
+      <div className="max-w-xl w-full bg-white border border-[#001F58]/12 rounded-lg p-8 sm:p-10 shadow-sm my-12">
+        <div className="mb-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#E70F1F]">
           Espacio Aéreo Restringido
         </div>
 
@@ -25,16 +24,16 @@ export default function Forbidden() {
           No tenés los permisos necesarios para entrar a esta sección de la plataforma.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <Link
             href="/"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#001F58] hover:bg-[#001F58]/90 text-white font-medium text-sm transition-all shadow-md active:scale-[0.98]"
+            className="w-full sm:w-auto px-6 py-3 rounded-md bg-[#001F58] hover:bg-[#001F58]/90 text-white font-medium text-sm transition-all shadow-md active:scale-[0.98]"
           >
             Inicio
           </Link>
 
           {/* VA-163 */}
-          <BackOrHomeButton className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/80 hover:bg-white border border-[#001F58]/20 text-[#001F58] font-medium text-sm transition-all shadow-sm" />
+          <BackOrHomeButton className="w-full sm:w-auto px-6 py-3 rounded-md bg-white/80 hover:bg-white border border-[#001F58]/20 text-[#001F58] font-medium text-sm transition-all shadow-sm" />
         </div>
       </div>
     </main>

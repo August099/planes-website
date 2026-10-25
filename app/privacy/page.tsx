@@ -46,7 +46,7 @@ export default function PrivacidadPage() {
           {/* CUERPO PRINCIPAL: Contenido de la Política de Privacidad */}
           <section className="md:col-span-3">
             <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-[#001F58] mb-2">
-              POLÍTICA DE PRIVACIDAD
+              Política de privacidad
             </h1>
             <p className="text-sm text-[#001F58]/60 mb-12 border-b border-[#001F58]/20 pb-4">
               <strong>Última actualización:</strong> Octubre 2026.
@@ -224,7 +224,7 @@ export default function PrivacidadPage() {
               </div>
 
               {/* Marco Legal Oficial Destacado */}
-              <div className="bg-[#001F58]/5 border-l-4 border-[#001F58] p-5 mt-4 rounded-r-xl italic text-xs text-[#001F58]/90 space-y-3">
+              <div className="bg-[#001F58]/5 border-l-2 border-[#001F58] p-5 mt-4 rounded-r-md italic text-xs text-[#001F58]/90 space-y-3">
                 <p>
                   “El titular de los datos personales tiene la facultad de ejercer el derecho de acceso a los mismos en forma gratuita a intervalos no inferiores a seis meses, salvo que se acredite un interés legítimo al efecto conforme lo establecido en el artículo 14, inciso 3 de la Ley Nº 25.326.”
                 </p>

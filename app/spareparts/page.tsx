@@ -232,7 +232,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
 
         <div className="w-full flex-1 min-w-0">
           {spareParts.length === 0 ? (
-            <div className="p-12 text-center border rounded-2xl bg-neutral-50/50">
+            <div className="p-12 text-center border rounded-lg bg-neutral-50/50">
               <p className="text-slate-500 font-medium">
                 No se encontraron repuestos con los filtros seleccionados.
               </p>

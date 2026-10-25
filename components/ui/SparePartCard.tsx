@@ -108,19 +108,19 @@ export function SparePartCard({
   return (
     <>
       <Link href={`/spareparts/sparepart-details/${id}`} className="group block h-full">
-        <Card data-card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <Card data-card className="h-full flex flex-col p-3 rounded-lg bg-[#FFFFFF]/[0.65] border border-[#001F58]/10 hover:border-[#001F58]/30 transition-colors duration-200">
           <div className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100">
             <AppImage
               src={imageUrl}
               alt={title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+              className="object-cover"
             />
 
             {formattedCondition && (
               <div className="absolute top-2.5 left-2.5 z-10">
-                <span className="bg-black/70 backdrop-blur-md text-white text-[10px] font-semibold tracking-wider uppercase px-2.5 py-1 rounded-md shadow-sm">
+                <span className="bg-black/75 text-white text-[10px] font-semibold tracking-wider uppercase px-2.5 py-1 rounded-md shadow-sm">
                   {formattedCondition}
                 </span>
               </div>
@@ -131,7 +131,7 @@ export function SparePartCard({
                 type="button"
                 onClick={handleShareClick}
                 aria-label="Compartir"
-                className="p-2 rounded-full bg-white/80 backdrop-blur-md text-slate-700 hover:text-blue-600 hover:bg-white shadow-sm transition-all duration-200 cursor-pointer flex items-center justify-center"
+                className="p-2 rounded-full bg-white/90 text-slate-700 hover:text-blue-600 hover:bg-white shadow-sm transition-all duration-200 cursor-pointer flex items-center justify-center"
               >
                 <Share2 className="w-4 h-4" />
               </button>
@@ -141,7 +141,7 @@ export function SparePartCard({
                 onClick={handleFavoriteClick}
                 disabled={loadingFav}
                 aria-label="Añadir a favoritos"
-                className={`p-2 rounded-full backdrop-blur-md shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50 ${
+                className={`p-2 rounded-full shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-50 ${
                   isFavorite
                     ? "bg-red-50 text-red-600 hover:bg-red-100"
                     : "bg-white/80 text-slate-700 hover:text-red-600 hover:bg-white"

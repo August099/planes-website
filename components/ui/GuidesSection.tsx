@@ -19,7 +19,7 @@ export async function GuidesSection() {
           href={GUIDES_PATH}
           className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-white underline underline-offset-4 decoration-white/40 hover:decoration-white"
         >
-          Ver todas las guías →
+          Ver todas las guías
         </Link>
       </div>
     </section>

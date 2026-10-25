@@ -34,7 +34,7 @@ export function PhoneRequiredCard({ onSaved }: { onSaved: () => void }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 space-y-3">
+    <div className="max-w-2xl mx-auto mb-6 rounded-lg border border-amber-300 bg-amber-50 p-5 space-y-3">
       <div className="flex items-start gap-3">
         <Phone className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
         <div>

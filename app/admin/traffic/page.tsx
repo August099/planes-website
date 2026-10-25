@@ -35,7 +35,7 @@ export default function AdminTrafficPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* SITIOS DE ORIGEN */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
           <h3 className="font-bold text-[#001F58] text-sm flex items-center gap-2">
             <Globe2 className="w-4 h-4 text-blue-600" />
             Principales Sitios de Origen (Referrers)
@@ -73,7 +73,7 @@ export default function AdminTrafficPage() {
         </div>
 
         {/* SEGMENTACIÓN DE USUARIOS */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-6">
           <h3 className="font-bold text-[#001F58] text-sm flex items-center gap-2">
             <Users className="w-4 h-4 text-indigo-600" />
             Comportamiento: Registrados vs Anónimos

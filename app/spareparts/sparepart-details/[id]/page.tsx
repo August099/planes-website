@@ -286,7 +286,7 @@ export default async function SparePartDetailsPage({
             </div>
 
             {sparePart.description && (
-              <div className="order-4 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
+              <div className="order-4 lg:order-none border border-slate-200 rounded-lg bg-white p-6 shadow-sm">
                 <ListingDescription text={sparePart.description} />
               </div>
             )}
@@ -299,7 +299,7 @@ export default async function SparePartDetailsPage({
 
           <div className="contents lg:flex lg:w-1/3 lg:flex-col lg:gap-5">
             {/* Tarjeta con los Detalles Principales del Repuesto */}
-            <div className="order-2 lg:order-none border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
+            <div className="order-2 lg:order-none border border-slate-200 rounded-lg bg-white p-6 shadow-sm space-y-4">
               <PublishedLine createdAt={sparePart.createdAt} lastPublishedAt={sparePart.lastPublishedAt} location={locationText} />
               <AircraftActionsHeader
                 title={sparePart.title}

@@ -89,7 +89,7 @@ export function QuestionsClient({
           {pendingReceivedCount > 0 && (
             <span
               aria-label={`${pendingReceivedCount} sin responder`}
-              className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[11px] font-bold animate-pulse whitespace-nowrap"
+              className="px-2 py-0.5 rounded-full bg-[#E70F1F] text-white text-[11px] font-bold whitespace-nowrap"
             >
               {pendingReceivedCount}<span className="hidden sm:inline"> sin responder</span>
             </span>
@@ -113,7 +113,7 @@ export function QuestionsClient({
       {activeTab === "received" && (
         <div className="space-y-4">
           {receivedQuestions.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 text-sm bg-white rounded-2xl border border-dashed border-slate-200">
+            <div className="p-8 text-center text-slate-400 text-sm bg-white rounded-lg border border-dashed border-slate-200">
               Todavía no recibiste preguntas en tus publicaciones.
             </div>
           ) : (
@@ -131,7 +131,7 @@ export function QuestionsClient({
               return (
                 <div
                   key={q.id}
-                  className={`p-5 rounded-2xl border transition-all ${
+                  className={`p-5 rounded-lg border transition-all ${
                     isPending
                       ? "bg-amber-50/40 border-amber-200 shadow-2xs"
                       : "bg-white border-slate-200"
@@ -238,7 +238,7 @@ export function QuestionsClient({
       {activeTab === "sent" && (
         <div className="space-y-4">
           {sentQuestions.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 text-sm bg-white rounded-2xl border border-dashed border-slate-200">
+            <div className="p-8 text-center text-slate-400 text-sm bg-white rounded-lg border border-dashed border-slate-200">
               Aún no has realizado preguntas en ninguna publicación.
             </div>
           ) : (
@@ -253,7 +253,7 @@ export function QuestionsClient({
               const imageUrl = item?.images?.[0]?.url || PLACEHOLDER_IMAGE;
 
               return (
-                <div key={q.id} className="p-5 rounded-2xl border border-slate-200 bg-white space-y-3">
+                <div key={q.id} className="p-5 rounded-lg border border-slate-200 bg-white space-y-3">
                   {/* Encabezado del Producto */}
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 gap-3">
                     <div className="flex items-center gap-3">

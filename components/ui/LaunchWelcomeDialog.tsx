@@ -55,7 +55,7 @@ export function LaunchWelcomeDialog() {
       aria-labelledby="launch-welcome-title"
       className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-[#001F58]/15 p-0 text-slate-800 backdrop:bg-[#001331]/60"
     >
-      <div className="border-l-4 border-[#E70F1F] p-6 space-y-4">
+      <div className="border-l-2 border-[#E70F1F] p-6 space-y-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
             Bienvenida <span className="text-[#E70F1F]">{"//"}</span> Ventas Aeronáuticas

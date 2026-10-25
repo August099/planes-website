@@ -19,7 +19,7 @@ export function SellerContactCard({
 }) {
   const sellerLocation = [seller.city, seller.province].filter(Boolean).join(", ");
   return (
-    <div className={`border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4 ${className}`}>
+    <div className={`border border-slate-200 rounded-lg bg-white p-6 shadow-sm space-y-4 ${className}`}>
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-[#001F58]">Vendedor</h2>
         <a className="text-xs font-semibold text-blue-600 hover:underline py-2" href={`/profile/${seller.id}`}>

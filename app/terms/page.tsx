@@ -35,7 +35,7 @@ export default function TerminosPage() {
 
           <section className="md:col-span-3">
             <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-[#001F58] mb-2">
-              TÉRMINOS Y CONDICIONES DE USO
+              Términos y condiciones
             </h1>
             <p className="text-sm text-[#001F58]/60 mb-12 border-b border-[#001F58]/20 pb-4">
               <strong>Última actualización:</strong> Octubre 2026.

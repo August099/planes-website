@@ -41,7 +41,7 @@ export function GuideArticle({ guide, breadcrumbs = true }: { guide: Guide; brea
       </p>
 
       {guide.source && (
-        <p className="mt-5 rounded-md border-l-4 border-[#001F58] bg-[#001F58]/5 p-4 text-sm text-slate-700">
+        <p className="mt-5 rounded-md border-l-2 border-[#001F58] bg-[#001F58]/5 p-4 text-sm text-slate-700">
           Fuente oficial: <InlineLink link={guide.source} />
         </p>
       )}

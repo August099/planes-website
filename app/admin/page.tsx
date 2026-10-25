@@ -172,7 +172,7 @@ export default function AdminOverviewPage() {
         <>
           {/* TARJETAS PRINCIPALES (SIN DUPLICAR DATOS INNECESARIOS) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tráfico de Usuarios</p>
                 <h3 className="text-2xl font-bold text-[#001F58] mt-1">{data.kpis.uniqueVisitors}</h3>
@@ -183,7 +183,7 @@ export default function AdminOverviewPage() {
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Aeronaves / Repuestos Vistos</p>
                 <h3 className="text-2xl font-bold text-[#001F58] mt-1">{data.kpis.totalViews}</h3>
@@ -196,7 +196,7 @@ export default function AdminOverviewPage() {
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Interacciones Comerciales</p>
                 <h3 className="text-2xl font-bold text-[#001F58] mt-1">{data.kpis.totalContacts}</h3>
@@ -215,7 +215,7 @@ export default function AdminOverviewPage() {
           {/* ANALÍTICA DETALLADA */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* DESGLOSE POR CANAL DE CONTACTO */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
               <h3 className="font-bold text-[#001F58] text-sm flex items-center gap-2">
                 <Layers className="w-4 h-4 text-emerald-600" />
                 Origen de los Contactos
@@ -249,7 +249,7 @@ export default function AdminOverviewPage() {
             </div>
 
             {/* TABLA DE TENDENCIA DIARIA */}
-            <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div className="lg:col-span-2 bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
               <h3 className="font-bold text-[#001F58] text-sm">Registro de Vistas vs. Contactos Generados</h3>
               
               <div className="overflow-x-auto">

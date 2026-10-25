@@ -81,7 +81,7 @@ export function Footer() {
 
           <div>
             <h3 className="font-heading font-semibold mb-3 text-sm text-white drop-shadow-md">
-              Explorar
+              Avisos y planes
             </h3>
             <ul className="space-y-1 sm:space-y-2 text-sm text-white/90 drop-shadow-sm">
               <li>

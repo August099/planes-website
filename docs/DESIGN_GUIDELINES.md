@@ -94,10 +94,15 @@ No sumar verdes, violetas ni otros colores de relleno: el verde quedó solo para
 - Imágenes con `next/image`/`AppImage` y `sizes` reales; `priority` solo para la imagen principal de la pantalla.
 - Antes de cerrar: 375 y 1280 px sin scroll horizontal, un solo `h1`, consola limpia (ver el repaso del 11/10 en `docs/REGISTRO_DE_CAMBIOS.md`).
 
+### Repaso anti-slop del 24/10/2026 (VA-191)
+- Vidrio (`backdrop-blur`) solo en el buscador de la portada, sobre la foto. Paneles, formularios y estados vacíos son placas blancas.
+- Sombras marcadas solo en capas flotantes (sugerencias del buscador, cajón de filtros, diálogos); el resto, `shadow-sm` o nada.
+- Sin elevación ni zoom de foto al pasar el mouse por las tarjetas: alcanza con el borde.
+- Títulos en minúscula normal (nada de `H1` en mayúsculas); las mayúsculas quedan para el rótulo técnico.
+- Avisos y estados con borde izquierdo de 2 px. Sin flechas "→" pegadas a los links y sin texto con degradé.
+- `/howtopublish` usa la ruta de waypoints; `/login` y `/register`, alineados a la izquierda y sin vidrio.
+
 ### Páginas que todavía usan el estilo viejo (pendientes de alinear)
 Repaso del 11/10/2026. Cada una necesita proponer 2 direcciones antes de tocarla (cambio visual grande):
-- **`/plans`** y **`/ads`**: pill con ícono + título centrado en mayúsculas + 3 tarjetas iguales con la del medio agrandada (`scale-105`, `shadow-2xl`), "MÁS ELEGIDO" en pill, íconos en cuadraditos (en `/ads`). Idea: tabla comparativa tipo ficha técnica (columnas = planes, filas = qué incluye) con el precio arriba y el plan destacado marcado con el rojo en el borde, no agrandado.
-- **`/howtopublish`**: 4 tarjetas con ícono en cuadradito, `rounded-2xl` y `shadow-xl`. Idea: la misma ruta de waypoints numerados de "Cómo funciona" de la Home (VA-82).
-- **`/banners`**: formulario con `rounded-xl`, rótulos en mayúsculas grandes y el resumen centrado. Idea: el layout de `/checkout` (formulario + placa "Elegiste" al costado).
-- **`/login`** y **`/register`**: título centrado en mayúsculas dentro de una tarjeta translúcida. Menor: alcanza con alinear a la izquierda y sacar el vidrio.
-- **`/faq`**: el diseño está bien (índice + lista), pero el **contenido es de relleno** ("Pregunta 1 / Respuesta 1"): falta el texto real.
+- **`/ads`** (hoy da 404; `/plans` ya es la grilla tipo ficha técnica desde VA-166): pill con ícono + título centrado en mayúsculas + 3 tarjetas iguales con la del medio agrandada (`scale-105`, `shadow-2xl`), "MÁS ELEGIDO" en pill, íconos en cuadraditos (en `/ads`). Idea: tabla comparativa tipo ficha técnica (columnas = planes, filas = qué incluye) con el precio arriba y el plan destacado marcado con el rojo en el borde, no agrandado.
+- **`/banners`** (hoy da 404): formulario con `rounded-xl`, rótulos en mayúsculas grandes y el resumen centrado. Idea: el layout de `/checkout` (formulario + placa "Elegiste" al costado).

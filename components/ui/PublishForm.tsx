@@ -786,7 +786,7 @@ export default function PublishForm({
             {quotaFull && quota && quotaLine && (
               <section
                 aria-labelledby="quota-full-title"
-                className="max-w-2xl mx-auto mb-6 rounded-lg border border-[#001F58]/15 border-l-4 border-l-[#E70F1F] bg-white p-5 space-y-3"
+                className="max-w-2xl mx-auto mb-6 rounded-lg border border-[#001F58]/15 border-l-2 border-l-[#E70F1F] bg-white p-5 space-y-3"
               >
                 <h2 id="quota-full-title" className="text-base font-bold leading-snug text-[#001F58] sm:text-lg">
                   {quotaFullText(activeTab, quotaLine.used, quotaLine.limit ?? 0, quota.planName)}
@@ -848,7 +848,7 @@ export default function PublishForm({
 
             {/* En la edición no se puede cambiar el tipo de publicación */}
             <div className={isEditing ? "hidden" : "flex justify-center mb-8"}>
-              <div className="bg-white/80 p-1.5 rounded-2xl border border-[#001F58]/20 flex gap-2 shadow-sm backdrop-blur-sm">
+              <div className="bg-white p-1.5 rounded-lg border border-[#001F58]/20 flex gap-2 shadow-sm">
                 <button
                   type="button"
                   onClick={() => { 
@@ -882,7 +882,7 @@ export default function PublishForm({
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div className="lg:col-span-2">
-                    <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl text-[#001F58]">
+                    <div className="bg-white border border-[#001F58]/12 rounded-lg p-6 sm:p-8 shadow-sm text-[#001F58]">
                         
                         {/* ======================= FORMULARIO AVIONES ======================= */}
                         {activeTab === "aircraft" ? (
@@ -1608,7 +1608,7 @@ export default function PublishForm({
                                                 {showModelDropdown && (
                                                     <>
                                                         <div className="fixed inset-0 z-10" onClick={() => setShowModelDropdown(false)} />
-                                                        <div className="absolute top-full mt-2 w-full max-h-56 overflow-y-auto bg-white border border-slate-200 shadow-xl rounded-xl z-20">
+                                                        <div className="absolute top-full mt-2 w-full max-h-56 overflow-y-auto bg-white border border-slate-200 shadow-lg rounded-lg z-20">
                                                             {filteredModels.length === 0 ? (
                                                                 <div className="p-4 text-xs text-slate-500 text-center">No se encontraron modelos.</div>
                                                             ) : (
@@ -1668,7 +1668,7 @@ export default function PublishForm({
 
                 {/* Sidebar Asistencia */}
                 <div className="lg:col-span-1 hidden lg:block">
-                  <div className="bg-[#001F58] text-white rounded-2xl p-6 shadow-xl border border-white/10 sticky top-24">
+                  <div className="bg-[#001F58] text-white rounded-lg p-6 border border-white/10 sticky top-24">
                     <div className="flex items-center gap-2 text-red-500 font-bold text-xs uppercase tracking-wider mb-2">
                       <HelpCircle className="w-4 h-4" /> ¿Preferís que nos encarguemos?
                     </div>

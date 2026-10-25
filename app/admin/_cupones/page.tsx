@@ -134,7 +134,7 @@ export default function AdminCouponsPage() {
           Cargando cupones...
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-5 border-b border-slate-100 flex items-center justify-between">
             <h3 className="font-bold text-[#001F58] text-sm flex items-center gap-2">
               <Ticket className="w-4 h-4 text-indigo-600" />
@@ -297,7 +297,7 @@ export default function AdminCouponsPage() {
       {/* Modal de Creación de Cupón */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-6 space-y-5">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-xl max-w-lg w-full p-6 space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-bold text-[#001F58] text-base flex items-center gap-2">
                 <Ticket className="w-5 h-5 text-indigo-600" />

@@ -86,7 +86,7 @@ export function AircraftGallery({ images, title, video = null, fade = false }: G
 
   return (
     <>
-      <div className={`relative w-full rounded-2xl overflow-hidden bg-white ${fade ? "" : "shadow-sm border border-slate-200"}`}>
+      <div className={`relative w-full rounded-lg overflow-hidden bg-white ${fade ? "" : "shadow-sm border border-slate-200"}`}>
         <div className="relative">
           <Swiper
             onSwiper={(swiper) => (mainSwiperRef.current = swiper)}

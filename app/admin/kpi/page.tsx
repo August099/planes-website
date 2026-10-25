@@ -141,7 +141,7 @@ function KpiCard({ title, value, trend, icon, isCritical }: { title: string, val
   const description = METRIC_DESCRIPTIONS[title];
 
   return (
-    <div className={`p-5 rounded-2xl border bg-white shadow-sm transition-all hover:shadow-md ${isCritical ? 'border-red-200 bg-red-50/10' : 'border-slate-200'}`}>
+    <div className={`p-5 rounded-lg border bg-white shadow-sm transition-all hover:shadow-md ${isCritical ? 'border-red-200 bg-red-50/10' : 'border-slate-200'}`}>
       <div className="flex justify-between items-start mb-2 gap-2">
         
         {/* TÍTULO CON TOOLTIP EN HOVER */}
