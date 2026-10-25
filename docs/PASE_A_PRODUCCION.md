@@ -187,20 +187,32 @@ Esperado: `robots.txt` con `Allow: /` y el sitemap responde `200`.
 
 ---
 
-## 8. Pago real de prueba y facturación
+## 8. Pago real de prueba y facturación (en el Preview)
 
-> ⏳ **A redefinir (VA-152):** el "Pago de prueba" era un pack de AR$ 100 y ya no hay packs (quedó
-> archivado). Los socios definen cómo se prueba (por ejemplo, un Pro de prueba oculto o el Pro con su
-> precio y el arrepentimiento). Los pasos de abajo se ajustan cuando esté decidido (VA-164).
+Decidido el 25/10: se prueba en el **Preview** (base propia desde el 25/10), con el **Pro a AR$ 100** y una
+tarjeta real. Prueba la suscripción completa: débito, aviso de Mercado Pago, Factura C real, arrepentimiento,
+reembolso y nota de crédito. Producción no se toca.
 
-1. Con `BILLING_ENABLED=false`, comprar el **Pago de prueba** (AR$ 100, en `/plans`) con una tarjeta real.
-2. En `/admin/payments` el pago figura aprobado y su factura **pendiente** (no se emitió nada).
-3. Pedir la devolución con el **botón de arrepentimiento** (Perfil → Mis compras → "Arrepentirme", VA-125):
-   prueba el reembolso real. En `/admin/payments` el pago queda reintegrado y la factura pendiente, descartada
-   (si no, **Descartar** la factura a mano escribiendo DESCARTAR).
-   Después, en `/admin/plans`, **Archivar** el "Pago de prueba" para que no se vea más en `/plans`.
-4. Recién ahí: `TUSFACTURAS_MODE=production` y `BILLING_ENABLED=true` (solo Production) y Redeploy.
-5. La próxima venta real emite la Factura C (punto de venta 3). Revisar la primera en `/admin/payments`.
+1. Preview, con la cuenta admin → `/admin/plans`: Pro a **AR$ 100**, **Activo**, guardar.
+2. Vercel, **solo el ambiente Preview**: `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` con las credenciales de
+   **producción** de Mercado Pago; `BILLING_ENABLED=true` y las credenciales reales de TusFacturas (punto de
+   venta 3). Redeploy.
+3. Mercado Pago → tu aplicación → Webhooks → **modo productivo**: URL
+   `https://planes-website-git-pre-production-diodo.vercel.app/api/webhooks/mercadopago` mientras dure la prueba
+   (las suscripciones avisan a la URL de la aplicación, no a una por pedido).
+4. Con una cuenta **que no sea admin**, suscribirse al Pro y pagar con una tarjeta real.
+5. `/admin/payments`: el pago aprobado y la factura **emitida** (Factura C en ARCA).
+6. Ajustes → Mis compras → **Arrepentirme**: se devuelven los AR$ 100 (puede tardar unos días según el medio de
+   pago), la suscripción termina y se emite la **nota de crédito**. Revisarlo en `/admin/payments`.
+7. Al terminar: variables del Preview de vuelta a las de prueba (y `BILLING_ENABLED` como estaba), webhook del
+   modo productivo a la URL de producción (o vacío hasta el lanzamiento) y el Pro del Preview a su precio.
+
+Lo que no tiene vuelta atrás: la Factura C y la nota de crédito quedan en ARCA (avisar a quien lleva la
+contabilidad) y el cobro de AR$ 100 es real hasta que vuelve el reintegro.
+
+Para producción, el día del lanzamiento: `TUSFACTURAS_MODE=production` y `BILLING_ENABLED=true` (solo
+Production), webhook del modo productivo a la URL de producción, y revisar la primera venta real en
+`/admin/payments`.
 
 ---
 

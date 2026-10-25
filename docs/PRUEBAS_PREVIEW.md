@@ -125,6 +125,7 @@ Esperar el deploy en Vercel (Deployments) y que termine sin errores.
 Marcar cada punto. Celular real para los que dicen 📱.
 
 ### Lote del 22/10 y 24/10 (VA-176 a VA-191)
+- [ ] **Pago real (VA-164):** Pro a AR$ 100 en el Preview, suscripción con tarjeta real, factura emitida y arrepentimiento con reembolso y nota de crédito. Pasos y variables en `docs/PASE_A_PRODUCCION.md`, sección 8.
 
 - [ ] **Video (VA-176):** en un aviso de Broker con video, tocar "Ver video": el carrusel no cambia solo mientras suena. Pasar a otra foto (flecha, miniatura o deslizando 📱): el video deja de sonar y al volver aparece "Ver video".
 - [ ] **Página personalizada (VA-177):** en `/plans`, `/faq`, Ajustes, el perfil, el buscador y `/admin/plans` no aparece "Página VA".
