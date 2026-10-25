@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { errorMessage } from "@/lib/errors";
 import { AccountsSummary } from "@/components/admin/AccountsSummary";
+import { SalesSummary } from "@/components/admin/SalesSummary";
 
 export default function AdminOverviewPage() {
   const [period, setPeriod] = useState<PeriodFilter>("30d");
@@ -101,6 +102,8 @@ export default function AdminOverviewPage() {
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* VA-173: cuentas por tipo y cobertura de los gastos fijos */}
       <AccountsSummary />
+      {/* VA-183 */}
+      <SalesSummary />
 
       {/* CABECERA & ACCIONES DE MANTENIMIENTO */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">

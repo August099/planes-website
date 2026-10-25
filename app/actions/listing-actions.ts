@@ -6,6 +6,7 @@ import { lockAndCheckRoom, QUOTA_KIND_TEXT } from "@/lib/quota";
 import { prisma } from "@/lib/prisma";
 import { assertListingOwner } from "@/lib/listing-auth";
 import { pathFromPublicUrl, removeUploads } from "@/lib/listing-uploads";
+import { CLEARED_SALE, saleSnapshot } from "@/lib/sales";
 
 // Alta y edición de publicaciones: app/publish/actions.ts (createListing / updateListing).
 // Acá quedan cambiar el estado (pausar, activar, vendido) y eliminar, desde el perfil.
@@ -37,16 +38,26 @@ export async function setListingStatusAction(
     if (!["ACTIVE", "PAUSED", "SOLD"].includes(to)) return { success: false, error: "Estado inválido." };
     await assertListingOwner(id, type);
     const kind = type === "aircraft" ? "AIRCRAFT" : "SPARE_PART";
-    const select = { status: true, sellerId: true, listingStartsAt: true } as const;
-    const current = type === "aircraft" ? await prisma.aircraft.findUnique({ where: { id }, select }) : await prisma.sparePart.findUnique({ where: { id }, select });
+    const select = { status: true, sellerId: true, listingStartsAt: true, price: true } as const;
+    const current =
+      type === "aircraft"
+        ? await prisma.aircraft.findUnique({ where: { id }, select })
+        : await prisma.sparePart.findUnique({ where: { id }, select: { ...select, inPesos: true } });
     if (!current) return { success: false, error: "La publicación no existe." };
     // VA-154: un aviso pausado por moderación solo lo reactiva el admin (el dueño pide revisión).
     if (current.status === "MODERATED") return { success: false, error: "Este aviso está pausado por moderación: editalo y pedí revisión." };
     if (current.status === to) return { success: true };
 
+    // VA-183: al venderse, fecha, precio publicado y cotización del día (se pide antes de la transacción).
+    const sale = to === "SOLD" ? await saleSnapshot(current) : null;
     const result = await prisma.$transaction(async (tx) => {
       if (to === "ACTIVE" && !(await lockAndCheckRoom(tx, current.sellerId, kind))) return "FULL" as const;
-      const data = to === "ACTIVE" ? { status: to, listingStartsAt: current.listingStartsAt ?? new Date() } : { status: to };
+      const data =
+        to === "ACTIVE"
+          ? { status: to, listingStartsAt: current.listingStartsAt ?? new Date(), ...(current.status === "SOLD" ? CLEARED_SALE : {}) }
+          : to === "SOLD"
+            ? { status: to, ...sale }
+            : { status: to };
       if (type === "aircraft") await tx.aircraft.update({ where: { id }, data });
       else await tx.sparePart.update({ where: { id }, data });
       return "OK" as const;

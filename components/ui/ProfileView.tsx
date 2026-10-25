@@ -21,6 +21,7 @@ import { BarChart3, MapPin, Calendar, Phone, Mail, Edit, Plane } from "lucide-re
 import { USER_TYPE_LABELS } from "@/lib/user-types";
 import { StorefrontHeader, type StorefrontData } from "@/components/ui/profile/StorefrontHeader";
 import type { SubscriptionSummary } from "@/lib/subscriptions";
+import { SoldDialog } from "@/components/ui/profile/SoldDialog";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -111,12 +112,18 @@ export function ProfileView({
   const [activeTab, setActiveTab] = useState<"listings" | "metrics">("listings");
   // VA-152: pausar, activar (con cupo libre) y marcar vendido desde "Mis publicaciones".
   const [loadingStatusId, setLoadingStatusId] = useState<string | null>(null);
+  // VA-183: aviso recién marcado como vendido (abre "¿Lo vendiste gracias a VA?").
+  const [sold, setSold] = useState<{ kind: "AIRCRAFT" | "SPARE_PART"; id: string; currency: "USD" | "ARS" } | null>(null);
 
   const handleStatus = async (id: string, type: "aircraft" | "sparepart", to: StatusTarget) => {
     setLoadingStatusId(id);
     try {
       const res = await setListingStatusAction(id, type, to);
       if (!res.success) alert(res.error);
+      else if (to === "SOLD") {
+        const part = type === "sparepart" ? profileUser.spareParts?.find((p) => p.id === id) : null;
+        setSold({ kind: type === "aircraft" ? "AIRCRAFT" : "SPARE_PART", id, currency: part?.inPesos ? "ARS" : "USD" });
+      }
     } catch {
       alert("Error de conexión. Probá de nuevo.");
     } finally {
@@ -391,6 +398,7 @@ export function ProfileView({
 
 
       {isOwner && hasSellerMetrics && activeTab === "metrics" && <SellerMetricsPanel />}
+      {sold && <SoldDialog {...sold} onClose={() => setSold(null)} />}
 
 
     </div>

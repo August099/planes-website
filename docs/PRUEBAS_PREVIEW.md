@@ -127,6 +127,7 @@ Marcar cada punto. Celular real para los que dicen 📱.
 - [ ] **Datos faltantes (VA-185):** con una cuenta sin ciudad o sin teléfono, el menú del usuario tiene punto y "Ajustes" también; tocarlo lleva a la sección de datos. "Mi cuenta" no muestra el cartel. Completar y guardar: el cartel y los puntos se van sin recargar.
 - [ ] **Planes (VA-186):** "Planes y precios" en el menú del usuario (📱 también); link junto al cupo en Mi cuenta; "Cambiar de plan" en Ajustes con una suscripción activa. Todos llevan a `/plans`.
 - [ ] **Grilla (VA-187):** `/plans` y `/admin/plans` sin la fila "Branding"; la fila "Página personalizada" dice Básica (Pro) y Completa (Broker). 📱 Sin scroll lateral.
+- [ ] **Ventas (VA-183):** marcar un aviso como vendido: aparece la ventana; responder Sí con un precio y guardar. Otro: cerrar sin responder (queda vendido). En `/admin`, "Ventas" muestra las dos, el total en dólares y 1 gracias a VA y 1 sin respuesta. "Volver a publicar" uno: deja de contar. 📱 La ventana entra en el celular.
 
 ### Cuentas y lanzamiento
 - [ ] Registro con email: llega el mail de verificación y el link abre el Preview (no localhost).
