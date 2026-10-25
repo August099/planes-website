@@ -62,7 +62,7 @@ async function main() {
   }
 
   const show = <T extends { escritas?: Set<string>; escritos?: Set<string> }>(rows: Iterable<T>) =>
-    [...rows].map((r) => ({ ...r, escritas: undefined, escritos: undefined, "como lo cargaron": [...(r.escritas ?? r.escritos ?? [])].join(" / ") }));
+    [...rows].map(({ escritas, escritos, ...r }) => ({ ...r, "como lo cargaron": [...(escritas ?? escritos ?? [])].join(" / ") }));
   console.log(`Avisos de aviones con marca o modelo propio: ${listings.length}`);
   console.log("\nMarcas propias:");
   console.table(show(brandRows.values()));
