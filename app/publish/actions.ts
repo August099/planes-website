@@ -35,7 +35,8 @@ import {
   type UploadRequest,
 } from "@/lib/listing-uploads";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Se crea al mandar (ver lib/mail.ts): sin RESEND_API_KEY, creado acá rompía toda la página de publicar.
+const resend = { emails: { send: (...args: Parameters<Resend["emails"]["send"]>) => new Resend(process.env.RESEND_API_KEY).emails.send(...args) } };
 
 // VA-165: manda la categoría elegida (la del modelo es solo una recomendación: los aviones modificados
 // pueden ser de otra). Si no existe, se rechaza (VA-22: antes se usaba la primera que existiera).
