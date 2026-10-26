@@ -674,15 +674,6 @@ header[data-home] .va-mega-panel {
   from { transform: scale(0.4); opacity: 1; }
   to { transform: scale(2.2); opacity: 0; }
 }
-/* "//" del cartel de publicar: franjas diagonales que se desplazan. */
-.va-stripes {
-  background-image: repeating-linear-gradient(115deg, rgb(255 255 255 / 0.08) 0 14px, transparent 14px 34px);
-  background-size: 200% 100%;
-  animation: va-stripes 18s linear infinite;
-}
-@keyframes va-stripes {
-  to { background-position: -400px 0; }
-}
 
 /* Entrada al hacer scroll (en el contenedor: la animación pisaría el transform del hover). */
 @keyframes va-rise {
@@ -703,7 +694,6 @@ header[data-home] .va-mega-panel {
 @media (prefers-reduced-motion: reduce) {
   .va-dash,
   .va-ping,
-  .va-stripes,
   .home-zone-4 > .home-zone-bg::before,
   .home-zone-4 > .home-zone-bg::after,
   .home-theme [role="region"] > ul > li,

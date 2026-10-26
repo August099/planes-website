@@ -5,6 +5,7 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import { FREE_QUOTA_PROMO } from "@/lib/promo";
 import { useViewerStatus } from "@/components/ui/FavoriteIdsProvider";
+import { BrandBars } from "@/components/ui/home/BrandBars";
 
 const STORAGE_KEY = "va_launch_promo";
 
@@ -55,13 +56,13 @@ export function LaunchPromoBanner({ text }: { text: string }) {
     setVisible(false);
   };
 
-  // Rediseño moderno (26/10): tarjeta roja redondeada que flota sobre el borde del hero, con las "//"
-  // de la marca como franjas diagonales que se desplazan lento.
+  // Rediseño moderno (26/10): tarjeta roja redondeada que flota sobre el borde del hero, con las dos
+  // barras del logo ("//") de fondo.
   return (
     <section aria-label={FREE_QUOTA_PROMO.title} className="relative z-30 container mx-auto -mt-10 px-4 sm:-mt-14">
       <div className="relative isolate flex flex-col gap-4 overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#D62828_0%,#B71F1F_100%)] px-6 py-6 pr-16 text-white shadow-[0_24px_48px_-20px_rgb(183_31_31/0.6)] sm:flex-row sm:items-center sm:gap-8 sm:px-8">
-        {/* Las franjas van en su propia capa: .va-stripes usa background-image y taparía el degradé rojo. */}
-        <span aria-hidden className="va-stripes absolute inset-0 -z-10" />
+        {/* Las dos barras del logo (una ancha y otra fina), detrás del contenido. */}
+        <BrandBars className="right-[22%] -z-10" />
         <p className="shrink-0 self-start rounded-full bg-[#00205B] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] sm:self-center">
           {FREE_QUOTA_PROMO.title}
         </p>

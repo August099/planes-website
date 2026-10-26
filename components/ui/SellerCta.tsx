@@ -1,16 +1,18 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { BrandBars } from "@/components/ui/home/BrandBars";
 
 // "¿Querés vender tu aeronave?" (VA-79, VA-84). Rediseño (25/10, v2): bloque partido, el único gran plano
 // rojo de la Home; texto sobre rojo (blanco sobre #D62828: 4,9:1) y la foto con el corte diagonal de las
 // "//" del logo. Moderno (26/10): tarjeta redondeada dentro del contenedor, con sombra roja suave y las
-// franjas diagonales que se desplazan. En celular, foto arriba.
+// dos barras del logo de fondo, como el cartel de publicar. En celular, foto arriba.
 export function SellerCta() {
   return (
     <section className="container mx-auto px-4 py-16 sm:py-20">
       <div className="group relative isolate grid overflow-hidden rounded-[32px] bg-[linear-gradient(135deg,#D62828_0%,#B71F1F_100%)] shadow-[0_30px_60px_-28px_rgb(183_31_31/0.7)] md:min-h-[440px] md:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-        <div className="va-stripes relative order-2 flex flex-col justify-center gap-5 px-6 py-12 sm:px-12 md:order-1 lg:px-16">
+        <div className="relative isolate order-2 flex flex-col justify-center gap-5 overflow-hidden px-6 py-12 sm:px-12 md:order-1 lg:px-16">
+          <BrandBars className="right-6 -z-10" />
           <h2 className="font-heading text-[2.4rem] leading-[0.95] font-extrabold tracking-[-0.035em] text-white sm:text-[3.4rem] lg:text-[4rem]">
             ¿Querés vender tu aeronave?
           </h2>

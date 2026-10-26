@@ -31,7 +31,7 @@ export function FeaturedBrands({ brands }: FeaturedBrandsProps) {
   ];
 
   return (
-    <section className="py-12 overflow-hidden">
+    <section className="my-10 overflow-hidden py-16 sm:my-14">
 
       {/* Rediseño (26/10): marquesina original (logos flotando sobre el fondo); solo cambia el título. */}
       <div className="container mx-auto px-4 mb-6">

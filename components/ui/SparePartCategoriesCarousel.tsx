@@ -59,7 +59,7 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
                   <SparePartIcon name={cat.name} icon={cat.icon} className="h-8 w-9" />
                 </span>
               </span>
-              <span className="line-clamp-3 text-left text-[14px] font-bold leading-snug text-[#00205B] transition-colors group-hover:text-white">
+              <span className="line-clamp-3 text-left text-[16px] font-bold leading-snug tracking-[-0.01em] text-[#00205B] sm:text-[17px] transition-colors group-hover:text-white">
                 {cat.name}
               </span>
             </span>

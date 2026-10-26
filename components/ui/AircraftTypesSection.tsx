@@ -49,6 +49,8 @@ const TYPES = [
     width: 486,
     height: 238,
     categories: ["PR"],
+    // 26/10 (socio): un 15 % más chica que las demás.
+    scale: "scale-[0.85]",
   },
   {
     name: "Otros",
@@ -89,7 +91,7 @@ export function AircraftTypesSection({ counts }: { counts: Record<string, number
                       fill
                       // En celular la caja mide ~35vw (85% de media columna): así baja la de 256 px y no la de 384.
                       sizes="(min-width: 1280px) 250px, (min-width: 1024px) 20vw, (min-width: 768px) 27vw, 35vw"
-                      className="object-contain object-bottom"
+                      className={`object-contain object-bottom origin-bottom ${"scale" in type ? type.scale : ""}`}
                     />
                   </div>
                   <h3 className="mt-3 text-[0.95rem] leading-snug font-bold text-[#00205B] decoration-[#D62828] decoration-2 underline-offset-4 group-hover:underline group-focus-visible:underline">

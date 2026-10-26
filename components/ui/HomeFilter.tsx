@@ -87,11 +87,11 @@ export default function HomeHeroFilter() {
 
   // Rediseño (25/10): una "tira de plan de vuelo" sólida en vez del panel de vidrio. Cada campo lleva su
   // rótulo arriba; la única sombra separa la tira de la foto del hero.
-  const field = "group/field relative block min-w-0 rounded-[20px] border-white/0 px-4 pt-3 pb-2.5 transition-colors hover:bg-white/45 focus-within:bg-white/70";
+  const field = "group/field relative block min-w-0 rounded-[20px] border-white/0 px-4 pt-3 pb-2.5 transition-colors hover:bg-white/30 focus-within:bg-white/55";
   const select = "mt-0.5 w-full min-w-0 appearance-none truncate bg-transparent pr-6 text-sm font-semibold text-[#00205B] focus:outline-none cursor-pointer disabled:cursor-not-allowed disabled:text-[#00205B]/45";
   const chevron = "pointer-events-none absolute right-3 bottom-3 h-4 w-4 text-[#00205B]/60";
   return (
-    <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-[28px] border border-white/70 bg-white/70 p-1.5 text-left shadow-[inset_0_1px_0_rgb(255_255_255/0.8),0_24px_50px_-24px_rgba(0,19,49,0.55)] backdrop-blur-2xl">
+    <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-[28px] border border-white/50 bg-white/30 p-1.5 text-left shadow-[inset_0_1px_0_rgb(255_255_255/0.8),0_24px_50px_-24px_rgba(0,19,49,0.55)] backdrop-blur-xl">
       {/* Rediseño (26/10): "vidrio líquido" con filtro blanco sobre el hero: fondo blanco translúcido con desenfoque,
           borde y brillo interior claros. Mismos campos y misma lógica. */}
       <div className="grid grid-cols-2 gap-1 md:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
