@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -9,8 +12,11 @@ export const sparePartsCategoryHref = (id: string) => `/spareparts?category=${en
 // VA-120: menú desplegable de "Repuestos" en el header de escritorio, con el mismo panel que tenía
 // Servicios (VA-83, referencia: menú de adidas): al pasar el mouse o al llegar con Tab se abre a
 // todo el ancho con las categorías principales, que llevan al listado filtrado. Solo CSS (hover y
-// focus-within), sin JavaScript. Las categorías llegan del Header (taxonomía cacheada, VA-13).
+// focus-within). Las categorías llegan del Header (taxonomía cacheada, VA-13). 26/10: componente de cliente
+// solo para cerrarlo al tocar un link: después de navegar el mouse sigue encima y el link conserva el foco,
+// así que el panel quedaba abierto. Vuelve a abrirse cuando el mouse sale y entra de nuevo.
 export function SparePartsMenu({ linkClass, categories }: { linkClass: string; categories: PartCategoryLink[] }) {
+  const [closed, setClosed] = useState(false);
   if (categories.length === 0) {
     return (
       <Link href="/spareparts" className={linkClass}>
@@ -19,10 +25,20 @@ export function SparePartsMenu({ linkClass, categories }: { linkClass: string; c
     );
   }
   const half = Math.ceil(categories.length / 2);
+  const closeOnLink = (e: React.MouseEvent) => {
+    if (!(e.target instanceof Element) || !e.target.closest("a")) return;
+    setClosed(true);
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  };
   const columns = [categories.slice(0, half), categories.slice(half)].filter((c) => c.length > 0);
 
   return (
-    <div className="va-mega group flex h-20 items-center">
+    <div
+      className="va-mega group flex h-20 items-center"
+      data-closed={closed || undefined}
+      onClickCapture={closeOnLink}
+      onMouseLeave={() => setClosed(false)}
+    >
       <Link href="/spareparts" className={`${linkClass} flex items-center gap-1`} aria-haspopup="true">
         Repuestos
         <ChevronDown className="h-3.5 w-3.5 transition-transform group-hover:rotate-180 group-focus-within:rotate-180" aria-hidden />
@@ -30,7 +46,7 @@ export function SparePartsMenu({ linkClass, categories }: { linkClass: string; c
 
       {/* Rediseño (25/10): colores por variables (.va-mega-panel en globals.css). En la Home el header es
           transparente: al abrir, header y panel pasan al mismo azul y forman una sola pieza. */}
-      <div className="va-mega-panel invisible absolute inset-x-0 top-full z-50 max-h-[calc(100vh-5rem)] overflow-y-auto overscroll-contain -translate-y-1 border-t border-[var(--mega-line)] bg-[var(--mega-bg)] text-[var(--mega-fg)] opacity-0 shadow-[0_18px_30px_-18px_rgb(0_19_49/0.45)] transition-[opacity,transform] duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 motion-reduce:transition-none">
+      <div className={`va-mega-panel ${closed ? "!invisible !opacity-0" : ""} invisible absolute inset-x-0 top-full z-50 max-h-[calc(100vh-5rem)] overflow-y-auto overscroll-contain -translate-y-1 border-t border-[var(--mega-line)] bg-[var(--mega-bg)] text-[var(--mega-fg)] opacity-0 shadow-[0_18px_30px_-18px_rgb(0_19_49/0.45)] transition-[opacity,transform] duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 motion-reduce:transition-none`}>
         <div className="container mx-auto grid gap-10 px-4 pt-8 pb-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1.4fr)]">
           {/* Presentación */}
           <div className="border-r border-[var(--mega-line)] pr-8">

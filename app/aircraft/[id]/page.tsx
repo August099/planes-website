@@ -293,7 +293,7 @@ export default async function AircraftDetailsPage({
                   <CategoryLinks items={[{ label: aircraft.category.name, href: `/aircraft?category=${encodeURIComponent(aircraft.category.id)}` }]} />
                 )}
                 <p className="va-label mt-4">Precio</p>
-                <p className="font-heading text-[1.9rem] leading-none font-extrabold tracking-[-0.02em] text-[#00205B] tabular-nums">{formattedPrice}</p>
+                <p className="font-heading text-[1.9rem] leading-none font-extrabold tracking-[-0.02em] text-[#2563EB] tabular-nums">{formattedPrice}</p>
               </div>
               <Separator />
               <KeyFacts title="Datos de la aeronave" facts={keyFacts} />

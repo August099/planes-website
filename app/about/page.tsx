@@ -47,7 +47,7 @@ export default function AboutPage() {
       <PageBackground page="faq" />
       <div className="container mx-auto max-w-6xl px-4 pt-6 pb-20">
         <Breadcrumbs items={[{ label: "Nosotros" }]} className="mb-6" />
-        <PageHeader
+        <PageHeader variant="plain"
           routeId="va-route-about"
           className="mb-10"
           title="Nosotros"

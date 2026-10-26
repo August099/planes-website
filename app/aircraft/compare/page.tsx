@@ -43,7 +43,7 @@ export default async function ComparePage({ searchParams }: Props) {
       <PageBackground page="aircraftList" />
       <div className="container mx-auto px-4 pb-16 pt-6">
         <Breadcrumbs items={[{ label: "Aviones", href: "/aircraft" }, { label: "Comparar" }]} className="mb-6" />
-        <PageHeader
+        <PageHeader variant="plain"
           compact
           routeId="va-route-compare"
           className="mb-6"

@@ -44,7 +44,7 @@ export function PlansClient({ data }: { data: PlansGrid }) {
 
       <div className="container mx-auto max-w-6xl px-4 pb-20 pt-6">
         <Breadcrumbs items={[{ label: "Planes" }]} className="mb-8" />
-        <PageHeader
+        <PageHeader variant="plain"
           routeId="va-route-plans"
           className="mb-8"
           title="Planes"

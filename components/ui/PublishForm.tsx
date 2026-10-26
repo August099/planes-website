@@ -769,7 +769,7 @@ export default function PublishForm({
 
         <div className="container mx-auto px-4 pt-8 pb-20 max-w-7xl">
             {/* Rediseño (26/10): banner de página, como el resto del sitio. */}
-            <PageHeader routeId="va-route-publish" className="mb-10" title={isEditing ? "Editar publicación" : "Publicar producto"} />
+            <PageHeader variant="plain" routeId="va-route-publish" className="mb-10" title={isEditing ? "Editar publicación" : "Publicar producto"} />
 
             {/* VA-152: cupo de la cuenta. Sin lugar libre se avisa al empezar (no al final), con las salidas. */}
             {!isEditing && quota && quotaLine && !quotaFull && quotaLine.limit !== null && (

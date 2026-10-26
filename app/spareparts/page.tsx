@@ -213,7 +213,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
       <Breadcrumbs items={[{ label: "Repuestos" }]} className="-mt-4 mb-2" />
       {/* Misma disposición que /aircraft (VA-45): en celular, "Filtros" (panel lateral) y "Ordenar"
           lado a lado; desde lg, barra lateral + grilla. */}
-      <PageHeader compact routeId="va-route-spareparts" title="Repuestos en venta" count={totalSpareParts} className="mb-6" aside={<div className="hidden lg:block"><SortDropdown /></div>} />
+      <PageHeader compact variant="desktop-banner" routeId="va-route-spareparts" title="Repuestos en venta" count={totalSpareParts} className="mb-6" aside={<div className="hidden lg:block"><SortDropdown /></div>} />
       <section className="flex flex-col lg:flex-row items-start gap-6">
         <div className="w-full flex lg:block items-center gap-3 lg:w-auto shrink-0">
           <div className="flex-1 lg:flex-none lg:w-72">

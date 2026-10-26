@@ -26,7 +26,7 @@ export default function PrivacidadPage() {
 
       <div className="container mx-auto px-4 pt-6 pb-20 max-w-6xl">
         <Breadcrumbs items={[{ label: "Privacidad" }]} className="mb-6" />
-        <PageHeader routeId="va-route-privacy" className="mb-10" title="Política de privacidad" eyebrow="Última actualización: Octubre 2026" />
+        <PageHeader variant="plain" routeId="va-route-privacy" className="mb-10" title="Política de privacidad" eyebrow="Última actualización: Octubre 2026" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           
           {/* MENÚ LATERAL: Índices del documento legal */}

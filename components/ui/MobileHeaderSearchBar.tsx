@@ -26,11 +26,12 @@ export default function MobileHeaderSearchBar() {
         inputRef.current?.focus();
       }, 100);
     } else {
-      document.body.style.overflow = "unset";
+      // "" quita el estilo en línea; "unset" quedaba escrito y pisaba el overflow-x: clip del body (globals.css).
+      document.body.style.overflow = "";
     }
 
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 

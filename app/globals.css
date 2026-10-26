@@ -401,8 +401,8 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
 header[data-home] {
   transition: background-color 200ms;
 }
-header[data-home]:has(.va-mega:hover),
-header[data-home]:has(.va-mega:focus-within) {
+header[data-home]:has(.va-mega:not([data-closed]):hover),
+header[data-home]:has(.va-mega:not([data-closed]):focus-within) {
   background-color: var(--va2-navy);
 }
 .va-mega-panel {

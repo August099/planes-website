@@ -57,7 +57,7 @@ export default async function HowToPublishPage() {
       <div className="container mx-auto max-w-6xl px-4 pt-6 pb-24">
         <Breadcrumbs items={[{ label: "Cómo publicar" }]} className="mb-8 sm:mb-12" />
 
-        <PageHeader
+        <PageHeader variant="plain"
           routeId="va-route-howto"
           className="mb-12"
           title="Cómo publicar tu avión o repuesto"

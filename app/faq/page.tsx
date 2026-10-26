@@ -52,7 +52,7 @@ export default function FAQPage() {
 
       <div className="container mx-auto px-4 pt-6 pb-20 max-w-6xl">
         <Breadcrumbs items={[{ label: "Preguntas frecuentes" }]} className="mb-6" />
-        <PageHeader routeId="va-route-faq" className="mb-10" title="Preguntas frecuentes" subtitle="Todo lo que necesitás saber antes de comprar o publicar" />
+        <PageHeader variant="plain" routeId="va-route-faq" className="mb-10" title="Preguntas frecuentes" subtitle="Todo lo que necesitás saber antes de comprar o publicar" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           
           <aside className="hidden md:col-span-1 md:flex flex-col gap-2 border-l border-[#00205B]/20 pl-4 md:sticky md:top-24">

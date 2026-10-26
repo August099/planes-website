@@ -55,7 +55,7 @@ export default async function ServicesPage() {
 
       <div className="mx-auto max-w-5xl space-y-14">
         {/* Encabezado (rediseño 26/10: banner de página) */}
-        <PageHeader
+        <PageHeader variant="plain"
           routeId="va-route-services"
           title="Todo el ecosistema aeronáutico, en un solo lugar."
           subtitle="Estamos construyendo la próxima etapa de Ventas Aeronáuticas. Hoy podés publicar y encontrar aeronaves y repuestos, y ya tenés disponibles nuestras guías para comprar y vender con más seguridad. Muy pronto vas a encontrar también los servicios y profesionales que hacen posible que la aviación siga en el aire."

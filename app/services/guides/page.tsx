@@ -36,7 +36,7 @@ export default async function GuidesIndexPage() {
         <Breadcrumbs items={[{ label: "Servicios", href: "/services" }, { label: "Guías" }]} jsonLd={false} className="mb-6" />
 
         {/* Rediseño (26/10): banner de página arriba y el índice numerado en una placa debajo. */}
-        <PageHeader
+        <PageHeader variant="plain"
           routeId="va-route-guides-index"
           className="mb-8"
           eyebrow={<span className="tabular-nums">{guides.length} guías{lastReview ? ` · Última revisión el ${formatGuideDate(lastReview)}` : ""}</span>}

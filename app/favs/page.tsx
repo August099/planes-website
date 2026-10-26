@@ -55,7 +55,7 @@ export default async function FavoritesPage() {
       <PageBackground page="default" />
       <Breadcrumbs items={[{ label: "Favoritos" }]} className="-mt-4 mb-2" />
 
-      <PageHeader
+      <PageHeader variant="plain"
         compact
         routeId="va-route-favs"
         className="mb-8"

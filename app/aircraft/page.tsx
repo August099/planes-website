@@ -220,7 +220,7 @@ export default async function AircraftListPage({ searchParams }: Props) {
       <Breadcrumbs items={[{ label: "Aviones" }]} className="-mt-4 mb-2" />
 
       {/* Encabezado (rediseño 26/10): banner con el título y la cantidad; el orden (solo desktop) a la derecha. */}
-      <PageHeader compact routeId="va-route-aircraft" title="Aviones en venta" count={totalAircrafts} className="mb-6" aside={<div className="hidden lg:block"><SortDropdown /></div>} />
+      <PageHeader compact variant="desktop-banner" routeId="va-route-aircraft" title="Aviones en venta" count={totalAircrafts} className="mb-6" aside={<div className="hidden lg:block"><SortDropdown /></div>} />
 
       <section className="flex flex-col lg:flex-row items-start gap-6">
         

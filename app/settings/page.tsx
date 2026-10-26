@@ -70,13 +70,13 @@ export default async function SettingsPage() {
     <main className="relative container mx-auto min-h-[calc(100vh-80px)] max-w-2xl px-4 py-8 pb-16">
       <PageBackground page="profile" />
       <Breadcrumbs items={[{ label: "Mi cuenta", href: `/profile/${id}` }, { label: "Ajustes" }]} className="-mt-4 mb-2" />
-      <PageHeader
+      <PageHeader variant="plain"
         compact
         routeId="va-route-settings"
         className="mb-8"
         title="Ajustes"
         aside={
-          <Link href={`/profile/${id}`} className="inline-flex min-h-10 items-center rounded-full bg-white px-5 text-sm font-bold text-[#00205B] transition-colors hover:bg-[#EEF5FC]">
+          <Link href={`/profile/${id}`} className="inline-flex min-h-10 items-center rounded-full border border-[#00205B]/20 bg-white px-5 text-sm font-bold text-[#00205B] transition-colors hover:border-[#00205B] hover:bg-[#EEF5FC]">
             Ver mi cuenta
           </Link>
         }

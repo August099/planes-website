@@ -118,7 +118,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
       <Breadcrumbs items={[{ label: "Búsqueda" }]} className="-mt-4 mb-2" />
       {/* VA-15: la búsqueda se registra acá (una vez por pestaña y término), no en cada tecla */}
       {currentPage === 1 && <TrackSearch query={query} resultsCount={totalItems} />}
-      <PageHeader compact routeId="va-route-search" eyebrow="Búsqueda" title={<>Resultados para “{query}”</>} count={totalItems} className="mb-6" />
+      <PageHeader variant="plain" compact routeId="va-route-search" eyebrow="Búsqueda" title={<>Resultados para “{query}”</>} count={totalItems} className="mb-6" />
 
       {sellers.length > 0 && (
         <section id="vendedores" className="va-plate mb-8 max-w-xl">
