@@ -1,40 +1,29 @@
-import { SellerType } from "@prisma/client";
-import "next-auth";
-import NextAuth, { DefaultSession } from "next-auth";
-import { JWT } from "next-auth/jwt";
+import type { DefaultSession } from "next-auth";
 
+// Lo que agrega lib/auth.ts a la sesión y al token (VA-26). Antes se declaraban SellerType
+// (no existe en Prisma) y role (no se usa), y Session estaba declarada dos veces.
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      sellerType?: SellerType | null;
       isAdmin?: boolean;
+      // VA-87: fecha (ISO) en que se verificó el email, leída de la base.
+      emailVerifiedAt?: string | null;
+      userTypeConfirmed?: boolean;
     } & DefaultSession["user"];
   }
-}
 
-declare module "next-auth" {
   interface User {
-    sellerType?: SellerType | null;
     isAdmin?: boolean;
-  }
-}
-
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      role: string;
-    } & DefaultSession["user"];
-  }
-
-  interface User {
-    role?: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    role?: string;
+    id?: string;
+    isAdmin?: boolean;
+    isAdminCheckedAt?: number;
+    emailVerified?: string | null;
+    userTypeConfirmed?: boolean;
   }
 }

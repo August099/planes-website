@@ -1,23 +1,42 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { activeListingWhere } from "@/lib/listing-filters";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
 import Link from "next/link";
+import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { PageBackground } from "@/components/ui/PageBackground";
+import { TrackSearch } from "@/components/analytics/TrackSearch";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { searchSellers } from "@/app/actions/search-actions";
+import { SellerResults } from "@/components/ui/search/SellerResults";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 interface Props {
   searchParams: Promise<{ q?: string; page?: string }>;
 }
 
+// Resultados de búsqueda internos: no se indexan.
+export const metadata: Metadata = {
+  title: "Resultados de búsqueda",
+  robots: { index: false, follow: true },
+};
+
 export default async function SearchResultsPage({ searchParams }: Props) {
   const params = await searchParams;
   const query = params.q || "";
-  const currentPage = Number(params.page) || 1;
+  const currentPage = Math.max(1, Math.floor(Number(params.page)) || 1);
   const itemsPerPage = 20;
+  const skip = (currentPage - 1) * itemsPerPage;
+  // Aviones y repuestos se mezclan por fecha: para la página N alcanza con las primeras
+  // N × 20 de cada tabla (antes se traían todas, sin límite; VA-13).
+  const takeEach = skip + itemsPerPage;
 
   const tokens = query.trim().toLowerCase().split(" ").filter((t) => t.length > 0);
 
   // El insensitive es la clave pa, algún día nos pasaremos a los GIN pero no ahora
   const aircraftWhere = {
-    status: "ACTIVE" as const,
+    ...activeListingWhere(),
     ...(tokens.length > 0 && {
       AND: tokens.map((token) => ({
         OR: [
@@ -35,7 +54,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
   };
 
   const sparePartWhere = {
-    status: "ACTIVE" as const,
+    ...activeListingWhere(),
     ...(tokens.length > 0 && {
       AND: tokens.map((token) => ({
         OR: [
@@ -58,6 +77,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
         images: { orderBy: { order: "asc" }, take: 1 },
       },
       orderBy: { createdAt: "desc" },
+      take: takeEach,
     }),
     prisma.aircraft.count({ where: aircraftWhere }),
     prisma.sparePart.findMany({
@@ -67,6 +87,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
         images: { orderBy: { order: "asc" }, take: 1 },
       },
       orderBy: { createdAt: "desc" },
+      take: takeEach,
     }),
     prisma.sparePart.count({ where: sparePartWhere }),
   ]);
@@ -84,17 +105,26 @@ export default async function SearchResultsPage({ searchParams }: Props) {
 
   const totalItems = totalAircrafts + totalSpareParts;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const skip = (currentPage - 1) * itemsPerPage;
   const paginatedItems = allItems.slice(skip, skip + itemsPerPage);
 
   const hasNextPage = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
+  // VA-172: vendedores (Brokers) que coinciden por nombre comercial, arriba de los avisos.
+  const sellers = currentPage === 1 ? await searchSellers(query, 12) : [];
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-medium mb-6">
-        Resultados para "{query}" ({totalItems})
-      </h1>
+      <PageBackground page="default" />
+      <Breadcrumbs items={[{ label: "Búsqueda" }]} className="-mt-4 mb-2" />
+      {/* VA-15: la búsqueda se registra acá (una vez por pestaña y término), no en cada tecla */}
+      {currentPage === 1 && <TrackSearch query={query} resultsCount={totalItems} />}
+      <PageHeader variant="plain" compact routeId="va-route-search" eyebrow="Búsqueda" title={<>Resultados para “{query}”</>} count={totalItems} className="mb-6" />
+
+      {sellers.length > 0 && (
+        <section id="vendedores" className="va-plate mb-8 max-w-xl">
+          <SellerResults sellers={sellers} query={query} max={12} />
+        </section>
+      )}
 
       <section className="w-full">
         {paginatedItems.length === 0 ? (
@@ -116,7 +146,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
                     totalTimeHours={item.totalTimeHours}
                     city={item.city}
                     province={item.province}
-                    imageUrl={item.images[0]?.url ?? "/placeholder.png"}
+                    imageUrl={item.images[0]?.url ?? PLACEHOLDER_IMAGE}
                   />
                 );
               }
@@ -130,7 +160,7 @@ export default async function SearchResultsPage({ searchParams }: Props) {
                   category={item.category}
                   city={item.city}
                   province={item.province}
-                  imageUrl={item.images[0]?.url ?? "/placeholder.png"}
+                  imageUrl={item.images[0]?.url ?? PLACEHOLDER_IMAGE}
                 />
               );
             })}

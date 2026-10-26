@@ -2,6 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import { TaxonomyManager } from "@/components/ui/TaxonomyManager";
+import { sortAircraftCategories } from "@/lib/aircraft-categories";
+import { userCreatedEntries } from "@/lib/taxonomy-admin";
+import { UserTaxonomyReview } from "@/components/admin/UserTaxonomyReview";
 
 export default async function AdminTaxonomyPage() {
   const user = await getCurrentUser();
@@ -23,7 +26,7 @@ export default async function AdminTaxonomyPage() {
     prisma.aircraftCategory.findMany({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
-    }),
+    }).then(sortAircraftCategories), // VA-149
     prisma.aircraftBrand.findMany({
       select: {
         id: true,
@@ -33,6 +36,7 @@ export default async function AdminTaxonomyPage() {
           select: {
             id: true,
             name: true,
+            recommendedCategoryId: true, // VA-153
             variants: { // Usa exactamente la relación 'variants' del Schema
               select: { id: true, name: true },
               orderBy: { name: "asc" },
@@ -96,20 +100,39 @@ export default async function AdminTaxonomyPage() {
     models: brand.models.map((model) => ({
       id: model.id,
       name: model.name,
+      recommendedCategoryId: model.recommendedCategoryId,
       subModels: model.variants,
     })),
   }));
 
   const sparePartCategoriesTree = buildCategoryTree(sparePartCategories);
 
+  // VA-190: lo que cargaron los usuarios, para revisar.
+  const userCreated = await userCreatedEntries();
+  const entry = (e: { id: string; name: string; hidden: boolean; userCreatedAt: Date | null; sourceAircraftId: string | null; _count: { aircrafts: number } }) => ({
+    id: e.id,
+    name: e.name,
+    hidden: e.hidden,
+    createdAt: (e.userCreatedAt ?? new Date()).toISOString(),
+    sourceAircraftId: e.sourceAircraftId,
+    listings: e._count.aircrafts,
+  });
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[#001F58]">Gestor de Categorías y Marcas</h1>
         <p className="text-xs text-slate-500">
-          Añade, edita y elimina opciones para los desplegables de publicación y filtros.
+          Agregá, editá y eliminá opciones para los desplegables de publicación y filtros.
         </p>
       </div>
+
+      <UserTaxonomyReview
+        brands={userCreated.brands.map(entry)}
+        models={userCreated.models.map((m) => ({ ...entry(m), brandId: m.brandId, brandName: m.brand.name }))}
+        brandOptions={aircraftBrands.map((b) => ({ id: b.id, name: b.name }))}
+        modelOptions={aircraftBrands.flatMap((b) => b.models.map((m) => ({ id: m.id, name: m.name, brandId: b.id })))}
+      />
 
       <TaxonomyManager
         aircraftCategories={aircraftCategories}

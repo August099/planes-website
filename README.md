@@ -20,6 +20,20 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Base de datos y migraciones
+
+**Regla: prohibido `prisma db push` contra cualquier base compartida (producción o la de otro desarrollador).**
+`db push` cambia la base sin dejar migración, y después `migrate deploy` deja las bases nuevas sin esas tablas y
+`migrate dev` quiere resetear la base por la deriva (ver VA-10 en `docs/PLAN_FIXES_MVP.md`).
+
+- **Local:** cambiá `prisma/schema.prisma` y corré `npx prisma migrate dev --name <nombre>`. Revisá el SQL generado en
+  `prisma/migrations/<timestamp>_<nombre>/migration.sql` antes de commitearlo.
+- **Producción:** las migraciones se aplican de forma explícita en el deploy, con `npm run migrate:deploy`
+  (`prisma migrate deploy`) apuntando `DATABASE_URL` a producción. El script `build` ya **no** corre migraciones.
+- **Estado:** `npx prisma migrate status` tiene que decir "Database schema is up to date".
+- La migración `*_baseline_db_push` recupera lo que se había aplicado con `db push`. En las bases que ya tenían esos
+  cambios se marcó como aplicada con `npx prisma migrate resolve --applied <nombre>`; nunca se ejecuta sobre ellas.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

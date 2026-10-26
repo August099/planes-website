@@ -1,0 +1,8 @@
+{
+  "name": "@ventas-aeronauticas/icons",
+  "version": "1.0.0",
+  "private": true,
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}

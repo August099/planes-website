@@ -49,13 +49,11 @@ async function main() {
   }
 
   // Helpers para elementos random
-  const getRandom = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
+  const getRandom = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
   const getRandomPrice = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min);
   const randomBoolean = () => Math.random() < 0.5;
 
   const now = new Date();
-  const futureDate = new Date();
-  futureDate.setDate(now.getDate() + 45); // 45 días de vigencia
 
   // 2. Crear 10 Publicaciones de Aviones
   console.log('Creando 10 publicaciones de aviones con campos avanzados...');
@@ -107,7 +105,6 @@ async function main() {
         province: seller.province || 'Provincia',
         status: AircraftStatus.ACTIVE,
         listingStartsAt: now,
-        listingExpiresAt: futureDate,
 
         // Creación de Motores (1 motor random)
         engines: {
@@ -116,7 +113,6 @@ async function main() {
             model: `Modelo-${getRandomPrice(100, 500)}`,
             TBO: 2000,
             engineHours: getRandomPrice(100, 1900),
-            DURG: getRandomPrice(0, 500),
             description: 'Cilindros y magnetos recorridos recientemente.'
           }]
         },
@@ -172,7 +168,6 @@ async function main() {
         province: seller.province || 'Provincia',
         status: SparePartStatus.ACTIVE,
         listingStartsAt: now,
-        listingExpiresAt: futureDate,
         
         // Imágenes reales de maquinaria o partes
         images: {

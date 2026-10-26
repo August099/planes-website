@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { MessageSquare, Send, Reply } from "lucide-react";
+import { MessageSquare, Reply } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { createQuestionAction, answerQuestionAction } from "@/app/actions/questions";
+import { errorMessage } from "@/lib/errors";
+import { refreshHeaderIndicators } from "@/lib/header-refresh";
 
 export interface QuestionData {
   id: string;
@@ -54,15 +56,19 @@ export function QnaSection({
     setErrorMsg(null);
 
     try {
-      await createQuestionAction({
+      const res = await createQuestionAction({
         entityId,
         entityType,
         questionText: newQuestion,
         path: pathname,
       });
+      if (!res.success) {
+        setErrorMsg(res.error || "Error al enviar la pregunta");
+        return;
+      }
       setNewQuestion("");
-    } catch (err: any) {
-      setErrorMsg(err.message || "Error al enviar la pregunta");
+    } catch (err) {
+      setErrorMsg(errorMessage(err) || "Error al enviar la pregunta");
     } finally {
       setIsSubmitting(false);
     }
@@ -74,15 +80,20 @@ export function QnaSection({
 
     setIsAnswering(true);
     try {
-      await answerQuestionAction({
+      const res = await answerQuestionAction({
         questionId,
         answerText,
         path: pathname,
       });
+      if (!res.success) {
+        alert(res.error || "Error al responder");
+        return;
+      }
       setReplyingToId(null);
       setAnswerText("");
-    } catch (err: any) {
-      alert(err.message || "Error al responder");
+      refreshHeaderIndicators();
+    } catch (err) {
+      alert(errorMessage(err) || "Error al responder");
     } finally {
       setIsAnswering(false);
     }
@@ -105,6 +116,7 @@ export function QnaSection({
               type="text"
               placeholder="Ej: ¿Aceptas permutas? ¿Tiene el historial de mantenimiento al día?"
               value={newQuestion}
+              maxLength={1000}
               onChange={(e) => setNewQuestion(e.target.value)}
               className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isSubmitting}
@@ -121,7 +133,7 @@ export function QnaSection({
         </form>
       ) : (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-          <strong>Modo Vendedor:</strong> Estás viendo esta publicación como el dueño. Puedes responder a las preguntas realizadas por los interesados abajo.
+          <strong>Modo Vendedor:</strong> Estás viendo esta publicación como el dueño. Podés responder las preguntas de los interesados acá abajo.
         </div>
       )}
 
@@ -168,8 +180,9 @@ export function QnaSection({
 
                       <div className="flex flex-col gap-2 mt-2">
                         <textarea
-                          placeholder="Escribe tu respuesta aquí..."
+                          placeholder="Escribí tu respuesta acá..."
                           value={answerText}
+                          maxLength={1000}
                           onChange={(e) => setAnswerText(e.target.value)}
                           className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500"
                           rows={2}

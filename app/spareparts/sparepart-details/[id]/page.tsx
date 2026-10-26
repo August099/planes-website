@@ -1,14 +1,68 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { AircraftGallery } from "@/components/ui/Carousel";
 import { Separator } from "@/components/ui/separator";
-import { Phone, Mail, MessageCircle } from "lucide-react";
-import { DetailRow } from "@/components/ui/DetailRow";
 import { QnaSection } from "@/components/ui/QnaSection";
-import { PlaneActionsHeader } from "@/components/ui/PlaneActionsHeader";
+import { AircraftActionsHeader } from "@/components/ui/AircraftActionsHeader";
 import { AppImage } from "@/components/ui/AppImage";
 import { auth } from "@/lib/auth";
-import { ContactButtons } from "@/components/ui/ContactButtons";
+import type { Metadata } from "next";
+import { getSparePartDetail } from "@/lib/listing-data";
+import { isListingActive } from "@/lib/listing-filters";
+import { sparePartSeoDescription, sparePartSeoTitle } from "@/lib/listing-seo";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { InactiveListingNotice } from "@/components/ui/listing/InactiveListingNotice";
+import { TrackListingView } from "@/components/ui/listing/TrackListingView";
+import { FeaturesCard } from "@/components/ui/listing/FeaturesCard";
+import { DetailSections, PrintSections } from "@/components/ui/listing/DetailSections";
+import { PublishedLine } from "@/components/ui/listing/PublishedLine";
+import { sparePartConditionLabel, sparePartFeatures, sparePartSections } from "@/lib/listing-detail";
+import { CategoryLinks } from "@/components/ui/listing/CategoryLinks";
+import { KeyFacts, type KeyFact } from "@/components/ui/listing/KeyFacts";
+import { DescriptionBody, ListingDescription } from "@/components/ui/listing/ListingDescription";
+import { SellerContactCard } from "@/components/ui/listing/SellerContactCard";
+import { ListingLocationMap } from "@/components/ui/ListingLocationMap";
+import { sparePartJsonLd } from "@/lib/structured-data";
+import { formatPrice } from "@/lib/format";
+import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { OwnerRepublishBar } from "@/components/ui/listing/OwnerRepublishBar";
+import { BrokerDetailHeader } from "@/components/ui/listing/BrokerDetailHeader";
+import { getBrokerDetail } from "@/lib/broker-detail";
+import { youtubeId } from "@/lib/youtube";
+import { getMoreFromSeller } from "@/lib/recommendations";
+import { getRepublishStatus, republishView } from "@/lib/republish";
+import { RecommendationRail } from "@/components/ui/recommendations/RecommendationRail";
+import { getAircraftForPart, getSimilarParts } from "@/lib/recommendations";
+
+type Props = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const sparePart = await getSparePartDetail(id);
+  if (!sparePart) notFound();
+
+  const title = sparePartSeoTitle(sparePart);
+  const description = sparePartSeoDescription(sparePart);
+  const url = `/spareparts/sparepart-details/${sparePart.id}`;
+  const cover = sparePart.images[0]?.url;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    robots: isListingActive(sparePart) ? undefined : { index: false, follow: true },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "website",
+      ...(cover ? { images: [{ url: cover, alt: sparePart.title }] } : {}),
+    },
+  };
+}
 
 export default async function SparePartDetailsPage({
   params,
@@ -16,40 +70,16 @@ export default async function SparePartDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await auth();
-
-  const sparePart = await prisma.sparePart.findUnique({
-    where: { id },
-    include: {
-      images: { orderBy: { order: "asc" } },
-      // La categoría guardada puede ser una Subcategoría o, si existe, una
-      // Sección (sub-subcategoría). Traemos hasta dos niveles de "parent"
-      // para poder reconstruir la jerarquía completa: Categoría > Subcategoría > Sección.
-      category: {
-        include: {
-          parent: {
-            include: {
-              parent: true,
-            },
-          },
-        },
-      },
-      questions: {
-        orderBy: { createdAt: "desc" },
-        include: { user: { select: { name: true } } },
-      },
-    },
-  });
+  const [session, sparePart] = await Promise.all([auth(), getSparePartDetail(id)]);
 
   if (!sparePart) notFound();
 
-  const seller = await prisma.user.findUnique({
-    where: { id: sparePart.sellerId },
-  });
+  if (!isListingActive(sparePart) && session?.user?.id !== sparePart.sellerId) {
+    return <InactiveListingNotice backHref="/spareparts" backLabel="Ver otros repuestos" background="spareparts" />;
+  }
 
-  if (!seller) notFound();
+  const seller = sparePart.seller;
 
-  // Comprobar si la publicación está guardada en los favoritos del usuario actual
   let isFavoriteInitial = false;
   if (session?.user?.id) {
     const fav = await prisma.favorite.findFirst({
@@ -60,19 +90,6 @@ export default async function SparePartDetailsPage({
       select: { id: true },
     });
     isFavoriteInitial = Boolean(fav);
-  }
-
-  // Registrar evento analítico
-  try {
-    await prisma.analyticsEvent.create({
-      data: {
-        eventType: "SPARE_PART_VIEW",
-        sparePartId: sparePart.id,
-        userId: session?.user?.id ?? null,
-      },
-    });
-  } catch (err) {
-    console.error("Error al registrar analítica:", err);
   }
 
   const subject = encodeURIComponent(`Consulta por repuesto ${sparePart.title}`);
@@ -86,61 +103,77 @@ export default async function SparePartDetailsPage({
     ? `https://wa.me/${cleanPhone}?text=${body}`
     : null;
 
-  // Formato explícito de precio (AR$ o US$)
-  const priceNumber = sparePart.price ? Number(sparePart.price) : null;
-  const numberFormatted = priceNumber !== null 
-    ? new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(priceNumber)
-    : null;
-
-  const formattedPrice = numberFormatted
-    ? `${sparePart.inPesos ? "AR$" : "US$"} ${numberFormatted}`
-    : "Consultar precio";
-
-  // Ubicación del vendedor / producto
+  const formattedPrice = formatPrice(sparePart.price, { inPesos: sparePart.inPesos });
   const locationText = `${sparePart.city}, ${sparePart.province}`;
   const sellerLocation = [seller.city, seller.province].filter(Boolean).join(", ");
 
-  // Atributos dinámicos del JSON de la subcategoría
-  const attributesObj = (sparePart.attributes as Record<string, any>) || {};
-  const attributeEntries = Object.entries(attributesObj);
+  const features = sparePartFeatures(sparePart);
+  const sections = sparePartSections(sparePart, { omitSummary: true });
+  const printSections = sparePartSections(sparePart);
 
-  // Lista de aeronaves compatibles si existen
-  const compatibleAircrafts = Array.isArray(sparePart.aircrafts) ? (sparePart.aircrafts as string[]) : [];
+  const recSource = {
+    id: sparePart.id,
+    title: sparePart.title,
+    partNumber: sparePart.partNumber,
+    description: sparePart.description,
+    categoryId: sparePart.categoryId,
+    brand: sparePart.brand,
+    aircrafts: sparePart.aircrafts,
+  };
+  const [similarParts, relatedAircraft] = await Promise.all([getSimilarParts(recSource), getAircraftForPart(recSource)]);
 
-  // Reconstrucción de la jerarquía de categorías del repuesto.
-  // sparePart.category es siempre el nivel más específico que eligió el vendedor:
-  // puede ser la Subcategoría (2 niveles) o la Sección (3 niveles, sub-subcategoría).
+  const broker = await getBrokerDetail(sparePart.sellerId);
+  const moreFromSeller = broker ? await getMoreFromSeller(sparePart.sellerId, sparePart.id, broker.name) : null;
+
   const leafCategory = sparePart.category;
   const midCategory = leafCategory?.parent ?? null;
   const rootCategory = midCategory?.parent ?? null;
 
-  let categoryName: string | null = null;
-  let subcategoryName: string | null = null;
-  let sectionName: string | null = null;
+  type CategoryRef = { id: string; name: string } | null;
+  let category: CategoryRef = null;
+  let subcategory: CategoryRef = null;
 
   if (rootCategory) {
-    // Categoría (raíz) > Subcategoría (mid) > Sección (leaf)
-    categoryName = rootCategory.name;
-    subcategoryName = midCategory?.name ?? null;
-    sectionName = leafCategory?.name ?? null;
+    category = rootCategory;
+    subcategory = midCategory;
   } else if (midCategory) {
-    // Categoría (mid) > Subcategoría (leaf) — no hay Sección
-    categoryName = midCategory.name;
-    subcategoryName = leafCategory?.name ?? null;
+    category = midCategory;
+    subcategory = leafCategory;
   } else if (leafCategory) {
-    // Solo hay categoría raíz
-    categoryName = leafCategory.name;
+    category = leafCategory;
   }
+  const subcategoryName = subcategory?.name ?? null;
+  const categoryLinks = category ? [{ label: category.name, href: `/spareparts?category=${encodeURIComponent(category.id)}` }] : [];
+
+  const keyFacts: KeyFact[] = [
+    { label: "Marca", value: sparePart.brand },
+    { label: "Estado", value: sparePart.condition ? sparePartConditionLabel(sparePart.condition) : null },
+    { label: "Stock", value: `${sparePart.stock} ${sparePart.stock === 1 ? "unidad" : "unidades"}` },
+    { label: "Subcategoría", value: subcategoryName },
+  ];
 
   return (
     <>
+      {/* Datos estructurados */}
+      {isListingActive(sparePart) && <JsonLd data={sparePartJsonLd(sparePart)} />}
+      {isListingActive(sparePart) && session?.user?.id !== sparePart.sellerId && (
+        <TrackListingView type="SPARE_PART" id={sparePart.id} />
+      )}
+
+      {/* Bar para republicar (dueño) */}
+      {isListingActive(sparePart) && session?.user?.id === sparePart.sellerId && (
+        <OwnerRepublishBar view={republishView(await getRepublishStatus(sparePart.sellerId))} id={sparePart.id} kind="SPARE_PART" profileHref={`/profile/${sparePart.sellerId}`} />
+      )}
+
       {/* VISTA DE IMPRESIÓN / PDF */}
       <div className="hidden print:block font-sans text-black p-4 space-y-6 max-w-4xl mx-auto">
         <div className="flex justify-between items-end border-b-2 border-black pb-3">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 uppercase">
+            <p className="text-xl font-bold tracking-tight text-slate-900 uppercase">
               Ventas Aeronáuticas
-            </h1>
+            </p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {broker?.logoUrl && <img src={broker.logoUrl} alt={`Logo de ${broker.name}`} className="mt-1 h-10 w-auto max-w-[140px] object-contain" />}
             <p className="text-xs text-slate-500">Ficha Técnica de Repuesto</p>
           </div>
           <div className="text-right text-xs">
@@ -162,58 +195,35 @@ export default async function SparePartDetailsPage({
               src={sparePart.images[0].url}
               alt={sparePart.title}
               fill
-              optimizedWidth={1200}
               className="object-contain"
             />
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-8 text-xs border-t border-b border-slate-300 py-4">
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-bold uppercase text-slate-800 border-b border-slate-200 pb-1 mb-2">
-                Datos del Repuesto
-              </h3>
-              <div className="space-y-1">
-                {sparePart.brand && <p><span className="font-semibold">Marca:</span> {sparePart.brand}</p>}
-                {sparePart.condition && <p><span className="font-semibold">Condición:</span> {sparePart.condition}</p>}
-                {categoryName && <p><span className="font-semibold">Categoría:</span> {categoryName}</p>}
-                {subcategoryName && <p><span className="font-semibold">Subcategoría:</span> {subcategoryName}</p>}
-                {sectionName && <p><span className="font-semibold">Sección:</span> {sectionName}</p>}
-                <p><span className="font-semibold">Stock:</span> {sparePart.stock} {sparePart.stock === 1 ? "unidad" : "unidades"}</p>
-                {sparePart.partNumber && <p><span className="font-semibold">Número de Parte (P/N):</span> {sparePart.partNumber}</p>}
-                <p><span className="font-semibold">Ubicación:</span> {locationText}</p>
-                {attributeEntries.map(([key, val]) => (
-                  <p key={key}><span className="font-semibold">{key}:</span> {String(val)}</p>
-                ))}
-              </div>
-            </div>
-          </div>
+        <p className="text-xs text-slate-500">Ubicación: {locationText}</p>
 
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-bold uppercase text-slate-800 border-b border-slate-200 pb-1 mb-2">
-                Datos del Vendedor
-              </h3>
-              <div className="space-y-1">
-                <p><span className="font-semibold">Nombre:</span> {seller.name}</p>
-                {sellerLocation && <p><span className="font-semibold">Ubicación:</span> {sellerLocation}</p>}
-                {seller.phone && <p><span className="font-semibold">Teléfono:</span> {seller.phone}</p>}
-                {seller.email && <p><span className="font-semibold">Email:</span> {seller.email}</p>}
-              </div>
-            </div>
-
-            {sparePart.description && (
-              <div>
-                <h3 className="font-bold uppercase text-slate-800 border-b border-slate-200 pb-1 mb-2">
-                  Descripción
-                </h3>
-                <p className="text-slate-700 leading-snug whitespace-pre-line text-[11px]">
-                  {sparePart.description}
-                </p>
-              </div>
-            )}
+        {features.length > 0 && (
+          <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
+            <h3 className="text-xs font-bold uppercase text-[#00205B] border-b pb-1 mb-1.5 border-slate-100">Características</h3>
+            <p className="text-slate-700">{features.map((f) => (f.value ? `${f.label}: ${f.value}` : f.label)).join(" · ")}</p>
           </div>
+        )}
+
+        <PrintSections sections={printSections} />
+
+        {sparePart.description && (
+          <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
+            <h3 className="text-xs font-bold uppercase text-[#00205B] border-b pb-1 mb-1.5 border-slate-100">Descripción</h3>
+            <DescriptionBody text={sparePart.description} />
+          </div>
+        )}
+
+        <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 text-xs space-y-1 text-slate-700">
+          <h3 className="text-xs font-bold uppercase text-[#00205B] border-b pb-1 mb-1.5 border-slate-200">Datos del Vendedor</h3>
+          <p><span className="font-semibold">Nombre:</span> {seller.name}</p>
+          {sellerLocation && <p><span className="font-semibold">Ubicación:</span> {sellerLocation}</p>}
+          {seller.phone && <p><span className="font-semibold">Teléfono:</span> {seller.phone}</p>}
+          {seller.email && <p><span className="font-semibold">Email:</span> {seller.email}</p>}
         </div>
 
         <div className="pt-2 text-center text-[10px] text-slate-400">
@@ -221,255 +231,113 @@ export default async function SparePartDetailsPage({
         </div>
       </div>
 
-      {/* VISTA WEB NORMAL */}
-      <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
-        <section className="flex flex-col lg:flex-row items-start gap-8">
-          <div className="w-full lg:w-2/3 flex flex-col gap-8">
-            {/* 1. Galería de Imágenes */}
-            <AircraftGallery images={sparePart.images} />
+      {/* Aviso de inactividad para el dueño */}
+      {!isListingActive(sparePart) && (
+        <div className="bg-amber-500 text-white text-xs font-semibold py-3 px-4 text-center flex items-center justify-center gap-2 print:hidden">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>
+            {sparePart.status === "SOLD"
+              ? "Marcaste este aviso como vendido: no es visible para el público."
+              : "Tu aviso está pausado y no es visible para el público. Lo activás desde tu perfil, si tenés cupo libre."}
+          </span>
+          <Link href={`/profile/${sparePart.sellerId}`} className="underline font-bold hover:text-amber-100 ml-2">
+            Ir a mi perfil
+          </Link>
+        </div>
+      )}
 
-            {/* 2. DESCRIPCIÓN GENERAL (Ubicada inmediatamente debajo de las imágenes) */}
+      {/* BANNER SOLO PARA BROKERS (FUERA DEL CONTAINER DE MAIN) */}
+      {broker && (
+        <BrokerDetailHeader
+          broker={broker}
+          phone={seller.phone}
+          email={seller.email}
+          whatsappUrl={whatsappUrl}
+          emailUrl={emailUrl}
+          entityId={sparePart.id}
+          entityType="SPARE_PART"
+          breadcrumbs={
+            <Breadcrumbs 
+              items={[{ label: "Repuestos", href: "/spareparts" }, { label: sparePart.title }]} 
+              jsonLd={false} 
+              className="text-white/80 hover:text-white"
+            />
+          }
+        />
+      )}
+
+      {/* VISTA WEB */}
+      <main className="container flex flex-col gap-10 mx-auto px-4 py-8 print:hidden">
+        <PageBackground page="spareparts" />
+
+        {/* BREADCRUMBS SOLO SI NO ES BROKER (PÁGINA COMÚN) */}
+        {!broker && (
+          <Breadcrumbs 
+            items={[{ label: "Repuestos", href: "/spareparts" }, { label: sparePart.title }]} 
+            jsonLd={false} 
+            className="-mt-4 -mb-6" 
+          />
+        )}
+
+        <section className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
+          <div className="contents lg:flex lg:w-2/3 lg:flex-col lg:gap-8">
+            <div className="order-1 lg:order-none">
+              <AircraftGallery images={sparePart.images} title={sparePart.title} video={broker ? youtubeId(sparePart.youtubeUrl) : null} fade={!!broker} />
+            </div>
+
             {sparePart.description && (
-              <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm">
-                <h1 className="text-xl font-bold mb-3 text-[#001F58]">Descripción General</h1>
-                <p className="whitespace-pre-line text-slate-700 text-sm leading-relaxed">
-                  {sparePart.description}
-                </p>
+              <div className="order-4 lg:order-none border border-slate-200 rounded-lg bg-white p-6 shadow-sm">
+                <ListingDescription text={sparePart.description} />
               </div>
             )}
 
-            {/* BLOQUES VISIBLES SOLO EN MÓVIL (<lg) */}
-            <div className="flex flex-col gap-5 lg:hidden">
-              <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-                <div className="flex justify-between items-center text-xs text-slate-400 pb-2 border-b border-slate-100">
-                  <p>Publicado el {sparePart.createdAt.toLocaleDateString("es-AR")}</p>
-                </div>
-
-                <PlaneActionsHeader
-                  title={sparePart.title}
-                  aircraftId={sparePart.id}
-                  isFavoriteInitial={isFavoriteInitial}
-                />
-
-                <Separator />
-
-                <div>
-                  <h2 className="text-xl font-bold text-[#001F58]">{sparePart.title}</h2>
-                  <h3 className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">
-                    {formattedPrice}
-                  </h3>
-                </div>
-
-                <Separator />
-
-                {/* DETALLES PRINCIPALES MÓVIL (lateral): solo Categoría y Subcategoría */}
-                <div className="space-y-1 text-sm text-slate-700">
-                  <h4 className="font-bold text-[#001F58] mb-2">Detalles principales</h4>
-                  {sparePart.brand && (
-                    <p><span className="font-semibold text-slate-500">Marca:</span> {sparePart.brand}</p>
-                  )}
-                  {sparePart.condition && (
-                    <p><span className="font-semibold text-slate-500">Condición:</span> {sparePart.condition}</p>
-                  )}
-                  {categoryName && (
-                    <p><span className="font-semibold text-slate-500">Categoría:</span> {categoryName}</p>
-                  )}
-                  {subcategoryName && (
-                    <p><span className="font-semibold text-slate-500">Subcategoría:</span> {subcategoryName}</p>
-                  )}
-                  <p><span className="font-semibold text-slate-500">Stock:</span> {sparePart.stock} {sparePart.stock === 1 ? "unidad" : "unidades"}</p>
-                </div>
-              </div>
-
-              {/* Vendedor y Contacto en Mobile */}
-              <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-[#001F58]">Vendedor</h4>
-                  <a
-                    className="text-xs font-semibold text-blue-600 hover:underline"
-                    href={`/profile/${seller.id}`}
-                  >
-                    Ver perfil
-                  </a>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {seller.image ? (
-                    <AppImage
-                      className="rounded-full w-12 h-12 object-cover border border-slate-200"
-                      src={seller.image}
-                      alt={seller.name || "Foto del vendedor"}
-                      width={48}
-                      height={48}
-                      optimizedWidth={100}
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg border border-slate-200">
-                      {seller.name?.charAt(0).toUpperCase() || "V"}
-                    </div>
-                  )}
-                  <div>
-                    <h5 className="font-bold text-slate-800 text-sm">{seller.name}</h5>
-                    {sellerLocation && <p className="text-xs text-slate-500">{sellerLocation}</p>}
-                  </div>
-                </div>
-
-                <ContactButtons 
-                  phone={seller.phone} 
-                  email={seller.email} 
-                  whatsappUrl={whatsappUrl} 
-                  emailUrl={emailUrl} 
-                  entityId={sparePart.id} 
-                  entityType="SPARE_PART" 
-                />
-              </div>
+            <div className="order-5 lg:order-none flex flex-col gap-5 lg:gap-8">
+              <FeaturesCard title="Características del repuesto" features={features} />
+              <DetailSections sections={sections} />
             </div>
-
-            {/* Ficha Técnica / Información Adicional */}
-            <section className="flex flex-col gap-6">
-              <h2 className="text-2xl font-bold text-[#001F58]">Información Adicional</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                
-                {/* Columna 1: Especificaciones principales */}
-                <div className="space-y-6">
-                  <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
-                    {sparePart.brand && <DetailRow label="Marca / Fabricante" value={sparePart.brand} />}
-                    {sparePart.condition && <DetailRow label="Condición" value={sparePart.condition} />}
-                    {sparePart.partNumber && (
-                      <DetailRow label="Número de Parte (P/N)" value={sparePart.partNumber} />
-                    )}
-                    <DetailRow label="Stock Disponible" value={`${sparePart.stock} ${sparePart.stock === 1 ? "unidad" : "unidades"}`} />
-                    <DetailRow label="Ubicación" value={locationText} />
-
-                    {/* Renderizar dinámicamente todos los campos/atributos del JSON */}
-                    {attributeEntries.map(([key, val]) => (
-                      <DetailRow key={key} label={key} value={String(val)} />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Columna 2: Aeronaves compatibles y Categoría (grilla: acá sí va la Sección si existe) */}
-                <div className="space-y-6">
-                  <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
-                    {categoryName && (
-                      <DetailRow label="Categoría" value={categoryName} />
-                    )}
-                    {subcategoryName && (
-                      <DetailRow label="Subcategoría" value={subcategoryName} />
-                    )}
-                    {sectionName && (
-                      <DetailRow label="Sección" value={sectionName} />
-                    )}
-                  </div>
-
-                  {/* Aeronaves Compatibles en Chips Azules */}
-                  {compatibleAircrafts.length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-lg font-semibold text-slate-800">Aeronaves Compatibles</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {compatibleAircrafts.map((modelName, idx) => (
-                          <span
-                            key={idx}
-                            className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#001F58] text-xs font-semibold"
-                          >
-                            {modelName}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            </section>
           </div>
 
-          {/* Columna Derecha (DESKTOP >= lg) - Flujo continuo sin sticky */}
-          <div className="hidden lg:flex w-1/3 flex-col gap-5">
-            <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-              <div className="flex justify-between items-center text-xs text-slate-400 pb-2 border-b border-slate-100">
-                <p>Publicado el {sparePart.createdAt.toLocaleDateString("es-AR")}</p>
-              </div>
-
-              <PlaneActionsHeader
+          <div className="contents lg:flex lg:w-1/3 lg:flex-col lg:gap-5">
+            {/* Tarjeta con los Detalles Principales del Repuesto */}
+            <div className="order-2 lg:order-none border border-slate-200 rounded-lg bg-white p-6 shadow-sm space-y-4">
+              <PublishedLine createdAt={sparePart.createdAt} lastPublishedAt={sparePart.lastPublishedAt} location={locationText} />
+              <AircraftActionsHeader
                 title={sparePart.title}
                 aircraftId={sparePart.id}
+                type="SPARE_PART"
                 isFavoriteInitial={isFavoriteInitial}
               />
-
               <Separator />
-
               <div>
-                <h2 className="text-xl font-bold text-[#001F58]">{sparePart.title}</h2>
-                <h3 className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">
-                  {formattedPrice}
-                </h3>
+                <h1 className="va-h1-keep text-[1.65rem] leading-[1.12] font-extrabold tracking-[-0.015em] text-[#00205B] break-words">{sparePart.title}</h1>
+                <CategoryLinks items={categoryLinks} />
+                <p className="va-label mt-4">Precio</p>
+                <p className="font-heading text-[1.9rem] leading-none font-extrabold tracking-[-0.02em] text-[#2563EB] tabular-nums">{formattedPrice}</p>
               </div>
-
               <Separator />
-
-              {/* DETALLES PRINCIPALES (lateral): solo Categoría y Subcategoría */}
-              <div className="space-y-1 text-sm text-slate-700">
-                <h4 className="font-bold text-[#001F58] mb-2">Detalles principales</h4>
-                {sparePart.brand && (
-                  <p><span className="font-semibold text-slate-500">Marca:</span> {sparePart.brand}</p>
-                )}
-                {sparePart.condition && (
-                  <p><span className="font-semibold text-slate-500">Condición:</span> {sparePart.condition}</p>
-                )}
-                {categoryName && (
-                  <p><span className="font-semibold text-slate-500">Categoría:</span> {categoryName}</p>
-                )}
-                {subcategoryName && (
-                  <p><span className="font-semibold text-slate-500">Subcategoría:</span> {subcategoryName}</p>
-                )}
-                <p><span className="font-semibold text-slate-500">Stock:</span> {sparePart.stock} {sparePart.stock === 1 ? "unidad" : "unidades"}</p>
-              </div>
+              <KeyFacts title="Detalles principales" facts={keyFacts} />
             </div>
 
-            {/* Vendedor */}
-            <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-bold text-[#001F58]">Vendedor</h4>
-                <a
-                  className="text-xs font-semibold text-blue-600 hover:underline"
-                  href={`/profile/${seller.id}`}
-                >
-                  Ver perfil
-                </a>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {seller.image ? (
-                  <AppImage
-                    className="rounded-full w-12 h-12 object-cover border border-slate-200"
-                    src={seller.image}
-                    alt={seller.name || "Foto del vendedor"}
-                    width={48}
-                    height={48}
-                    optimizedWidth={100}
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg border border-slate-200">
-                    {seller.name?.charAt(0).toUpperCase() || "V"}
-                  </div>
-                )}
-                <div>
-                  <h5 className="font-bold text-slate-800 text-sm">{seller.name}</h5>
-                  {sellerLocation && <p className="text-xs text-slate-500">{sellerLocation}</p>}
-                </div>
-              </div>
-
-              <ContactButtons 
-                phone={seller.phone} 
-                email={seller.email} 
-                whatsappUrl={whatsappUrl} 
-                emailUrl={emailUrl} 
-                entityId={sparePart.id} 
-                entityType="AIRCRAFT" 
+            {/* TARJETA DE VENDEDOR COMÚN (SOLO SI NO ES BROKER) */}
+            {!broker && (
+              <SellerContactCard
+                className="order-3 lg:order-none"
+                seller={seller}
+                whatsappUrl={whatsappUrl}
+                emailUrl={emailUrl}
+                entityId={sparePart.id}
+                entityType="SPARE_PART"
               />
-            </div>
+            )}
+
+            {/* Mapa de ubicación */}
+            <ListingLocationMap
+              className="order-7 lg:order-none"
+              latitude={sparePart.latitude}
+              longitude={sparePart.longitude}
+              city={sparePart.city}
+              province={sparePart.province}
+            />
           </div>
         </section>
 
@@ -482,6 +350,12 @@ export default async function SparePartDetailsPage({
           sellerId={sparePart.sellerId}
           currentUserId={session?.user?.id}
         />
+
+        {/* Recomendaciones */}
+        {moreFromSeller?.parts && <RecommendationRail kind="sparePart" id="mas-del-vendedor" block={moreFromSeller.parts} />}
+        {moreFromSeller?.aircraft && <RecommendationRail kind="aircraft" id="aviones-del-vendedor" block={moreFromSeller.aircraft} />}
+        {similarParts && <RecommendationRail kind="sparePart" id="similares" block={similarParts} />}
+        {relatedAircraft && <RecommendationRail kind="aircraft" id="aeronaves-relacionadas" block={relatedAircraft} />}
       </main>
     </>
   );

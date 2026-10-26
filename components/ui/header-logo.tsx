@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { useIsHome } from "@/lib/use-is-home";
 
 export function HeaderLogo() {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
+  const isHome = useIsHome();
 
   const fullLogoSrc = isHome ? "/logo-full-white.png" : "/logo-full-blue.png";
 
   return (
-    <Link href="/" className="flex items-center">
+    <Link href="/" aria-label="Ventas Aeronáuticas, ir al inicio" className="flex items-center min-h-11">
       <div className="hidden md:block">
         <Image
           src={fullLogoSrc}
@@ -21,14 +20,17 @@ export function HeaderLogo() {
           priority
         />
       </div>
+      {/* Celular (VA-40): "VA//" completo, blanco sobre el hero de la Home y en color en el resto.
+          Antes era logo-mark.svg, que solo tiene las barras "//". Los PNG son borradores: si el socio
+          manda la versión final, se reemplazan con el mismo nombre. Aspecto 1032×276 (≈ 3,74:1). */}
       <div className="block md:hidden">
         <Image
-          src="/logo-mark.svg"
-          alt="Ventas Aeronáuticas Icono"
-          width={20}
-          height={20}
+          src={isHome ? "/logo-va-white.svg" : "/logo-va-color.png"}
+          alt="Ventas Aeronáuticas"
+          width={127}
+          height={34}
           priority
-          className="block md:hidden h-9 w-auto object-contain shrink-0"
+          className="h-[34px] w-auto object-contain shrink-0"
         />
       </div>
     </Link>

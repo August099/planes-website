@@ -3,24 +3,176 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { AnalyticsEventType } from "@prisma/client";
+import { activeListingWhere } from "@/lib/listing-filters";
+import { getAnalyticsContext } from "@/lib/analytics-context";
 
+const CONTACT_EVENTS = new Set<AnalyticsEventType>([
+  AnalyticsEventType.PHONE_CLICK,
+  AnalyticsEventType.WHATSAPP_CLICK,
+  AnalyticsEventType.EMAIL_CLICK,
+]);
+
+const validId = (id: unknown): id is string => typeof id === "string" && id.length > 0 && id.length <= 64;
+
+// Clic en llamar / WhatsApp / email del vendedor. Solo acepta esos tres tipos (antes se podía
+// registrar cualquier evento desde el navegador) y guarda visitante y origen (VA-15).
 export async function logContactClick(
   entityId: string,
-  entityType: "AIRCRAFT" | "SPARE_PART",
+  entityType: "AIRCRAFT" | "SPARE_PART" | "HANGAR",
   eventType: AnalyticsEventType
 ) {
-  const session = await auth();
+  if (!validId(entityId) || !CONTACT_EVENTS.has(eventType)) return;
+  if (entityType !== "AIRCRAFT" && entityType !== "SPARE_PART" && entityType !== "HANGAR") return;
 
   try {
+    const [session, context] = await Promise.all([auth(), getAnalyticsContext()]);
     await prisma.analyticsEvent.create({
       data: {
         eventType,
         userId: session?.user?.id ?? null,
+        ...context,
         aircraftId: entityType === "AIRCRAFT" ? entityId : null,
         sparePartId: entityType === "SPARE_PART" ? entityId : null,
+        hangarId: entityType === "HANGAR" ? entityId : null, // VA-84
       },
     });
   } catch (error) {
     console.error("Error al registrar evento de contacto:", error);
+  }
+}
+
+const VIEW_DEDUP_MS = 30 * 60 * 1000;
+
+// Vista de una publicación (VA-17). La llama TrackListingView al montar el detalle en el
+// navegador, una vez por pestaña: así no suman los re-renders del servidor (refresh, server
+// actions, volver atrás), el prefetch ni los bots sin JS. No cuenta al dueño ni repite la vista
+// del mismo usuario (o del mismo visitante anónimo, VA-15) dentro de 30 minutos.
+export async function logListingView(entityType: "AIRCRAFT" | "SPARE_PART", entityId: string) {
+  if (!validId(entityId)) return;
+  if (entityType !== "AIRCRAFT" && entityType !== "SPARE_PART") return;
+
+  try {
+    const [session, context] = await Promise.all([auth(), getAnalyticsContext()]);
+    const userId = session?.user?.id ?? null;
+    const isAircraft = entityType === "AIRCRAFT";
+    const where = { id: entityId, ...activeListingWhere() };
+    const listing = isAircraft
+      ? await prisma.aircraft.findFirst({ where, select: { sellerId: true } })
+      : await prisma.sparePart.findFirst({ where, select: { sellerId: true } });
+
+    // VA-151: tampoco cuentan las vistas de los admins (ni las del dueño).
+    if (!listing || listing.sellerId === userId || session?.user?.isAdmin) return;
+
+    const eventType = isAircraft ? AnalyticsEventType.AIRCRAFT_VIEW : AnalyticsEventType.SPARE_PART_VIEW;
+    const target = isAircraft ? { aircraftId: entityId } : { sparePartId: entityId };
+    const who = userId ? { userId } : context.anonymousId ? { anonymousId: context.anonymousId } : null;
+
+    if (who) {
+      const recent = await prisma.analyticsEvent.findFirst({
+        where: { eventType, ...who, ...target, createdAt: { gte: new Date(Date.now() - VIEW_DEDUP_MS) } },
+        select: { id: true },
+      });
+      if (recent) return;
+    }
+
+    await prisma.analyticsEvent.create({ data: { eventType, userId, ...context, ...target } });
+  } catch (error) {
+    console.error("Error al registrar la vista:", error);
+  }
+}
+
+export type SearchOrigin = "HEADER_SUBMIT" | "HEADER_RESULT_CLICK" | "SEARCH_PAGE";
+
+// Búsqueda (VA-15). Se registra solo cuando la persona busca de verdad (Enter, botón, clic en un
+// resultado o la página /search), no en cada tecla: antes "cessna 182" dejaba eventos de "ce",
+// "cess", "cessna"… y ensuciaba "búsquedas sin resultados" y "oportunidades".
+export async function logSearch(query: string, resultsCount: number, origin: SearchOrigin, searchType?: string) {
+  const cleanQuery = typeof query === "string" ? query.trim().toLowerCase().slice(0, 200) : "";
+  if (cleanQuery.length < 2) return;
+  if (!["HEADER_SUBMIT", "HEADER_RESULT_CLICK", "SEARCH_PAGE"].includes(origin)) return;
+
+  try {
+    const [session, context] = await Promise.all([auth(), getAnalyticsContext()]);
+    await prisma.analyticsEvent.create({
+      data: {
+        eventType: AnalyticsEventType.SEARCH,
+        userId: session?.user?.id ?? null,
+        ...context,
+        metadata: {
+          query: cleanQuery,
+          resultsCount: Number.isFinite(resultsCount) ? Math.max(0, Math.trunc(resultsCount)) : 0,
+          ...(searchType ? { searchType: String(searchType).slice(0, 20) } : {}),
+          origin,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error al registrar la búsqueda:", error);
+  }
+}
+
+// VA-151: visita al perfil de un vendedor (Página VA). Misma regla que las vistas de avisos: una por
+// pestaña (la marca la pone el cliente), sin contar al dueño ni a los admins, y sin repetir la del
+// mismo usuario o visitante anónimo dentro de 30 minutos. Solo se guarda el total, nunca quién.
+export async function logProfileView(profileUserId: string) {
+  if (!validId(profileUserId)) return;
+  try {
+    const [session, context] = await Promise.all([auth(), getAnalyticsContext()]);
+    const userId = session?.user?.id ?? null;
+    if (userId === profileUserId || session?.user?.isAdmin) return;
+    const exists = await prisma.user.findUnique({ where: { id: profileUserId }, select: { id: true } });
+    if (!exists) return;
+    const who = userId ? { userId } : context.anonymousId ? { anonymousId: context.anonymousId } : null;
+    if (who) {
+      const recent = await prisma.analyticsEvent.findFirst({
+        where: { eventType: AnalyticsEventType.PROFILE_VIEW, profileUserId, ...who, createdAt: { gte: new Date(Date.now() - VIEW_DEDUP_MS) } },
+        select: { id: true },
+      });
+      if (recent) return;
+    }
+    await prisma.analyticsEvent.create({ data: { eventType: AnalyticsEventType.PROFILE_VIEW, userId, ...context, profileUserId } });
+  } catch (error) {
+    console.error("Error al registrar la visita al perfil:", error);
+  }
+}
+
+// VA-171: se agregó un aviso al comparador. Sin el dueño ni los admins, y sin repetir el mismo
+// visitante dentro de 30 minutos. Solo totales por aviso (métricas del Broker).
+export async function logCompareAdd(entityType: "AIRCRAFT" | "SPARE_PART", entityId: string) {
+  if (!validId(entityId) || (entityType !== "AIRCRAFT" && entityType !== "SPARE_PART")) return;
+  try {
+    const [session, context] = await Promise.all([auth(), getAnalyticsContext()]);
+    const userId = session?.user?.id ?? null;
+    const isAircraft = entityType === "AIRCRAFT";
+    const listing = isAircraft
+      ? await prisma.aircraft.findUnique({ where: { id: entityId }, select: { sellerId: true } })
+      : await prisma.sparePart.findUnique({ where: { id: entityId }, select: { sellerId: true } });
+    if (!listing || listing.sellerId === userId || session?.user?.isAdmin) return;
+    const target = isAircraft ? { aircraftId: entityId } : { sparePartId: entityId };
+    const who = userId ? { userId } : context.anonymousId ? { anonymousId: context.anonymousId } : null;
+    if (who) {
+      const recent = await prisma.analyticsEvent.findFirst({
+        where: { eventType: AnalyticsEventType.COMPARE_ADD, ...who, ...target, createdAt: { gte: new Date(Date.now() - VIEW_DEDUP_MS) } },
+        select: { id: true },
+      });
+      if (recent) return;
+    }
+    await prisma.analyticsEvent.create({ data: { eventType: AnalyticsEventType.COMPARE_ADD, userId, ...context, ...target } });
+  } catch (error) {
+    console.error("Error al registrar el comparador:", error);
+  }
+}
+
+// VA-171: clic a un aviso desde la Página VA de su vendedor (sin el dueño ni los admins).
+export async function logProfileListingClick(profileUserId: string, entityType: "AIRCRAFT" | "SPARE_PART", entityId: string) {
+  if (!validId(profileUserId) || !validId(entityId) || (entityType !== "AIRCRAFT" && entityType !== "SPARE_PART")) return;
+  try {
+    const [session, context] = await Promise.all([auth(), getAnalyticsContext()]);
+    const userId = session?.user?.id ?? null;
+    if (userId === profileUserId || session?.user?.isAdmin) return;
+    const target = entityType === "AIRCRAFT" ? { aircraftId: entityId } : { sparePartId: entityId };
+    await prisma.analyticsEvent.create({ data: { eventType: AnalyticsEventType.PROFILE_LISTING_CLICK, userId, ...context, profileUserId, ...target } });
+  } catch (error) {
+    console.error("Error al registrar el clic desde el perfil:", error);
   }
 }

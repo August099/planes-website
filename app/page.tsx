@@ -1,72 +1,55 @@
-import Image from "next/image";
 
-// Hasta el lanzamiento (2/11), main muestra solo esta pantalla: el resto de las rutas redirige acá
-// (next.config.ts). La Home real queda comentada abajo.
-export default function ComingSoonPage() {
-  return (
-    <main className="fixed inset-0 z-50 isolate flex flex-col items-center justify-center gap-8 overflow-hidden bg-[#001F58] px-6 text-center">
-      <Image
-        src="/bkg-home.png"
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="-z-20 scale-110 object-cover blur-[6px]"
-      />
-      <div className="absolute inset-0 -z-10 bg-[#001F58]/45" />
-
-      <h1 className="font-heading text-7xl font-bold tracking-tight text-white drop-shadow-lg sm:text-9xl">2/11</h1>
-      <Image
-        src="/logo-full.png"
-        alt="Ventas Aeronáuticas"
-        width={1842}
-        height={128}
-        priority
-        className="h-auto w-full max-w-[min(80vw,560px)] drop-shadow-lg"
-      />
-    </main>
-  );
-}
-
-
-
-
-
-{/*
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
-import { getCurrentUser } from "@/lib/auth-helpers";
 import { getAircraftTaxonomy, getSparePartCategories } from "@/lib/cached-data";
 import { HowItWorks } from "@/components/ui/HowItWorks";
+import { GuidesSection } from "@/components/ui/GuidesSection";
 import { SellerCta } from "@/components/ui/SellerCta";
-import { TrustBlock } from "@/components/ui/TrustBlock";
 import { SparePartCategoriesCarousel } from "@/components/ui/SparePartCategoriesCarousel";
 import { FeaturedAircraftCarousel } from "@/components/ui/FeaturedAircraftCarousel";
 import { LatestAircraft, ListingItem } from "@/components/ui/LatestListings";
 import { HeroBanner } from "@/components/ui/hero-banner";
+import { LaunchPromoBanner } from "@/components/ui/LaunchPromoBanner";
+import { getCachedFreeQuota } from "@/lib/quota";
+import { freeQuotaText } from "@/lib/promo";
+import { FavoriteIdsProvider } from "@/components/ui/FavoriteIdsProvider";
 import HomeServicesCards from "@/components/ui/HomeServiceCards";
 import { FeaturedBrands } from "@/components/ui/FeaturedBrands";
+import { AircraftTypesSection } from "@/components/ui/AircraftTypesSection";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationAndWebsiteJsonLd } from "@/lib/structured-data";
-import { PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { FEATURED_AIRCRAFT_POOL, LATEST_AIRCRAFT_COUNT, PLACEHOLDER_IMAGE } from "@/lib/constants";
+import { ProvinceExplorer, type ProvinceCounts } from "@/components/ui/ProvinceExplorer";
+import { provinceByName } from "@/lib/provinces";
+import { BrandSlashes } from "@/components/ui/BrandSlashes";
+import { getFeaturedSellerIds } from "@/lib/featured";
+import { ScrollToTop } from "@/components/ui/ScrollToTop";
+import { HomeSpotlight } from "@/components/ui/home/HomeSpotlight";
 
 // Título y descripción salen del layout; acá solo el canonical.
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export default async function HomePage() {
-  // 1. Obtener usuario actual
-  const user = await getCurrentUser();
+// VA-76: la Home es estática y se regenera cada 5 minutos (y al publicar, editar, renovar o borrar
+// un aviso, con revalidatePath("/")). Antes leía la sesión para marcar favoritos y se renderizaba
+// en cada visita sin caché; ahora los favoritos los pide el navegador (FavoriteIdsProvider).
+export const revalidate = 300;
 
-  // 2. Traer datos y favoritos en paralelo
+export default async function HomePage() {
+  // VA-168: cuentas con destacadas (Pro, Broker y admins).
+  const featuredSellerIds = await getFeaturedSellerIds();
+  // Datos en paralelo
   const [
     featuredAircraftsFromDb,
     latestSparePartsFromDb,
     sparePartCategories,
     featuredBrandsFromDb,
-    userFavorites,
+    aircraftByProvince,
+    sparePartsByProvince,
+    aircraftByCategory,
+    planFeaturedFromDb,
   ] = await Promise.all([
     prisma.aircraft.findMany({
       where: activeListingWhere(),
@@ -76,8 +59,9 @@ export default async function HomePage() {
         brand: true,
         model: true,
       },
-      orderBy: { createdAt: "desc" },
-      take: 8,
+      // VA-167: "más recientes" = última publicación (alta o republicación).
+      orderBy: { lastPublishedAt: "desc" },
+      take: FEATURED_AIRCRAFT_POOL,
     }),
     // Últimos Repuestos
     prisma.sparePart.findMany({
@@ -86,7 +70,7 @@ export default async function HomePage() {
         images: { orderBy: { order: "asc" }, take: 1 },
         category: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { lastPublishedAt: "desc" },
       take: 6,
     }),
     // Categorías raíz de repuestos y marcas con logo: salen de la taxonomía cacheada (VA-13)
@@ -96,25 +80,44 @@ export default async function HomePage() {
     getAircraftTaxonomy().then(({ brands }) =>
       brands.filter((b) => b.logoUrl !== null).map(({ id, name, logoUrl }) => ({ id, name, logoUrl }))
     ),
-    // Favoritos del usuario logueado
-    user
-      ? prisma.favorite.findMany({
-          where: { userId: user.id },
-          select: { aircraftId: true, sparePartId: true },
+    // VA-77: avisos visibles por provincia (mismo criterio que /aircraft y /spareparts). Dinámico,
+    // como el resto de la Home, para que coincida siempre con los listados.
+    prisma.aircraft.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
+    prisma.sparePart.groupBy({ by: ["province"], where: activeListingWhere(), _count: { _all: true } }),
+    // VA-86: avisos visibles por categoría de aeronave (mismo criterio que /aircraft).
+    prisma.aircraft.groupBy({ by: ["categoryId"], where: activeListingWhere(), _count: { _all: true } }),
+    // VA-168: avisos de cuentas con destacadas (las más recientes; el carrusel elige al azar).
+    featuredSellerIds.length
+      ? prisma.aircraft.findMany({
+          where: { ...activeListingWhere(), sellerId: { in: featuredSellerIds } },
+          include: { images: { orderBy: { order: "asc" }, take: 1 }, category: true, brand: true, model: true },
+          orderBy: { lastPublishedAt: "desc" },
+          take: FEATURED_AIRCRAFT_POOL,
         })
       : Promise.resolve([]),
   ]);
-
-  // Sets de búsqueda rápida para los IDs favoritos
-  const userFavAircraftIds = new Set(
-    userFavorites.filter((f) => f.aircraftId).map((f) => f.aircraftId)
-  );
-  const userFavSparePartIds = new Set(
-    userFavorites.filter((f) => f.sparePartId).map((f) => f.sparePartId)
+  const categoryCounts: Record<string, number> = Object.fromEntries(
+    aircraftByCategory.filter((g) => g.categoryId).map((g) => [g.categoryId as string, g._count._all])
   );
 
-  // Formateo para Aeronaves Destacadas (OverlayCard)
-  const formattedFeaturedAircrafts = featuredAircraftsFromDb.map((aircraft) => ({
+  // { slug: { aircraft, parts } }. Las provincias que no son una de las 24 canónicas no cuentan
+  // (los listados filtran por igualdad exacta); ver scripts/normalize-provinces.ts.
+  const provinceCounts: ProvinceCounts = {};
+  const addCount = (province: string | null, field: "aircraft" | "parts", n: number) => {
+    const slug = provinceByName(province)?.slug;
+    if (!slug) return;
+    provinceCounts[slug] ??= { aircraft: 0, parts: 0 };
+    provinceCounts[slug][field] += n;
+  };
+  aircraftByProvince.forEach((g) => addCount(g.province, "aircraft", g._count._all));
+  sparePartsByProvince.forEach((g) => addCount(g.province, "parts", g._count._all));
+
+  // Formateo para Aeronaves Destacadas (OverlayCard). VA-168: primero los de cuentas con destacadas
+  // (planFeatured: el carrusel elige entre ellos y completa con los demás recientes).
+  const planFeaturedIds = new Set(planFeaturedFromDb.map((a) => a.id));
+  const featuredPool = [...planFeaturedFromDb, ...featuredAircraftsFromDb.filter((a) => !planFeaturedIds.has(a.id))];
+  const formattedFeaturedAircrafts = featuredPool.map((aircraft) => ({
+    planFeatured: planFeaturedIds.has(aircraft.id),
     id: aircraft.id,
     title: aircraft.title,
     brand: aircraft.brand?.name ?? aircraft.customBrand ?? "",
@@ -128,12 +131,11 @@ export default async function HomePage() {
     city: aircraft.city,
     province: aircraft.province,
     imageUrl: aircraft.images[0]?.url ?? PLACEHOLDER_IMAGE,
-    isFavoriteInitial: userFavAircraftIds.has(aircraft.id),
   }));
 
-  // Mapear aeronaves a ListingItem. "Últimas aeronaves" son las 6 primeras de la misma
-  // consulta de destacadas (antes eran dos queries idénticas, VA-13).
-  const aircraftListings: ListingItem[] = featuredAircraftsFromDb.slice(0, 6).map(
+  // Mapear aeronaves a ListingItem. "Últimas aeronaves" salen de la misma consulta de
+  // destacadas (antes eran dos queries idénticas, VA-13).
+  const aircraftListings: ListingItem[] = featuredAircraftsFromDb.slice(0, LATEST_AIRCRAFT_COUNT).map(
     (aircraft) => ({
       type: "AIRCRAFT",
       id: aircraft.id,
@@ -147,8 +149,7 @@ export default async function HomePage() {
       city: aircraft.city,
       province: aircraft.province,
       imageUrl: aircraft.images[0]?.url ?? PLACEHOLDER_IMAGE,
-      createdAt: aircraft.createdAt,
-      isFavoriteInitial: userFavAircraftIds.has(aircraft.id),
+      createdAt: aircraft.lastPublishedAt, // VA-167: un republicado vuelve primero
     })
   );
 
@@ -166,8 +167,7 @@ export default async function HomePage() {
       province: part.province,
       inPesos: part.inPesos,
       imageUrl: part.images[0]?.url ?? PLACEHOLDER_IMAGE,
-      createdAt: part.createdAt,
-      isFavoriteInitial: userFavSparePartIds.has(part.id),
+      createdAt: part.lastPublishedAt, // VA-167
     })
   );
 
@@ -182,25 +182,54 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={organizationAndWebsiteJsonLd()} />
-      <div className="bg-[#FAF5F5] min-h-screen">
+      {/* VA-79: la Home es una sola pieza. Cuatro zonas con degradés que se continúan (el color con
+          que termina una es el color con que empieza la siguiente); estilos en app/globals.css. */}
+      <FavoriteIdsProvider>
+      <main className="home-theme relative isolate overflow-x-clip">
+        {/* Zona 1 · Cielo: hero + tipos de aeronave + destacadas.
+            VA-147 (socio, 17/10): hero, tipos, destacadas, últimas, repuestos por categoría,
+            fabricantes, mapa, CTA de vendedores, cómo funciona, guías y secciones. */}
+        {/* Rediseño (25/10, v2): bandas planas en el mismo orden (VA-147): hero, aviso de cupo, tipos,
+            destacadas (banda azul), últimas, repuestos por categoría, fabricantes, mapa, CTA de vendedores
+            (banda roja), cómo funciona, guías y servicios (azul que sigue en el footer). */}
         <HeroBanner />
+        {/* VA-47: invitación a registrarse, solo para visitantes sin cuenta (se decide en el navegador) */}
+        <LaunchPromoBanner text={freeQuotaText(await getCachedFreeQuota())} />
+        <div className="home-zone home-zone-1">
+          <div aria-hidden className="home-zone-bg" />
+          <AircraftTypesSection counts={categoryCounts} />
+        </div>
 
-        <FeaturedBrands brands={featuredBrandsFromDb} />
+        <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
 
-        <main className="container mx-auto px-4 py-8 space-y-12">
-          <FeaturedAircraftCarousel aircrafts={formattedFeaturedAircrafts} />
+        <div className="home-zone home-zone-2">
+          <div aria-hidden className="home-zone-bg" />
+          <div className="container mx-auto px-4 pt-20 space-y-20">
+            <LatestAircraft items={combinedLatestListings} />
+            <SparePartCategoriesCarousel categories={sparePartCategories} />
+          </div>
+          <FeaturedBrands brands={featuredBrandsFromDb} />
+          <div className="container mx-auto px-4">
+            <ProvinceExplorer counts={provinceCounts} />
+          </div>
+          <SellerCta />
+        </div>
 
-          <LatestAircraft items={combinedLatestListings} />
-
-          <SparePartCategoriesCarousel categories={sparePartCategories} />
-        </main>
-
-        <SellerCta />
-        <HowItWorks />
-        <HomeServicesCards />
-      </div>
+        {/* Cómo funciona + guías + servicios; el footer sigue el mismo color */}
+        <div className="home-zone home-zone-4 pb-8">
+          <div aria-hidden className="home-zone-bg" />
+          <BrandSlashes className="bottom-24 -left-24 w-64 sm:w-96" />
+          <HowItWorks />
+          <GuidesSection />
+          <HomeServicesCards />
+        </div>
+        <ScrollToTop />
+        <HomeSpotlight />
+      </main>
+      </FavoriteIdsProvider>
     </>
   );
 } 
-  */}
+
+
 

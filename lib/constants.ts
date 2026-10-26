@@ -28,6 +28,8 @@ export const AIRCRAFT_STATUS_LABELS: Record<string, string> = {
   SOLD: "Vendida",
   EXPIRED: "Expirada",
   PENDING_PAYMENT: "Pendiente de pago",
+  // VA-154
+  MODERATED: "Pausada por moderación",
 };
 
 export const AIRCRAFT_CATEGORY_LABELS: Record<string, string> = {
@@ -68,10 +70,17 @@ export const SPARE_PART_CATEGORY_LABELS: Record<string, string> = {
   EQUIPO_DE_FUMIGACION: "Equipo de fumigación",
 };
 
+// Estados según los enums de Prisma (VA-23). El mapa anterior tenía REMANUFACTURADO, que no existe.
+export const AIRCRAFT_CONDITION_LABELS: Record<string, string> = {
+  NUEVO: "Nuevo",
+  USADO: "Usado",
+};
+
 export const SPARE_PART_CONDITION_LABELS: Record<string, string> = {
   NUEVO: "Nuevo",
   USADO: "Usado",
-  REMANUFACTURADO: "Remanufacturado",
+  RECORRIDO: "Recorrido",
+  REPARAR: "A reparar",
 };
 
 export const REPORT_STATUS_LABELS: Record<string, string> = {
@@ -102,3 +111,14 @@ export function formatEnum(
     .replace(/_/g, " ")
     .replace(/(?:^|\s)\S/g, (a) => a.toUpperCase());
 }
+
+// Imagen de reemplazo cuando una publicación no tiene foto o la foto no carga (VA-25).
+// Antes se usaba "/placeholder.png", que no existe en public/.
+export const PLACEHOLDER_IMAGE = "/placeholder.svg";
+
+// VA-110 / VA-168: cantidad de aeronaves del carrusel "Aeronaves destacadas" de la Home: 6 al azar entre
+// las de cuentas con destacadas (Pro, Broker y admins) y, si faltan, entre las FEATURED_AIRCRAFT_POOL más
+// recientes activas. "Últimas publicaciones" usa las 6 primeras de la consulta de recientes.
+export const FEATURED_AIRCRAFT_COUNT = 6;
+export const FEATURED_AIRCRAFT_POOL = 30;
+export const LATEST_AIRCRAFT_COUNT = 6;

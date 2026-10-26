@@ -7,28 +7,45 @@ datasource db {
 }
 
 model User {
-  id                        String           @id @default(cuid())
+  id                        String               @id @default(cuid())
   name                      String?
-  email                     String           @unique
+  email                     String               @unique
   emailVerified             DateTime?
+  // VA-182: miembro fundador (de las primeras cuentas no admin que publican) y cuándo publicó su primer aviso.
+  isFoundingMember          Boolean              @default(false)
+  foundingMemberAt          DateTime?
   passwordHash              String?
   image                     String?
   phone                     String?
   bio                       String?
-  isAdmin                   Boolean          @default(false)
-  isFoundingMember          Boolean          @default(false)
-  createdAt                 DateTime         @default(now())
-  aircraftListingsBalance   Int              @default(0)
-  sparePartsListingsBalance Int              @default(0)
+  isAdmin                   Boolean              @default(false)
+  createdAt                 DateTime             @default(now())
+  // VA-111: cuándo vio (y cerró) la ventana de bienvenida. null = todavía no. (VA-152: los saldos de
+  // publicaciones y el de lanzamiento se quitaron; el cupo está en lib/quota.ts.)
+  launchWelcomeSeenAt       DateTime?
   facebook                  String?
   instagram                 String?
   city                      String?
   province                  String?
-  userType                  UserType         @default(PARTICULAR)
+  userType                  UserType             @default(PARTICULAR)
+  // VA-87: el usuario ya eligió su tipo de cuenta (en /register o en /onboarding/account-type).
+  userTypeConfirmed         Boolean              @default(false)
+  // VA-87: página personalizada (solo con un plan que la incluya, lib/subscriptions.ts).
+  businessName              String?
+  coverUrl                  String?
+  logoUrl                   String?
+  website                   String?
+  whatsapp                  String?
+  // VA-170: detalles personalizados del Broker: portada propia de los detalles y color de acento (clave de
+  // una paleta cerrada, lib/accent-colors.ts; null = el azul de VA).
+  detailCoverUrl            String?
+  accentColor               String?              @db.VarChar(16)
   accounts                  Account[]
   adBanners                 AdBanner[]
   aircrafts                 Aircraft[]
-  analyticsEvents           AnalyticsEvent[]
+  analyticsEvents           AnalyticsEvent[]     @relation("AnalyticsEventUser")
+  // VA-151: visitas a su perfil (Página VA), sin datos del visitante.
+  profileViews              AnalyticsEvent[]     @relation("AnalyticsEventProfile")
   couponUsages              CouponUsage[]
   favorites                 Favorite[]
   purchases                 Purchase[]
@@ -36,7 +53,26 @@ model User {
   reports                   Report[]
   sessions                  Session[]
   spareParts                SparePart[]
+  hangars                   Hangar[]
+  // VA-84: créditos de publicación de hangares (los suma el webhook de Mercado Pago, Fase 6).
+  hangarListingsBalance     Int                  @default(0)
+  // VA-92: datos de facturación guardados para la próxima compra.
+  billingProfile            BillingProfile?
   Subscription              Subscription?
+  listingPriceChanges       ListingPriceChange[]
+  // VA-105 · 3: al cambiar o restablecer la contraseña se cierran las sesiones iniciadas antes (callback jwt).
+  passwordChangedAt         DateTime?
+  passwordResetTokens       PasswordResetToken[]
+  // VA-150: lotes de saldo y registro de con qué se pagó cada aviso.
+  creditLots                CreditLot[]
+  listingFundings           ListingFunding[]
+  // VA-154: historial de moderación de sus avisos (como dueño) y de las acciones que hizo (como admin).
+  moderationActions         ModerationAction[]   @relation("ModerationOwner")
+  moderationDone            ModerationAction[]   @relation("ModerationAdmin")
+  // VA-167: republicaciones hechas (el saldo del año sale de contarlas).
+  republications            Republication[]
+  // VA-169: secciones de la Página VA completa (Broker y admins).
+  profilePage               ProfilePage?
 }
 
 model Account {
@@ -55,6 +91,7 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -63,6 +100,31 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// VA-105 · 3: "Olvidé mi contraseña". Se guarda solo el hash (SHA-256) del token; vence en 1 hora,
+// es de un solo uso y pedir uno nuevo invalida los anteriores (usedAt).
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// VA-105 · 3: límite de pedidos (por email y por IP, guardados como hash). Se reutiliza para otros límites.
+model RateLimitEvent {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
 }
 
 model VerificationToken {
@@ -77,10 +139,27 @@ model Plan {
   id                      String           @id @default(cuid())
   name                    String
   type                    PlanType
+  // VA-152/VA-166: nivel del plan (Base, Pro o Broker). null = plan del modelo anterior (packs o
+  // "Pago de prueba"), que queda archivado porque tiene compras. Base y Pro: aircraftListingsCount y
+  // sparePartsListingsCount son el CUPO de avisos activos al mismo tiempo. Broker (BUSINESS): 3 filas
+  // (solo aviones, solo repuestos o ambos ilimitados); lo que no es ilimitado tiene el cupo de Base.
+  tier                    PlanTier?
+  // VA-166: precio real (el que se cobra, "Promo de lanzamiento") y precio tachado (solo se muestra).
   price                   Decimal          @db.Decimal(12, 2)
+  listPrice               Decimal?         @db.Decimal(12, 2)
   savingsPercent          Int?
   usageDescription        String?
   includesVerifiedBadge   Boolean          @default(false)
+  // VA-166: beneficios según la grilla de los socios (interruptores del admin).
+  // Republicaciones (VA-167): por año (Base 2, Pro 5) o "Republicar todas" cada N días (Broker: 30).
+  republishesPerYear      Int              @default(0)
+  republishAllEveryDays   Int?
+  // Destacadas (VA-168), Página VA (VA-169: ninguna, banner del Pro o completa del Broker), detalles
+  // personalizados (VA-170) y nivel de métricas (VA-171).
+  includesFeatured        Boolean          @default(false)
+  vaPageLevel             VaPageLevel      @default(NONE)
+  includesCustomDetail    Boolean          @default(false)
+  metricsLevel            MetricsLevel     @default(BASIC)
   isActive                Boolean          @default(true)
   aircraftListingsCount   Int              @default(0)
   sparePartsListingsCount Int              @default(0)
@@ -88,44 +167,236 @@ model Plan {
   billingType             PlanBillingType  @default(ONE_TIME)
   isUnlimitedAircraft     Boolean          @default(false)
   isUnlimitedSpareParts   Boolean          @default(false)
+  // VA-84: hangares, con el mismo patrón que aeronaves y repuestos.
+  hangarListingsCount     Int              @default(0)
+  isUnlimitedHangars      Boolean          @default(false)
+  showInHangarsTab        Boolean          @default(false)
+  // VA-80: lo que se muestra en /plans (la lógica usa los campos de arriba).
+  currency                String           @default("ARS")
+  description             String?
+  features                String[]         @default([])
+  badge                   String?
+  isPopular               Boolean          @default(false)
+  showInAircraftTab       Boolean          @default(false)
+  showInPartsTab          Boolean          @default(false)
+  sortOrder               Int              @default(0)
+  // VA-80: archivado = fuera de /plans y del alta, pero conserva compras y suscripciones.
+  archivedAt              DateTime?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @default(now()) @updatedAt
   purchases               Purchase[]
   subscriptions           Subscription[]
 }
 
+// VA-59: precio por menor de publicar un avión o un repuesto, editable desde /admin/prices.
+// Una fila por tipo. Lo que se cobre se lee siempre de acá en el servidor (Fase 6).
+model ListingPrice {
+  kind      ListingKind @id
+  amount    Decimal     @db.Decimal(12, 2)
+  currency  String      @default("ARS")
+  updatedAt DateTime    @updatedAt
+}
+
+// VA-59: historial de cambios de precio (quién, cuándo, de cuánto a cuánto).
+model ListingPriceChange {
+  id             String      @id @default(cuid())
+  kind           ListingKind
+  previousAmount Decimal     @db.Decimal(12, 2)
+  newAmount      Decimal     @db.Decimal(12, 2)
+  currency       String      @default("ARS")
+  adminId        String?
+  admin          User?       @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  createdAt      DateTime    @default(now())
+
+  @@index([kind, createdAt])
+}
+
+// VA-85: guías de /services/guides, editables desde /admin/guides. Solo las PUBLISHED se ven en
+// el sitio, el sitemap y el JSON-LD; las DRAFT dan 404 al público y el admin las ve en la vista previa.
+model Guide {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  excerpt         String
+  audience        GuideAudience
+  // Nombre de un ícono de lucide (de la lista de lib/guide-icons.ts).
+  icon            String
+  metaDescription String
+  // [{ heading, id?, paragraphs[], bullets[], links[{ label, href }] }]
+  sections        Json
+  // Fuente oficial con link visible ({ label, href }) y botones al pie ([{ label, href }]).
+  source          Json?
+  cta             Json          @default("[]")
+  // El glosario se muestra como lista de definiciones y publica DefinedTermSet.
+  isGlossary      Boolean       @default(false)
+  status          GuideStatus   @default(DRAFT)
+  order           Int           @default(0)
+  reviewedBy      String?
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status, order])
+}
+
+// VA-84: hangares (alquiler de espacio, de hangar completo y venta). Mismos estados y vencimiento que
+// las aeronaves. Puede ofrecerse en venta, en alquiler o las dos cosas (al menos una): cada una con
+// su precio y moneda; el alquiler, además, con su período. Precio vacío con la opción marcada =
+// "a convenir".
+model Hangar {
+  id               String               @id @default(cuid())
+  sellerId         String
+  title            String
+  description      String
+  // Ubicación
+  airfieldName     String
+  icaoCode         String?
+  city             String
+  province         String
+  latitude         Float?
+  longitude        Float?
+  // Para asociarlo al futuro directorio de pistas (nulo por ahora).
+  airfieldId       String?
+  // Medidas en metros (puerta obligatoria) y superficie en m²
+  doorWidth        Float
+  doorHeight       Float
+  interiorWidth    Float?
+  interiorDepth    Float?
+  area             Float?
+  // Capacidad y servicios
+  spaceType        HangarSpaceType?
+  spots            Int?
+  aircraftTypes    HangarAircraftType[]
+  services         HangarService[]
+  // Venta
+  offersSale       Boolean              @default(false)
+  salePrice        Decimal?             @db.Decimal(14, 2)
+  saleCurrency     ListingCurrency      @default(USD)
+  // Alquiler
+  offersRent       Boolean              @default(false)
+  rentalType       HangarRentalType?
+  rentPrice        Decimal?             @db.Decimal(12, 2)
+  rentCurrency     ListingCurrency      @default(ARS)
+  rentPeriod       HangarRentPeriod?
+  negotiable       Boolean              @default(false)
+  // Disponibilidad: null = disponible ahora
+  availableFrom    DateTime?
+  // Estado y vencimiento (igual que Aircraft)
+  status           AircraftStatus       @default(PENDING_PAYMENT)
+  listingStartsAt  DateTime?
+  listingExpiresAt DateTime?
+  // VA-95: destacado pago o incluido en el plan, vigente hasta esta fecha.
+  featuredUntil    DateTime?
+  purchaseId       String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  seller           User                 @relation(fields: [sellerId], references: [id])
+  purchase         Purchase?            @relation(fields: [purchaseId], references: [id])
+  images           HangarImage[]
+  favorites        Favorite[]
+  questions        Question[]
+  reports          Report[]
+  analyticsEvents  AnalyticsEvent[]
+
+  @@index([status, listingExpiresAt, createdAt])
+  @@index([province, city])
+  @@index([doorWidth])
+  @@index([salePrice])
+  @@index([rentPrice])
+  @@index([sellerId])
+  @@index([featuredUntil])
+}
+
+model HangarImage {
+  id       String @id @default(cuid())
+  hangarId String
+  url      String
+  order    Int    @default(0)
+  hangar   Hangar @relation(fields: [hangarId], references: [id], onDelete: Cascade)
+
+  @@index([hangarId, order])
+}
+
 model Purchase {
-  id             String        @id @default(cuid())
-  userId         String
-  planId         String
-  mpPreferenceId String?
-  paymentStatus  PaymentStatus @default(PENDING)
-  createdAt      DateTime      @default(now())
-  couponId       String?
-  discountAmount Decimal       @default(0) @db.Decimal(12, 2)
-  finalPrice     Decimal       @default(0) @db.Decimal(12, 2)
-  originalPrice  Decimal       @default(0) @db.Decimal(12, 2)
-  adBanners      AdBanner[]
-  aircrafts      Aircraft[]
-  couponUsage    CouponUsage?
-  coupon         Coupon?       @relation(fields: [couponId], references: [id])
-  plan           Plan          @relation(fields: [planId], references: [id])
-  user           User          @relation(fields: [userId], references: [id])
-  spareParts     SparePart[]
+  id                String           @id @default(cuid())
+  userId            String
+  // VA-92: opcional. Un aviso suelto se cobra al precio de ListingPrice (listingKind), sin Plan.
+  planId            String?
+  listingKind       ListingKind?
+  // Concepto que se cobra y se factura ("Publicación de aeronave – Plan 1 Avión").
+  description       String           @default("")
+  currency          String           @default("ARS")
+  mpPreferenceId    String?
+  paymentStatus     PaymentStatus    @default(PENDING)
+  // VA-92: cuándo se aprobó el pago y cuándo se entregó lo comprado. activatedAt hace idempotente
+  // la activación: se marca en la misma transacción que acredita el saldo o activa el aviso.
+  approvedAt        DateTime?
+  activatedAt       DateTime?
+  // Datos de facturación usados en esta compra (copia del BillingProfile en ese momento).
+  billingSnapshot   Json?
+  // VA-95: compra de un destacado: cuántos días y para qué aviso (tipo + id, sin FK para no duplicar
+  // la relación de la publicación).
+  featuredDays      Int?
+  featuredKind      ListingKind?
+  featuredListingId String?
+  // VA-105 (14/10): renovación paga de un aviso vencido (tipo + id, sin FK, igual que los destacados).
+  renewalKind       ListingKind?
+  renewalListingId  String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @default(now()) @updatedAt
+  couponId          String?
+  discountAmount    Decimal          @default(0) @db.Decimal(12, 2)
+  finalPrice        Decimal          @default(0) @db.Decimal(12, 2)
+  originalPrice     Decimal          @default(0) @db.Decimal(12, 2)
+  adBanners         AdBanner[]
+  aircrafts         Aircraft[]
+  couponUsage       CouponUsage?
+  coupon            Coupon?          @relation(fields: [couponId], references: [id])
+  plan              Plan?            @relation(fields: [planId], references: [id], onDelete: Restrict)
+  user              User             @relation(fields: [userId], references: [id])
+  spareParts        SparePart[]
+  hangars           Hangar[]
+  payments          Payment[]
+  creditLots        CreditLot[]
+  listingFundings   ListingFunding[]
+
+  @@index([userId, createdAt])
+  @@index([paymentStatus, createdAt])
+  // VA-105: reservas de cupón (compras pendientes con cupón) al validar el límite de usos.
+  @@index([couponId, paymentStatus])
 }
 
 model Subscription {
-  id                   String             @id @default(cuid())
-  userId               String             @unique
-  planId               String
-  status               SubscriptionStatus @default(ACTIVE)
-  mpSubscriptionId     String?            @unique
-  stripeSubscriptionId String?            @unique
-  currentPeriodStart   DateTime
-  currentPeriodEnd     DateTime
-  cancelAtPeriodEnd    Boolean            @default(false)
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-  plan                 Plan               @relation(fields: [planId], references: [id])
-  user                 User               @relation(fields: [userId], references: [id])
+  id                      String             @id @default(cuid())
+  userId                  String             @unique
+  planId                  String
+  status                  SubscriptionStatus @default(ACTIVE)
+  mpSubscriptionId        String?            @unique
+  stripeSubscriptionId    String?            @unique
+  currentPeriodStart      DateTime
+  currentPeriodEnd        DateTime
+  cancelAtPeriodEnd       Boolean            @default(false)
+  // VA-92: MANUAL = cortesía asignada desde el admin: sin Mercado Pago, no se cobra ni se renueva y no
+  // cuenta en ingresos ni en los KPIs (VA-102).
+  source                  SubscriptionSource @default(MERCADOPAGO)
+  grantedById             String?
+  note                    String?
+  // VA-92: estado del preapproval en Mercado Pago (pending, authorized, paused, cancelled) y
+  // gracia tras un cobro rechazado: vencida graceUntil, pierde los beneficios.
+  mpStatus                String?
+  graceUntil              DateTime?
+  lastPaymentAt           DateTime?
+  // VA-121: cambio de plan inmediato (sin prorrateo). El preapproval del plan nuevo queda acá hasta
+  // que Mercado Pago aprueba su primer cobro; recién ahí reemplaza al actual (que se cancela en MP).
+  // Si el usuario no completa el pago, sigue con su plan de siempre.
+  pendingPlanId           String?
+  pendingMpSubscriptionId String?            @unique
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  plan                    Plan               @relation(fields: [planId], references: [id])
+  user                    User               @relation(fields: [userId], references: [id])
+  payments                Payment[]
+  listingFundings         ListingFunding[]
 }
 
 model AdBanner {
@@ -151,17 +422,26 @@ model AircraftBrand {
   logoUrl   String?
   aircrafts Aircraft[]
   models    AircraftModel[]
+  // VA-190: cargada por un usuario ("Otra marca"): cuándo y desde qué aviso; el admin la puede ocultar.
+  userCreatedAt    DateTime?
+  sourceAircraftId String?
+  hidden           Boolean   @default(false)
 }
 
 model AircraftModel {
   id                String             @id @default(cuid())
   brandId           String
   name              String
-  defaultCategoryId String?
+  // VA-165: categoría recomendada (era defaultCategoryId, VA-153): el formulario la propone y se puede cambiar.
+  recommendedCategoryId String?
   aircrafts         Aircraft[]
   brand             AircraftBrand      @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  AircraftCategory  AircraftCategory?  @relation(fields: [defaultCategoryId], references: [id])
+  AircraftCategory  AircraftCategory?  @relation(fields: [recommendedCategoryId], references: [id])
   variants          AircraftSubModel[]
+  // VA-190: cargado por un usuario ("Otro modelo"), como en AircraftBrand.
+  userCreatedAt     DateTime?
+  sourceAircraftId  String?
+  hidden            Boolean            @default(false)
 
   @@unique([brandId, name])
 }
@@ -192,14 +472,29 @@ model Aircraft {
   title            String
   customBrand      String?
   year             Int
-  totalTimeHours   Int
+  totalTimeHours   Int?
   price            Decimal?            @db.Decimal(12, 2)
   city             String
   province         String
-  status           AircraftStatus      @default(PENDING_PAYMENT)
+  // VA-152: sin vencimiento; ACTIVE cuenta en el cupo (lib/quota.ts).
+  status           AircraftStatus      @default(ACTIVE)
   listingStartsAt  DateTime?
-  listingExpiresAt DateTime?
+  // VA-95: destacado pago o incluido en el plan, vigente hasta esta fecha.
+  featuredUntil    DateTime?
   createdAt        DateTime            @default(now())
+  // VA-167: última vez que se publicó (alta o republicación). Ordena "Más recientes" y "Últimas
+  // publicaciones"; el detalle muestra "Actualizado el …" si es posterior al alta.
+  lastPublishedAt  DateTime            @default(now())
+  // VA-183: venta. soldViaVA null = no respondió; precio declarado o, si no lo cargó, el publicado al vender;
+  // soldArsPerUsd = cotización del día de la venta (lib/dolar) para sumar en una sola moneda.
+  soldAt            DateTime?
+  soldViaVA         Boolean?
+  soldPrice         Decimal?         @db.Decimal(12, 2)
+  soldCurrency      ListingCurrency?
+  soldPriceDeclared Boolean          @default(false)
+  soldArsPerUsd     Decimal?         @db.Decimal(12, 2)
+  // VA-170: link a un video de YouTube (solo el texto; el reproductor se carga al tocarlo).
+  youtubeUrl       String?             @db.VarChar(100)
   updatedAt        DateTime            @updatedAt
   purchaseId       String?
   description      String
@@ -216,7 +511,10 @@ model Aircraft {
   financing        Boolean             @default(false)
   trade            Boolean             @default(false)
   rent             Boolean             @default(false)
-  avDescription    String
+  negotiable       Boolean             @default(false)
+  extraEquipment   String?
+  agEquipment      String?
+  avDescription    String?
   avAaptoifr       Boolean             @default(false)
   avAutopilot      Boolean             @default(false)
   brandId          String?
@@ -239,13 +537,22 @@ model Aircraft {
   leads            Lead[]
   questions        Question[]
   reports          Report[]
+  republications   Republication[]
   tags             Tag[]               @relation("AircraftToTag")
+  // VA-83: centroide de la localidad (API Georef), para el mapa de zona aproximada.
+  latitude         Float?
+  longitude        Float?
 
   @@index([price])
-  @@index([status])
+  @@index([status, createdAt])
+  @@index([status, lastPublishedAt])
+  @@index([status, soldAt])
   @@index([brandId, modelId])
   @@index([province, city])
   @@index([year])
+  @@index([sellerId])
+  @@index([featuredUntil])
+  @@index([categoryId])
 }
 
 model AircraftImage {
@@ -254,6 +561,8 @@ model AircraftImage {
   url        String
   order      Int      @default(0)
   aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId, order])
 }
 
 model AircraftDocument {
@@ -263,27 +572,34 @@ model AircraftDocument {
   name       String
   uploadedAt DateTime @default(now())
   aircraft   Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId])
 }
 
 model AircraftEngine {
   id          String   @id @default(cuid())
   aircraftId  String
   engineHours Int?
-  TBO         Int
-  DURG        Int?
+  TBO         Int?
+  horsepower  Int?
   brand       String?
   model       String?
   description String?
   aircraft    Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId])
 }
 
 model AircraftPropeller {
   id             String   @id @default(cuid())
   aircraftId     String
   propellerHours Int?
+  brand          String?
   model          String?
   description    String?
   aircraft       Aircraft @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+
+  @@index([aircraftId])
 }
 
 model Category {
@@ -370,11 +686,26 @@ model SparePart {
   price            Decimal?            @db.Decimal(12, 2)
   city             String
   province         String
-  status           SparePartStatus     @default(PENDING_PAYMENT)
+  // VA-152: sin vencimiento; ACTIVE cuenta en el cupo (lib/quota.ts).
+  status           SparePartStatus     @default(ACTIVE)
   condition        SparepartCondition  @default(USADO)
   listingStartsAt  DateTime?
-  listingExpiresAt DateTime?
+  // VA-95: destacado pago o incluido en el plan, vigente hasta esta fecha.
+  featuredUntil    DateTime?
   createdAt        DateTime            @default(now())
+  // VA-167: última vez que se publicó (alta o republicación). Ordena "Más recientes" y "Últimas
+  // publicaciones"; el detalle muestra "Actualizado el …" si es posterior al alta.
+  lastPublishedAt  DateTime            @default(now())
+  // VA-183: venta. soldViaVA null = no respondió; precio declarado o, si no lo cargó, el publicado al vender;
+  // soldArsPerUsd = cotización del día de la venta (lib/dolar) para sumar en una sola moneda.
+  soldAt            DateTime?
+  soldViaVA         Boolean?
+  soldPrice         Decimal?         @db.Decimal(12, 2)
+  soldCurrency      ListingCurrency?
+  soldPriceDeclared Boolean          @default(false)
+  soldArsPerUsd     Decimal?         @db.Decimal(12, 2)
+  // VA-170: link a un video de YouTube (solo el texto; el reproductor se carga al tocarlo).
+  youtubeUrl       String?             @db.VarChar(100)
   updatedAt        DateTime            @updatedAt
   purchaseId       String?
   description      String
@@ -389,15 +720,24 @@ model SparePart {
   favorites        Favorite[]
   questions        Question[]
   reports          Report[]
+  republications   Republication[]
   category         Category            @relation(fields: [categoryId], references: [id])
   purchase         Purchase?           @relation(fields: [purchaseId], references: [id])
   seller           User                @relation(fields: [sellerId], references: [id])
   images           SparePartImage[]
   leads            SparePartLead[]
+  // VA-83: centroide de la localidad (API Georef), para el mapa de zona aproximada.
+  latitude         Float?
+  longitude        Float?
 
   @@index([price])
-  @@index([status])
+  @@index([status, inPesos, createdAt])
+  @@index([status, lastPublishedAt])
+  @@index([status, soldAt])
   @@index([province, city])
+  @@index([sellerId])
+  @@index([featuredUntil])
+  @@index([categoryId])
 }
 
 model SparePartImage {
@@ -406,6 +746,8 @@ model SparePartImage {
   url         String
   order       Int       @default(0)
   sparePart   SparePart @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+
+  @@index([sparePartId, order])
 }
 
 model Lead {
@@ -417,6 +759,8 @@ model Lead {
   message    String
   createdAt  DateTime @default(now())
   aircraft   Aircraft @relation(fields: [aircraftId], references: [id])
+
+  @@index([aircraftId])
 }
 
 model SparePartLead {
@@ -428,6 +772,8 @@ model SparePartLead {
   message     String
   createdAt   DateTime  @default(now())
   sparePart   SparePart @relation(fields: [sparePartId], references: [id])
+
+  @@index([sparePartId])
 }
 
 model Favorite {
@@ -437,9 +783,19 @@ model Favorite {
   sparePartId String?
   aircraft    Aircraft?  @relation(fields: [aircraftId], references: [id])
   sparePart   SparePart? @relation(fields: [sparePartId], references: [id])
+  // VA-84
+  hangarId    String?
+  hangar      Hangar?    @relation(fields: [hangarId], references: [id], onDelete: Cascade)
   user        User       @relation(fields: [userId], references: [id])
+  // VA-151: para "Favoritos nuevos" del panel de métricas. Los anteriores quedan con 1/1/2026.
+  createdAt   DateTime   @default(now())
 
-  @@unique([userId, aircraftId, sparePartId])
+  // VA-16: el unique de 3 columnas no evitaba duplicados (en Postgres NULL <> NULL, y siempre
+  // una de las dos columnas es NULL). Con dos índices de 2 columnas, los NULL no chocan entre sí
+  // pero dos favoritos del mismo avión (o repuesto) para el mismo usuario sí.
+  @@unique([userId, aircraftId])
+  @@unique([userId, sparePartId])
+  @@unique([userId, hangarId])
 }
 
 model Report {
@@ -454,7 +810,10 @@ model Report {
   userId        String?
   aircraft      Aircraft?    @relation(fields: [aircraftId], references: [id])
   sparePart     SparePart?   @relation(fields: [sparePartId], references: [id])
-  user          User?         @relation(fields: [userId], references: [id])
+  // VA-84
+  hangarId      String?
+  hangar        Hangar?      @relation(fields: [hangarId], references: [id], onDelete: Cascade)
+  user          User?        @relation(fields: [userId], references: [id])
 }
 
 model Tag {
@@ -475,35 +834,50 @@ model Question {
   createdAt   DateTime   @default(now())
   aircraft    Aircraft?  @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
   sparePart   SparePart? @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+  // VA-84
+  hangarId    String?
+  hangar      Hangar?    @relation(fields: [hangarId], references: [id], onDelete: Cascade)
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([aircraftId])
   @@index([sparePartId])
+  @@index([hangarId])
   @@index([userId])
 }
 
 model AnalyticsEvent {
-  id          String             @id @default(cuid())
-  eventType   AnalyticsEventType
-  userId      String?
-  anonymousId String?
-  aircraftId  String?
-  sparePartId String?
-  metadata    Json               @default("{}")
-  referrer    String?
-  utmSource   String?
-  utmMedium   String?
-  utmCampaign String?
-  createdAt   DateTime           @default(now())
-  aircraft    Aircraft?          @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
-  sparePart   SparePart?         @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
-  user        User?              @relation(fields: [userId], references: [id])
+  id            String             @id @default(cuid())
+  eventType     AnalyticsEventType
+  userId        String?
+  anonymousId   String?
+  aircraftId    String?
+  sparePartId   String?
+  metadata      Json               @default("{}")
+  referrer      String?
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  createdAt     DateTime           @default(now())
+  aircraft      Aircraft?          @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+  sparePart     SparePart?         @relation(fields: [sparePartId], references: [id], onDelete: Cascade)
+  // VA-84
+  hangarId      String?
+  hangar        Hangar?            @relation(fields: [hangarId], references: [id], onDelete: Cascade)
+  user          User?              @relation("AnalyticsEventUser", fields: [userId], references: [id])
+  // VA-151: perfil visitado (evento PROFILE_VIEW).
+  profileUserId String?
+  profileUser   User?              @relation("AnalyticsEventProfile", fields: [profileUserId], references: [id], onDelete: Cascade)
+  // VA-171: provincia aproximada del visitante (código ISO 3166-2:AR del encabezado de Vercel; sin la IP).
+  region        String?            @db.VarChar(8)
 
   @@index([eventType, createdAt])
+  @@index([profileUserId, eventType, createdAt])
   @@index([aircraftId, eventType])
   @@index([sparePartId, eventType])
+  @@index([hangarId, eventType])
   @@index([userId])
   @@index([anonymousId])
+  @@index([createdAt])
 }
 
 model Coupon {
@@ -538,6 +912,7 @@ model CouponUsage {
   User        User      @relation(fields: [userId], references: [id])
 
   @@index([couponId, userId])
+  @@index([userId])
 }
 
 enum CouponType {
@@ -553,9 +928,74 @@ enum DiscountType {
 
 enum CouponScope {
   ALL
+  // VA-95
+  FEATURED
   AIRCRAFT
   SPARE_PART
+  HANGAR
   AD_BANNER
+}
+
+enum GuideAudience {
+  comprador
+  vendedor
+  todos
+}
+
+enum GuideStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum HangarRentalType {
+  SHARED_SPACE
+  WHOLE_HANGAR
+}
+
+enum HangarSpaceType {
+  INDIVIDUAL
+  SHARED
+  PLATFORM
+}
+
+enum HangarRentPeriod {
+  NIGHT
+  DAY
+  MONTH
+  YEAR
+}
+
+enum HangarAircraftType {
+  SINGLE_ENGINE
+  TWIN_ENGINE
+  HELICOPTER
+  LIGHT_JET
+  GLIDER
+  ULTRALIGHT
+}
+
+enum HangarService {
+  ELECTRICITY
+  WATER
+  BATHROOM
+  OFFICE_STORAGE
+  SECURITY
+  ACCESS_24H
+  FUEL
+  WORKSHOP
+  FLIGHT_SCHOOL
+  LIGHTED_RUNWAY
+}
+
+enum ListingCurrency {
+  ARS
+  USD
+}
+
+enum ListingKind {
+  AIRCRAFT
+  SPARE_PART
+  HANGAR
 }
 
 enum UserType {
@@ -567,6 +1007,7 @@ enum UserType {
 enum PlanType {
   AIRCRAFT_PACK
   SPARE_PART_PACK
+  HANGAR_PACK
   AD_BANNER
   SUBSCRIPTION
 }
@@ -585,6 +1026,11 @@ enum PaymentStatus {
   PENDING
   APPROVED
   REJECTED
+  // VA-92
+  IN_PROCESS
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
 }
 
 enum SubscriptionStatus {
@@ -592,6 +1038,10 @@ enum SubscriptionStatus {
   PAUSED
   CANCELLED
   EXPIRED
+  // VA-92: alta iniciada, esperando que el usuario autorice el débito en Mercado Pago.
+  PENDING
+  // VA-92: cobro rechazado, en período de gracia (Subscription.graceUntil).
+  PAST_DUE
 }
 
 enum AdBannerStatus {
@@ -619,19 +1069,23 @@ enum SparepartCondition {
   REPARAR
 }
 
+// VA-154: MODERATED = pausado por moderación (desde un reporte). Solo el admin lo reactiva.
 enum AircraftStatus {
   ACTIVE
   PAUSED
   SOLD
   EXPIRED
   PENDING_PAYMENT
+  MODERATED
 }
 
 enum SparePartStatus {
-  PENDING_PAYMENT
   ACTIVE
-  EXPIRED
   SOLD
+  // VA-152: pausado por el dueño (o por el sistema al bajar de plan). No cuenta en el cupo.
+  PAUSED
+  // VA-154: pausado por moderación (desde un reporte). Solo el admin lo reactiva; no cuenta en el cupo.
+  MODERATED
 }
 
 enum FilterType {
@@ -683,5 +1137,431 @@ enum AnalyticsEventType {
 
   // Users
   USER_REGISTERED
+  // VA-151: visita al perfil de un vendedor (Página VA)
+  PROFILE_VIEW
+  // VA-171: se agregó un aviso al comparador.
+  COMPARE_ADD
+  // VA-171: clic a un aviso desde la Página VA de su vendedor.
+  PROFILE_LISTING_CLICK
 }
 
+// --------------------------------------------------------------------------- VA-92 · Pagos y facturación
+
+// Un pago de Mercado Pago (único o cobro de una suscripción). Se crea o actualiza siempre con lo que
+// devuelve la API de MP (nunca con el payload del webhook). mpPaymentId único: el mismo pago no se
+// registra ni se procesa dos veces.
+model Payment {
+  id                    String        @id @default(cuid())
+  provider              String        @default("MERCADOPAGO")
+  mpPaymentId           String        @unique
+  // Estado tal como lo informa MP: pending, approved, authorized, in_process, in_mediation,
+  // rejected, cancelled, refunded, charged_back.
+  status                String
+  statusDetail          String?
+  amount                Decimal       @db.Decimal(12, 2)
+  refundedAmount        Decimal       @default(0) @db.Decimal(12, 2)
+  currency              String        @default("ARS")
+  method                String?
+  paymentType           String?
+  approvedAt            DateTime?
+  purchaseId            String?
+  subscriptionId        String?
+  // VA-105: live_mode que informa la API de MP y si es un pago de prueba (credenciales o cuentas de
+  // prueba). Un pago de prueba nunca genera una factura real ni cuenta en el tope ni en los KPIs.
+  liveMode              Boolean?
+  isTest                Boolean       @default(false)
+  // VA-125: botón de arrepentimiento (hasta 10 días del pago): cuándo lo pidió el usuario.
+  withdrawalRequestedAt DateTime?
+  raw                   Json?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  purchase              Purchase?     @relation(fields: [purchaseId], references: [id])
+  subscription          Subscription? @relation(fields: [subscriptionId], references: [id])
+  invoices              Invoice[]
+
+  @@index([purchaseId])
+  @@index([subscriptionId])
+  @@index([status, createdAt])
+}
+
+// Cada notificación recibida, con firma válida o no. Se guarda antes de procesar y se responde 200
+// rápido; el procesamiento deja el resultado acá (status, error, attempts).
+model WebhookEvent {
+  id             String        @id @default(cuid())
+  provider       String        @default("MERCADOPAGO")
+  topic          String
+  action         String?
+  externalId     String?
+  requestId      String?
+  signatureValid Boolean
+  payload        Json
+  status         WebhookStatus @default(RECEIVED)
+  error          String?       @db.Text
+  attempts       Int           @default(0)
+  receivedAt     DateTime      @default(now())
+  processedAt    DateTime?
+
+  @@index([provider, externalId])
+  @@index([status, receivedAt])
+}
+
+// Factura C o nota de crédito C emitida con TusFacturasAPP. TusFacturas no controla el
+// external_reference repetido: la unicidad la garantiza la base.
+model Invoice {
+  id                String        @id @default(cuid())
+  kind              InvoiceKind
+  status            InvoiceStatus @default(PENDING)
+  paymentId         String
+  // = paymentId solo en las facturas (null en las notas de crédito): una factura por pago.
+  invoicedPaymentId String?       @unique
+  // Notas de crédito: el reembolso de MP que la originó (una por reembolso, también los parciales)
+  // o el id de la anulación manual.
+  refundRef         String?       @unique
+  originalInvoiceId String?
+  pointOfSale       Int?
+  number            Int?
+  cae               String?
+  caeExpiresAt      DateTime?
+  total             Decimal       @db.Decimal(12, 2)
+  periodFrom        DateTime
+  periodTo          DateTime
+  description       String
+  // Datos del receptor con los que se emitió (copia de los datos de facturación de la compra).
+  receiver          Json
+  arcaObservations  String?       @db.Text
+  errors            String?       @db.Text
+  attempts          Int           @default(0)
+  nextAttemptAt     DateTime?
+  issuedAt          DateTime?
+  // Ruta en el bucket privado de Supabase (el PDF de TusFacturas es temporal).
+  pdfPath           String?
+  // VA-105: cómo se procesó (production, development o simulated) y el JSON enviado (o que se habría
+  // enviado) a TusFacturas, sin credenciales.
+  mode              String?
+  requestPayload    Json?
+  // VA-105: "Descartar (prueba interna)": quién y cuándo.
+  skippedAt         DateTime?
+  skippedById       String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  payment           Payment       @relation(fields: [paymentId], references: [id])
+  originalInvoice   Invoice?      @relation("CreditNotes", fields: [originalInvoiceId], references: [id])
+  creditNotes       Invoice[]     @relation("CreditNotes")
+
+  @@unique([kind, pointOfSale, number])
+  @@index([status, nextAttemptAt])
+  @@index([issuedAt])
+  @@index([paymentId])
+}
+
+// Datos de facturación del usuario (se completan al comprar y se reutilizan).
+model BillingProfile {
+  id           String           @id @default(cuid())
+  userId       String           @unique
+  kind         BillingPartyKind
+  // DNI (consumidor final, obligatorio desde BillingSettings.dniRequiredFrom) o CUIT (empresa).
+  docType      String?
+  docNumber    String?
+  name         String
+  // Condición frente al IVA con los códigos de TusFacturas: CF, M (monotributo), RI, E (exento).
+  ivaCondition String           @default("CF")
+  email        String
+  address      String?
+  province     String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Configuración de facturación editable desde el admin (una sola fila, id "default").
+model BillingSettings {
+  id                    String    @id @default("default")
+  // Tope anual de la categoría del monotributo (solo indicador, no bloquea) y umbral de alerta.
+  monotributoAnnualCap  Decimal?  @db.Decimal(14, 2)
+  alertThresholdPercent Int       @default(80)
+  lastCapAlertAt        DateTime?
+  // Desde qué monto el consumidor final tiene que informar DNI (regla de ARCA, configurable).
+  dniRequiredFrom       Decimal   @default(10000000) @db.Decimal(14, 2)
+  // Días de gracia de una suscripción con un cobro rechazado.
+  graceDays             Int       @default(7)
+  // Reintentos de una factura con error antes de avisar al admin.
+  maxInvoiceAttempts    Int       @default(5)
+  updatedAt             DateTime  @default(now()) @updatedAt
+}
+
+enum WebhookStatus {
+  RECEIVED
+  PROCESSED
+  IGNORED
+  REJECTED
+  ERROR
+}
+
+enum InvoiceKind {
+  FACTURA_C
+  NOTA_CREDITO_C
+}
+
+enum InvoiceStatus {
+  PENDING
+  ISSUED
+  ERROR
+  // VA-105: no se llamó a TusFacturas en producción (local/Preview o pago de prueba): se registra el
+  // JSON que se habría enviado, sin CAE.
+  ISSUED_SIMULATED
+  // VA-105: descartada a mano por un admin (por ejemplo, el pago real de prueba). Nunca se emite.
+  SKIPPED
+}
+
+enum BillingPartyKind {
+  CONSUMIDOR_FINAL
+  EMPRESA
+}
+
+enum SubscriptionSource {
+  MERCADOPAGO
+  MANUAL
+}
+
+
+// VA-122: sugerencias del formulario de /about. Avisa por mail a SUPPORT_EMAIL y se ven en
+// /admin/suggestions. userId solo si la mandó alguien con sesión.
+model Suggestion {
+  id        String    @id @default(cuid())
+  message   String
+  name      String?
+  email     String?
+  userId    String?
+  handledAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([createdAt])
+}
+
+// VA-150: saldo de publicaciones por lote (de dónde salió cada crédito). User.*ListingsBalance queda
+// como total (se actualiza en la misma transacción). Orden de consumo en lib/balances.ts:
+// suscripción vigente → LAUNCH → PACK del más viejo al más nuevo (LEGACY y ADMIN, junto con LAUNCH).
+enum CreditSource {
+  LAUNCH
+  PACK
+  ADMIN
+  // Saldo que ya existía antes de VA-150 (no se sabe de qué compra salió): no se revierte.
+  LEGACY
+}
+
+model CreditLot {
+  id         String           @id @default(cuid())
+  userId     String
+  kind       ListingKind
+  source     CreditSource
+  // PACK: la compra que lo dio.
+  purchaseId String?
+  granted    Int
+  remaining  Int
+  createdAt  DateTime         @default(now())
+  // Arrepentimiento o reembolso del pack: se le quita lo que no se usó.
+  revokedAt  DateTime?
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purchase   Purchase?        @relation(fields: [purchaseId], references: [id], onDelete: SetNull)
+  fundings   ListingFunding[]
+
+  @@index([userId, kind, remaining])
+  @@index([purchaseId])
+}
+
+enum FundingSource {
+  LAUNCH_BALANCE
+  PACK
+  SUBSCRIPTION
+  SINGLE_PAYMENT
+  COUPON_100
+  ADMIN
+  LEGACY_BALANCE
+}
+
+enum FundingReason {
+  PUBLISH
+  RENEWAL
+  FEATURED
+}
+
+// VA-150: con qué se pagó cada publicación, renovación o destacado. Al arrepentirse (o con un
+// reembolso o contracargo) se revierte exactamente lo que salió de ese pago. Los avisos anteriores a
+// VA-150 no tienen fila: no se tocan.
+model ListingFunding {
+  id                    String        @id @default(cuid())
+  userId                String
+  listingKind           ListingKind
+  listingId             String
+  reason                FundingReason
+  source                FundingSource
+  purchaseId            String?
+  subscriptionId        String?
+  creditLotId           String?
+  // Renovación: vencimiento que tenía antes (para volver a él). Destacado: hasta cuándo estaba.
+  previousExpiresAt     DateTime?
+  previousFeaturedUntil DateTime?
+  createdAt             DateTime      @default(now())
+  revertedAt            DateTime?
+  // Pago de Mercado Pago cuyo reembolso lo revirtió.
+  revertedPaymentId     String?
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purchase              Purchase?     @relation(fields: [purchaseId], references: [id], onDelete: SetNull)
+  subscription          Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  creditLot             CreditLot?    @relation(fields: [creditLotId], references: [id], onDelete: SetNull)
+
+  @@index([purchaseId])
+  @@index([subscriptionId, createdAt])
+  @@index([creditLotId])
+  @@index([listingKind, listingId])
+  @@index([revertedPaymentId])
+}
+
+// VA-152: niveles de los planes de cupos.
+enum PlanTier {
+  // VA-166: el plan gratis (una sola fila, precio 0, no se cobra).
+  BASE
+  PRO
+  // "Broker / Empresa" (antes "Empresarial").
+  BUSINESS
+}
+
+// VA-166: Página VA del plan.
+enum VaPageLevel {
+  NONE
+  // La Página VA del Pro (portada o banner, logo, nombre comercial y WhatsApp).
+  BANNER
+  // La del Broker, con secciones armables (VA-169).
+  FULL
+}
+
+// VA-166/VA-171: nivel de métricas del plan.
+enum MetricsLevel {
+  BASIC
+  PRO
+  FULL
+}
+
+// VA-166: filas de la grilla de planes (/plans y /admin/plans). Las de sistema (systemKey) muestran
+// valores que salen de las columnas de Plan y no se borran; las propias guardan el texto de cada celda.
+model PlanGridRow {
+  id        String   @id @default(cuid())
+  label     String
+  sortOrder Int      @default(0)
+  systemKey String?  @unique
+  // Filas propias: { BASE: { kind: "yes" | "no" | "text", text? }, PRO: …, BROKER: … }.
+  cells     Json     @default("{}")
+  updatedAt DateTime @updatedAt
+}
+
+// Ajustes globales de los planes (una sola fila, id "default"). VA-166: el cupo gratis pasó al plan
+// Base; queda la espera entre republicaciones del mismo aviso (VA-167).
+model QuotaSettings {
+  id                    String   @id @default("default")
+  republishCooldownDays Int      @default(7)
+  // VA-182: cuántas cuentas pueden ser fundadoras.
+  foundingMembersLimit  Int      @default(15)
+  updatedById           String?
+  updatedAt          DateTime @default(now()) @updatedAt
+}
+
+// VA-154: acciones de moderación sobre un aviso.
+enum ModerationActionType {
+  // El admin lo pausa indefinidamente (desde un reporte), con motivo.
+  PAUSE
+  // El dueño lo editó y pide revisión.
+  REVIEW_REQUESTED
+  // El admin lo reactiva (activo si hay cupo; si no, pausado común).
+  REACTIVATE
+  // El admin lo mantiene pausado, con un mensaje nuevo.
+  KEEP_PAUSED
+}
+
+// VA-154: historial de moderación por aviso (quién, cuándo, motivo). La pausa vigente es la última
+// acción de un aviso MODERATED; la cola "Revisiones pendientes" son los MODERATED cuya última acción es
+// REVIEW_REQUESTED. La ventana flotante del dueño sale para las acciones del admin (PAUSE, REACTIVATE,
+// KEEP_PAUSED) sin ownerAcknowledgedAt: una vez por acción, y vuelve si no la cierra.
+model ModerationAction {
+  id                  String               @id @default(cuid())
+  listingKind         ListingKind
+  listingId           String
+  action              ModerationActionType
+  // Motivo (PAUSE), mensaje (KEEP_PAUSED / REACTIVATE) o comentario del dueño (REVIEW_REQUESTED).
+  message             String?
+  ownerId             String
+  // Admin que actuó (null en REVIEW_REQUESTED, que lo pide el dueño).
+  adminId             String?
+  // Reporte que originó la pausa, si vino de uno.
+  reportId            String?
+  // El dueño cerró la ventana ("Entendido" o "Editar aviso").
+  ownerAcknowledgedAt DateTime?
+  // Se mandó el mail al dueño.
+  emailSentAt         DateTime?
+  createdAt           DateTime             @default(now())
+  owner               User                 @relation("ModerationOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  admin               User?                @relation("ModerationAdmin", fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([listingKind, listingId, createdAt])
+  @@index([ownerId, ownerAcknowledgedAt])
+  @@index([action, createdAt])
+}
+
+// VA-167: cada republicación de un aviso (vuelve a ponerlo primero en "Más recientes"). El saldo de Base y
+// Pro sale de contar las del año en curso; "Republicar todas" (Broker y admins) deja una fila por aviso
+// con bulk = true. No cambia el aviso ni su historial, solo lastPublishedAt.
+model Republication {
+  id          String     @id @default(cuid())
+  userId      String
+  aircraftId  String?
+  sparePartId String?
+  bulk        Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aircraft    Aircraft?  @relation(fields: [aircraftId], references: [id], onDelete: SetNull)
+  sparePart   SparePart? @relation(fields: [sparePartId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([aircraftId])
+  @@index([sparePartId])
+}
+
+// VA-169: Página VA completa del Broker (y admins): secciones armables (carrusel, grilla de avisos y texto),
+// publicadas y en borrador. Validadas con zod (lib/profile-page.ts). Si el plan baja, se guarda y no se muestra.
+model ProfilePage {
+  userId        String    @id
+  sections      Json      @default("[]")
+  draftSections Json?
+  publishedAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// VA-173: gastos fijos de la web (referencia para el admin: no factura ni paga nada).
+enum ExpenseFrequency {
+  MONTHLY
+  YEARLY
+}
+
+model FixedExpense {
+  id        String           @id @default(cuid())
+  name      String
+  amount    Decimal          @db.Decimal(12, 2)
+  // "ARS" o "USD"
+  currency  String           @default("ARS")
+  frequency ExpenseFrequency @default(MONTHLY)
+  since     DateTime
+  notes     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+// VA-173: tipo de cambio cargado a mano (dólar → pesos), con fecha. Vale el más reciente.
+model ExchangeRate {
+  id          String   @id @default(cuid())
+  usdToArs    Decimal  @db.Decimal(12, 2)
+  date        DateTime
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+}

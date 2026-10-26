@@ -1,0 +1,43 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "prod",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "next",
+        "start",
+        "-p",
+        "3001"
+      ],
+      "port": 3001
+    },
+    {
+      "name": "prod-local",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "process.env.NEXT_DIST_DIR=\".next-local\";process.env.AUTH_TRUST_HOST=\"true\";process.argv=[process.argv[0],\"next\",\"start\",\"-p\",\"3001\"];require(\"next/dist/bin/next\")"
+      ],
+      "port": 3001
+    },
+    {
+      "name": "main-temp",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "process.chdir(\"../va-main\");process.argv=[process.argv[0],\"next\",\"start\",\"-p\",\"3005\"];require(require(\"path\").resolve(\"node_modules/next/dist/bin/next\"))"
+      ],
+      "port": 3005
+    }
+  ]
+}

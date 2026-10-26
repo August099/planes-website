@@ -1,22 +1,25 @@
 import Link from "next/link";
 import Image from "next/image";
+import { BrandSlashes } from "@/components/ui/BrandSlashes";
+import { CookieSettingsLink } from "@/components/ui/CookieSettingsLink";
 import { Mail, Phone } from "lucide-react";
+import { CONTACT_PHONE } from "@/lib/site";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
 
+// VA-83: el mismo footer en todo el sitio: azul profundo liso (el color con que termina la Home)
+// y el "//" de la marca en SVG, en lugar de la imagen bkg-footer.png.
 export function Footer() {
   return (
-    <footer className="relative bg-[#001F58] text-white overflow-hidden">
-      <Image
-        src="/bkg-footer.png"
-        alt="Fondo Footer"
-        fill
-        className="object-cover object-[center_30%]"
-      />
+    <footer className="relative isolate bg-[#001331] text-white overflow-hidden">
+      <BrandSlashes className="-top-8 right-[-5rem] w-80 sm:w-[30rem]" />
+      <BrandSlashes className="-bottom-10 -left-20 w-64 sm:w-96" />
 
       <div className="relative z-10 container mx-auto px-4 pt-12 pb-8 sm:pt-16 sm:pb-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div>
-            <div className="relative w-80 sm:w-[384px] md:w-[448px] h-24 mb-3">
+            {/* VA-50: ancho fluido con la proporción real del logo (1842×128); antes medía 448 px
+                fijos y se salía de la columna en la grilla de 4. */}
+            <div className="relative w-full max-w-72 aspect-[1842/128] mb-4">
               <Image
                 src="/logo-full-white.png"
                 alt="Ventas Aeronáuticas"
@@ -33,55 +36,70 @@ export function Footer() {
             <h3 className="font-heading font-semibold mb-3 text-sm text-white drop-shadow-md">
               Ayuda
             </h3>
-            <ul className="space-y-2 text-sm text-white/90 drop-shadow-sm">
+            <ul className="space-y-1 sm:space-y-2 text-sm text-white/90 drop-shadow-sm">
               <li>
-                <Link href="/faq" className="hover:text-white transition-colors">
+                <Link href="/about" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  Nosotros
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Preguntas frecuentes
                 </Link>
               </li>
               <li>
-                <Link href="/howtopublish" className="hover:text-white transition-colors">
+                <Link href="/howtopublish" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Cómo publicar
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-white transition-colors">
+                <Link href="/services/guides" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  Guías
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Términos y condiciones
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-white transition-colors">
+                <Link href="/privacy" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Privacidad
                 </Link>
+              </li>
+              <li>
+                <Link href="/arrepentimiento" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  Botón de arrepentimiento
+                </Link>
+              </li>
+              <li>
+                {/* VA-155: cambiar la elección del cartel de cookies */}
+                <CookieSettingsLink className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors" />
               </li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-heading font-semibold mb-3 text-sm text-white drop-shadow-md">
-              Explorar
+              Avisos y planes
             </h3>
-            <ul className="space-y-2 text-sm text-white/90 drop-shadow-sm">
+            <ul className="space-y-1 sm:space-y-2 text-sm text-white/90 drop-shadow-sm">
               <li>
-                <Link href="/planes" className="hover:text-white transition-colors">
+                <Link href="/aircraft" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Aviones en venta
                 </Link>
               </li>
               <li>
-                <Link href="/spareparts" className="hover:text-white transition-colors">
+                <Link href="/spareparts" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Repuestos en venta
                 </Link>
               </li>
-              {/*<li>
-                <Link href="/plans" className="hover:text-white transition-colors">
-                  Planes para publicar
+              {/* VA-94 */}
+              <li>
+                <Link href="/plans" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  Planes y precios
                 </Link>
               </li>
-              <li>
-                <Link href="/ads" className="hover:text-white transition-colors">
-                  Publicite su negocio
-                </Link>
-              </li>*/}
             </ul>
           </div>
 
@@ -89,7 +107,7 @@ export function Footer() {
             <h3 className="font-heading font-semibold mb-3 text-sm text-white drop-shadow-md">
               Contacto
             </h3>
-            <ul className="space-y-2.5 text-sm text-white/90 drop-shadow-sm">
+            <ul className="space-y-1 sm:space-y-2.5 text-sm text-white/90 drop-shadow-sm">
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0 text-white" />
                 <a
@@ -101,8 +119,8 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0 text-white" />
-                <a href="tel:+5490000000000" className="hover:text-white transition-colors">
-                  +54 9 000 000 0000
+                <a href={`tel:${CONTACT_PHONE.e164}`} className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  {CONTACT_PHONE.display}
                 </a>
               </li>
               <li className="flex items-center gap-2">
@@ -111,7 +129,7 @@ export function Footer() {
                   href="https://instagram.com/ventas.aeronauticas"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-white transition-colors"
+                  className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors"
                 >
                   @ventas.aeronauticas
                 </a>

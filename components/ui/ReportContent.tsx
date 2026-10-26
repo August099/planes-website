@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { PageBackground } from "@/components/ui/PageBackground";
 import {
   Plane,
   Wrench,
@@ -13,6 +13,7 @@ import {
   Send,
   Loader2,
 } from "lucide-react";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export function ReportContent() {
   const searchParams = useSearchParams();
@@ -74,12 +75,19 @@ export function ReportContent() {
       });
 
       if (!res.ok) {
-        throw new Error("Error al enviar el reporte");
+        const data = await res.json().catch(() => null);
+        // Los 400/404 traen un mensaje para el usuario; el resto, el mensaje genérico.
+        setError(
+          res.status < 500 && data?.error
+            ? data.error
+            : "Ocurrió un error al enviar tu reporte. Probá de nuevo."
+        );
+        return;
       }
 
       setSubmitted(true);
-    } catch (err) {
-      setError("Ocurrió un error al enviar tu reporte. Por favor, reintenta.");
+    } catch {
+      setError("Ocurrió un error al enviar tu reporte. Probá de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -87,28 +95,22 @@ export function ReportContent() {
 
   if (submitted) {
     return (
-      <main className="relative isolate overflow-hidden min-h-screen -mb-16 flex items-center justify-center py-16">
-        <Image
-          src="/bkg-report.jpg"
-          alt="Fondo Reporte"
-          fill
-          priority
-          className="-z-20 object-cover"
-        />
-        <div className="absolute inset-0 -z-10 bg-background/85" />
+      <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
+      <Breadcrumbs items={[{ label: "Reportar" }]} className="absolute inset-x-0 top-0 container mx-auto px-4 pt-3" />
+        <PageBackground page="report" />
 
         <div className="container mx-auto px-4 max-w-md">
-          <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-8 backdrop-blur-sm shadow-xl text-center space-y-6">
+          <div className="bg-white border border-[#00205B]/12 rounded-lg p-8 shadow-sm text-center space-y-6">
             <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
-            <h2 className="font-heading text-2xl font-semibold text-[#001F58]">
-              REPORTE ENVIADO
+            <h2 className="font-heading text-2xl font-semibold text-[#00205B]">
+              Reporte enviado
             </h2>
-            <p className="text-xs sm:text-sm text-[#001F58]/70">
+            <p className="text-xs sm:text-sm text-[#00205B]/70">
               Gracias por colaborar con la seguridad y transparencia de la comunidad. Revisaremos la publicación a la brevedad.
             </p>
             <Link
               href="/"
-              className="inline-block w-full bg-[#001F58] hover:bg-[#001F58]/90 text-white font-medium py-2.5 rounded-xl shadow-sm transition-colors text-sm"
+              className="inline-block w-full bg-[#00205B] hover:bg-[#00205B]/90 text-white font-medium py-2.5 rounded-xl shadow-sm transition-colors text-sm"
             >
               Volver al Inicio
             </Link>
@@ -119,40 +121,34 @@ export function ReportContent() {
   }
 
   return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16 flex items-center justify-center py-16">
-      <Image
-        src="/bkg-report.jpg"
-        alt="Fondo Reporte"
-        fill
-        priority
-        className="-z-20 object-cover"
-      />
-      <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen flex items-center justify-center py-16">
+      <Breadcrumbs items={[{ label: "Reportar" }]} className="absolute inset-x-0 top-0 container mx-auto px-4 pt-3" />
+      <PageBackground page="report" />
 
       <div className="container mx-auto px-4 max-w-lg">
-        <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl space-y-6">
+        <div className="bg-white border border-[#00205B]/12 rounded-lg p-6 sm:p-8 shadow-sm space-y-6">
           <div className="text-center space-y-1.5">
-            <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#001F58] uppercase">
-              Reportar Publicación
+            <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#00205B]">
+              Reportar
             </h1>
-            <p className="text-xs sm:text-sm text-[#001F58]/70">
+            <p className="text-xs sm:text-sm text-[#00205B]/70">
               Informa sobre contenido inapropiado o irregularidades en la plataforma
             </p>
           </div>
 
           {(aircraftId || sparePartId) ? (
-            <div className="p-3.5 bg-white/80 border border-[#001F58]/15 rounded-xl flex items-center gap-3 shadow-sm">
-              <div className="p-2 bg-[#001F58]/5 rounded-lg text-[#001F58]">
-                {aircraftId ? <Plane className="w-5 h-5 text-[#001F58]" /> : <Wrench className="w-5 h-5 text-[#001F58]" />}
+            <div className="p-3.5 bg-white/80 border border-[#00205B]/15 rounded-xl flex items-center gap-3 shadow-sm">
+              <div className="p-2 bg-[#00205B]/5 rounded-lg text-[#00205B]">
+                {aircraftId ? <Plane className="w-5 h-5 text-[#00205B]" /> : <Wrench className="w-5 h-5 text-[#00205B]" />}
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-[#001F58]/50 block">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#00205B]/50 block">
                   {aircraftId ? "Aeronave a reportar" : "Repuesto a reportar"}
                 </span>
-                <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#001F58]">
-                  <Link2 className="w-3.5 h-3.5 text-[#001F58]/50 shrink-0" />
+                <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#00205B]">
+                  <Link2 className="w-3.5 h-3.5 text-[#00205B]/50 shrink-0" />
                   {loadingTitle ? (
-                    <span className="flex items-center gap-2 text-[#001F58]/50 text-xs font-normal">
+                    <span className="flex items-center gap-2 text-[#00205B]/50 text-xs font-normal">
                       <Loader2 className="w-3.5 h-3.5 animate-spin" /> Cargando publicación...
                     </span>
                   ) : (
@@ -172,14 +168,14 @@ export function ReportContent() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-[#001F58]">
-                Motivo del reporte <span className="text-[#E70F1F]">*</span>
+              <label className="block text-xs font-semibold text-[#00205B]">
+                Motivo del reporte <span className="text-[#D62828]">*</span>
               </label>
               <select
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-white/80 border border-[#001F58]/20 rounded-lg focus:ring-2 focus:ring-[#001F58] focus:outline-none text-[#001F58] text-xs sm:text-sm font-sans"
+                className="w-full px-3 py-2 bg-white/80 border border-[#00205B]/20 rounded-lg focus:ring-2 focus:ring-[#00205B] focus:outline-none text-[#00205B] text-xs sm:text-sm font-sans"
               >
                 <option value="" className="font-sans text-slate-800">Selecciona una opción...</option>
                 <option value="Información engañosa o falsa" className="font-sans text-slate-800">Información engañosa o falsa</option>
@@ -191,28 +187,29 @@ export function ReportContent() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-[#001F58]">
-                Detalles o Comentarios <span className="text-[#001F58]/50 font-normal">(Opcional)</span>
+              <label className="block text-xs font-semibold text-[#00205B]">
+                Detalles o Comentarios <span className="text-[#00205B]/50 font-normal">(Opcional)</span>
               </label>
               <textarea
                 value={details}
+                maxLength={1000}
                 onChange={(e) => setDetails(e.target.value)}
                 rows={3}
-                placeholder="Si deseas, puedes darnos más detalles del problema..."
-                className="w-full px-3 py-2 bg-white/80 border border-[#001F58]/20 rounded-lg focus:ring-2 focus:ring-[#001F58] focus:outline-none text-[#001F58] text-xs sm:text-sm font-sans placeholder:text-[#001F58]/40"
+                placeholder="Si querés, podés darnos más detalles del problema..."
+                className="w-full px-3 py-2 bg-white/80 border border-[#00205B]/20 rounded-lg focus:ring-2 focus:ring-[#00205B] focus:outline-none text-[#00205B] text-xs sm:text-sm font-sans placeholder:text-[#00205B]/40"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-[#001F58]">
-                Tu Email de Contacto <span className="text-[#001F58]/50 font-normal">(Opcional)</span>
+              <label className="block text-xs font-semibold text-[#00205B]">
+                Tu Email de Contacto <span className="text-[#00205B]/50 font-normal">(Opcional)</span>
               </label>
               <input
                 type="email"
                 value={reporterEmail}
                 onChange={(e) => setReporterEmail(e.target.value)}
                 placeholder="tuemail@ejemplo.com"
-                className="w-full px-3 py-2 bg-white/80 border border-[#001F58]/20 rounded-lg focus:ring-2 focus:ring-[#001F58] focus:outline-none text-[#001F58] text-xs sm:text-sm font-sans placeholder:text-[#001F58]/40"
+                className="w-full px-3 py-2 bg-white/80 border border-[#00205B]/20 rounded-lg focus:ring-2 focus:ring-[#00205B] focus:outline-none text-[#00205B] text-xs sm:text-sm font-sans placeholder:text-[#00205B]/40"
               />
             </div>
 
@@ -225,7 +222,7 @@ export function ReportContent() {
             <button
               type="submit"
               disabled={loading || !reason}
-              className="w-full mt-2 bg-[#E70F1F] hover:bg-[#c00d1a] text-white font-medium py-2.5 rounded-xl shadow-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-xs sm:text-sm"
+              className="w-full mt-2 bg-[#D62828] hover:bg-[#c00d1a] text-white font-medium py-2.5 rounded-xl shadow-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-xs sm:text-sm"
             >
               {loading ? "Enviando..." : (
                 <>

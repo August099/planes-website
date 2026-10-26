@@ -11,6 +11,7 @@ import {
   deleteAircraftBrandAction,
   createAircraftModelAction,
   updateAircraftModelAction,
+  setAircraftModelCategoryAction,
   deleteAircraftModelAction,
   createAircraftSubModelAction,
   updateAircraftSubModelAction,
@@ -24,8 +25,11 @@ import {
   createFilterAction,
   deleteFilterAction,
 } from "@/app/actions/admin-taxonomy-actions";
-import { Plus, Plane, Wrench, CheckCircle2, ExternalLink, Pencil, Trash2, X, Check, ImageIcon, Upload } from "lucide-react";
+import { Plus, Plane, Wrench, CheckCircle2, Pencil, Trash2, X, Check, ImageIcon, Upload } from "lucide-react";
 import { FilterType } from "@prisma/client";
+import { CATEGORY_ICON_OPTIONS } from "@/lib/category-icon-names";
+import { DynamicCategoryIcon } from "@/components/ui/DynamicCategoryIcon";
+import { errorMessage } from "@/lib/errors";
 
 interface SubModel {
   id: string;
@@ -35,6 +39,7 @@ interface SubModel {
 interface Model {
   id: string;
   name: string;
+  recommendedCategoryId: string | null;
   subModels: SubModel[];
 }
 
@@ -189,8 +194,8 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       await createAircraftBrandAction(name, logoUrl);
       form.reset();
       showFeedback("Marca agregada exitosamente");
-    } catch (err: any) {
-      alert(err?.message || "Error al guardar la marca");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al guardar la marca");
     } finally {
       setLoading(false);
     }
@@ -211,8 +216,8 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       await updateAircraftBrandAction(id, editName, finalLogoUrl);
       cancelEditing();
       showFeedback("Marca actualizada");
-    } catch (err: any) {
-      alert(err?.message || "Error al actualizar la marca");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al actualizar la marca");
     } finally {
       setLoading(false);
     }
@@ -232,7 +237,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
   // MODELOS
   const handleAddModel = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedBrandId) return alert("Selecciona una marca primero");
+    if (!selectedBrandId) return alert("Seleccioná una marca primero");
     setLoading(true);
     const form = e.currentTarget;
     const name = new FormData(form).get("name") as string;
@@ -257,6 +262,17 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
     }
   };
 
+  // VA-153/VA-165: la categoría recomendada del modelo (la heredan sus submodelos; el formulario de publicar
+  // la propone y el vendedor la puede cambiar).
+  const handleModelCategory = async (id: string, categoryId: string) => {
+    try {
+      await setAircraftModelCategoryAction(id, categoryId || null);
+      showFeedback("Categoría recomendada actualizada");
+    } catch {
+      alert("Error al cambiar la categoría");
+    }
+  };
+
   const handleDeleteModel = async (id: string) => {
     if (!confirm("¿Eliminar este modelo?")) return;
     try {
@@ -271,7 +287,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
   // SUBMODELOS / VARIANTES
   const handleAddSubModel = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedModelId) return alert("Selecciona un modelo primero");
+    if (!selectedModelId) return alert("Seleccioná un modelo primero");
     setLoading(true);
     const form = e.currentTarget;
     const name = new FormData(form).get("name") as string;
@@ -356,7 +372,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
     return categories
       .filter((c) => c.parentId === parentId)
       .flatMap((c) => [
-        { id: c.id, label: `${"— ".repeat(depth)}${c.name}` },
+        { id: c.id, label: `${"· ".repeat(depth)}${c.name}` },
         ...flattenWithDepth(categories, c.id, depth + 1),
       ]);
   }
@@ -399,15 +415,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                 onChange={(e) => setEditName(e.target.value)}
                 className="flex-1 px-2 py-1 text-xs border rounded-lg bg-white"
               />
-              {depth === 0 && (
-                <input
-                  type="text"
-                  value={editIcon}
-                  onChange={(e) => setEditIcon(e.target.value)}
-                  placeholder="Icono"
-                  className="w-24 px-2 py-1 text-xs border rounded-lg bg-white"
-                />
-              )}
+              {depth === 0 && <CategoryIconSelect value={editIcon} onChange={setEditIcon} aria-label="Ícono" />}
               <button onClick={() => handleUpdate(node.id)} className="text-green-600">
                 <Check className="w-4 h-4" />
               </button>
@@ -420,8 +428,8 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
               <div className="flex items-center gap-2">
                 <span className={depth === 0 ? "text-[#001F58]" : "text-slate-600"}>{node.name}</span>
                 {node.icon && (
-                  <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-md font-mono">
-                    {node.icon}
+                  <span className="text-[#001F58]" title={CATEGORY_ICON_OPTIONS.find((o) => o.value === node.icon)?.label ?? node.icon}>
+                    <DynamicCategoryIcon name={node.icon} className="h-4 w-4" />
                   </span>
                 )}
               </div>
@@ -558,7 +566,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
   // Lista plana de todas las categorías de repuestos (padres + hijas), para el multi-select de grupos
   const allSpareCategoriesFlat = flattenWithDepth(sparePartCategoriesFlat).map((cat) => ({
     id: cat.id,
-    name: cat.label, // ya viene con la indentación tipo "— — Cilindros"
+    name: cat.label, // ya viene con la indentación tipo "· · Cilindros"
   }));
 
   return (
@@ -598,7 +606,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       {activeTab === "aircrafts" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* CATEGORÍAS */}
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Categorías de Aeronave</h3>
             <form onSubmit={handleAddAircraftCategory} className="flex gap-2">
               <input
@@ -654,7 +662,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           </div>
 
           {/* MARCAS Y LOGO (SUBIR DESDE LA PC) */}
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Marcas de Aeronave</h3>
             
             <form onSubmit={handleAddBrand} className="space-y-2">
@@ -670,7 +678,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                 <label className="flex-1 px-3 py-2 border rounded-xl bg-white text-xs text-slate-500 cursor-pointer flex items-center justify-between hover:bg-slate-50">
                   <span className="truncate">Subir foto desde PC...</span>
                   <Upload className="w-3.5 h-3.5 text-slate-400" />
-                  <input type="file" name="file" accept="image/*" className="hidden" />
+                  <input type="file" name="file" accept="image/jpeg,image/png,image/webp" className="hidden" />
                 </label>
 
                 <button
@@ -711,7 +719,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                         <Upload className="w-3 h-3 text-slate-400" />
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp"
                           className="hidden"
                           onChange={(e) => {
                             if (e.target.files?.[0]) setEditFile(e.target.files[0]);
@@ -724,9 +732,11 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                       <div className="flex items-center gap-2">
                         {brand.logoUrl ? (
                           <div className="relative w-6 h-6 rounded border bg-white overflow-hidden shrink-0 flex items-center justify-center">
-                            <img
+                            <Image
                               src={brand.logoUrl}
                               alt={brand.name}
+                              width={24}
+                              height={24}
                               className="w-full h-full object-contain p-0.5"
                             />
                           </div>
@@ -760,8 +770,8 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           </div>
 
           {/* MODELOS */}
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
-            <h3 className="font-bold text-sm text-[#001F58]">Modelos</h3>
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
+            <h3 className="font-bold text-sm text-[#001F58]">Modelos <span className="font-normal text-[11px] text-slate-500">· a la derecha, su categoría recomendada</span></h3>
             <select
               value={selectedBrandId}
               onChange={(e) => {
@@ -818,6 +828,18 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
                     <>
                       <span className="font-medium text-slate-700">{model.name}</span>
                       <div className="flex items-center gap-2">
+                        <select
+                          value={model.recommendedCategoryId ?? ""}
+                          onChange={(e) => handleModelCategory(model.id, e.target.value)}
+                          aria-label={`Categoría recomendada de ${model.name}`}
+                          title="Categoría recomendada"
+                          className="max-w-36 px-1.5 py-1 text-[11px] border rounded-lg bg-white"
+                        >
+                          <option value="">Sin categoría recomendada</option>
+                          {aircraftCategories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                          ))}
+                        </select>
                         <button onClick={() => startEditing(model.id, model.name)} className="text-slate-400 hover:text-blue-600">
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
@@ -833,7 +855,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           </div>
 
           {/* SUBMODELOS / VARIANTES */}
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Variantes / Submodelos</h3>
             <select
               value={selectedModelId}
@@ -908,7 +930,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
       {/* VISTA DE REPUESTOS */}
       {activeTab === "spareparts" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Nueva Categoría / Subcategoría</h3>
             <form onSubmit={handleAddSpareCategory} className="space-y-3">
               <div>
@@ -945,25 +967,11 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
 
               {!selectedSpareParentId && (
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-[11px] font-semibold text-slate-500">
-                      Icono (React Icons)
-                    </label>
-                    <a
-                      href="https://react-icons.github.io/react-icons/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
-                    >
-                      Buscar icono <ExternalLink className="w-2.5 h-2.5" />
-                    </a>
-                  </div>
-                  <input
-                    type="text"
-                    name="icon"
-                    placeholder="Ej: PiEngine, TiLightBulb, BsNut"
-                    className="w-full px-3 py-2 text-xs border rounded-xl bg-white"
-                  />
+                  {/* VA-148: uno de los 14 íconos propios (components/icons/category). */}
+                  <label htmlFor="new-category-icon" className="block text-[11px] font-semibold text-slate-500">
+                    Ícono
+                  </label>
+                  <CategoryIconSelect id="new-category-icon" name="icon" />
                 </div>
               )}
 
@@ -977,7 +985,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
             </form>
           </div>
 
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Categorías Existentes</h3>
             <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
               {sparePartCategories.map((parent) => (
@@ -999,7 +1007,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           </div>
 
           {/* GRUPOS DE FILTROS */}
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Grupos de Filtros</h3>
 
             <form onSubmit={handleAddFilterGroup} className="space-y-3">
@@ -1057,7 +1065,7 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
           </div>
 
           {/* FILTROS */}
-          <div className="p-5 bg-white/80 rounded-2xl border border-slate-200 space-y-4">
+          <div className="p-5 bg-white/80 rounded-lg border border-slate-200 space-y-4">
             <h3 className="font-bold text-sm text-[#001F58]">Filtros</h3>
 
             <select
@@ -1216,6 +1224,45 @@ export function TaxonomyManager({ aircraftCategories, aircraftBrands, sparePartC
 
         </div>
       )}
+    </div>
+  );
+}
+// VA-148: selector de ícono de una categoría padre (con vista previa del elegido).
+function CategoryIconSelect({
+  id,
+  name,
+  value,
+  onChange,
+  "aria-label": ariaLabel,
+}: {
+  id?: string;
+  name?: string;
+  value?: string;
+  onChange?: (v: string) => void;
+  "aria-label"?: string;
+}) {
+  const [own, setOwn] = useState("");
+  const current = value ?? own;
+  return (
+    <div className="flex items-center gap-2">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-[#001F58]" aria-hidden>
+        {current ? <DynamicCategoryIcon name={current} className="h-5 w-5" /> : null}
+      </span>
+      <select
+        id={id}
+        name={name}
+        aria-label={ariaLabel}
+        value={current}
+        onChange={(e) => (onChange ? onChange(e.target.value) : setOwn(e.target.value))}
+        className="min-w-0 flex-1 rounded-xl border bg-white px-2 py-1.5 text-xs"
+      >
+        <option value="">Sin ícono</option>
+        {CATEGORY_ICON_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

@@ -3,6 +3,8 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { UserType } from "@prisma/client";
+import { issueVerificationEmail } from "@/lib/verification";
+import { parseSelectableUserType } from "@/lib/user-types";
 
 export async function registerUserAction(formData: FormData) {
   try {
@@ -38,14 +40,14 @@ export async function registerUserAction(formData: FormData) {
     }
 
     // 5. Mapear el valor del formulario al Enum de Prisma (UserType)
-    const userType: UserType = userTypeInput === "COMPANY" ? UserType.RESELLER : UserType.PARTICULAR;
+    // VA-87: mismas opciones que el perfil y la pantalla de Google (lib/user-types.ts). "COMPANY"
+    // queda por compatibilidad con formularios viejos.
+    const userType: UserType =
+      parseSelectableUserType(userTypeInput) ?? (userTypeInput === "COMPANY" ? UserType.RESELLER : UserType.PARTICULAR);
 
     // 6. Enhashear contraseña
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // 7. Lógica de Miembro Fundador (Primeros 50 usuarios registrados)
-    const totalUsersCount = await prisma.user.count();
-    const isFoundingMember = totalUsersCount < 50;
 
     // 8. Crear el usuario en la base de datos
     await prisma.user.create({
@@ -54,9 +56,18 @@ export async function registerUserAction(formData: FormData) {
         email: email.toLowerCase().trim(),
         passwordHash,
         userType,
-        isFoundingMember,
+        userTypeConfirmed: true,
       },
     });
+
+    // 9. Token + mail de verificación (VA-20). Si el mail falla, la cuenta queda creada y
+    //    se puede pedir otro desde el login ("Reenviar mail de verificación").
+    try {
+      await issueVerificationEmail(email);
+    } catch (mailError) {
+      console.error("Error al enviar el mail de verificación:", mailError);
+      return { success: "CheckEmailRetry" };
+    }
 
     return { success: "CheckEmail" };
   } catch (error) {

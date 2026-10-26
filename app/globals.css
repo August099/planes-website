@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Raleway:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -61,9 +59,7 @@
   --muted-foreground: hsl(217 30% 35%);
   --border: hsl(214 20% 88%);
   --radius: 0.5rem;
-
-  --font-display: 'Montserrat', sans-serif; 
-  --font-body: 'IBM Plex Sans ', sans-serif;
+  /* --font-display y --font-body los define next/font en app/layout.tsx (VA-72). */
 }
 
 .dark {
@@ -106,6 +102,8 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
+    /* VA-155: mientras se ve el cartel de cookies, el pie de la página no queda tapado. */
+    padding-bottom: var(--va-consent-h, 0px);
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
@@ -167,7 +165,7 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #E70F1F;
+  background: #D62828;
   border-radius: 5px;
 }
 
@@ -177,7 +175,16 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #E70F1F #f1f1f1;
+  scrollbar-color: #D62828 #f1f1f1;
+}
+
+/* Carruseles de la Home (ScrollCarousel): se deslizan sin barra. Va acá y no como utilidad de
+   Tailwind porque la regla de arriba, sin capa, le ganaría. */
+.va-no-scrollbar {
+  scrollbar-width: none;
+}
+.va-no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes marquee {
@@ -209,4 +216,518 @@ a, button:not(:disabled), [role="button"]:not(:disabled) {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+}
+/* ==========================================================================
+   VA-79 · Home fluida. Todo esto vive bajo .home-theme (solo la Home); el resto
+   de la web sigue con el fondo estándar con filtro blanco (VA-56).
+   Paleta sacada del hero (backgrounds/home2.webp y home-mobile.webp).
+   ========================================================================== */
+.home-theme {
+  --va-navy: #00205b;      /* marca */
+  --va-navy-deep: #001331; /* sombra del hangar del hero */
+  --va-blue: #0a4c96;      /* azul del cielo del hero */
+  --va-sky: #cfe3f6;       /* celeste: el cielo del hero aclarado */
+  --va-mist: #eef5fc;      /* blanco neblina */
+  --va-blush: #fff3f0;     /* blanco con un toque rojo/crema (nubes del hero) */
+  --va-red: #d62828;       /* marca (manual 25/10) */
+  --va-red-hover: #b71f1f;
+  --va-red-soft: rgb(214 40 40 / 0.12);
+}
+
+/* Cada zona pinta su fondo en una capa absoluta detrás del contenido (z -2); los resplandores
+   van en z -1, así pueden pasar por encima del límite entre zonas sin tapar nada. La regla: el
+   color con que termina una zona es el color con que empieza la siguiente. */
+.home-zone {
+  position: relative;
+}
+.home-zone > .home-zone-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+/* Los fondos de las zonas (papel con luces y grano; azul al del footer) están en el bloque
+   "Home · Relieve", más abajo. */
+
+/* Motivo "//" de la marca, muy tenue (components/ui/BrandSlashes.tsx: Home y footer) */
+.brand-slashes {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  color: #fff;
+  opacity: 0.06;
+}
+
+/* Tarjetas sobre las zonas claras: blancas, sombra azulada y borde tenue, para que floten. */
+.home-theme .home-card,
+.home-theme [data-card] {
+  background-color: #fff;
+  border-color: rgb(0 31 88 / 0.12);
+  box-shadow: 0 1px 2px rgb(0 31 88 / 0.06);
+}
+
+/* VA-139: puntos de los carruseles de la Home (los dibuja ScrollCarousel). */
+.va-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgb(0 31 88 / 0.22);
+  cursor: pointer;
+  padding: 0;
+  border: 0;
+  transition: width 150ms, background-color 150ms;
+}
+.va-dot-active {
+  width: 20px;
+  background: var(--va2-red);
+}
+@media (prefers-reduced-motion: reduce) {
+  .va-dot { transition: none; }
+}
+
+/* ==========================================================================
+   Rediseño (25/10): "carta de navegación". Paleta del manual (docs/DESIGN.md): azul #00205B,
+   rojo #D62828, gris #CFCFCF y blanco #F5F5F5. Superficies: placas blancas con borde fino sobre
+   el blanco papel; el rojo solo marca acciones y estados.
+   ========================================================================== */
+:root {
+  --va2-navy: #00205b;
+  --va2-navy-deep: #001331; /* el del footer, para que la última zona se funda con él */
+  --va2-red: #d62828;
+  --va2-red-hover: #b71f1f;
+  --va2-gray: #cfcfcf;
+  --va2-paper: #f5f5f5;
+  --va2-line: rgb(0 32 91 / 0.14);
+  --va2-line-soft: rgb(0 32 91 / 0.08);
+}
+
+/* Placa: bloque de datos con borde fino, sin sombra. */
+.va-plate {
+  background: #fff;
+  border: 1px solid var(--va2-line);
+  border-radius: 6px;
+}
+
+/* Rótulo técnico, como las placas de un panel de instrumentos. */
+.va-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgb(0 32 91 / 0.62);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cinta de datos de una tarjeta: celdas iguales separadas por una línea fina. */
+.va-tape {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  border-top: 1px solid var(--va2-line-soft);
+  border-bottom: 1px solid var(--va2-line-soft);
+}
+.va-tape > * + * {
+  border-left: 1px solid var(--va2-line-soft);
+}
+
+/* Tarjeta de aviso (base). El aspecto moderno (radio, sombra, subida al pasar) está en "Sitio público · Moderno". */
+.va-card {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--va2-line);
+  border-radius: 6px;
+  transition: border-color 200ms;
+}
+.va-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--va2-red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 350ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.group:hover .va-card,
+.group:focus-visible .va-card {
+  border-color: rgb(0 32 91 / 0.32);
+}
+
+/* ==========================================================================
+   Rediseño de la Home v2 (25/10): títulos de revista, bandas planas y esquinas rectas.
+   ========================================================================== */
+/* Regla bajo el título: línea de marca con el primer tramo en rojo, que crece al entrar en pantalla. */
+.va-rule {
+  position: relative;
+  display: block;
+  height: 2px;
+  background: var(--va2-navy);
+}
+.va-rule-dark {
+  background: rgb(255 255 255 / 0.3);
+}
+.va-rule::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 96px;
+  background: var(--va2-red);
+  transform-origin: left;
+}
+@keyframes va-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@supports (animation-timeline: view()) {
+  .va-rule::before {
+    animation: va-grow linear both;
+    animation-timeline: view();
+    animation-range: entry 20% cover 35%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .va-rule::before {
+    animation: none !important;
+    transform: none;
+  }
+}
+
+/* Header transparente de la Home: al abrir el menú de Repuestos, el header se vuelve azul y el panel
+   sigue en el mismo azul, así forman una sola pieza sobre el hero. En el resto del sitio, blanco. */
+header[data-home] {
+  transition: background-color 200ms;
+}
+header[data-home]:has(.va-mega:not([data-closed]):hover),
+header[data-home]:has(.va-mega:not([data-closed]):focus-within) {
+  background-color: var(--va2-navy);
+}
+.va-mega-panel {
+  --mega-bg: #fff;
+  --mega-fg: var(--va2-navy);
+  --mega-muted: rgb(51 65 85);
+  --mega-line: rgb(0 32 91 / 0.12);
+  --mega-num: var(--va2-red);
+}
+header[data-home] .va-mega-panel {
+  --mega-bg: var(--va2-navy);
+  --mega-fg: #fff;
+  --mega-muted: rgb(255 255 255 / 0.78);
+  --mega-line: rgb(255 255 255 / 0.16);
+  --mega-num: rgb(255 255 255 / 0.55);
+}
+
+/* VA-156: atribución del mapa del detalle (OpenFreeMap, OpenMapTiles, OpenStreetMap) visible pero chica. */
+.maplibregl-ctrl.maplibregl-ctrl-attrib {
+  font-size: 10px;
+  line-height: 14px;
+}
+
+/* ==========================================================================
+   Home · Moderno (26/10): misma estructura que "Relieve" (Destacadas en grilla mixta, fichas con
+   iniciales + título + ícono), con esquinas redondeadas, sombras suaves teñidas de azul, más color
+   (los azules del cielo del hero: #0A4C96 y sus tintes) y vectores animados (FlightPaths).
+   Todo bajo .home-theme; el resto del sitio usa el bloque "Sitio público · Moderno" (al final).
+   ========================================================================== */
+.home-theme {
+  --m-radius: 22px;
+  --m-radius-lg: 28px;
+  --m-shadow: 0 1px 2px rgb(0 32 91 / 0.06), 0 14px 34px -16px rgb(0 32 91 / 0.22);
+  --m-shadow-hover: 0 2px 4px rgb(0 32 91 / 0.08), 0 28px 56px -20px rgb(0 32 91 / 0.38);
+  --m-grad: linear-gradient(135deg, #00205b 0%, #0a4c96 100%);
+  --m-grad-red: linear-gradient(135deg, #d62828 0%, #b71f1f 100%);
+}
+
+/* Títulos: minúscula y regla fina con el tramo rojo redondeado. */
+.home-theme .va-dt-h {
+  text-transform: none;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+.home-theme .va-rule {
+  height: 2px;
+  border-radius: 999px;
+  background: rgb(0 32 91 / 0.1);
+}
+.home-theme .va-rule-dark {
+  background: rgb(255 255 255 / 0.14);
+}
+.home-theme .va-rule::before {
+  border-radius: 999px;
+  background: var(--m-grad-red);
+}
+
+/* Fichas y tarjetas: radio grande, sombra suave; al pasar suben y la sombra se abre. */
+.home-theme .va-card,
+.home-theme .va-tile {
+  border-radius: var(--m-radius);
+  box-shadow: var(--m-shadow);
+  transition: transform 300ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 300ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    background-color 300ms, color 300ms, border-color 300ms;
+}
+.home-theme .va-card {
+  border: 1px solid rgb(0 32 91 / 0.08);
+}
+.home-theme .va-card.va-card-square {
+  border-radius: var(--m-radius-lg);
+  border: 0;
+}
+.home-theme .group:hover .va-card,
+.home-theme .group:hover .va-tile:not(.va-static),
+.home-theme .va-tile.group:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--m-shadow-hover);
+}
+.home-theme .va-card::after {
+  display: none;
+}
+/* Brillo que sigue al cursor (--mx/--my desde HomeSpotlight). */
+.home-theme .va-tile:not(.va-static)::before,
+.home-theme .va-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / 0.22), transparent 70%);
+}
+.home-theme .group:hover .va-tile::before,
+.home-theme .va-tile.group:hover::before,
+.home-theme .group:hover .va-card::before {
+  opacity: 1;
+}
+
+/* Fondos: malla de luz con los azules del cielo (claro) y auroras que se mueven lento (oscuro). */
+.home-zone-1 > .home-zone-bg,
+.home-zone-2 > .home-zone-bg {
+  background:
+    radial-gradient(50rem 20rem at 90% 18%, rgb(207 227 246 / 0.75), transparent 70%),
+    radial-gradient(40rem 18rem at 2% 52%, rgb(214 40 40 / 0.06), transparent 70%),
+    radial-gradient(46rem 20rem at 60% 84%, rgb(207 227 246 / 0.6), transparent 70%),
+    linear-gradient(180deg, #f5f5f5 0%, #eef5fc 50%, #f5f5f5 100%);
+}
+.home-theme .va-feat {
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(56rem 22rem at 20% 50%, rgb(207 227 246 / 0.9), transparent 70%),
+    radial-gradient(30rem 16rem at 92% 40%, rgb(214 40 40 / 0.07), transparent 70%),
+    #eef5fc !important;
+}
+.home-zone-4 > .home-zone-bg {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.12) 1px, transparent 1.5px) 0 0 / 28px 28px,
+    linear-gradient(180deg, var(--va2-navy) 0%, var(--va2-navy-deep) 100%);
+}
+/* Auroras: dos manchas de color de marca (azul cielo y rojo) que derivan muy despacio. */
+.home-zone-4 > .home-zone-bg::before,
+.home-zone-4 > .home-zone-bg::after {
+  content: "";
+  position: absolute;
+  width: 46rem;
+  height: 30rem;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.45;
+  pointer-events: none;
+  animation: va-drift 26s ease-in-out infinite alternate;
+}
+.home-zone-4 > .home-zone-bg::before {
+  top: -8rem;
+  right: -10rem;
+  background: #0a4c96;
+}
+.home-zone-4 > .home-zone-bg::after {
+  bottom: 10rem;
+  left: -14rem;
+  background: rgb(214 40 40 / 0.55);
+  animation-duration: 32s;
+  animation-direction: alternate-reverse;
+}
+@keyframes va-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-6rem, 4rem, 0) scale(1.15); }
+}
+
+/* Vectores (FlightPaths): rayas que avanzan por la ruta y un aro que late en el punto de paso. */
+.va-dash {
+  stroke-dasharray: 2 10;
+  stroke-linecap: round;
+  animation: va-dash-move 3s linear infinite;
+}
+.va-dash-slow {
+  animation-duration: 6s;
+}
+@keyframes va-dash-move {
+  to { stroke-dashoffset: -48; }
+}
+.va-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: va-ping 2.4s ease-out infinite;
+}
+@keyframes va-ping {
+  from { transform: scale(0.4); opacity: 1; }
+  to { transform: scale(2.2); opacity: 0; }
+}
+
+/* Entrada al hacer scroll (en el contenedor: la animación pisaría el transform del hover). */
+@keyframes va-rise {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: none; }
+}
+@supports (animation-timeline: view()) {
+  .home-theme [role="region"] > ul > li,
+  .home-theme .va-rise {
+    animation: va-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 70%;
+  }
+}
+
+/* Destacadas: carrusel con dos tarjetas por pantalla (26/10, a pedido del socio; lo arma ScrollCarousel). */
+
+@media (prefers-reduced-motion: reduce) {
+  .va-dash,
+  .va-ping,
+  .home-zone-4 > .home-zone-bg::before,
+  .home-zone-4 > .home-zone-bg::after,
+  .home-theme [role="region"] > ul > li,
+  .home-theme .va-rise {
+    animation: none !important;
+  }
+  .va-motion {
+    display: none;
+  }
+  .home-theme .va-card,
+  .home-theme .va-tile {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   Sitio público · Moderno (26/10): los estándares de la Home llevados al resto de la web.
+   Todo menos el admin: el admin se reconoce por el botón "Abrir menú del panel" de AdminNav (siempre en
+   el HTML), así no hace falta tocar nada del panel. Radios grandes, sombras suaves teñidas de azul,
+   botones en píldora, campos redondeados con foco celeste, títulos de página con la regla roja.
+   ========================================================================== */
+:root {
+  --m-radius: 22px;
+  --m-radius-lg: 28px;
+  --m-shadow: 0 1px 2px rgb(0 32 91 / 0.06), 0 14px 34px -16px rgb(0 32 91 / 0.22);
+  --m-shadow-hover: 0 2px 4px rgb(0 32 91 / 0.08), 0 28px 56px -20px rgb(0 32 91 / 0.38);
+}
+
+/* Placas y tarjetas de aviso (también fuera de la Home). */
+.va-plate {
+  border-radius: var(--m-radius);
+  border-color: rgb(0 32 91 / 0.08);
+  box-shadow: var(--m-shadow);
+}
+.va-card {
+  border-radius: 20px;
+  border-color: rgb(0 32 91 / 0.08);
+  box-shadow: var(--m-shadow);
+  transition: transform 300ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 300ms cubic-bezier(0.2, 0.7, 0.2, 1), border-color 300ms;
+}
+.va-card::after {
+  display: none;
+}
+.group:hover .va-card,
+.group:focus-visible .va-card {
+  transform: translateY(-5px);
+  box-shadow: var(--m-shadow-hover);
+  border-color: rgb(0 32 91 / 0.12);
+}
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .va-card {
+    transform: none;
+  }
+}
+
+/* Radios: la escala de Tailwind sube un escalón dentro del contenido (no header, no footer). */
+html:not(:has([aria-label="Abrir menú del panel"])) :is(main, dialog, [role="dialog"]) .rounded-md {
+  border-radius: 12px;
+}
+html:not(:has([aria-label="Abrir menú del panel"])) :is(main, dialog, [role="dialog"]) .rounded-lg {
+  border-radius: 18px;
+}
+html:not(:has([aria-label="Abrir menú del panel"])) :is(main, dialog, [role="dialog"]) .rounded-xl {
+  border-radius: 22px;
+}
+html:not(:has([aria-label="Abrir menú del panel"])) :is(main, dialog, [role="dialog"]) .rounded-2xl {
+  border-radius: 26px;
+}
+/* Sombras chicas → sombra suave azulada. */
+html:not(:has([aria-label="Abrir menú del panel"])) main :is(.shadow-sm, .shadow, .shadow-md) {
+  box-shadow: var(--m-shadow);
+}
+
+/* Botones en píldora: los de shadcn y los botones/links con forma de botón (sin padding de tarjeta). */
+html:not(:has([aria-label="Abrir menú del panel"])) [data-slot="button"],
+html:not(:has([aria-label="Abrir menú del panel"])) :is(main, dialog, [role="dialog"])
+  :is(button, a, span).rounded-md[class*="px-"]:not([class~="p-3"]):not([class~="p-4"]):not([class~="p-5"]):not([class~="p-6"]):not([class*="py-3"]):not([class*="py-4"]) {
+  border-radius: 999px;
+}
+
+/* Campos: redondeados y con foco celeste. */
+html:not(:has([aria-label="Abrir menú del panel"])) :is(main, dialog, [role="dialog"])
+  :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea) {
+  border-radius: 14px;
+  transition: border-color 200ms, box-shadow 200ms;
+}
+html:not(:has([aria-label="Abrir menú del panel"])) :is(main, dialog, [role="dialog"])
+  :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus-visible {
+  border-color: #0a4c96;
+  box-shadow: 0 0 0 4px rgb(10 76 150 / 0.15);
+  outline: none;
+}
+html:not(:has([aria-label="Abrir menú del panel"])) [data-slot="checkbox"] {
+  border-radius: 6px;
+  border-color: rgb(0 32 91 / 0.35);
+}
+html:not(:has([aria-label="Abrir menú del panel"])) [data-slot="checkbox"][data-checked] {
+  border-color: #00205b;
+  background-color: #00205b;
+  color: #fff;
+}
+html:not(:has([aria-label="Abrir menú del panel"])) [data-slot="card"] {
+  border-radius: var(--m-radius);
+  box-shadow: var(--m-shadow);
+}
+
+/* Títulos de página: Montserrat extra negrita, tracking cerrado y la regla roja redondeada debajo.
+   No aplica a la Home, a los títulos con íconos (flex) ni a los marcados con .va-h1-keep. */
+html:not(:has([aria-label="Abrir menú del panel"])) main:not(.home-theme) h1:not(.va-h1-keep):not(.flex) {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  color: #00205b;
+}
+html:not(:has([aria-label="Abrir menú del panel"])) main:not(.home-theme) h1:not(.va-h1-keep):not(.flex)::after {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 3px;
+  margin-top: 0.7rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #d62828, #b71f1f);
+}
+html:not(:has([aria-label="Abrir menú del panel"])) main:not(.home-theme) :is(.text-center, [class*="items-center"]) > h1:not(.va-h1-keep):not(.flex)::after,
+html:not(:has([aria-label="Abrir menú del panel"])) main:not(.home-theme) h1.text-center:not(.va-h1-keep)::after {
+  margin-inline: auto;
+}
+/* Títulos chicos (text-2xl) suben a la escala de título de página (24 px → 30–38 px).
+   Los banners de página (PageHeader) usan .va-h1-keep y no entran acá. */
+html:not(:has([aria-label="Abrir menú del panel"])) main:not(.home-theme) h1.text-2xl:not(.va-h1-keep) {
+  font-size: clamp(1.9rem, 3.2vw, 2.4rem);
 }

@@ -26,7 +26,7 @@
     },
     {
       "id": "E",
-      "name": "Experimental / Avión Ligero (LSA)"
+      "name": "Experimental / LSA"
     },
     {
       "id": "PR",
@@ -34,7 +34,7 @@
     },
     {
       "id": "S/C",
-      "name": "Sin categoría asignada"
+      "name": "Otros"
     }
   ],
   "AircraftBrands": [
@@ -200,7 +200,7 @@
         },
         {
           "name": "Citation",
-          "category": "JET) (S/C",
+          "category": "S/C",
           "subModels": []
         }
       ]
@@ -880,17 +880,17 @@
         },
         {
           "name": "Aero Commander",
-          "category": "PISTÓN Y TURBOHÉLICE) (BP",
+          "category": "BP",
           "subModels": []
         },
         {
           "name": "Aero Commander 500",
-          "category": "PR",
+          "category": "BP",
           "subModels": []
         },
         {
           "name": "Turbo Commander 680",
-          "category": "PR",
+          "category": "BT",
           "subModels": []
         }
       ]
@@ -1048,7 +1048,7 @@
         },
         {
           "name": "PC-12",
-          "category": "BT",
+          "category": "MT",
           "subModels": [
             {
               "name": "PC-12/45",

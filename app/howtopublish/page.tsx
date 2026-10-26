@@ -1,153 +1,132 @@
-import Image from "next/image";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { 
-    UserPlus, 
-    ListPlus, 
-    CreditCard, 
-    Megaphone, 
-    HelpCircle, 
-    ArrowRight, 
-    Ticket,
-    ShieldCheck
-} from "lucide-react";
+import { PageBackground } from "@/components/ui/PageBackground";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { getCachedFreeQuota } from "@/lib/quota";
+import { MAX_LISTING_IMAGES } from "@/lib/listing-schema";
+import { PageHeader } from "@/components/ui/PageHeader";
 
-export default function HowToPublishPage() {
-    return (
-        <main className="relative isolate overflow-hidden min-h-screen">
-            {/* Fondo general */}
-            <Image 
-                src="/bkg-publish2.png" 
-                alt="Fondo de la plataforma" 
-                fill 
-                priority 
-                className="-z-20 object-cover" 
-            />
-            <div className="absolute inset-0 -z-10 bg-slate-50/90 backdrop-blur-[2px]" />
+export const metadata: Metadata = {
+  title: "Cómo publicar tu avión o repuesto",
+  description: "Paso a paso para publicar tu avión o repuesto en Ventas Aeronáuticas y llegar a compradores de todo el país.",
+  alternates: { canonical: "/howtopublish" },
+};
 
-            <div className="container mx-auto px-4 pt-16 pb-24 max-w-4xl">
-                
-                {/* Encabezado Principal */}
-                <div className="text-center mb-16">
-                    <h1 className="font-heading text-4xl sm:text-5xl font-bold text-[#001F58] mb-6 tracking-tight">
-                        ¿Cómo publicar tu producto?
-                    </h1>
-                    <p className="text-lg sm:text-xl text-slate-700 max-w-2xl mx-auto leading-relaxed">
-                        Vender tu aeronave o repuesto en nuestra plataforma es un proceso seguro y directo. Seguí estos 4 simples pasos para llegar a miles de compradores.
-                    </p>
+// VA-191: la misma ruta de waypoints de "Cómo funciona" (Home), vertical y sobre fondo claro, en vez de
+// cuatro tarjetas iguales con ícono. Al costado, el cupo de Base y la publicación asistida.
+const STEPS: { title: string; body: React.ReactNode }[] = [
+  {
+    title: "Creá tu cuenta",
+    body: (
+      <>
+        Con tu correo o con Google. Elegís si publicás como particular o como empresa, taller o broker, y cargás un teléfono de contacto: sin teléfono no se puede publicar.
+      </>
+    ),
+  },
+  {
+    title: "Completá el formulario",
+    body: (
+      <ul className="mt-1 list-disc space-y-1 pl-5">
+        <li>Tipo de aeronave, marca y modelo. Si tu marca o modelo no está en la lista, escribilo y queda sumado para los próximos avisos.</li>
+        <li>Año, horas, precio (o &quot;a consultar&quot;) y ubicación.</li>
+        <li>Hasta {MAX_LISTING_IMAGES} fotos y la descripción. Si adjuntás documentos, cualquier visitante los puede ver.</li>
+      </ul>
+    ),
+  },
+  {
+    title: "Tu aviso queda publicado",
+    body: <>Se ve al momento y no vence: sigue activo hasta que lo pauses o lo marques como vendido. Los interesados te escriben o te llaman directo, sin intermediarios.</>,
+  },
+  {
+    title: "Mantenelo arriba",
+    body: (
+      <>
+        Con las republicaciones de tu plan, el aviso vuelve primero en &quot;Últimas publicaciones&quot; sin cambiar nada. Cuando lo vendas, marcalo como vendido y liberás su lugar.
+      </>
+    ),
+  },
+];
+
+export default async function HowToPublishPage() {
+  // VA-152: cupo de Base vigente (se edita en /admin/plans).
+  const free = await getCachedFreeQuota();
+  return (
+    <main className="relative isolate overflow-hidden min-h-screen">
+      <PageBackground page="howtopublish" />
+
+      <div className="container mx-auto max-w-6xl px-4 pt-6 pb-24">
+        <Breadcrumbs items={[{ label: "Cómo publicar" }]} className="mb-8 sm:mb-12" />
+
+        <PageHeader variant="plain"
+          routeId="va-route-howto"
+          className="mb-12"
+          title="Cómo publicar tu avión o repuesto"
+          subtitle="Publicar es gratis dentro del cupo de tu cuenta y el aviso no vence. Estos son los pasos."
+        />
+
+        <div className="grid gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] md:gap-12">
+          <ol className="relative space-y-10">
+            {/* Ruta punteada entre los waypoints */}
+            <span aria-hidden className="absolute bottom-3 left-[11px] top-3 border-l border-dashed border-[#00205B]/30" />
+            {STEPS.map((step, i) => (
+              <li key={step.title} className="relative pl-10">
+                <span aria-hidden className="absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#00205B] bg-white">
+                  <span className="h-2 w-2 rounded-full bg-[#D62828]" />
+                </span>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#D62828] tabular-nums">Paso {String(i + 1).padStart(2, "0")}</p>
+                <h2 className="mt-1 text-xl font-bold text-[#00205B]">{step.title}</h2>
+                <div className="mt-2 max-w-xl text-base leading-relaxed text-slate-700">{step.body}</div>
+              </li>
+            ))}
+          </ol>
+
+          <aside className="space-y-6 md:sticky md:top-24 md:self-start">
+            <section className="rounded-lg border border-[#00205B]/12 bg-white">
+              <div className="p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Plan Base · gratis</p>
+                <p className="mt-1 text-sm text-slate-600">Avisos activos al mismo tiempo, en toda cuenta:</p>
+              </div>
+              <dl className="grid grid-cols-2 divide-x divide-[#00205B]/10 border-t border-[#00205B]/10 tabular-nums">
+                <div className="px-5 py-3">
+                  <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Aviones</dt>
+                  <dd className="mt-0.5 text-2xl font-bold text-[#00205B]">{free.AIRCRAFT ?? "Sin límite"}</dd>
                 </div>
-
-                {/* Pasos a seguir (Diseño Lineal para máxima claridad) */}
-                <div className="space-y-6 mb-16">
-                    
-                    {/* Paso 1 */}
-                    <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-lg flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                        <div className="flex-shrink-0 bg-blue-50 w-16 h-16 flex items-center justify-center rounded-2xl border border-blue-100">
-                            <UserPlus className="w-8 h-8 text-[#001F58]" />
-                        </div>
-                        <div className="flex-1">
-                            <h2 className="text-2xl font-bold text-[#001F58] mb-2">1. Creá tu cuenta gratis</h2>
-                            <p className="text-lg text-slate-600">
-                                Para proteger tus datos y administrar tus ventas, el primer paso es <strong>registrarte o iniciar sesión</strong>. Es totalmente gratuito y solo te tomará un minuto.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Paso 2 */}
-                    <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-lg flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                        <div className="flex-shrink-0 bg-blue-50 w-16 h-16 flex items-center justify-center rounded-2xl border border-blue-100">
-                            <ListPlus className="w-8 h-8 text-[#001F58]" />
-                        </div>
-                        <div className="flex-1">
-                            <h2 className="text-2xl font-bold text-[#001F58] mb-2">2. Completá el formulario</h2>
-                            <p className="text-lg text-slate-600">
-                                Dirigite a la sección de publicación. Te guiaremos paso a paso para cargar:
-                            </p>
-                            <ul className="list-disc list-inside mt-3 text-lg text-slate-600 space-y-1">
-                                <li>Datos técnicos (Marca, modelo, horas de motor).</li>
-                                <li>Hasta 15 fotografías de buena calidad.</li>
-                                <li>Descripción detallada de tu avión o repuesto.</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    {/* Paso 3 (Destacado porque involucra pago) */}
-                    <div className="bg-[#001F58] rounded-2xl p-6 sm:p-8 border border-[#001F58] shadow-xl flex flex-col sm:flex-row gap-6 items-start sm:items-center text-white relative overflow-hidden">
-                        <div className="absolute -right-10 -top-10 opacity-10 pointer-events-none">
-                            <CreditCard className="w-48 h-48" />
-                        </div>
-                        <div className="flex-shrink-0 bg-white/10 w-16 h-16 flex items-center justify-center rounded-2xl border border-white/20 backdrop-blur-md relative z-10">
-                            <CreditCard className="w-8 h-8 text-white" />
-                        </div>
-                        <div className="flex-1 relative z-10">
-                            <div className="flex items-center gap-3 mb-2">
-                                <h2 className="text-2xl font-bold text-white">3. Pago y Cupón de Descuento</h2>
-                            </div>
-                            <p className="text-lg text-blue-100 mb-4">
-                                Antes de que el anuncio se haga público, el sistema te pedirá abonar el costo de la publicación mediante nuestra pasarela de pago segura. 
-                            </p>
-                            <div className="bg-white/10 border border-white/20 p-4 rounded-xl flex items-start gap-3">
-                                <Ticket className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
-                                <p className="text-base text-white font-medium">
-                                    ¿Tenés un código promocional? ¡No te olvides de ingresarlo en este paso para aplicar tu descuento antes de pagar!
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Paso 4 */}
-                    <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-lg flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                        <div className="flex-shrink-0 bg-emerald-50 w-16 h-16 flex items-center justify-center rounded-2xl border border-emerald-100">
-                            <Megaphone className="w-8 h-8 text-emerald-600" />
-                        </div>
-                        <div className="flex-1">
-                            <h2 className="text-2xl font-bold text-[#001F58] mb-2">4. ¡Publicación activa!</h2>
-                            <p className="text-lg text-slate-600">
-                                Una vez confirmado el pago, tu producto estará visible inmediatamente. Los compradores interesados te contactarán de forma directa y sin intermediarios.
-                            </p>
-                        </div>
-                    </div>
-
+                <div className="px-5 py-3">
+                  <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Repuestos</dt>
+                  <dd className="mt-0.5 text-2xl font-bold text-[#00205B]">{free.SPARE_PART ?? "Sin límite"}</dd>
                 </div>
+              </dl>
+              <p className="border-t border-[#00205B]/10 px-5 py-3 text-sm text-slate-600">
+                Con Pro o Broker / Empresa publicás más avisos a la vez.{" "}
+                <Link href="/plans" className="font-semibold text-[#00205B] underline underline-offset-2">
+                  Planes y precios
+                </Link>
+              </p>
+            </section>
 
-                {/* Acciones Principales */}
-                <div className="flex flex-col sm:flex-row justify-center gap-4 mb-20">
-                    <Link 
-                        href="/publish" 
-                        className="px-8 py-4 bg-[#001F58] text-white rounded-xl font-bold text-lg text-center hover:bg-blue-900 transition-colors shadow-lg flex items-center justify-center gap-2"
-                    >
-                        Comenzar Ahora <ArrowRight className="w-5 h-5" />
-                    </Link>
-                </div>
+            <Link href="/publish" className="flex min-h-12 items-center justify-center rounded-md bg-[#D62828] px-6 text-base font-bold text-white transition-colors hover:bg-[#B71F1F]">
+              Publicar mi aviso
+            </Link>
 
-                {/* Sección Alternativa: Publicación Asistida */}
-                <div className="bg-white rounded-3xl p-8 sm:p-10 border-2 border-red-100 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-                        <HelpCircle className="w-64 h-64" />
-                    </div>
-                    
-                    <div className="relative z-10 text-center sm:text-left flex flex-col sm:flex-row items-center gap-8">
-                        <div className="flex-1">
-                            <h3 className="text-3xl font-bold text-[#001F58] mb-4">
-                                ¿No tenés tiempo o se te complica la tecnología?
-                            </h3>
-                            <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-                                Contamos con un <strong>Servicio de Publicación Asistida</strong>. Dejanos tu número de teléfono y nosotros nos ponemos en contacto con vos. Solo tenés que mandarnos las fotos e información por WhatsApp y nuestro equipo arma el anuncio completo para que no tengas que preocuparte por nada.
-                            </p>
-                            <div className="flex items-center justify-center sm:justify-start gap-2 text-slate-500 font-medium mb-6">
-                                <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                                Sin estrés, fácil y rápido.
-                            </div>
-                            <Link 
-                                href="/publish" 
-                                className="inline-block px-8 py-3.5 bg-red-600 text-white rounded-xl font-bold text-lg text-center hover:bg-red-700 transition-colors shadow-md"
-                            >
-                                Solicitar asistencia técnica
-                            </Link>
-                        </div>
-                    </div>
-                </div>
+            <section className="border-l-2 border-[#00205B] pl-4">
+              <h2 className="text-base font-bold text-[#00205B]">¿Preferís que lo armemos nosotros?</h2>
+              <p className="mt-1 text-sm leading-relaxed text-slate-700">
+                Con la publicación asistida nos dejás tu nombre y tu WhatsApp, nos mandás las fotos y los datos, y armamos el aviso por vos. El formulario está al costado de la página de publicar.
+              </p>
+              <Link href="/publish" className="mt-2 inline-block text-sm font-semibold text-[#00205B] underline underline-offset-2">
+                Pedir publicación asistida
+              </Link>
+            </section>
 
-            </div>
-        </main>
-    );
+            <p className="text-sm text-slate-600">
+              ¿Querés vender más rápido?{" "}
+              <Link href="/services/guides/selling-your-aircraft" className="font-semibold text-[#00205B] underline underline-offset-2">
+                Leé la guía para vender tu avión
+              </Link>
+            </p>
+          </aside>
+        </div>
+      </div>
+    </main>
+  );
 }

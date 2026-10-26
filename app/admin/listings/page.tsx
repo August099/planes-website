@@ -5,24 +5,35 @@ import { getListingsAnalytics } from "../actions";
 import Link from "next/link";
 import { Eye, PhoneCall, ExternalLink, Plane, Wrench, ChevronLeft, ChevronRight } from "lucide-react";
 
+type ListingsData = Awaited<ReturnType<typeof getListingsAnalytics>>;
+
 export default function AdminListingsPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ListingsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // La tabla viene paginada desde el servidor (VA-12): cada página pide solo sus 10 filas.
   useEffect(() => {
-    getListingsAnalytics("30d")
-      .then((res) => setData(res))
+    let cancelled = false;
+    getListingsAnalytics("30d", undefined, currentPage, itemsPerPage)
+      .then((res) => {
+        if (!cancelled) setData(res);
+      })
       .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage]);
 
   if (loading) {
     return <div className="py-20 text-center text-slate-400">Cargando métricas de publicaciones...</div>;
   }
 
-  const formatPrice = (item: any) => {
+  const formatPrice = (item: { price: number | null; type: string; inPesos: boolean }) => {
     if (!item.price) return "A Consultar";
 
     if (item.type === "Aeronave" || !item.inPesos) {
@@ -41,10 +52,10 @@ export default function AdminListingsPage() {
   };
 
   // Lógica de Paginación
-  const totalItems = data?.listings?.length || 0;
-  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentListings = data?.listings?.slice(startIndex, startIndex + itemsPerPage) || [];
+  const totalItems = data?.totalItems || 0;
+  const totalPages = data?.totalPages || 1;
+  const startIndex = ((data?.page || currentPage) - 1) * itemsPerPage;
+  const currentListings = data?.listings || [];
 
   const handlePrevPage = () => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1);
@@ -63,13 +74,13 @@ export default function AdminListingsPage() {
 
       {/* TOP 5 MÁS VISTAS Y CONTACTADAS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
           <h3 className="font-bold text-[#001F58] text-sm flex items-center gap-2">
             <Eye className="w-4 h-4 text-indigo-600" />
             Top 5 Más Vistas
           </h3>
           <div className="space-y-3">
-            {data?.mostViewed?.map((item: any) => (
+            {data?.mostViewed?.map((item) => (
               <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-slate-800 truncate">{item.title}</p>
@@ -83,13 +94,13 @@ export default function AdminListingsPage() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
           <h3 className="font-bold text-[#001F58] text-sm flex items-center gap-2">
             <PhoneCall className="w-4 h-4 text-emerald-600" />
             Top 5 Más Contactadas
           </h3>
           <div className="space-y-3">
-            {data?.mostContacted?.map((item: any) => (
+            {data?.mostContacted?.map((item) => (
               <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-slate-800 truncate">{item.title}</p>
@@ -105,7 +116,7 @@ export default function AdminListingsPage() {
       </div>
 
       {/* TABLA PRINCIPAL CON CONTROLES DE PAGINACIÓN */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h3 className="font-bold text-[#001F58] text-sm">Todas las Publicaciones</h3>
@@ -158,7 +169,7 @@ export default function AdminListingsPage() {
                   </td>
                 </tr>
               ) : (
-                currentListings.map((item: any) => (
+                currentListings.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50">
                     <td className="py-3 pl-1 pr-3 font-medium text-slate-800 max-w-[200px] sm:max-w-[280px]">
                       <span className="block truncate" title={item.title}>

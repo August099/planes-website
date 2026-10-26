@@ -11,6 +11,13 @@ import {
 
 type Option = { id: string; name: string };
 
+// Rangos del selector de precio → parámetros que entiende /aircraft (VA-31).
+const PRICE_RANGES: Record<string, { minPrice?: string; maxPrice?: string }> = {
+  "0-100k": { maxPrice: "100000" },
+  "100k-300k": { minPrice: "100000", maxPrice: "300000" },
+  "300k+": { minPrice: "300000" },
+};
+
 export default function HomeHeroFilter() {
   const router = useRouter();
 
@@ -31,20 +38,37 @@ export default function HomeHeroFilter() {
     getBrands().then(setBrands);
   }, []);
 
-  // Al seleccionar/cambiar marca, traer todos los modelos de esa marca
-  const handleBrandChange = async (bId: string) => {
-    setSelectedBrand(bId);
-    setSelectedModel(""); // Resetea el modelo anterior
-
+  // Al seleccionar/cambiar marca, traer los modelos de esa marca (de la categoría elegida, si hay).
+  const loadModels = async (bId: string, categoryId: string) => {
     if (!bId) {
       setModels([]);
       return;
     }
-
     setLoadingModels(true);
-    const availableModels = await getModelsByBrand(bId);
-    setModels(availableModels);
+    setModels(await getModelsByBrand(bId, categoryId || undefined));
     setLoadingModels(false);
+  };
+
+  const handleBrandChange = async (bId: string) => {
+    setSelectedBrand(bId);
+    setSelectedModel(""); // Resetea el modelo anterior
+    await loadModels(bId, selectedCategory);
+  };
+
+  // VA-153: la categoría acota las marcas y los modelos; si la marca elegida no tiene, se limpia.
+  const handleCategoryChange = async (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    const available = await getBrands(categoryId || undefined);
+    setBrands(available);
+    if (selectedBrand && !available.some((b) => b.id === selectedBrand)) {
+      setSelectedBrand("");
+      setSelectedModel("");
+      setModels([]);
+      return;
+    }
+    const models = selectedBrand ? await getModelsByBrand(selectedBrand, categoryId || undefined) : [];
+    setModels(models);
+    if (selectedModel && !models.some((m) => m.id === selectedModel)) setSelectedModel("");
   };
 
   const handleSearch = () => {
@@ -53,20 +77,22 @@ export default function HomeHeroFilter() {
     if (selectedCategory) params.set("category", selectedCategory);
     if (selectedBrand) params.set("brand", selectedBrand);
     if (selectedModel) params.set("model", selectedModel);
-    if (selectedPrice) params.set("price", selectedPrice);
+    const range = PRICE_RANGES[selectedPrice];
+    if (range?.minPrice) params.set("minPrice", range.minPrice);
+    if (range?.maxPrice) params.set("maxPrice", range.maxPrice);
 
     const queryString = params.toString();
-    router.push(`/planes${queryString ? `?${queryString}` : ""}`);
+    router.push(`/aircraft${queryString ? `?${queryString}` : ""}`);
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-2 sm:p-3 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl">
+    <div className="w-full max-w-4xl mx-auto p-2 sm:p-3 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         {/* Categoría libre */}
         <div className="relative">
           <select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={(e) => void handleCategoryChange(e.target.value)}
             className="w-full h-11 px-4 pr-8 bg-white text-slate-700 text-xs sm:text-sm rounded-xl appearance-none font-medium focus:outline-none cursor-pointer border border-slate-100 shadow-sm"
           >
             <option value="">Categoría</option>
@@ -139,7 +165,7 @@ export default function HomeHeroFilter() {
         <button
           type="button"
           onClick={handleSearch}
-          className="col-span-2 md:col-span-1 h-11 bg-[#DC2626] hover:bg-red-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+          className="col-span-2 md:col-span-1 h-11 bg-[#D62828] hover:bg-[#B71F1F] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
         >
           <span>Buscar</span>
         </button>

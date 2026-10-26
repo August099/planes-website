@@ -12,7 +12,7 @@ export async function updateReportStatusAction(
   const user = await getCurrentUser();
 
   if (!user || !user.isAdmin) {
-    throw new Error("No tienes permisos de administrador.");
+    throw new Error("No tenés permisos de administrador.");
   }
 
   await prisma.report.update({

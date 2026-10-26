@@ -1,22 +1,26 @@
+import { readFileSync } from "node:fs";
+
+// VA-156: versión de MapLibre (la de package.json), para la ruta de public/vendor/ que arma el script
+// scripts/vendor-maplibre.mjs.
+const MAPLIBRE_VERSION: string = JSON.parse(readFileSync("./package.json", "utf8")).dependencies["maplibre-gl"];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: { NEXT_PUBLIC_MAPLIBRE_VERSION: MAPLIBRE_VERSION },
+  // Builds locales de verificación en otra carpeta (NEXT_DIST_DIR=.next-local), así no pisan la de
+  // `next dev` (.next/dev): correr un build con el dev abierto dejaba las rutas /api en 404 y Auth.js
+  // daba ClientFetchError. Sin la variable (Vercel y `npm run dev`), queda .next como siempre.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "picsum.photos", // Permite URLs de Picsum
-      },
-      {
+        // Avisos de prueba que siguen en producción (VA-27): sacarlo cuando se reemplacen.
         protocol: 'https',
         hostname: 'loremflickr.com',
       },
       {
         protocol: "https",
         hostname: "**.supabase.co", // Permite URLs del storage de Supabase
-      },
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
       },
       {
         protocol: 'https',
@@ -32,19 +36,37 @@ const nextConfig = {
       },
     ],
   },
+  // Solo afecta al servidor de desarrollo (túneles de loca.lt para probar en el celular).
+  allowedDevOrigins: ['*.loca.lt'],
   experimental: {
+    // Probado y descartado (VA-76, 18/10): `inlineCss: true` mete el CSS en el HTML pero también lo
+    // repite en los datos de la página; la Home pasaba de 48 KB a 127 KB comprimida en cada visita.
     serverActions: {
-      allowedDevOrigins: ['*.loca.lt', 'localhost:3000'],
-      bodySizeLimit: "30mb", // Aumenta el límite a 10MB (o "20mb" si subes fotos muy pesadas)
+      bodySizeLimit: "30mb",
     },
   },
   staticPageGenerationTimeout: 120,
-  // Temporal (18/10/2026): la base de producción ya tiene el esquema nuevo (VA-150 a VA-158) y este
-  // código es el anterior: toda página que lee la base daba error. Hasta el lanzamiento, todo lo que no
-  // es la Home ("Próximamente"), un archivo (tiene punto), /_next o /api vuelve a la Home. 307: se
-  // quita al mergear el sitio nuevo.
+  // VA-156: MapLibre en public/vendor/maplibre-gl-<versión>/ (la versión está en la ruta): caché larga.
+  async headers() {
+    return [{ source: "/vendor/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] }];
+  },
+  // Las guías se mudaron de /guias a /services/guides, con slugs en inglés (cambio sobre VA-78, 9/10).
+  // permanent: true → 308.
   async redirects() {
-    return [{ source: "/:path((?!_next|api)[^.]+)", destination: "/", permanent: false }];
+    const guides: [string, string][] = [
+      ["como-comprar-un-avion-usado", "buying-a-used-aircraft"],
+      ["como-vender-tu-avion", "selling-your-aircraft"],
+      ["transferencia-de-aeronaves-anac", "aircraft-transfer-anac"],
+      ["glosario-aeronautico", "aviation-glossary"],
+    ];
+    return [
+      // VA-96: las rutas de aeronaves pasan de /planes a /aircraft (la query string se conserva).
+      { source: "/planes", destination: "/aircraft", permanent: true },
+      { source: "/planes/compare", destination: "/aircraft/compare", permanent: true },
+      { source: "/planes/plane-details/:id", destination: "/aircraft/:id", permanent: true },
+      { source: "/guias", destination: "/services/guides", permanent: true },
+      ...guides.map(([from, to]) => ({ source: `/guias/${from}`, destination: `/services/guides/${to}`, permanent: true })),
+    ];
   },
 };
 

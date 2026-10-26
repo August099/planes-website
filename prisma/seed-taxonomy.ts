@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma'; 
 import fs from 'fs';
+import { FilterType, Prisma } from '@prisma/client';
 
 async function main() {
   console.log('🚀 Iniciando la carga de Taxonomía de Producción...');
@@ -15,13 +16,15 @@ async function main() {
 
   // 1. Cargar Categorías de Aeronaves
   console.log('Cargando Categorías de Aeronaves...');
+  // Por id (MP, MT, BP, ...): así un cambio de nombre se actualiza en vez de duplicarse.
   for (const cat of dbData.AircraftCategories) {
     await prisma.aircraftCategory.upsert({
-      where: { name: cat.name },
-      update: {},
+      where: { id: cat.id },
+      update: { name: cat.name },
       create: { id: cat.id, name: cat.name },
     });
   }
+  const categoryIds = new Set<string>(dbData.AircraftCategories.map((c: { id: string }) => c.id));
 
   // 2. Cargar Marcas y Modelos
   console.log('Cargando Marcas, Modelos y Submodelos...');
@@ -33,18 +36,26 @@ async function main() {
     });
 
     for (const model of brand.models) {
+      // Categoría por defecto del modelo (antes se ignoraba y el formulario no podía sugerirla).
+      const recommendedCategoryId = categoryIds.has(model.category) ? model.category : null;
       const createdModel = await prisma.aircraftModel.upsert({
         where: { brandId_name: { brandId: createdBrand.id, name: model.name } },
-        update: {},
-        create: { brandId: createdBrand.id, name: model.name },
+        update: { recommendedCategoryId },
+        create: { brandId: createdBrand.id, name: model.name, recommendedCategoryId },
       });
 
       if (model.subModels) {
         for (const subModel of model.subModels) {
+          // "(PR)" en la composición significa "para más adelante", no Proyecto (D12):
+          // esas variantes heredan la categoría del modelo.
+          const categoryOverride =
+            subModel.category && subModel.category !== "PR" && categoryIds.has(subModel.category)
+              ? subModel.category
+              : null;
           await prisma.aircraftSubModel.upsert({
             where: { modelId_name: { modelId: createdModel.id, name: subModel.name } },
-            update: {},
-            create: { modelId: createdModel.id, name: subModel.name },
+            update: { categoryOverride },
+            create: { modelId: createdModel.id, name: subModel.name, categoryOverride },
           });
         }
       }
@@ -53,7 +64,16 @@ async function main() {
 
   // 3. Cargar Repuestos (Árbol y Filtros)
   console.log('Cargando Categorías y Filtros de Repuestos...');
-  async function processCategory(categoryData: any, parentId: string | null = null) {
+  type SeedFilter = {
+    name: string;
+    slug: string;
+    type: FilterType;
+    config?: Prisma.InputJsonValue;
+    options?: string[];
+  };
+  type SeedCategory = { name: string; slug: string; filters?: SeedFilter[]; children?: SeedCategory[] };
+
+  async function processCategory(categoryData: SeedCategory, parentId: string | null = null) {
     const category = await prisma.category.upsert({
       where: { slug: categoryData.slug },
       update: { parentId },

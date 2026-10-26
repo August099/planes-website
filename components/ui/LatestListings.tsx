@@ -1,17 +1,9 @@
-"use client";
-
+// Componente de servidor (VA-76): solo ScrollCarousel y las tarjetas se hidratan.
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
-
-// Swiper React
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
-
-// Estilos de Swiper
-import "swiper/css";
-import "swiper/css/navigation";
+import { DisplayTitle, HOME_SQUARE_LINK } from "@/components/ui/home/DisplayTitle";
+import { ScrollCarousel } from "@/components/ui/home/ScrollCarousel";
 
 type CategoryProp = { id?: string; name: string } | string | null;
 
@@ -52,104 +44,63 @@ export function LatestAircraft({ items }: LatestListingsProps) {
   if (!items || items.length === 0) return null;
 
   return (
-    <section className="py-8 relative">
+    <section className="relative">
       {/* TÍTULO Y NAVEGACIÓN */}
-      <div className="flex justify-between items-end mb-6">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F58] tracking-tight">
-            Últimas Publicaciones
-          </h2>
-          <p className="text-sm text-slate-500 mt-1">
-            Lo último en aeronaves y repuestos certificados ingresados al mercado
-          </p>
-        </div>
-        <div className="flex gap-4 hidden sm:flex text-sm font-semibold text-[#001F58]">
-          <Link href="/planes" className="hover:underline">
-            Ver Aviones →
-          </Link>
-          <span className="text-slate-300">•</span>
-          <Link href="/spareparts" className="hover:underline">
-            Ver Repuestos →
-          </Link>
-        </div>
+      <div className="mb-8">
+        <DisplayTitle
+          aside={
+            <div className="flex gap-2">
+              <Link href="/aircraft" className={HOME_SQUARE_LINK}>
+                Ver aviones
+              </Link>
+              <Link href="/spareparts" className={HOME_SQUARE_LINK}>
+                Ver repuestos
+              </Link>
+            </div>
+          }
+        >
+          Últimas Publicaciones
+        </DisplayTitle>
+        <p className="mt-3 text-sm text-slate-600">Lo último en aeronaves y repuestos certificados ingresados al mercado</p>
       </div>
 
-      {/* CARRUSEL SWIPER */}
-      <div className="relative">
-        {/* FLECHA IZQUIERDA */}
-        <button
-          id="swiper-latest-listings-prev"
-          className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-          aria-label="Anterior"
-        >
-          <ChevronLeft className="w-10 h-10 sm:w-12 sm:h-12 stroke-[2.5]" />
-        </button>
-
-        <Swiper
-          modules={[Navigation]}
-          navigation={{
-            prevEl: "#swiper-latest-listings-prev",
-            nextEl: "#swiper-latest-listings-next",
-          }}
-          spaceBetween={20}
-          slidesPerView={1}
-          breakpoints={{
-            480: {
-              slidesPerView: 2,
-              spaceBetween: 16,
-            },
-            768: {
-              slidesPerView: 3,
-              spaceBetween: 20,
-            },
-            1280: {
-              slidesPerView: 4,
-              spaceBetween: 24,
-            },
-          }}
-          className="py-2"
-        >
-          {items.map((item) => (
-            <SwiperSlide key={`${item.type}-${item.id}`} className="h-auto">
-              {item.type === "AIRCRAFT" ? (
-                <AircraftCard
-                  id={item.id}
-                  title={item.title}
-                  price={item.price}
-                  year={item.year}
-                  category={item.category}
-                  totalTimeHours={item.totalTimeHours}
-                  city={item.city}
-                  province={item.province}
-                  imageUrl={item.imageUrl}
-                  isFavoriteInitial={item.isFavoriteInitial}
-                />
-              ) : (
-                <SparePartCard
-                  id={item.id}
-                  title={item.title}
-                  price={item.price}
-                  inPesos={item.inPesos}
-                  category={item.category}
-                  city={item.city}
-                  province={item.province}
-                  imageUrl={item.imageUrl}
-                  isFavoriteInitial={item.isFavoriteInitial}
-                />
-              )}
-            </SwiperSlide>
-          ))}
-        </Swiper>
-
-        {/* FLECHA DERECHA */}
-        <button
-          id="swiper-latest-listings-next"
-          className="absolute -right-4 top-1/2 -translate-y-1/2 z-20 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-          aria-label="Siguiente"
-        >
-          <ChevronRight className="w-10 h-10 sm:w-12 sm:h-12 stroke-[2.5]" />
-        </button>
-      </div>
+      {/* VA-139: en celular se asoma la tarjeta siguiente (1,15); 2 desde 480 px, 3 desde md y 4 desde xl. */}
+      <ScrollCarousel
+        label="Últimas publicaciones"
+        gapClassName="gap-3 min-[480px]:gap-4 md:gap-5 xl:gap-6"
+        slideClassName="w-[calc((100%-1.8px)/1.15)] min-[480px]:w-[calc((100%-16px)/2)] md:w-[calc((100%-40px)/3)] xl:w-[calc((100%-72px)/4)]"
+      >
+        {items.map((item) =>
+          item.type === "AIRCRAFT" ? (
+            <AircraftCard
+              key={`${item.type}-${item.id}`}
+              id={item.id}
+              title={item.title}
+              price={item.price}
+              year={item.year}
+              category={item.category}
+              totalTimeHours={item.totalTimeHours}
+              city={item.city}
+              province={item.province}
+              imageUrl={item.imageUrl}
+              isFavoriteInitial={item.isFavoriteInitial}
+            />
+          ) : (
+            <SparePartCard
+              key={`${item.type}-${item.id}`}
+              id={item.id}
+              title={item.title}
+              price={item.price}
+              inPesos={item.inPesos}
+              category={item.category}
+              city={item.city}
+              province={item.province}
+              imageUrl={item.imageUrl}
+              isFavoriteInitial={item.isFavoriteInitial}
+            />
+          ),
+        )}
+      </ScrollCarousel>
     </section>
   );
 }

@@ -1,28 +1,34 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
-import { createListing, sendManagedListingEmail } from "@/app/publish/actions";
+import { useState, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { createListing, sendManagedListingEmail, updateListing } from "@/app/publish/actions";
+import { compressImage } from "@/lib/image-compressor";
+import {
+    AIRCRAFT_GROUPS,
+    ENGINE_LABELS,
+    categoriesInGroup,
+    categoryDef,
+    groupHasEngines,
+    resolveCategoryId,
+    type EngineKind,
+} from "@/lib/aircraft-categories";
+import { brandsInCategories, effectiveCategory, modelsInCategories, variantsInCategories } from "@/lib/aircraft-taxonomy";
+import { isRequired, minEngines, requiredMark } from "@/lib/aircraft-rules";
+import { discardUploaded, uploadListingFiles } from "@/lib/listing-upload-client";
+import { listingSchema, toFieldErrors, MAX_LISTING_IMAGES, type EditListingData, type FieldErrors, type ListingInput } from "@/lib/listing-schema";
 import Image from "next/image";
 import Link from "next/link";
 import Stepper, { Step } from "@/components/ui/Stepper";
-import { 
-    Plane, 
-    Wrench, 
-    Plus, 
-    Trash2, 
-    CheckCircle2, 
-    Gauge, 
-    FileText,
-    HelpCircle,
-    Send,
-    AlertCircle,
-    Upload,
-    Paperclip,
-    Search,
-    X,
-    GripHorizontal,
-    Rocket
-} from "lucide-react";
+import { PageBackground } from "@/components/ui/PageBackground";
+import { Plane, Wrench, Plus, Trash2, CheckCircle2, Gauge, FileText, HelpCircle, Send, AlertCircle, Upload, Paperclip, Search, X, GripHorizontal } from "lucide-react";
+import { PhoneRequiredCard } from "@/components/ui/PhoneRequiredCard";
+import { FoundingMemberDialog } from "@/components/ui/FoundingMemberDialog";
+import { DescriptionTextarea } from "@/components/ui/DescriptionTextarea";
+import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
+import { LocalityInput } from "@/components/ui/LocalityInput";
+import { cityConflictsWithProvince } from "@/lib/localities";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export interface CategoryOption { 
     id: string; 
@@ -39,7 +45,7 @@ export interface SubModelOption {
 export interface ModelOption {
     id: string;
     name: string;
-    defaultCategoryId?: string | null;
+    recommendedCategoryId?: string | null;
     variants?: SubModelOption[];
 }
 
@@ -51,9 +57,29 @@ export interface BrandOption {
 
 interface PublishFormProps {
     userId: string | null;
-    categoriesData?: CategoryOption[];
     brandsData?: BrandOption[];
     spareCategoriesData?: CategoryOption[];
+    // Si viene, el formulario edita esa publicación (/publish?edit=<id>) en vez de crear una.
+    editListing?: EditListingData;
+    // VA-46: el usuario no tiene teléfono cargado (no puede publicar hasta cargarlo).
+    needsPhone?: boolean;
+    // VA-170: el plan incluye detalles personalizados (campo "Video de YouTube").
+    canVideo?: boolean;
+    // VA-152: uso del cupo de la cuenta (solo al crear). limit null = ilimitado.
+    quota?: { tier: "BASE" | "PRO" | "BROKER" | "ADMIN"; planName: string; aircraft: QuotaLine; parts: QuotaLine };
+    // VA-152: hay planes pagos activos en /plans (si no, no se ofrece "Pasarme a Pro").
+    plansAvailable?: boolean;
+}
+
+type QuotaLine = { used: number; limit: number | null };
+
+// VA-152: "Ya tenés 1 avión activo, que es el cupo de tu plan Gratis" (o, si quedó por encima del
+// cupo, "Tenés 5 aviones activos y el cupo de tu plan Gratis es de 1").
+function quotaFullText(tab: "aircraft" | "parts", used: number, limit: number, planName: string) {
+    const word = (n: number) => (tab === "aircraft" ? (n === 1 ? "avión activo" : "aviones activos") : n === 1 ? "repuesto activo" : "repuestos activos");
+    return used > limit
+        ? `Tenés ${used} ${word(used)} y el cupo de tu plan ${planName} es de ${limit}`
+        : `Ya tenés ${used} ${word(used)}, que es el cupo de tu plan ${planName}`;
 }
 
 interface EngineInput {
@@ -61,7 +87,7 @@ interface EngineInput {
     model: string;
     engineHours: string;
     TBO: string;
-    DURG: string;
+    horsepower: string;
     description: string;
 }
 
@@ -72,16 +98,43 @@ interface PropellerInput {
     description: string;
 }
 
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const DOCUMENT_TYPES = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ...IMAGE_TYPES,
+];
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+// Error de validación debajo de un campo (viene del mismo esquema que usa el servidor).
+function FieldError({ message }: { message?: string }) {
+    if (!message) return null;
+    return <p className="text-[11px] text-red-600 font-semibold mt-1">{message}</p>;
+}
+
+const EMPTY_ENGINE: EngineInput = { brand: "", model: "", engineHours: "", TBO: "", horsepower: "", description: "" };
+
 export default function PublishForm({
     userId,
-    categoriesData = [],
     brandsData = [],
-    spareCategoriesData = []
+    spareCategoriesData = [],
+    editListing,
+    needsPhone = false,
+    canVideo = false,
+    quota,
+    plansAvailable = false
 }: PublishFormProps) {
     const errorRef = useRef<HTMLDivElement>(null);
+    const isEditing = !!editListing;
+    const [phoneMissing, setPhoneMissing] = useState(needsPhone && !isEditing);
 
     // Sistema de Pasos
-    const [activeTab, setActiveTab] = useState<"aircraft" | "parts">("aircraft");    
+    const [activeTab, setActiveTab] = useState<"aircraft" | "parts">(editListing?.type ?? "aircraft");
+    // VA-152: sin cupo libre, el usuario puede elegir guardarlo pausado (por tipo de aviso).
+    const [saveAsPaused, setSaveAsPaused] = useState<{ aircraft: boolean; parts: boolean }>({ aircraft: false, parts: false });
+    const quotaLine = quota ? (activeTab === "aircraft" ? quota.aircraft : quota.parts) : null;
+    const quotaFull = !isEditing && !!quotaLine && quotaLine.limit !== null && quotaLine.used >= quotaLine.limit;
     const [currentStep, setCurrentStep] = useState(1);
 
     // Controla si el usuario ya intentó avanzar en el paso actual.
@@ -98,7 +151,7 @@ export default function PublishForm({
     }, [brandsData]);
     const [searchModel, setSearchModel] = useState("");
     const [showModelDropdown, setShowModelDropdown] = useState(false);
-    const [compatibleModels, setCompatibleModels] = useState<string[]>([]);
+    const [compatibleModels, setCompatibleModels] = useState<string[]>(editListing?.parts?.aircrafts ?? []);
 
     const filteredModels = useMemo(() => {
         if (!searchModel) return allAircraftModels.slice(0, 10);
@@ -117,10 +170,11 @@ export default function PublishForm({
         setCompatibleModels(compatibleModels.filter(m => m !== model));
     };
 
-    const [selectedBrandModels, setSelectedBrandModels] = useState<ModelOption[]>([]);
-    const [selectedModelVariants, setSelectedModelVariants] = useState<SubModelOption[]>([]);
-    const [selectedParentCategoryId, setSelectedParentCategoryId] = useState<string>("");
-    const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string>("");
+    // Marca inicial: la de la publicación que se edita o, si no hay, la primera de la lista.
+    // Antes se completaba en un efecto después del primer render (VA-63).
+    const initialBrandId = editListing?.aircraft?.brandId || brandsData[0]?.id || "";
+    const [selectedParentCategoryId, setSelectedParentCategoryId] = useState<string>(editListing?.parts?.parentCategoryId ?? "");
+    const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string>(editListing?.parts?.subCategoryId ?? "");
 
     const subCategories = useMemo(() => {
       const parent = spareCategoriesData.find((cat) => cat.id === selectedParentCategoryId);
@@ -160,16 +214,30 @@ export default function PublishForm({
         description: "",
     });
 
+    const router = useRouter();
     const [isPublishing, setIsPublishing] = useState(false);
+    // Candado contra doble clic: el estado de React tarda un render en actualizarse.
+    const submittingRef = useRef(false);
+    const [publishStatus, setPublishStatus] = useState<string | null>(null);
+    // VA-182: primer aviso de una cuenta fundadora: ventana de bienvenida antes de ir al aviso.
+    const [founder, setFounder] = useState<{ until: string; url: string } | null>(null);
+    const [compressing, setCompressing] = useState<{ done: number; total: number } | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
     const [isSubmittingManaged, setIsSubmittingManaged] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
-    const [isSuccess, setIsSuccess] = useState(false);
     const [managedSuccess, setManagedSuccess] = useState(false);
 
     const currentYear = new Date().getFullYear();
 
+    // Solo los modelos del año en curso pueden ser "Nuevo"; la marca vacía toma la inicial.
+    const withInitialFixes = <T extends { year: number; condition: "USADO" | "NUEVO"; brandId: string }>(form: T): T => ({
+        ...form,
+        brandId: form.brandId || initialBrandId,
+        condition: form.year === currentYear ? form.condition : "USADO",
+    });
+
     // ESTADO: Formulario de aeronaves
-    const [aircraftForm, setAircraftForm] = useState({
+    const [aircraftForm, setAircraftForm] = useState(() => withInitialFixes(editListing?.aircraft ?? {
         title: "",
         year: currentYear,
         condition: "USADO" as "USADO" | "NUEVO",
@@ -181,17 +249,20 @@ export default function PublishForm({
         subModelId: "",
         customModel: "",
         categoryId: "",
-        engineType: "PISTON" as "PISTON" | "TURBOPROP",
         totalTimeHours: "",
         financing: false,
         trade: false,
         rent: false,
+        negotiable: false,
+        extraEquipment: "",
+        agEquipment: "",
         avDescription: "",
         avAaptoifr: false,
         avAutopilot: false,
-        certified: false,
+        certified: null as boolean | null,
         certDate: "",
         plate: "",
+        youtubeUrl: "",
         city: "",
         province: "",
         intDescription: "",
@@ -200,19 +271,72 @@ export default function PublishForm({
         oxygen: false,
         extDescription: "",
         description: "",
+    }));
+
+    // VA-165: marca, modelo y submodelo de la lista, y la categoría RECOMENDADA del modelo (o del submodelo).
+    // Se propone sola pero se puede cambiar (aviones modificados): las reglas usan la elegida.
+    const brandModels = useMemo(() => brandsData.find((b) => b.id === aircraftForm.brandId)?.models ?? [], [brandsData, aircraftForm.brandId]);
+    const currentModel = brandModels.find((m) => m.id === aircraftForm.modelId);
+    const currentVariant = currentModel?.variants?.find((v) => v.id === aircraftForm.subModelId);
+    const recommendedCategory = effectiveCategory(currentModel, currentVariant);
+
+    // VA-43: "Tipo de aeronave" + "Motorización" resuelven la categoría (MP/MT/BP/BT/...).
+    // pendingGroup guarda el tipo elegido mientras todavía falta la motorización; pickedCategoryId, la
+    // categoría elegida a mano: acota las marcas y los modelos por su recomendada (VA-153), salvo con
+    // "Ver todas las marcas" (showAllBrands).
+    const [pendingGroup, setPendingGroup] = useState("");
+    const [pickedCategoryId, setPickedCategoryId] = useState(() => (editListing?.aircraft?.modelId ? "" : aircraftForm.categoryId));
+    const [showAllBrands, setShowAllBrands] = useState(false);
+    const selectedGroup = categoryDef(aircraftForm.categoryId)?.group ?? pendingGroup;
+    const selectedEngine = categoryDef(aircraftForm.categoryId)?.engine ?? null;
+
+    const pickedGroup = categoryDef(pickedCategoryId)?.group ?? pendingGroup;
+    const categoryFilter = showAllBrands ? [] : pickedCategoryId ? [pickedCategoryId] : pickedGroup ? categoriesInGroup(pickedGroup).map((c) => c.id) : [];
+    // Lo ya elegido siempre queda en la lista, aunque no sea de la categoría (un modificado).
+    const keep = <T extends { id: string }>(filtered: T[], all: T[], id: string) =>
+        filtered.some((x) => x.id === id) ? filtered : [...filtered, ...all.filter((x) => x.id === id)];
+    const brandOptions = keep(brandsInCategories(brandsData, categoryFilter), brandsData, aircraftForm.brandId);
+    const modelOptions = keep(modelsInCategories(brandModels, categoryFilter), brandModels, aircraftForm.modelId);
+    const variantOptions = currentModel ? keep(variantsInCategories(currentModel, categoryFilter), currentModel.variants ?? [], aircraftForm.subModelId) : [];
+
+    /** "Monomotor Pistón", "Agrícola"… */
+    const categoryLabel = (id: string) => {
+        const def = categoryDef(id);
+        return def ? (def.engine ? `${def.group} ${ENGINE_LABELS[def.engine]}` : def.group) : id;
+    };
+
+    // Nueva categoría + limpieza de "Implementos agrícolas" si deja de ser Agrícola (VA-54).
+    const withCategory = <T extends { categoryId: string; agEquipment: string }>(prev: T, categoryId: string): T => ({
+        ...prev,
+        categoryId,
+        agEquipment: categoryId === "A" ? prev.agEquipment : "",
     });
 
-    useEffect(() => {
-        if (aircraftForm.year !== currentYear) {
-            setAircraftForm(prev => ({ ...prev, condition: "USADO" }));
-        }
-    }, [aircraftForm.year, currentYear]);
+    // Categoría elegida a mano. Con un modelo ya elegido no se toca nada (puede ser un avión modificado);
+    // sin modelo, la marca que no tiene nada de esa categoría se limpia (por ejemplo, la que viene preelegida).
+    const pickCategory = (group: string, categoryId: string) => {
+        setPendingGroup(group);
+        setPickedCategoryId(categoryId);
+        const filter = showAllBrands ? [] : categoryId ? [categoryId] : group ? categoriesInGroup(group).map((c) => c.id) : [];
+        setAircraftForm((prev) => {
+            const next = withCategory(prev, categoryId);
+            const brand = brandsData.find((b) => b.id === prev.brandId);
+            if (!prev.modelId && brand && brandsInCategories([brand], filter).length === 0) return { ...next, brandId: "" };
+            return next;
+        });
+    };
 
-    const [engines, setEngines] = useState<EngineInput[]>([]);
-    const [propellers, setPropellers] = useState<PropellerInput[]>([]);
+    // Monomotor/Bimotor: se conserva la motorización si ya estaba elegida.
+    const handleGroupChange = (group: string) => pickCategory(group, resolveCategoryId(group, selectedEngine));
+
+    const handleEngineChange = (engine: EngineKind) => pickCategory(selectedGroup, resolveCategoryId(selectedGroup, engine));
+
+    // VA-90: el alta arranca con un motor vacío, así no hay que buscar "Agregar Motor".
+    const [engines, setEngines] = useState<EngineInput[]>(editListing?.engines ?? [{ ...EMPTY_ENGINE }]);
+    const [propellers, setPropellers] = useState<PropellerInput[]>(editListing?.propellers ?? []);
 
     // ESTADO: Formulario de repuestos
-    const [partsForm, setPartsForm] = useState({
+    const [partsForm, setPartsForm] = useState(() => editListing?.parts ?? {
         title: "",
         brand: "",
         price: "",
@@ -224,23 +348,17 @@ export default function PublishForm({
         description: "",
         partNumber: "",
         stock: "1",
+        youtubeUrl: "",
         categoryId: "",
     });
 
     // ESTADO: Archivos
-    const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
+    // Fotos: las que ya tenía la publicación (url) y las nuevas (file), en el orden elegido.
+    const [images, setImages] = useState<{ file?: File; url?: string; preview: string }[]>(
+        () => editListing?.images.map((url) => ({ url, preview: url })) ?? []
+    );
     const [documents, setDocuments] = useState<File[]>([]);
-
-    useEffect(() => {
-      if (brandsData && brandsData.length > 0 && !aircraftForm.brandId) {
-        const firstBrand = brandsData[0];
-        setAircraftForm((prev) => ({
-          ...prev,
-          brandId: firstBrand.id,
-        }));
-        setSelectedBrandModels(firstBrand.models || []);
-      }
-    }, [brandsData]);
+    const [existingDocuments, setExistingDocuments] = useState<{ name: string; url: string }[]>(editListing?.documents ?? []);
 
     const setErrorAndScroll = (msg: string) => {
       setFormError(msg);
@@ -249,8 +367,8 @@ export default function PublishForm({
       }, 100);
     };
 
+    // VA-165: al elegir modelo o submodelo, la categoría es la elegida a mano o, si no hay, la recomendada.
     const handleBrandChange = (brandId: string) => {
-        const foundBrand = brandsData.find((b) => b.id === brandId);
         setAircraftForm((prev) => ({
             ...prev,
             brandId,
@@ -259,40 +377,27 @@ export default function PublishForm({
             subModelId: "",
             customModel: "",
         }));
-        setSelectedBrandModels(foundBrand?.models || []);
-        setSelectedModelVariants([]);
     };
 
     const handleModelChange = (modelId: string) => {
-      if (modelId === "CUSTOM_MODEL") {
-        setSelectedModelVariants([]);
-        setAircraftForm((prev) => ({ ...prev, modelId: "CUSTOM_MODEL", subModelId: "", customModel: "" }));
-        return;
-      }
-      const foundModel = selectedBrandModels.find((m) => m.id === modelId);
-      const targetCategory = foundModel?.defaultCategoryId || aircraftForm.categoryId;
-      setSelectedModelVariants(foundModel?.variants || []);
+      const foundModel = brandModels.find((m) => m.id === modelId);
       setAircraftForm((prev) => ({
-        ...prev,
+        ...withCategory(prev, pickedCategoryId || effectiveCategory(foundModel) || prev.categoryId),
         modelId,
         subModelId: "",
         customModel: "",
-        categoryId: targetCategory, 
       }));
     };
 
     const handleSubModelChange = (subModelId: string) => {
-      const foundVariant = selectedModelVariants.find((v) => v.id === subModelId);
-      const currentModel = selectedBrandModels.find((m) => m.id === aircraftForm.modelId);
-      const targetCategory = foundVariant?.categoryOverride || currentModel?.defaultCategoryId || aircraftForm.categoryId;
+      const foundVariant = currentModel?.variants?.find((v) => v.id === subModelId);
       setAircraftForm((prev) => ({
-        ...prev,
+        ...withCategory(prev, pickedCategoryId || effectiveCategory(currentModel, foundVariant) || prev.categoryId),
         subModelId,
-        categoryId: targetCategory,
       }));
     };
 
-    const addEngine = () => setEngines([...engines, { brand: "", model: "", engineHours: "", TBO: "", DURG: "", description: "" }]);
+    const addEngine = () => setEngines([...engines, { ...EMPTY_ENGINE }]);
     const removeEngine = (index: number) => {
         const updatedEngines = engines.filter((_, i) => i !== index);
         setEngines(updatedEngines);
@@ -321,29 +426,46 @@ export default function PublishForm({
         setPropellers(updated);
     };
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files) return;
       const filesArray = Array.from(e.target.files);
+      e.target.value = "";
       setFormError(null);
 
-      if (images.length + filesArray.length > 15) {
-        setErrorAndScroll("Solo podés subir un máximo de 15 imágenes.");
+      if (images.length + filesArray.length > MAX_LISTING_IMAGES) {
+        setErrorAndScroll(`Solo podés subir un máximo de ${MAX_LISTING_IMAGES} imágenes.`);
         return;
       }
 
-      const newImages = filesArray.map((file) => ({
+      // Mismo criterio que el servidor (lib/upload-validation.ts): JPG, PNG o WebP de hasta 10 MB.
+      const invalid = filesArray.find((file) => !IMAGE_TYPES.includes(file.type) || file.size > MAX_FILE_SIZE);
+      if (invalid) {
+        setErrorAndScroll(`"${invalid.name}" debe ser una imagen JPG, PNG o WebP de hasta 10 MB.`);
+        return;
+      }
+
+      // Las fotos de celular (3–6 MB) se comprimen acá (máx. 1920 px y ~0,8 MB) antes de subirlas.
+      setCompressing({ done: 0, total: filesArray.length });
+      const compressed: File[] = [];
+      for (const file of filesArray) {
+        compressed.push(await compressImage(file, "listings"));
+        setCompressing({ done: compressed.length, total: filesArray.length });
+      }
+      setCompressing(null);
+
+      const newImages = compressed.map((file) => ({
         file,
         preview: URL.createObjectURL(file),
       }));
 
       setImages((prev) => [...prev, ...newImages]);
-      e.target.value = '';
+      setFieldErrors((prev) => ({ ...prev, images: "" }));
     };
 
     const removeImage = (index: number) => {
       setImages((prev) => {
         const updated = [...prev];
-        URL.revokeObjectURL(updated[index].preview);
+        if (updated[index].file) URL.revokeObjectURL(updated[index].preview);
         updated.splice(index, 1);
         return updated;
       });
@@ -369,8 +491,13 @@ export default function PublishForm({
     const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files) return;
       const filesArray = Array.from(e.target.files);
+      e.target.value = "";
+      const invalid = filesArray.find((file) => !DOCUMENT_TYPES.includes(file.type) || file.size > MAX_FILE_SIZE);
+      if (invalid) {
+        setErrorAndScroll(`"${invalid.name}" debe ser un PDF, Word o imagen de hasta 10 MB.`);
+        return;
+      }
       setDocuments((prev) => [...prev, ...filesArray]);
-      e.target.value = '';
     };
     const removeDocument = (index: number) => setDocuments((prev) => prev.filter((_, i) => i !== index));
 
@@ -383,23 +510,30 @@ export default function PublishForm({
                 if (!aircraftForm.title.trim()) return "Falta el Título de la publicación.";
                 if (isNaN(Number(aircraftForm.year)) || aircraftForm.year < 1900 || aircraftForm.year > currentYear) return "Año inválido.";
                 if (!aircraftForm.priceOnRequest && (!aircraftForm.price || Number(aircraftForm.price) < 0)) return "Ingrese el Precio (o marque 'A Consultar').";
-                if (aircraftForm.totalTimeHours === "" || Number(aircraftForm.totalTimeHours) < 0) return "Faltan las Horas Totales.";
+                if (aircraftForm.totalTimeHours === "" && isRequired("totalTimeHours", aircraftForm.categoryId)) return "Faltan las Horas Totales.";
+                if (aircraftForm.totalTimeHours !== "" && Number(aircraftForm.totalTimeHours) < 0) return "Las horas totales no pueden ser negativas.";
                 if (!aircraftForm.brandId) return "Seleccione una Marca.";
                 if (aircraftForm.brandId === "CUSTOM" && !aircraftForm.customBrand.trim()) return "Ingrese la Marca personalizada.";
                 if (!aircraftForm.modelId) return "Seleccione un Modelo.";
                 if (aircraftForm.modelId === "CUSTOM_MODEL" && !aircraftForm.customModel.trim()) return "Ingrese el Modelo personalizado.";
-                if (!aircraftForm.categoryId) return "Seleccione una Categoría.";
+                if (!selectedGroup) return "Elegí el tipo de aeronave.";
+                if (!aircraftForm.categoryId) return "Elegí la motorización (Pistón o Turbohélice).";
             }
             if (step === 2) {
-                if (!aircraftForm.avDescription.trim()) return "La descripción de Aviónica es obligatoria.";
+                if (!aircraftForm.avDescription.trim() && isRequired("avDescription", aircraftForm.categoryId)) return "La descripción de Aviónica es obligatoria.";
+                const neededEngines = minEngines(aircraftForm.categoryId);
+                if (engines.length < neededEngines) return neededEngines === 2 ? "Un bimotor necesita los dos motores." : "Agregá al menos un motor.";
                 for (let i = 0; i < engines.length; i++) {
-                    if (!engines[i].TBO) return `El TBO del Motor #${i + 1} es obligatorio.`;
+                    if (!engines[i].brand.trim() && !engines[i].model.trim()) return `Completá la marca o el modelo del Motor #${i + 1}.`;
+                }
+                for (let i = 0; i < engines.length; i++) {
+                    if (!engines[i].TBO && isRequired("TBO", aircraftForm.categoryId)) return `El TBO del Motor #${i + 1} es obligatorio.`;
                 }
                 if (propellers.length > engines.length) return "Demasiadas hélices (máximo igual a la cantidad de motores).";
             }
             if (step === 3) {
                 if (images.length === 0) return "Debe adjuntar al menos una imagen.";
-                if (!aircraftForm.certified) return "Debe confirmar si cuenta con habilitación anual.";
+                if (aircraftForm.certified === null) return "Indicá si la aeronave está habilitada (Sí o No).";
             }
         } else {
             if (step === 1) {
@@ -435,82 +569,163 @@ export default function PublishForm({
         return null;
     };
 
+    // Datos del formulario con la forma que espera el esquema (lib/listing-schema.ts).
+    const buildListingInput = (imagePaths: string[], docs: { path: string; name: string }[]): ListingInput =>
+      activeTab === "aircraft"
+        ? {
+            listingType: "aircraft",
+            title: aircraftForm.title,
+            year: String(aircraftForm.year),
+            condition: aircraftForm.condition,
+            price: aircraftForm.price,
+            priceOnRequest: aircraftForm.priceOnRequest,
+            brandId: aircraftForm.brandId === "CUSTOM" ? "" : aircraftForm.brandId,
+            customBrand: aircraftForm.brandId === "CUSTOM" ? aircraftForm.customBrand : "",
+            modelId: aircraftForm.modelId === "CUSTOM_MODEL" ? "" : aircraftForm.modelId,
+            subModelId: aircraftForm.subModelId,
+            customModel: aircraftForm.modelId === "CUSTOM_MODEL" ? aircraftForm.customModel : "",
+            categoryId: aircraftForm.categoryId,
+            totalTimeHours: aircraftForm.totalTimeHours,
+            financing: aircraftForm.financing,
+            trade: aircraftForm.trade,
+            rent: aircraftForm.rent,
+            negotiable: aircraftForm.negotiable,
+            extraEquipment: aircraftForm.extraEquipment,
+            agEquipment: aircraftForm.categoryId === "A" ? aircraftForm.agEquipment : "",
+            avDescription: aircraftForm.avDescription,
+            avAaptoifr: aircraftForm.avAaptoifr,
+            avAutopilot: aircraftForm.avAutopilot,
+            // null = sin responder: el esquema lo rechaza con su mensaje.
+            certified: aircraftForm.certified as boolean,
+            certDate: aircraftForm.certDate,
+            plate: aircraftForm.plate,
+            youtubeUrl: aircraftForm.youtubeUrl ?? "",
+            city: aircraftForm.city,
+            province: aircraftForm.province,
+            intDescription: aircraftForm.intDescription,
+            extDescription: aircraftForm.extDescription,
+            passengers: aircraftForm.passengers,
+            airconditioner: aircraftForm.airconditioner,
+            oxygen: aircraftForm.oxygen,
+            description: aircraftForm.description,
+            engines,
+            propellers,
+            images: imagePaths,
+            documents: docs,
+          }
+        : {
+            listingType: "parts",
+            title: partsForm.title,
+            brand: partsForm.brand,
+            price: partsForm.price,
+            inPesos: partsForm.inPesos,
+            priceOnRequest: partsForm.priceOnRequest,
+            condition: partsForm.condition as "NUEVO" | "USADO" | "RECORRIDO" | "REPARAR",
+            city: partsForm.city,
+            province: partsForm.province,
+            description: partsForm.description,
+            partNumber: partsForm.partNumber,
+            stock: partsForm.stock,
+            categoryId: partsForm.categoryId,
+            youtubeUrl: partsForm.youtubeUrl ?? "",
+            aircrafts: compatibleModels,
+            images: imagePaths,
+          };
+
+    const showFieldErrors = (errors: FieldErrors, message = "Revisá los campos marcados.") => {
+      setFieldErrors(errors);
+      const details = [...new Set(Object.values(errors))].filter((d) => d && d !== message);
+      setErrorAndScroll(details.length ? `${message} ${details.join(" ")}` : message);
+    };
+
     const submitForm = async () => {
+      if (submittingRef.current || compressing) return;
       setFormError(null);
+      setFieldErrors({});
+
+      if (phoneMissing) {
+        setErrorAndScroll("Para publicar tenés que cargar tu teléfono de contacto (arriba de todo).");
+        return;
+      }
+
       const validationError = validateForm();
       if (validationError) {
         setErrorAndScroll(validationError);
         return;
       }
 
+      // Misma validación que el servidor, antes de subir nada (las rutas son provisorias).
+      const precheck = listingSchema.safeParse(
+        buildListingInput(
+          images.map((img, i) => img.url ?? `pendiente-${i}`),
+          [
+            ...existingDocuments.map((d) => ({ path: d.url, name: d.name })),
+            ...documents.map((d, i) => ({ path: `pendiente-${i}`, name: d.name })),
+          ]
+        )
+      );
+      if (!precheck.success) {
+        showFieldErrors(toFieldErrors(precheck.error));
+        return;
+      }
+
+      submittingRef.current = true;
       setIsPublishing(true);
+      let uploaded: { images: string[]; documents: { path: string; name: string }[] } | null = null;
       try {
-        const data = new FormData();
-        data.append("listingType", activeTab);
+        // 1. Fotos y documentos directo a Supabase (no pasan por Vercel).
+        setPublishStatus("Subiendo fotos...");
+        // En la edición solo se suben las fotos y documentos nuevos.
+        const upload = await uploadListingFiles(
+          activeTab,
+          images.flatMap((img) => (img.file ? [img.file] : [])),
+          activeTab === "aircraft" ? documents : [],
+          ({ done, total }) => setPublishStatus(`Subiendo archivos ${done}/${total}...`)
+        );
+        if (!upload.ok) {
+          setErrorAndScroll(upload.error);
+          return;
+        }
+        uploaded = upload;
 
-        images.forEach((img) => data.append("files", img.file));
-        documents.forEach((doc) => data.append("documents", doc));
-
-        if (activeTab === "aircraft") {
-          data.append("title", aircraftForm.title.trim());
-          data.append("year", aircraftForm.year.toString());
-          data.append("condition", aircraftForm.condition);
-          data.append("price", aircraftForm.price);
-          data.append("priceOnRequest", aircraftForm.priceOnRequest.toString());
-          data.append("brandId", aircraftForm.brandId === "CUSTOM" ? "" : aircraftForm.brandId);
-          data.append("customBrand", aircraftForm.customBrand.trim());
-          data.append("modelId", aircraftForm.modelId === "CUSTOM_MODEL" ? "" : aircraftForm.modelId);
-          data.append("subModelId", aircraftForm.subModelId);
-          data.append("customModel", aircraftForm.customModel.trim());
-          data.append("categoryId", aircraftForm.categoryId);
-          data.append("engineType", aircraftForm.engineType);
-          data.append("totalTimeHours", aircraftForm.totalTimeHours);
-          data.append("financing", aircraftForm.financing.toString());
-          data.append("trade", aircraftForm.trade.toString());
-          data.append("rent", aircraftForm.rent.toString());
-          data.append("avDescription", aircraftForm.avDescription.trim());
-          data.append("avAaptoifr", aircraftForm.avAaptoifr.toString());
-          data.append("avAutopilot", aircraftForm.avAutopilot.toString());
-          data.append("certified", aircraftForm.certified.toString());
-          if (aircraftForm.certDate) data.append("certDate", new Date(aircraftForm.certDate).toISOString());
-          data.append("plate", aircraftForm.plate.trim());
-          data.append("city", aircraftForm.city.trim());
-          data.append("province", aircraftForm.province.trim());
-          data.append("intDescription", aircraftForm.intDescription.trim());
-          data.append("passengers", aircraftForm.passengers.toString());
-          data.append("airconditioner", aircraftForm.airconditioner.toString());
-          data.append("oxygen", aircraftForm.oxygen.toString());
-          data.append("extDescription", aircraftForm.extDescription.trim());
-          data.append("description", aircraftForm.description.trim());
-          
-          data.append("engines", JSON.stringify(engines));
-          const mappedPropellers = propellers.map(p => ({
-              ...p,
-              model: p.brand ? `${p.brand} ${p.model}`.trim() : p.model
-          }));
-          data.append("propellers", JSON.stringify(mappedPropellers));
-        } else {
-          data.append("title", partsForm.title.trim());
-          data.append("brand", partsForm.brand.trim());
-          data.append("price", partsForm.price);
-          data.append("inPesos", partsForm.inPesos.toString());
-          data.append("priceOnRequest", partsForm.priceOnRequest.toString());
-          data.append("condition", partsForm.condition);
-          data.append("city", partsForm.city.trim());
-          data.append("province", partsForm.province.trim());
-          data.append("description", partsForm.description.trim());
-          data.append("partNumber", partsForm.partNumber.trim());
-          data.append("stock", partsForm.stock.toString());
-          data.append("categoryId", partsForm.categoryId); 
-          data.append("aircrafts", JSON.stringify(compatibleModels));
+        // 2. Crear (o actualizar) la publicación con las rutas ya subidas. En la edición, las
+        //    fotos que ya existían van por URL y las nuevas por su ruta, en el orden elegido.
+        setPublishStatus(isEditing ? "Guardando cambios..." : "Guardando publicación...");
+        const newPaths = [...upload.images];
+        const orderedImages = images.map((img) => img.url ?? newPaths.shift()!);
+        const allDocuments = [...existingDocuments.map((d) => ({ path: d.url, name: d.name })), ...upload.documents];
+        const input = buildListingInput(orderedImages, allDocuments);
+        const res = editListing ? await updateListing(editListing.id, input) : await createListing(input, { saveAsPaused: saveAsPaused[activeTab] });
+        // Con o sin éxito, el servidor ya se hizo cargo de estos archivos.
+        uploaded = null;
+        if (!res.ok) {
+          if (res.fieldErrors) showFieldErrors(res.fieldErrors, res.error);
+          else setErrorAndScroll(res.error);
+          return;
         }
 
-        await createListing(data);
-        setIsSuccess(true);
+        if (!isEditing && "founder" in res && res.founder) {
+          setPublishStatus("¡Publicado!");
+          setFounder({ until: res.founder.until, url: res.url });
+          return;
+        }
+        setPublishStatus(
+          isEditing ? "¡Guardado! Abriendo tu aviso..." : res.paused ? "¡Guardado como pausado! Abriendo tu aviso..." : "¡Publicado! Abriendo tu aviso..."
+        );
+        router.push(res.url);
       } catch (error) {
-        setErrorAndScroll("Ocurrió un error al guardar la publicación.");
+        console.error("Error al publicar:", error);
+        // Si se cortó la red después de subir, se intenta borrar lo subido.
+        if (uploaded) await discardUploaded(activeTab, uploaded.images, uploaded.documents);
+        setErrorAndScroll(
+          isEditing
+            ? "Se perdió la conexión al guardar. Revisá tu internet y probá de nuevo: la publicación no se modificó."
+            : "Se perdió la conexión al publicar. Revisá tu internet y probá de nuevo: no se creó ninguna publicación."
+        );
       } finally {
+        submittingRef.current = false;
         setIsPublishing(false);
+        setPublishStatus(null);
       }
     };
 
@@ -541,36 +756,86 @@ export default function PublishForm({
     if (userId === null) {
       return (
         <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center p-4">
-          <h2 className="text-2xl font-bold text-[#001F58]">Debes iniciar sesión</h2>
+          <h2 className="text-2xl font-bold text-[#00205B]">Debes iniciar sesión</h2>
           <Link href="/login" className="px-6 py-2.5 bg-red-600 text-white rounded-xl font-semibold">Iniciar Sesión</Link>
         </div>
       );
     }
 
-    if (isSuccess) {
-      return (
-        <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center p-6">
-          <CheckCircle2 className="w-16 h-16 text-emerald-600" />
-          <h2 className="text-3xl font-bold text-[#001F58]">¡Publicación Creada con Éxito!</h2>
-          <p className="text-slate-600 max-w-md">Tu producto ha sido publicado en la plataforma correctamente.</p>
-          <Link href="/" className="mt-4 px-6 py-3 bg-[#001F58] text-white font-semibold rounded-xl hover:bg-blue-900 transition-colors">
-            Volver al Inicio
-          </Link>
-        </div>
-      );
-    }
-
     return (
-    <main className="relative isolate overflow-hidden min-h-screen -mb-16">
-        <Image src="/bkg-forms.png" alt="Fondo" fill priority className="-z-20 object-cover" />
-        <div className="absolute inset-0 -z-10 bg-background/85" />
+    <main className="relative isolate overflow-hidden min-h-screen">
+        <PageBackground page="publish" />
+        {founder && <FoundingMemberDialog until={founder.until} onClose={() => router.push(founder.url)} />}
 
-        <div className="container mx-auto px-4 pt-16 pb-36 max-w-7xl">
-            <div className="text-center max-w-3xl mx-auto mb-10">
-              <h1 className="font-heading text-3xl sm:text-5xl font-semibold text-[#001F58] mb-4">
-                PUBLICAR PRODUCTO
-              </h1>
-            </div>
+        <div className="container mx-auto px-4 pt-8 pb-20 max-w-7xl">
+            {/* Rediseño (26/10): banner de página, como el resto del sitio. */}
+            <PageHeader variant="plain" routeId="va-route-publish" className="mb-10" title={isEditing ? "Editar publicación" : "Publicar producto"} />
+
+            {/* VA-152: cupo de la cuenta. Sin lugar libre se avisa al empezar (no al final), con las salidas. */}
+            {!isEditing && quota && quotaLine && !quotaFull && quotaLine.limit !== null && (
+              <p className="max-w-2xl mx-auto mb-6 border-l-2 border-[#00205B]/30 pl-3 text-sm text-slate-600">
+                Plan {quota.planName}:{" "}
+                <span className="font-semibold tabular-nums text-[#00205B]">
+                  {quotaLine.used} de {quotaLine.limit}
+                </span>{" "}
+                {activeTab === "aircraft" ? "aviones" : "repuestos"} activos. Tus avisos no vencen.
+              </p>
+            )}
+            {quotaFull && quota && quotaLine && (
+              <section
+                aria-labelledby="quota-full-title"
+                className="max-w-2xl mx-auto mb-6 rounded-lg border border-[#00205B]/15 border-l-2 border-l-[#D62828] bg-white p-5 space-y-3"
+              >
+                <h2 id="quota-full-title" className="text-base font-bold leading-snug text-[#00205B] sm:text-lg">
+                  {quotaFullText(activeTab, quotaLine.used, quotaLine.limit ?? 0, quota.planName)}
+                </h2>
+                {saveAsPaused[activeTab] ? (
+                  <p className="text-sm text-slate-600">
+                    Este aviso se va a guardar <strong className="text-[#00205B]">pausado</strong>: no se ve hasta que lo actives desde tu
+                    perfil, cuando tengas lugar.{" "}
+                    <button
+                      type="button"
+                      onClick={() => setSaveAsPaused({ ...saveAsPaused, [activeTab]: false })}
+                      className="font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828] cursor-pointer"
+                    >
+                      Cambiar
+                    </button>
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-slate-600">Para publicar otro, elegí una opción:</p>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                      <Link
+                        href={`/profile/${userId}?tipo=${activeTab === "aircraft" ? "aeronaves" : "repuestos"}&estado=activos`}
+                        className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#00205B]/20 px-4 text-sm font-semibold text-[#00205B] hover:border-[#00205B]"
+                      >
+                        Pausar uno de mis avisos
+                      </Link>
+                      {plansAvailable && (
+                        <Link
+                          href="/plans"
+                          className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#D62828] px-4 text-sm font-bold text-white hover:bg-[#B71F1F]"
+                        >
+                          {quota.tier === "BASE" ? "Pasarme a Pro" : "Ver planes con más cupo"}
+                        </Link>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSaveAsPaused({ ...saveAsPaused, [activeTab]: true });
+                          setFormError(null);
+                        }}
+                        className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#00205B]/20 px-4 text-sm font-semibold text-[#00205B] hover:border-[#00205B] cursor-pointer"
+                      >
+                        Guardar como pausado
+                      </button>
+                    </div>
+                  </>
+                )}
+              </section>
+            )}
+
+            {phoneMissing && <PhoneRequiredCard onSaved={() => { setPhoneMissing(false); setFormError(null); }} />}
 
             {formError && (
               <div ref={errorRef} className="max-w-2xl mx-auto mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3 text-red-700 text-sm">
@@ -579,8 +844,9 @@ export default function PublishForm({
               </div>
             )}
 
-            <div className="flex justify-center mb-8">
-              <div className="bg-white/80 p-1.5 rounded-2xl border border-[#001F58]/20 flex gap-2 shadow-sm backdrop-blur-sm">
+            {/* En la edición no se puede cambiar el tipo de publicación */}
+            <div className={isEditing ? "hidden" : "flex justify-center mb-8"}>
+              <div className="bg-white p-1.5 rounded-lg border border-[#00205B]/20 flex gap-2 shadow-sm">
                 <button
                   type="button"
                   onClick={() => { 
@@ -590,7 +856,7 @@ export default function PublishForm({
                       setStepAttempted(false);
                   }}
                   className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                    activeTab === "aircraft" ? "bg-[#001F58] text-white shadow-md" : "text-[#001F58]/70 hover:text-[#001F58] hover:bg-[#001F58]/5"
+                    activeTab === "aircraft" ? "bg-[#00205B] text-white shadow-md" : "text-[#00205B]/70 hover:text-[#00205B] hover:bg-[#00205B]/5"
                   }`}
                 >
                   <Plane className="w-4 h-4" /> Aeronaves
@@ -604,7 +870,7 @@ export default function PublishForm({
                       setStepAttempted(false);
                   }}
                   className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                    activeTab === "parts" ? "bg-[#001F58] text-white shadow-md" : "text-[#001F58]/70 hover:text-[#001F58] hover:bg-[#001F58]/5"
+                    activeTab === "parts" ? "bg-[#00205B] text-white shadow-md" : "text-[#00205B]/70 hover:text-[#00205B] hover:bg-[#00205B]/5"
                   }`}
                 >
                   <Wrench className="w-4 h-4" /> Repuestos
@@ -614,7 +880,7 @@ export default function PublishForm({
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div className="lg:col-span-2">
-                    <div className="bg-white/90 border border-[#001F58]/20 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl text-[#001F58]">
+                    <div className="bg-white border border-[#00205B]/12 rounded-lg p-6 sm:p-8 shadow-sm text-[#00205B]">
                         
                         {/* ======================= FORMULARIO AVIONES ======================= */}
                         {activeTab === "aircraft" ? (
@@ -631,10 +897,17 @@ export default function PublishForm({
                                 nextButtonProps={{ 
                                     type: "button", 
                                     title: "Avanzar al siguiente paso",
-                                    className: "px-6 py-2.5 rounded-xl font-bold transition-all shadow-md bg-[#001F58] text-white hover:bg-blue-900",
+                                    className: "px-6 py-2.5 rounded-xl font-bold transition-all shadow-md bg-[#00205B] text-white hover:bg-blue-900",
                                     style: currentStep === 4 ? { display: 'none' } : {},
                                     onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
                                         const err = validateStep(activeTab, currentStep);
+                                        // VA-112: al pasar al paso de motores de un alta, dejar listos los que pide la categoría (2 en Bimotor).
+                                        if (!err && activeTab === "aircraft" && currentStep === 1 && !isEditing) {
+                                            const needed = minEngines(aircraftForm.categoryId);
+                                            const isBlank = (eng: EngineInput) => Object.values(eng).every((v) => !String(v).trim());
+                                            if (needed === 0) setEngines(engines.filter((eng) => !isBlank(eng)));
+                                            else if (engines.length < needed) setEngines([...engines, ...Array.from({ length: needed - engines.length }, () => ({ ...EMPTY_ENGINE }))]);
+                                        }
                                         if (err) {
                                             e.preventDefault();
                                             setStepAttempted(true);
@@ -650,104 +923,140 @@ export default function PublishForm({
                                                 <Plane className="w-5 h-5 text-red-600" />
                                                 Paso 1: Datos principales de la aeronave
                                             </h3>
-                                            <p className="text-xs text-slate-500 mt-1">Completa la información básica obligatoria para identificar tu aeronave.</p>
+                                            <p className="text-xs text-slate-500 mt-1">Completá la información básica obligatoria para identificar tu aeronave.</p>
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="sm:col-span-2">
                                                 <label className="block text-xs font-bold uppercase mb-1">Título de Publicación *</label>
                                                 <input type="text" value={aircraftForm.title} onChange={e => setAircraftForm({...aircraftForm, title: e.target.value})} placeholder="Ej: Cessna 172 Skyhawk" className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.title} />
                                             </div>
 
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Año *</label>
-                                                <input type="number" min="1900" max={currentYear} value={aircraftForm.year} onChange={e => setAircraftForm({...aircraftForm, year: Number(e.target.value)})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                {/* VA-145: vacío se guarda como 0 y se muestra vacío (antes quedaba un "0" imposible de borrar). */}
+                                                <input type="number" min="1900" max={currentYear} value={aircraftForm.year || ""} onChange={e => {
+                                                    const year = Number(e.target.value);
+                                                    setAircraftForm({...aircraftForm, year, condition: year === currentYear ? aircraftForm.condition : "USADO"});
+                                                }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.year} />
                                             </div>
 
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Condición *</label>
-                                                <select value={aircraftForm.condition} onChange={e => setAircraftForm({...aircraftForm, condition: e.target.value as any})} disabled={aircraftForm.year !== currentYear} className="w-full p-2.5 rounded-xl border border-slate-300 disabled:bg-slate-100 bg-white">
+                                                <select value={aircraftForm.condition} onChange={e => setAircraftForm({...aircraftForm, condition: e.target.value as "USADO" | "NUEVO"})} disabled={aircraftForm.year !== currentYear} className="w-full p-2.5 rounded-xl border border-slate-300 disabled:bg-slate-100 bg-white">
                                                     <option value="USADO">Usado</option>
                                                     {aircraftForm.year === currentYear && <option value="NUEVO">Nuevo</option>}
                                                 </select>
                                                 {aircraftForm.year !== currentYear && <p className="text-[10px] text-slate-400 mt-1">Solo los modelos del año {currentYear} pueden marcarse como Nuevos.</p>}
+                                                <FieldError message={fieldErrors.condition} />
                                             </div>
 
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Precio (USD) *</label>
                                                 <input type="number" min="0" disabled={aircraftForm.priceOnRequest} placeholder={aircraftForm.priceOnRequest ? "A Consultar" : "Ej: 150000"} value={aircraftForm.price} onChange={e => setAircraftForm({...aircraftForm, price: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white disabled:bg-slate-100" />
                                                 <label className="flex items-center gap-2 mt-2 text-xs font-semibold cursor-pointer">
-                                                    <input type="checkbox" checked={aircraftForm.priceOnRequest} onChange={e => setAircraftForm({...aircraftForm, priceOnRequest: e.target.checked, price: ""})} className="rounded text-[#001F58]" /> 
+                                                    <input type="checkbox" checked={aircraftForm.priceOnRequest} onChange={e => setAircraftForm({...aircraftForm, priceOnRequest: e.target.checked, price: ""})} className="rounded text-[#00205B]" /> 
                                                     Precio a Consultar
                                                 </label>
+                                                <FieldError message={fieldErrors.price} />
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Horas Totales (TT) *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Horas Totales (TT){requiredMark("totalTimeHours", aircraftForm.categoryId)}</label>
                                                 <input type="number" min="0" placeholder="Ej: 3200" value={aircraftForm.totalTimeHours} onChange={e => setAircraftForm({...aircraftForm, totalTimeHours: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.totalTimeHours} />
                                             </div>
+
+                                            {/* VA-153/VA-165: primero el tipo (opcional): acota las marcas y los modelos por su categoría
+                                                recomendada. Con un modelo de la lista, se propone la recomendada y se puede cambiar. */}
+                                            <div className="sm:col-span-2">
+                                                <label className="block text-xs font-bold uppercase mb-1">Tipo de aeronave *</label>
+                                                <select value={selectedGroup} onChange={e => handleGroupChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 font-medium bg-white">
+                                                    <option value="">-- Seleccionar tipo --</option>
+                                                    {AIRCRAFT_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
+                                                </select>
+                                                {recommendedCategory ? (
+                                                    <p className="text-[11px] text-slate-500 mt-1">
+                                                        Recomendada para este modelo: <strong className="text-slate-700">{categoryLabel(recommendedCategory)}</strong>
+                                                        {aircraftForm.categoryId && aircraftForm.categoryId !== recommendedCategory && <> · Elegiste una categoría distinta de la recomendada.</>}
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-[11px] text-slate-500 mt-1">Elegilo primero para ver solo las marcas y los modelos de ese tipo, o elegí directamente el modelo y se completa solo.</p>
+                                                )}
+                                                <FieldError message={fieldErrors.categoryId} />
+                                            </div>
+
+                                            {selectedGroup && groupHasEngines(selectedGroup) && (
+                                            <div className="sm:col-span-2 bg-blue-50/60 p-3.5 rounded-xl border border-blue-100 space-y-1.5">
+                                                <label className="block text-xs font-bold uppercase tracking-wider text-[#00205B]">
+                                                Motorización *
+                                                </label>
+                                                <div className="flex gap-6 text-sm font-medium">
+                                                    {categoriesInGroup(selectedGroup).map(c => c.engine && (
+                                                        <label key={c.id} className="flex items-center gap-2 cursor-pointer">
+                                                            <input type="radio" name="engine" checked={selectedEngine === c.engine} onChange={() => handleEngineChange(c.engine!)} className="w-4 h-4 text-[#00205B]" />
+                                                            {ENGINE_LABELS[c.engine]}
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            )}
 
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Marca *</label>
                                                 <select value={aircraftForm.brandId} onChange={(e) => handleBrandChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
                                                     <option value="">Seleccionar Marca</option>
-                                                    {brandsData.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                                    <option value="CUSTOM">Otra Marca...</option>
+                                                    {brandOptions.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                                    <option value="CUSTOM">Otra marca...</option>
                                                 </select>
-                                                {aircraftForm.brandId === "CUSTOM" && <input type="text" placeholder="Escribí la marca" value={aircraftForm.customBrand} onChange={e => setAircraftForm({...aircraftForm, customBrand: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white" />}
+                                                {/* VA-165: los modificados pueden ser de otra categoría que la recomendada. */}
+                                                {(pickedCategoryId || pickedGroup) && (
+                                                    <button type="button" onClick={() => setShowAllBrands(!showAllBrands)} className="mt-1 text-[11px] font-semibold text-[#00205B] underline hover:text-[#B71F1F] cursor-pointer">
+                                                        {showAllBrands ? "Ver solo las de este tipo" : "Ver todas las marcas"}
+                                                    </button>
+                                                )}
+                                                {/* VA-190: lo escrito pasa a la lista, en mayúsculas. */}
+                                                {aircraftForm.brandId === "CUSTOM" && (
+                                                    <>
+                                                        <input type="text" placeholder="Escribí la marca" maxLength={100} value={aircraftForm.customBrand} onChange={e => setAircraftForm({...aircraftForm, customBrand: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white uppercase placeholder:normal-case" />
+                                                        <p className="mt-1 text-xs text-slate-500">Se guarda en mayúsculas y queda en la lista para los próximos avisos.</p>
+                                                    </>
+                                                )}
+                                                <FieldError message={fieldErrors.brandId} />
                                             </div>
 
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Modelo/Submodelo *</label>
                                                 <select value={aircraftForm.modelId} onChange={(e) => handleModelChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
                                                     <option value="">Seleccionar Modelo</option>
-                                                    {selectedBrandModels.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                                                    {modelOptions.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                                                     <option value="CUSTOM_MODEL">Otro modelo...</option>
                                                 </select>
-                                                {aircraftForm.modelId === "CUSTOM_MODEL" && <input type="text" placeholder="Escribí el modelo" value={aircraftForm.customModel} onChange={e => setAircraftForm({...aircraftForm, customModel: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white" />}
-                                                
-                                                {selectedModelVariants.length > 0 && aircraftForm.modelId !== "CUSTOM_MODEL" && (
+                                                {aircraftForm.modelId === "CUSTOM_MODEL" && (
+                                                    <>
+                                                        <input type="text" placeholder="Escribí el modelo" maxLength={100} value={aircraftForm.customModel} onChange={e => setAircraftForm({...aircraftForm, customModel: e.target.value})} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white uppercase placeholder:normal-case" />
+                                                        <p className="mt-1 text-xs text-slate-500">Se guarda en mayúsculas y queda en la lista para los próximos avisos.</p>
+                                                    </>
+                                                )}
+                                                <FieldError message={fieldErrors.modelId} />
+
+                                                {variantOptions.length > 0 && (
                                                     <select value={aircraftForm.subModelId} onChange={(e) => handleSubModelChange(e.target.value)} className="w-full mt-2 p-2.5 rounded-xl border border-slate-300 bg-white">
                                                         <option value="">(Opcional) Variante específica</option>
-                                                        {selectedModelVariants.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                                                        {variantOptions.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
                                                     </select>
                                                 )}
                                             </div>
 
-                                            <div className="sm:col-span-2">
-                                                <label className="block text-xs font-bold uppercase mb-1">Categoría asignada *</label>
-                                                <select value={aircraftForm.categoryId} onChange={e => setAircraftForm({...aircraftForm, categoryId: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 font-medium bg-white">
-                                                    <option value="">-- Seleccionar Categoría --</option>
-                                                    {categoriesData.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                </select>
-                                                <p className="text-[10px] text-slate-400 mt-1">Sugerimos una categoría basada en tu modelo, pero podés cambiarla si es necesario.</p>
-                                            </div>
-
-                                            {(aircraftForm.categoryId === "MP" || aircraftForm.categoryId === "BP") && (
-                                            <div className="sm:col-span-2 bg-blue-50/60 p-3.5 rounded-xl border border-blue-100 space-y-1.5">
-                                                <label className="block text-xs font-bold uppercase tracking-wider text-[#001F58]">
-                                                Tipo de Motor *
-                                                </label>
-                                                <select
-                                                value={aircraftForm.engineType}
-                                                onChange={(e) => setAircraftForm({ ...aircraftForm, engineType: e.target.value as "PISTON" | "TURBOPROP" })}
-                                                className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium text-sm text-[#001F58]"
-                                                >
-                                                <option value="PISTON">Pistón</option>
-                                                <option value="TURBOPROP">Turbohélice</option>
-                                                </select>
-                                                <p className="text-[10px] text-slate-500">
-                                                Indicá si la planta motriz de esta categoría es a Pistón o Turbohélice.
-                                                </p>
-                                            </div>
-                                            )}
-
                                             <div className="sm:col-span-2 pt-4 border-t border-slate-100">
                                                 <label className="block text-xs font-bold uppercase mb-2">Opciones de Negociación</label>
                                                 <div className="flex flex-wrap gap-6 text-sm font-medium">
-                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.financing} onChange={e => setAircraftForm({...aircraftForm, financing: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Permite Financiación</label>
-                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.trade} onChange={e => setAircraftForm({...aircraftForm, trade: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Acepta Permuta</label>
-                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.rent} onChange={e => setAircraftForm({...aircraftForm, rent: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Disponible p/ Alquiler</label>
+                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.financing} onChange={e => setAircraftForm({...aircraftForm, financing: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Permite Financiación</label>
+                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.trade} onChange={e => setAircraftForm({...aircraftForm, trade: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Acepta Permuta</label>
+                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.rent} onChange={e => setAircraftForm({...aircraftForm, rent: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Disponible p/ Alquiler</label>
+                                                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.negotiable} onChange={e => setAircraftForm({...aircraftForm, negotiable: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Precio negociable</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -775,54 +1084,72 @@ export default function PublishForm({
 
                                         {/* AVIONICA */}
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Aviónica / Radio / Equipamiento</h4>
+                                            <h4 className="font-bold uppercase text-xs text-[#00205B]">Aviónica / Radio / Equipamiento</h4>
                                             <div>
-                                                <label className="block text-xs font-bold mb-1">Descripción del panel *</label>
+                                                <label className="block text-xs font-bold mb-1">Descripción del panel{requiredMark("avDescription", aircraftForm.categoryId)}</label>
                                                 <textarea rows={3} placeholder="Ej: Garmin G1000, 2 NAV/COM, Transponder GXR..." value={aircraftForm.avDescription} onChange={e => setAircraftForm({...aircraftForm, avDescription: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.avDescription} />
                                             </div>
                                             <div className="flex gap-6 text-sm font-medium">
-                                                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.avAaptoifr} onChange={e => setAircraftForm({...aircraftForm, avAaptoifr: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Apto IFR</label>
-                                                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.avAutopilot} onChange={e => setAircraftForm({...aircraftForm, avAutopilot: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Autopilot</label>
+                                                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.avAaptoifr} onChange={e => setAircraftForm({...aircraftForm, avAaptoifr: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Apto IFR</label>
+                                                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={aircraftForm.avAutopilot} onChange={e => setAircraftForm({...aircraftForm, avAutopilot: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Autopilot</label>
                                             </div>
                                         </div>
+
+                                        {/* EQUIPAMIENTO ADICIONAL */}
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                                            <h4 className="font-bold uppercase text-xs text-[#00205B]">Equipamiento adicional (opcional)</h4>
+                                            <textarea rows={3} placeholder={"Un ítem por línea, por ejemplo:\nEncendido electrónico\nSlats\nCubiertas Alaskan 38\""} value={aircraftForm.extraEquipment} onChange={e => setAircraftForm({...aircraftForm, extraEquipment: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-sm" />
+                                            <p className="text-[10px] text-slate-500">Cada línea se muestra como un ítem de la lista en tu aviso.</p>
+                                        </div>
+
+                                        {/* IMPLEMENTOS AGRÍCOLAS: solo en categoría Agrícola */}
+                                        {aircraftForm.categoryId === "A" && (
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                                            <h4 className="font-bold uppercase text-xs text-[#00205B]">Implementos agrícolas (opcional)</h4>
+                                            <textarea rows={3} placeholder="Ej: Tolva de 1.500 l, barra de 18 m, banderillero satelital..." value={aircraftForm.agEquipment} onChange={e => setAircraftForm({...aircraftForm, agEquipment: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-sm" />
+                                        </div>
+                                        )}
 
                                         {/* MOTOR */}
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
                                             <div className="flex justify-between items-center">
-                                                <h4 className="font-bold uppercase text-xs text-[#001F58]">Motor</h4>
-                                                <button type="button" onClick={addEngine} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#001F58]/10 text-[#001F58] hover:bg-[#001F58]/20 transition-colors">
+                                                <h4 className="font-bold uppercase text-xs text-[#00205B]">Motor{requiredMark("engines", aircraftForm.categoryId)}</h4>
+                                                <button type="button" onClick={addEngine} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#00205B]/10 text-[#00205B] hover:bg-[#00205B]/20 transition-colors">
                                                     <Plus className="w-4 h-4" /> Agregar Motor
                                                 </button>
                                             </div>
                                             {engines.map((eng, idx) => (
                                                 <div key={idx} className="bg-white p-3 rounded-lg border border-slate-200 grid grid-cols-2 gap-3 relative pt-7">
-                                                    <span className="absolute top-2 left-3 text-[10px] font-bold text-[#001F58] uppercase bg-blue-50 px-2 py-0.5 rounded">Motor #{idx + 1}</span>
+                                                    <span className="absolute top-2 left-3 text-[10px] font-bold text-[#00205B] uppercase bg-blue-50 px-2 py-0.5 rounded">Motor #{idx + 1}</span>
                                                     <button type="button" onClick={() => removeEngine(idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold text-[10px] uppercase flex items-center gap-1"><Trash2 className="w-3 h-3" /> Quitar</button>
                                                     
-                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.brand`]} /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Modelo</label><input type="text" placeholder="Ej: O-320" value={eng.model} onChange={e => updateEngine(idx, "model", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
-                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO *</label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
-                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">DURG</label><input type="number" min="0" placeholder="Ej: 500" value={eng.DURG} onChange={e => updateEngine(idx, "DURG", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO{requiredMark("TBO", aircraftForm.categoryId)}</label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.TBO`]} /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">Potencia (HP)</label><input type="number" min="0" placeholder="Ej: 150" value={eng.horsepower} onChange={e => updateEngine(idx, "horsepower", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">Horas del motor</label><input type="number" min="0" placeholder="Ej: 2200" value={eng.engineHours} onChange={e => updateEngine(idx, "engineHours", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div className="col-span-2"><label className="text-[10px] font-bold uppercase mb-1 block">Descripción Adicional</label><input type="text" placeholder="Detalles de cilindros, overhaul o accesorios." value={eng.description} onChange={e => updateEngine(idx, "description", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                 </div>
                                             ))}
-                                            {engines.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">No hay motores agregados.</p>}
+                                            {engines.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">{isRequired("engines", aircraftForm.categoryId) ? "Agregá al menos un motor con el botón \u201cAgregar Motor\u201d." : "Sin motor (opcional en Proyecto)."}</p>}
+                                            <FieldError message={fieldErrors["engines"]} />
                                         </div>
 
                                         {/* HÉLICE */}
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
                                             <div className="flex justify-between items-center">
                                                 <div>
-                                                    <h4 className="font-bold uppercase text-xs text-[#001F58]">Hélice</h4>
+                                                    <h4 className="font-bold uppercase text-xs text-[#00205B]">Hélice</h4>
                                                     <p className="text-[10px] text-slate-400 font-normal">Máximo {engines.length} {engines.length === 1 ? 'hélice' : 'hélices'} (igual o menor al N° de motores)</p>
                                                 </div>
-                                                <button type="button" onClick={addPropeller} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#001F58]/10 text-[#001F58] hover:bg-[#001F58]/20 transition-colors">
+                                                <button type="button" onClick={addPropeller} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#00205B]/10 text-[#00205B] hover:bg-[#00205B]/20 transition-colors">
                                                     <Plus className="w-4 h-4" /> Agregar Hélice
                                                 </button>
                                             </div>
                                             {propellers.map((prop, idx) => (
                                                 <div key={idx} className="bg-white p-3 rounded-lg border border-slate-200 grid grid-cols-2 gap-3 relative pt-7">
-                                                    <span className="absolute top-2 left-3 text-[10px] font-bold text-[#001F58] uppercase bg-blue-50 px-2 py-0.5 rounded">Hélice #{idx + 1}</span>
+                                                    <span className="absolute top-2 left-3 text-[10px] font-bold text-[#00205B] uppercase bg-blue-50 px-2 py-0.5 rounded">Hélice #{idx + 1}</span>
                                                     <button type="button" onClick={() => removePropeller(idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold text-[10px] uppercase flex items-center gap-1"><Trash2 className="w-3 h-3" /> Quitar</button>
 
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Hartzell" value={prop.brand} onChange={e => updatePropeller(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
@@ -832,6 +1159,7 @@ export default function PublishForm({
                                                 </div>
                                             ))}
                                             {propellers.length === 0 && <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded text-center">No hay hélices agregadas.</p>}
+                                            <FieldError message={fieldErrors.propellers} />
                                         </div>
 
                                         {stepAttempted && currentStepError && (
@@ -852,6 +1180,10 @@ export default function PublishForm({
                                                 Paso 3: Fotos y Documentos
                                             </h3>
                                             <p className="text-xs text-slate-500 mt-1">Mostrale al comprador el estado real de tu aeronave. La primera foto será la portada.</p>
+                                            {/* VA-126 (socio, 14/10): por ahora, sin las plantillas dibujadas de VA-124 (PhotoGuide queda en components/ui/publish). */}
+                                            <p className="mt-2 border-l-2 border-[#D62828] pl-3 text-xs text-slate-600">
+                                                Sacá buenas fotos: con luz de día, nítidas y de todos los ángulos (exterior, cabina, tablero y motor). Podés subir hasta {MAX_LISTING_IMAGES}.
+                                            </p>
                                         </div>
                                         
                                         <div>
@@ -859,6 +1191,10 @@ export default function PublishForm({
                                                 <label className="text-xs font-bold uppercase">Imágenes (Max 15) *</label>
                                                 <span className="text-[10px] text-slate-500 font-medium">Mantén apretado y arrastrá para reordenar</span>
                                             </div>
+                                            {compressing && (
+                                                <p className="text-xs font-semibold text-[#00205B] mb-2">Optimizando fotos {compressing.done}/{compressing.total}...</p>
+                                            )}
+                                            <FieldError message={fieldErrors.images} />
                                             
                                             <div className="flex flex-wrap gap-3">
                                                 {images.map((img, idx) => (
@@ -875,45 +1211,73 @@ export default function PublishForm({
                                                             <GripHorizontal className="w-6 h-6 text-white" />
                                                         </div>
                                                         <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-600 rounded-lg p-1.5 text-white shadow-md z-10 hover:bg-red-700"><Trash2 className="w-4 h-4" /></button>
-                                                        {idx === 0 && <span className="absolute bottom-1 left-1 right-1 text-center bg-[#001F58] text-white text-[10px] font-bold py-0.5 rounded shadow">PORTADA</span>}
+                                                        {idx === 0 && <span className="absolute bottom-1 left-1 right-1 text-center bg-[#00205B] text-white text-[10px] font-bold py-0.5 rounded shadow">PORTADA</span>}
                                                     </div>
                                                 ))}
-                                                {images.length < 15 && (
-                                                    <label className="w-28 h-28 rounded-xl border-2 border-dashed border-[#001F58]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#001F58]/60 bg-slate-50 hover:bg-slate-100 transition-colors">
-                                                        <Upload className="w-6 h-6 text-[#001F58]/50 mb-1" />
-                                                        <span className="text-[10px] font-bold text-[#001F58]">Agregar Foto</span>
-                                                        <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+                                                {images.length < MAX_LISTING_IMAGES && !compressing && (
+                                                    <label className="w-28 h-28 rounded-xl border-2 border-dashed border-[#00205B]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#00205B]/60 bg-slate-50 hover:bg-slate-100 transition-colors">
+                                                        <Upload className="w-6 h-6 text-[#00205B]/50 mb-1" />
+                                                        <span className="text-[10px] font-bold text-[#00205B]">Agregar Foto</span>
+                                                        <input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handleImageUpload} className="hidden" />
                                                     </label>
                                                 )}
                                             </div>
                                         </div>
 
+{/* VA-170: video de YouTube (detalles personalizados del Broker). */}
+                                        {canVideo && (
+                                            <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-1.5">
+                                                <label className="block text-xs font-bold uppercase">Video de YouTube <span className="font-normal normal-case text-slate-500">(opcional)</span></label>
+                                                <input type="url" inputMode="url" maxLength={100} placeholder="https://youtu.be/…" value={aircraftForm.youtubeUrl ?? ""} onChange={e => setAircraftForm({...aircraftForm, youtubeUrl: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <p className="text-[11px] text-slate-500">Pegá el link (youtube.com/watch, youtu.be o /shorts). Se ve como una foto más de la galería; el video se carga recién cuando lo tocan.</p>
+                                                <FieldError message={fieldErrors.youtubeUrl} />
+                                            </div>
+                                        )}
+
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4 mt-6">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Documentación (Solo Privado)</h4>
+                                            <h4 className="font-bold uppercase text-xs text-[#00205B]">Documentación</h4>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-[10px] font-bold uppercase mb-1">Estado de Habilitación *</label>
-                                                    <div className="flex items-center gap-2 mt-2">
-                                                        <input type="checkbox" checked={aircraftForm.certified} onChange={e => setAircraftForm({...aircraftForm, certified: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" />
-                                                        <span className="text-sm font-medium">Sí, cuenta con anual al día</span>
+                                                    <div className="flex items-center gap-6 mt-2 text-sm font-medium">
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input type="radio" name="certified" checked={aircraftForm.certified === true} onChange={() => setAircraftForm({...aircraftForm, certified: true})} className="w-4 h-4 text-[#00205B]" />
+                                                            Sí, con anual al día
+                                                        </label>
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input type="radio" name="certified" checked={aircraftForm.certified === false} onChange={() => setAircraftForm({...aircraftForm, certified: false})} className="w-4 h-4 text-[#00205B]" />
+                                                            No
+                                                        </label>
                                                     </div>
+                                                    <FieldError message={fieldErrors.certified} />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] font-bold uppercase mb-1">Fecha de habilitación anual</label>
+                                                    <label className="block text-[10px] font-bold uppercase mb-1">Habilitado hasta (vencimiento del anual)</label>
                                                     <input type="date" value={aircraftForm.certDate} onChange={e => setAircraftForm({...aircraftForm, certDate: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 text-sm bg-white" />
+                                                    <FieldError message={fieldErrors.certDate} />
                                                 </div>
                                                 <div className="sm:col-span-2">
-                                                    <label className="block text-[10px] font-bold uppercase mb-1">Matrícula</label>
+                                                    <label className="block text-[10px] font-bold uppercase mb-1">Matrícula <span className="font-normal normal-case text-slate-500">(opcional)</span></label>
                                                     <input type="text" placeholder="Ej: LV-XXX" value={aircraftForm.plate} onChange={e => setAircraftForm({...aircraftForm, plate: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 uppercase bg-white" />
-                                                    <p className="text-[10px] text-slate-500 mt-1">La matrícula es únicamente para control interno administrativo, NO será pública.</p>
+                                                    <p className="text-[10px] text-slate-500 mt-1">Opcional. Si la cargás, se muestra en el aviso, en el PDF y en el comparador.</p>
                                                 </div>
                                             </div>
 
                                             <div className="border-t border-slate-200 pt-3">
                                                 <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold cursor-pointer hover:bg-slate-50 shadow-sm transition-colors">
-                                                    <Paperclip className="w-4 h-4 text-[#001F58]" /> Adjuntar Fichas o Informes (PDF/Docs)
+                                                    <Paperclip className="w-4 h-4 text-[#00205B]" /> Adjuntar Fichas o Informes (PDF/Docs)
                                                     <input type="file" multiple accept=".pdf,.doc,.docx,image/*" onChange={handleDocumentUpload} className="hidden" />
                                                 </label>
+                                                {/* Pedido del socio (19/10): la documentación adjunta es pública. */}
+                                                <p className="mt-2 text-[11px] text-slate-600">
+                                                    <strong>Los documentos que adjuntes son públicos:</strong> cualquiera que vea el aviso los puede abrir y descargar. No subas datos personales que no quieras compartir.
+                                                </p>
+                                                {existingDocuments.map((doc) => (
+                                                    <div key={doc.url} className="flex justify-between items-center p-2.5 mt-2 bg-white rounded-lg border border-slate-200 text-xs shadow-sm">
+                                                        <span className="truncate w-3/4 font-medium text-slate-600">{doc.name}</span>
+                                                        <button type="button" onClick={() => setExistingDocuments((prev) => prev.filter((d) => d.url !== doc.url))} className="text-red-600 hover:text-red-800 font-bold px-2">X</button>
+                                                    </div>
+                                                ))}
                                                 {documents.map((doc, idx) => (
                                                     <div key={idx} className="flex justify-between items-center p-2.5 mt-2 bg-white rounded-lg border border-slate-200 text-xs shadow-sm">
                                                         <span className="truncate w-3/4 font-medium text-slate-600">{doc.name}</span>
@@ -941,21 +1305,30 @@ export default function PublishForm({
                                                 Paso 4: Descripción y otras características
                                             </h3>
                                             <p className="text-xs text-slate-500 mt-1">Brindá los detalles finales sobre la estética y el estado general.</p>
+                                            {/* VA-78: guía para vender */}
+                                            <p className="text-xs text-slate-500 mt-1">
+                                                ¿Qué conviene contar en el aviso?{" "}
+                                                <Link href="/services/guides/selling-your-aircraft" target="_blank" className="font-semibold text-[#D62828] hover:underline">
+                                                    Leé la guía para vender tu avión
+                                                </Link>
+                                            </p>
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Ciudad *</label>
-                                                <input type="text" placeholder="Ej: San Fernando" value={aircraftForm.city} onChange={e => setAircraftForm({...aircraftForm, city: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <LocalityInput placeholder="Ej: San Fernando" value={aircraftForm.city} province={aircraftForm.province} onChange={city => setAircraftForm(f => ({...f, city}))} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.city} />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Provincia *</label>
-                                                <input type="text" placeholder="Ej: Buenos Aires" value={aircraftForm.province} onChange={e => setAircraftForm({...aircraftForm, province: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <ProvinceSelect required value={aircraftForm.province} onChange={(province) => { setAircraftForm(f => ({...f, province})); cityConflictsWithProvince(aircraftForm.city, province).then(conflict => conflict && setAircraftForm(f => ({...f, city: ""}))); }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.province} />
                                             </div>
                                         </div>
 
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Interior</h4>
+                                            <h4 className="font-bold uppercase text-xs text-[#00205B]">Interior</h4>
                                             <div>
                                                 <label className="block text-[10px] font-bold uppercase mb-1">Descripción del Interior</label>
                                                 <textarea rows={2} placeholder="Ej: Tapizados de cuero beige 9/10, alfombras nuevas en 2021." value={aircraftForm.intDescription} onChange={e => setAircraftForm({...aircraftForm, intDescription: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 text-sm bg-white" />
@@ -964,16 +1337,17 @@ export default function PublishForm({
                                                 <div>
                                                     <label className="block text-[10px] font-bold uppercase mb-1">Cant. Pasajeros</label>
                                                     <input type="number" min="0" placeholder="Ej: 4" value={aircraftForm.passengers} onChange={e => setAircraftForm({...aircraftForm, passengers: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 text-sm bg-white" />
+                                                    <FieldError message={fieldErrors.passengers} />
                                                 </div>
                                                 <div className="flex flex-col justify-center gap-3 mt-4 sm:col-span-2 sm:flex-row sm:justify-start">
-                                                    <label className="flex items-center gap-2 text-sm font-medium cursor-pointer"><input type="checkbox" checked={aircraftForm.airconditioner} onChange={e => setAircraftForm({...aircraftForm, airconditioner: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Aire Acondicionado</label>
-                                                    <label className="flex items-center gap-2 text-sm font-medium cursor-pointer"><input type="checkbox" checked={aircraftForm.oxygen} onChange={e => setAircraftForm({...aircraftForm, oxygen: e.target.checked})} className="w-4 h-4 rounded text-[#001F58]" /> Sist. de Oxígeno</label>
+                                                    <label className="flex items-center gap-2 text-sm font-medium cursor-pointer"><input type="checkbox" checked={aircraftForm.airconditioner} onChange={e => setAircraftForm({...aircraftForm, airconditioner: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Aire Acondicionado</label>
+                                                    <label className="flex items-center gap-2 text-sm font-medium cursor-pointer"><input type="checkbox" checked={aircraftForm.oxygen} onChange={e => setAircraftForm({...aircraftForm, oxygen: e.target.checked})} className="w-4 h-4 rounded text-[#00205B]" /> Sist. de Oxígeno</label>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58]">Exterior</h4>
+                                            <h4 className="font-bold uppercase text-xs text-[#00205B]">Exterior</h4>
                                             <div>
                                                 <label className="block text-[10px] font-bold uppercase mb-1">Descripción de Pintura / Exterior</label>
                                                 <textarea rows={2} placeholder="Ej: Esquema original blanco con franjas azules, pintado en 2018." value={aircraftForm.extDescription} onChange={e => setAircraftForm({...aircraftForm, extDescription: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 text-sm bg-white" />
@@ -982,17 +1356,18 @@ export default function PublishForm({
 
                                         <div>
                                             <label className="block text-xs font-bold uppercase mb-1">Descripción General y Comentarios Adicionales *</label>
-                                            <textarea required rows={4} placeholder="Explayate sobre el historial, mantenimientos recientes, o motivo de venta de la aeronave..." value={aircraftForm.description} onChange={e => setAircraftForm({...aircraftForm, description: e.target.value})} className="w-full p-3 rounded-xl border border-slate-300 bg-white" />
+                                            <DescriptionTextarea required placeholder={"Historial:\n- Siempre hangarado\n- Último anual en marzo 2026\n\nMotivo de venta: cambio por un bimotor."} value={aircraftForm.description} onChange={(description) => setAircraftForm({...aircraftForm, description})} />
+                                            <FieldError message={fieldErrors.description} />
                                         </div>
 
                                         <div className="flex justify-end pt-4">
                                             <button 
                                                 type="button" 
                                                 onClick={submitForm} 
-                                                disabled={isPublishing} 
+                                                disabled={isPublishing || !!compressing} 
                                                 className="px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl flex items-center gap-2 shadow-lg disabled:opacity-50 transition-colors"
                                             >
-                                                <Rocket className="w-5 h-5" /> {isPublishing ? "Publicando..." : "Finalizar y Publicar"}
+                                                <Plane className="w-5 h-5" /> {isPublishing ? publishStatus ?? "Publicando..." : compressing ? "Optimizando fotos..." : isEditing ? "Guardar cambios" : "Finalizar y Publicar"}
                                             </button>
                                         </div>
                                     </div>
@@ -1013,7 +1388,7 @@ export default function PublishForm({
                                 nextButtonProps={{ 
                                     type: "button", 
                                     title: "Avanzar al siguiente paso",
-                                    className: "px-6 py-2.5 rounded-xl font-bold transition-all shadow-md bg-[#001F58] text-white hover:bg-blue-900",
+                                    className: "px-6 py-2.5 rounded-xl font-bold transition-all shadow-md bg-[#00205B] text-white hover:bg-blue-900",
                                     style: currentStep === 3 ? { display: 'none' } : {},
                                     onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
                                         const err = validateStep(activeTab, currentStep);
@@ -1039,6 +1414,7 @@ export default function PublishForm({
                                             <div className="sm:col-span-2">
                                                 <label className="block text-xs font-bold uppercase mb-1">Título de Publicación *</label>
                                                 <input type="text" placeholder="Ej: Cilindro Lycoming Superior con válvulas" value={partsForm.title} onChange={e => setPartsForm({...partsForm, title: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.title} />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Marca / Fabricante</label>
@@ -1063,9 +1439,10 @@ export default function PublishForm({
                                                     </select>
                                                 </div>
                                                 <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
-                                                    <input type="checkbox" checked={partsForm.priceOnRequest} onChange={e => setPartsForm({...partsForm, priceOnRequest: e.target.checked, price: ""})} className="rounded text-[#001F58]" /> 
+                                                    <input type="checkbox" checked={partsForm.priceOnRequest} onChange={e => setPartsForm({...partsForm, priceOnRequest: e.target.checked, price: ""})} className="rounded text-[#00205B]" /> 
                                                     Precio a Consultar
                                                 </label>
+                                                <FieldError message={fieldErrors.price} />
                                             </div>
                                         </div>
 
@@ -1094,6 +1471,10 @@ export default function PublishForm({
                                                 <label className="text-xs font-bold uppercase">Imágenes (Max 15) *</label>
                                                 <span className="text-[10px] text-slate-500 font-medium">Mantén apretado para reordenar</span>
                                             </div>
+                                            {compressing && (
+                                                <p className="text-xs font-semibold text-[#00205B] mb-2">Optimizando fotos {compressing.done}/{compressing.total}...</p>
+                                            )}
+                                            <FieldError message={fieldErrors.images} />
                                             <div className="flex flex-wrap gap-3">
                                                 {images.map((img, idx) => (
                                                     <div key={idx} draggable onDragStart={(e) => onDragStart(e, idx)} onDragOver={onDragOver} onDrop={(e) => onDrop(e, idx)} className="relative w-24 h-24 rounded-xl border border-slate-300 overflow-hidden cursor-move group">
@@ -1104,11 +1485,11 @@ export default function PublishForm({
                                                         <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-red-600 rounded-lg p-1 text-white shadow-md z-10 hover:bg-red-700"><Trash2 className="w-3.5 h-3.5" /></button>
                                                     </div>
                                                 ))}
-                                                {images.length < 15 && (
-                                                    <label className="w-24 h-24 rounded-xl border-2 border-dashed border-[#001F58]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#001F58]/60 bg-slate-50 transition-colors">
-                                                        <Upload className="w-6 h-6 text-[#001F58]/50 mb-1" />
-                                                        <span className="text-[10px] font-bold text-[#001F58]">Agregar</span>
-                                                        <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+                                                {images.length < MAX_LISTING_IMAGES && !compressing && (
+                                                    <label className="w-24 h-24 rounded-xl border-2 border-dashed border-[#00205B]/30 flex flex-col items-center justify-center cursor-pointer hover:border-[#00205B]/60 bg-slate-50 transition-colors">
+                                                        <Upload className="w-6 h-6 text-[#00205B]/50 mb-1" />
+                                                        <span className="text-[10px] font-bold text-[#00205B]">Agregar</span>
+                                                        <input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handleImageUpload} className="hidden" />
                                                     </label>
                                                 )}
                                             </div>
@@ -1117,17 +1498,20 @@ export default function PublishForm({
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Ciudad *</label>
-                                                <input type="text" placeholder="Ej: Morón" value={partsForm.city} onChange={e => setPartsForm({...partsForm, city: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <LocalityInput placeholder="Ej: Morón" value={partsForm.city} province={partsForm.province} onChange={city => setPartsForm(f => ({...f, city}))} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.city} />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Provincia *</label>
-                                                <input type="text" placeholder="Ej: Buenos Aires" value={partsForm.province} onChange={e => setPartsForm({...partsForm, province: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <ProvinceSelect required value={partsForm.province} onChange={(province) => { setPartsForm(f => ({...f, province})); cityConflictsWithProvince(partsForm.city, province).then(conflict => conflict && setPartsForm(f => ({...f, city: ""}))); }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.province} />
                                             </div>
                                         </div>
 
                                         <div>
                                             <label className="block text-xs font-bold uppercase mb-1">Descripción del Artículo *</label>
-                                            <textarea rows={4} placeholder="Detallá uso, tiempo remanente si aplica, fallas, compatibilidades generales..." value={partsForm.description} onChange={e => setPartsForm({...partsForm, description: e.target.value})} className="w-full p-3 rounded-xl border border-slate-300 bg-white" />
+                                            <DescriptionTextarea placeholder="Detallá uso, tiempo remanente si aplica, fallas, compatibilidades generales..." value={partsForm.description} onChange={(description) => setPartsForm({...partsForm, description})} />
+                                            <FieldError message={fieldErrors.description} />
                                         </div>
 
                                         {stepAttempted && currentStepError && (
@@ -1150,6 +1534,17 @@ export default function PublishForm({
                                             <p className="text-xs text-slate-500 mt-1">Configurá las variables finales para que los compradores encuentren tu repuesto.</p>
                                         </div>
 
+                                        {/* VA-170: video de YouTube (detalles personalizados del Broker). */}
+                                        {canVideo && (
+                                            <div className="p-4 bg-white rounded-xl border border-slate-200 space-y-1.5">
+                                                <label className="block text-xs font-bold uppercase">Video de YouTube <span className="font-normal normal-case text-slate-500">(opcional)</span></label>
+                                                <input type="url" inputMode="url" maxLength={100} placeholder="https://youtu.be/…" value={partsForm.youtubeUrl ?? ""} onChange={e => setPartsForm({...partsForm, youtubeUrl: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <p className="text-[11px] text-slate-500">Pegá el link (youtube.com/watch, youtu.be o /shorts). Se ve como una foto más de la galería; el video se carga recién cuando lo tocan.</p>
+                                                <FieldError message={fieldErrors.youtubeUrl} />
+                                            </div>
+                                        )}
+
+
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Nro. de Parte (P/N)</label>
@@ -1158,6 +1553,7 @@ export default function PublishForm({
                                             <div>
                                                 <label className="block text-xs font-bold uppercase mb-1">Stock Disponible *</label>
                                                 <input type="number" min="1" value={partsForm.stock} onChange={e => setPartsForm({...partsForm, stock: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <FieldError message={fieldErrors.stock} />
                                             </div>
 
                                             <div className="col-span-2 sm:col-span-1">
@@ -1174,6 +1570,7 @@ export default function PublishForm({
                                                     <option value="">Seleccionar subcategoría</option>
                                                     {subCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                                 </select>
+                                                <FieldError message={fieldErrors.categoryId} />
                                             </div>
 
                                             {subSubCategories.length > 0 && (
@@ -1188,9 +1585,10 @@ export default function PublishForm({
                                             )}
                                         </div>
 
-                                        <div className="p-5 bg-blue-50/50 rounded-xl border border-[#001F58]/10">
-                                            <h4 className="font-bold uppercase text-xs text-[#001F58] mb-2">Aeronaves Compatibles</h4>
-                                            <p className="text-[10px] text-slate-500 mb-4">Si tu artículo es exclusivo para ciertos modelos de avión, buscalos y marcalos acá. (Ideal para motores, hélices, tren de aterrizaje, frenos, cubiertas y agrícolas).</p>
+                                        <div className="p-5 bg-blue-50/60 rounded-xl border-2 border-[#00205B]/20">
+                                            {/* VA-88: más visible; con esto el repuesto aparece recomendado en los avisos de ese modelo */}
+                                            <h4 className="font-bold text-base text-[#00205B]">¿Para qué aeronave es?</h4>
+                                            <p className="text-sm text-slate-600 mt-1 mb-4">Así aparece recomendado en los avisos de ese modelo. Podés elegir varias (ideal para motores, hélices, tren de aterrizaje, frenos, cubiertas y agrícolas).</p>
                                             
                                             <div className="relative max-w-lg">
                                                 <div className="flex items-center gap-2 border border-slate-300 rounded-xl p-2.5 bg-white shadow-sm">
@@ -1208,7 +1606,7 @@ export default function PublishForm({
                                                 {showModelDropdown && (
                                                     <>
                                                         <div className="fixed inset-0 z-10" onClick={() => setShowModelDropdown(false)} />
-                                                        <div className="absolute top-full mt-2 w-full max-h-56 overflow-y-auto bg-white border border-slate-200 shadow-xl rounded-xl z-20">
+                                                        <div className="absolute top-full mt-2 w-full max-h-56 overflow-y-auto bg-white border border-slate-200 shadow-lg rounded-lg z-20">
                                                             {filteredModels.length === 0 ? (
                                                                 <div className="p-4 text-xs text-slate-500 text-center">No se encontraron modelos.</div>
                                                             ) : (
@@ -1224,9 +1622,9 @@ export default function PublishForm({
                                             </div>
 
                                             {compatibleModels.length > 0 && (
-                                                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#001F58]/10">
+                                                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[#00205B]/10">
                                                     {compatibleModels.map(m => (
-                                                        <span key={m} className="inline-flex items-center gap-1.5 bg-white border border-[#001F58]/20 text-[#001F58] px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">
+                                                        <span key={m} className="inline-flex items-center gap-1.5 bg-white border border-[#00205B]/20 text-[#00205B] px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">
                                                             {m}
                                                             <button type="button" onClick={() => removeCompatibleModel(m)} className="hover:bg-red-50 hover:text-red-600 rounded p-0.5 transition-colors"><X className="w-3.5 h-3.5" /></button>
                                                         </span>
@@ -1253,10 +1651,10 @@ export default function PublishForm({
                                                     }
                                                     submitForm();
                                                 }} 
-                                                disabled={isPublishing} 
+                                                disabled={isPublishing || !!compressing} 
                                                 className="px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl flex items-center gap-2 shadow-lg disabled:opacity-50 transition-colors"
                                             >
-                                                <Rocket className="w-5 h-5" /> {isPublishing ? "Publicando..." : "Finalizar y Publicar"}
+                                                <Plane className="w-5 h-5" /> {isPublishing ? publishStatus ?? "Publicando..." : compressing ? "Optimizando fotos..." : isEditing ? "Guardar cambios" : "Finalizar y Publicar"}
                                             </button>
                                         </div>
                                     </div>
@@ -1268,7 +1666,7 @@ export default function PublishForm({
 
                 {/* Sidebar Asistencia */}
                 <div className="lg:col-span-1 hidden lg:block">
-                  <div className="bg-[#001F58] text-white rounded-2xl p-6 shadow-xl border border-white/10 sticky top-24">
+                  <div className="bg-[#00205B] text-white rounded-lg p-6 border border-white/10 sticky top-24">
                     <div className="flex items-center gap-2 text-red-500 font-bold text-xs uppercase tracking-wider mb-2">
                       <HelpCircle className="w-4 h-4" /> ¿Preferís que nos encarguemos?
                     </div>
@@ -1291,7 +1689,7 @@ export default function PublishForm({
                           </select>
                         </div>
                         <div><textarea rows={3} placeholder="Descripción, ubicación o enlace a fotos del producto..." value={managedListingForm.description} onChange={e => setManagedListingForm({...managedListingForm, description: e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm" /></div>
-                        <button type="submit" disabled={isSubmittingManaged} className="w-full py-3 rounded-xl bg-white text-[#001F58] font-bold flex items-center justify-center gap-2 hover:bg-slate-100 disabled:opacity-50 shadow-md">
+                        <button type="submit" disabled={isSubmittingManaged} className="w-full py-3 rounded-xl bg-white text-[#00205B] font-bold flex items-center justify-center gap-2 hover:bg-slate-100 disabled:opacity-50 shadow-md">
                             <Send className="w-4 h-4 text-red-600" /> Solicitar Asistencia
                         </button>
                       </form>

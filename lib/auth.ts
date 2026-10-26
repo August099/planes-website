@@ -1,13 +1,22 @@
 // lib/auth.ts
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import FacebookProvider from "next-auth/providers/facebook";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { isValidPasswordChangeProof } from "@/lib/password-proof";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+// En Auth.js v5 un throw común en authorize() llega al cliente como "CredentialsSignin".
+// Con CredentialsSignin + code, el login recibe res.code === "EmailNotVerified" (VA-20).
+const ADMIN_RECHECK_MS = 5 * 60 * 1000;
+
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = "EmailNotVerified";
+}
+
+export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
     FacebookProvider({
@@ -63,7 +72,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!isValidPassword) return null;
 
         if (!user.emailVerified) {
-          throw new Error("EmailNotVerified");
+          throw new EmailNotVerifiedError();
         }
 
         return user;
@@ -71,20 +80,52 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   session: { strategy: "jwt" },
+  // VA-87: después del primer login con Google, elegir el tipo de cuenta una sola vez.
+  pages: { newUser: "/onboarding/account-type" },
+  events: {
+    // VA-87 · Causa del falso "email no verificado": Auth.js crea los usuarios de OAuth con
+    // emailVerified: null (ignora lo que devuelve profile()) y, al vincular Google a una cuenta que
+    // ya existía, no toca el usuario. Si Google confirma el email, se guarda acá, en los dos casos.
+    async signIn({ user, account, profile }) {
+      if (account?.provider !== "google" || !user?.id) return;
+      if (!(profile as { email_verified?: boolean } | undefined)?.email_verified) return;
+      await prisma.user.updateMany({
+        where: { id: user.id, emailVerified: null },
+        data: { emailVerified: new Date() },
+      });
+    },
+  },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        // VA-105 · 3: cuándo se inició esta sesión (para cortarla si después cambia la contraseña).
+        token.authAt = Date.now();
       }
 
-      if (token?.email) {
+      // isAdmin se consultaba en cada request (VA-13). Ahora: al iniciar sesión, con
+      // update() y, para que quitar un admin no tarde días, como mucho cada 5 minutos.
+      const checkedAt = typeof token.isAdminCheckedAt === "number" ? token.isAdminCheckedAt : 0;
+      const stale = Date.now() - checkedAt > ADMIN_RECHECK_MS;
+      if (token?.email && (user || trigger === "update" || stale)) {
+        // VA-87: también emailVerified y userTypeConfirmed, leídos de la base (no del proveedor).
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
-          select: { isAdmin: true },
+          select: { id: true, isAdmin: true, emailVerified: true, userTypeConfirmed: true, passwordChangedAt: true },
         });
-        if (dbUser) {
-          token.isAdmin = dbUser.isAdmin;
+        // VA-105 · 3: la contraseña cambió después de iniciar esta sesión → se cierra (null borra la
+        // cookie). El dispositivo que la cambió presenta la prueba firmada y sigue adentro. Como este
+        // bloque corre como mucho cada ADMIN_RECHECK_MS, los otros dispositivos salen en ≤ 5 minutos.
+        const changedAt = dbUser?.passwordChangedAt ?? null;
+        if (dbUser && trigger === "update" && isValidPasswordChangeProof((session as { passwordChangeProof?: unknown } | undefined)?.passwordChangeProof, dbUser.id, changedAt)) {
+          token.authAt = Date.now();
         }
+        const authAt = typeof token.authAt === "number" ? token.authAt : 0;
+        if (changedAt && changedAt.getTime() > authAt) return null;
+        token.isAdmin = dbUser?.isAdmin ?? false;
+        token.emailVerified = dbUser?.emailVerified ? dbUser.emailVerified.toISOString() : null;
+        token.userTypeConfirmed = dbUser?.userTypeConfirmed ?? false;
+        token.isAdminCheckedAt = Date.now();
       }
 
       return token;
@@ -93,6 +134,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token && session.user) {
         session.user.id = token.sub as string;
         session.user.isAdmin = (token.isAdmin as boolean) || false;
+        session.user.emailVerifiedAt = (token.emailVerified as string | null | undefined) ?? null;
+        session.user.userTypeConfirmed = (token.userTypeConfirmed as boolean | undefined) ?? false;
       }
       return session;
     },

@@ -17,18 +17,19 @@ import {
   Mail,
   Phone,
   Download,
-  Trash2,
-  TrendingUp
+  Trash2
 } from "lucide-react";
+import { errorMessage } from "@/lib/errors";
+import { AccountsSummary } from "@/components/admin/AccountsSummary";
+import { SalesSummary } from "@/components/admin/SalesSummary";
 
 export default function AdminOverviewPage() {
   const [period, setPeriod] = useState<PeriodFilter>("30d");
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Awaited<ReturnType<typeof getDashboardOverview>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchOverview = async (selectedPeriod: PeriodFilter) => {
-    setLoading(true);
     try {
       const res = await getDashboardOverview(selectedPeriod);
       setData(res);
@@ -39,8 +40,21 @@ export default function AdminOverviewPage() {
     }
   };
 
+  // Carga al entrar y al cambiar de período; si llega tarde la respuesta de un período anterior,
+  // se descarta (VA-63).
   useEffect(() => {
-    fetchOverview(period);
+    let cancelled = false;
+    getDashboardOverview(period)
+      .then((res) => {
+        if (!cancelled) setData(res);
+      })
+      .catch((err) => console.error("Error al cargar resumen:", err))
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [period]);
 
   const handleDownloadCSV = async () => {
@@ -59,7 +73,7 @@ export default function AdminOverviewPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (err) {
+    } catch {
       alert("Error al generar la planilla CSV.");
     } finally {
       setActionLoading(false);
@@ -77,8 +91,8 @@ export default function AdminOverviewPage() {
       const res = await archiveAndPurgeOldAnalytics();
       alert(res.message);
       fetchOverview(period);
-    } catch (err: any) {
-      alert(err.message || "Error al respaldar y purgar analíticas.");
+    } catch (err) {
+      alert(errorMessage(err) || "Error al respaldar y purgar analíticas.");
     } finally {
       setActionLoading(false);
     }
@@ -86,6 +100,11 @@ export default function AdminOverviewPage() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
+      {/* VA-173: cuentas por tipo y cobertura de los gastos fijos */}
+      <AccountsSummary />
+      {/* VA-183 */}
+      <SalesSummary />
+
       {/* CABECERA & ACCIONES DE MANTENIMIENTO */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
@@ -127,7 +146,11 @@ export default function AdminOverviewPage() {
             ].map((btn) => (
               <button
                 key={btn.id}
-                onClick={() => setPeriod(btn.id as PeriodFilter)}
+                onClick={() => {
+                  if (btn.id === period) return;
+                  setLoading(true);
+                  setPeriod(btn.id as PeriodFilter);
+                }}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                   period === btn.id
                     ? "bg-[#001F58] text-white shadow"
@@ -149,7 +172,7 @@ export default function AdminOverviewPage() {
         <>
           {/* TARJETAS PRINCIPALES (SIN DUPLICAR DATOS INNECESARIOS) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tráfico de Usuarios</p>
                 <h3 className="text-2xl font-bold text-[#001F58] mt-1">{data.kpis.uniqueVisitors}</h3>
@@ -160,7 +183,7 @@ export default function AdminOverviewPage() {
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Aeronaves / Repuestos Vistos</p>
                 <h3 className="text-2xl font-bold text-[#001F58] mt-1">{data.kpis.totalViews}</h3>
@@ -173,7 +196,7 @@ export default function AdminOverviewPage() {
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Interacciones Comerciales</p>
                 <h3 className="text-2xl font-bold text-[#001F58] mt-1">{data.kpis.totalContacts}</h3>
@@ -192,7 +215,7 @@ export default function AdminOverviewPage() {
           {/* ANALÍTICA DETALLADA */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* DESGLOSE POR CANAL DE CONTACTO */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
               <h3 className="font-bold text-[#001F58] text-sm flex items-center gap-2">
                 <Layers className="w-4 h-4 text-emerald-600" />
                 Origen de los Contactos
@@ -226,7 +249,7 @@ export default function AdminOverviewPage() {
             </div>
 
             {/* TABLA DE TENDENCIA DIARIA */}
-            <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div className="lg:col-span-2 bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
               <h3 className="font-bold text-[#001F58] text-sm">Registro de Vistas vs. Contactos Generados</h3>
               
               <div className="overflow-x-auto">
@@ -247,7 +270,7 @@ export default function AdminOverviewPage() {
                         </td>
                       </tr>
                     ) : (
-                      data.chartData.map((row: any) => {
+                      data.chartData.map((row) => {
                         const ratio = row.views > 0 ? ((row.contacts / row.views) * 100).toFixed(1) : "0.0";
                         return (
                           <tr key={row.date} className="hover:bg-slate-50">

@@ -5,7 +5,7 @@ import { getTrafficSourcesAnalytics } from "../actions";
 import { Globe2, Users, UserCheck, UserX, ArrowUpRight } from "lucide-react";
 
 export default function AdminTrafficPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Awaited<ReturnType<typeof getTrafficSourcesAnalytics>> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function AdminTrafficPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* SITIOS DE ORIGEN */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
           <h3 className="font-bold text-[#001F58] text-sm flex items-center gap-2">
             <Globe2 className="w-4 h-4 text-blue-600" />
             Principales Sitios de Origen (Referrers)
@@ -56,7 +56,7 @@ export default function AdminTrafficPage() {
                     <td colSpan={3} className="py-6 text-center text-slate-400">Sin datos de origen registrados.</td>
                   </tr>
                 ) : (
-                  data?.topReferrers?.map((item: any) => (
+                  data?.topReferrers?.map((item) => (
                     <tr key={item.source} className="hover:bg-slate-50">
                       <td className="py-2.5 font-medium text-slate-700 max-w-xs truncate flex items-center gap-1.5">
                         <ArrowUpRight className="w-3 h-3 text-slate-400 shrink-0" />
@@ -73,7 +73,7 @@ export default function AdminTrafficPage() {
         </div>
 
         {/* SEGMENTACIÓN DE USUARIOS */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-6">
           <h3 className="font-bold text-[#001F58] text-sm flex items-center gap-2">
             <Users className="w-4 h-4 text-indigo-600" />
             Comportamiento: Registrados vs Anónimos

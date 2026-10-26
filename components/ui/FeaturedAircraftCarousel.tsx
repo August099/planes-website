@@ -1,106 +1,76 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useSyncExternalStore } from "react";
 import {
   OverlayAircraftCard,
   AircraftCardProps,
 } from "@/components/ui/OverlayAircraftCard";
-
-// Swiper React
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
-
-// Estilos Swiper
-import "swiper/css";
-import "swiper/css/navigation";
+import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
+import { FlightPaths } from "@/components/ui/home/FlightPaths";
+import { ScrollCarousel } from "@/components/ui/home/ScrollCarousel";
+import { FEATURED_AIRCRAFT_COUNT } from "@/lib/constants";
 
 export interface FeaturedAircraftProps extends AircraftCardProps {
   viewsCount?: number;
+  /** VA-168: aviso de una cuenta con destacadas (Pro, Broker o admin). */
+  planFeatured?: boolean;
 }
 
 interface Props {
   aircrafts: FeaturedAircraftProps[];
 }
 
+function shuffle<T>(list: T[]): T[] {
+  const pool = [...list];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool;
+}
+
+// VA-110 / VA-168: 6 al azar entre los avisos de cuentas con destacadas (Pro, Broker y admins); si son
+// menos de 6, se completa al azar con los demás recientes.
+function pickFeatured(aircrafts: FeaturedAircraftProps[]) {
+  const featured = shuffle(aircrafts.filter((a) => a.planFeatured));
+  const others = shuffle(aircrafts.filter((a) => !a.planFeatured));
+  return [...featured, ...others].slice(0, FEATURED_AIRCRAFT_COUNT);
+}
+
+const subscribeNothing = () => () => {};
+
+// Aeronaves Destacadas: diseño original (tarjetas de foto con marca, modelo, precio y año encima),
+// restaurado el 10/10 a pedido del socio; las flechas son las unificadas de VA-82.
 export function FeaturedAircraftCarousel({ aircrafts }: Props) {
-  const [selectedAircrafts, setSelectedAircrafts] = useState<FeaturedAircraftProps[]>([]);
+  // La elección es al azar, así que se hace solo en el navegador: en el servidor y durante la
+  // hidratación no se renderiza nada, para evitar descalces (VA-63, antes con setState en un efecto).
+  const isClient = useSyncExternalStore(subscribeNothing, () => true, () => false);
+  if (!isClient || !aircrafts || aircrafts.length === 0) return null;
+  return <FeaturedCarousel aircrafts={aircrafts} />;
+}
 
-  useEffect(() => {
-    if (!aircrafts || aircrafts.length === 0) return;
-
-    let pool = [...aircrafts];
-
-    if (pool.length >= 20) {
-      // Si hay 20 o más, tomamos las 10 con más vistas
-      pool.sort((a, b) => (b.viewsCount || 0) - (a.viewsCount || 0));
-      pool = pool.slice(0, 10);
-    }
-
-    // Mezclamos aleatoriamente en el cliente y tomamos 2
-    const shuffled = pool.sort(() => 0.5 - Math.random());
-    setSelectedAircrafts(shuffled.slice(0, 2));
-  }, [aircrafts]);
-
-  // Si no se han seleccionado aún en el cliente, no renderizamos nada para evitar parpadeos/descalces
-  if (selectedAircrafts.length === 0) return null;
+function FeaturedCarousel({ aircrafts }: Props) {
+  const [selectedAircrafts] = useState(() => pickFeatured(aircrafts));
 
   return (
-    <section className="py-8 relative">
-      {/* ENCABEZADO */}
-      <div className="text-center mb-8">
-        <h2 className="text-3xl sm:text-4xl font-bold text-[#001F58] tracking-tight inline-block relative pb-2">
-          Aeronaves Destacadas
-          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-[#001F58] rounded-full" />
-        </h2>
-      </div>
+    // Rediseño (25/10, v2): sobre el mismo blanco papel que el resto, con un velo azul muy suave en el
+    // medio (sin cortes de fondo); las tarjetas oscuras dan el contraste.
+    <section className="va-feat relative py-16 sm:py-20 bg-[linear-gradient(180deg,#F5F5F5_0%,#E8EAF0_50%,#F5F5F5_100%)]">
+      <FlightPaths id="va-route-featured" className="-z-10" />
+      <div className="container mx-auto px-4">
+      <DisplayTitle className="mb-10">Aeronaves Destacadas</DisplayTitle>
 
-      {/* CONTENEDOR CON NAVEGACIÓN LATERAL */}
-      <div className="relative px-6 sm:px-10">
-        {/* FLECHA IZQUIERDA */}
-        <button
-          id="swiper-aircraft-prev"
-          className="absolute -left-2 sm:left-0 top-1/2 -translate-y-1/2 z-20 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-          aria-label="Anterior"
-        >
-          <ChevronLeft className="w-10 h-10 sm:w-12 sm:h-12 stroke-[2.5]" />
-        </button>
-
-        {/* SWIPER */}
-        <Swiper
-          modules={[Navigation]}
-          navigation={{
-            prevEl: "#swiper-aircraft-prev",
-            nextEl: "#swiper-aircraft-next",
-          }}
-          spaceBetween={20}
-          slidesPerView={1}
-          breakpoints={{
-            640: {
-              slidesPerView: 2,
-              spaceBetween: 24,
-            },
-          }}
-          className="py-2"
-        >
-          {selectedAircrafts.map((aircraft, index) => (
-            <SwiperSlide key={aircraft.id} className="h-auto">
-              <OverlayAircraftCard
-                {...aircraft}
-                featuredBadge={index === 0 ? "Dato Destacado" : undefined}
-              />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-
-        {/* FLECHA DERECHA */}
-        <button
-          id="swiper-aircraft-next"
-          className="absolute -right-2 sm:right-0 top-1/2 -translate-y-1/2 z-20 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-          aria-label="Siguiente"
-        >
-          <ChevronRight className="w-10 h-10 sm:w-12 sm:h-12 stroke-[2.5]" />
-        </button>
+      {/* VA-139: en celular se asoma la tarjeta siguiente (1,12 por pantalla); desde sm, 2.
+          VA-168 (socio, 24/10): sin etiqueta "Destacado" en las tarjetas. */}
+      <ScrollCarousel
+        label="Aeronaves destacadas"
+        gapClassName="gap-3 sm:gap-6"
+        slideClassName="w-[calc((100%-1.44px)/1.12)] sm:w-[calc((100%-24px)/2)]"
+      >
+        {selectedAircrafts.map((aircraft) => (
+          <OverlayAircraftCard key={aircraft.id} {...aircraft} />
+        ))}
+      </ScrollCarousel>
       </div>
     </section>
   );
