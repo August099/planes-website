@@ -40,7 +40,8 @@ export function HowItWorks() {
                 <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#D62828_0%,#B71F1F_100%)] shadow-[0_14px_30px_-12px_rgb(214_40_40/0.7)]">
                   <step.icon aria-hidden strokeWidth={1.75} className="h-8 w-8 text-white" />
                 </span>
-                <p className="va-label mt-6 text-white/75">Paso {String(i + 1).padStart(2, "0")}</p>
+                {/* Sin .va-label: su color azul (fuera de capa) pisaba el blanco y el rótulo no se veía sobre el azul. */}
+                <p className="mt-6 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-white/75 tabular-nums">Paso {String(i + 1).padStart(2, "0")}</p>
                 <h3 className="mt-1 font-heading text-2xl font-extrabold tracking-[-0.02em]">{step.title}</h3>
                 <p className="mt-2 max-w-xs text-sm leading-relaxed text-white/80">{step.description}</p>
               </li>
