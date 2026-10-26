@@ -520,43 +520,62 @@ header[data-home] .va-mega-panel {
     radial-gradient(30rem 16rem at 92% 40%, rgb(214 40 40 / 0.07), transparent 70%),
     #eef5fc !important;
 }
+.home-zone-4 {
+  /* No se dibuja hasta acercarse a la pantalla (rendimiento en celulares, 26/10). */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1400px;
+}
 .home-zone-4 > .home-zone-bg {
   overflow: hidden;
   background:
     radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.12) 1px, transparent 1.5px) 0 0 / 28px 28px,
     linear-gradient(180deg, var(--va2-navy) 0%, var(--va2-navy-deep) 100%);
 }
-/* Auroras: dos manchas de color de marca (azul cielo y rojo) que derivan muy despacio. */
+/* Auroras: dos manchas de color de marca (azul cielo y rojo). Degradé radial en vez de filter: blur(), que en
+   celulares redibujaba una capa enorme en cada cuadro. Solo se mueven en escritorio. */
 .home-zone-4 > .home-zone-bg::before,
 .home-zone-4 > .home-zone-bg::after {
   content: "";
   position: absolute;
-  width: 46rem;
-  height: 30rem;
-  border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.45;
+  width: 56rem;
+  height: 40rem;
   pointer-events: none;
-  animation: va-drift 26s ease-in-out infinite alternate;
+  will-change: transform;
 }
 .home-zone-4 > .home-zone-bg::before {
-  top: -8rem;
-  right: -10rem;
-  background: #0a4c96;
+  top: -14rem;
+  right: -16rem;
+  background: radial-gradient(closest-side, rgb(10 76 150 / 0.5), transparent);
 }
 .home-zone-4 > .home-zone-bg::after {
-  bottom: 10rem;
-  left: -14rem;
-  background: rgb(214 40 40 / 0.55);
-  animation-duration: 32s;
-  animation-direction: alternate-reverse;
+  bottom: 4rem;
+  left: -20rem;
+  background: radial-gradient(closest-side, rgb(214 40 40 / 0.28), transparent);
+}
+@media (min-width: 1024px) and (hover: hover) {
+  .home-zone-4 > .home-zone-bg::before {
+    animation: va-drift 26s ease-in-out infinite alternate;
+  }
+  .home-zone-4 > .home-zone-bg::after {
+    animation: va-drift 32s ease-in-out infinite alternate-reverse;
+  }
 }
 @keyframes va-drift {
   from { transform: translate3d(0, 0, 0) scale(1); }
   to { transform: translate3d(-6rem, 4rem, 0) scale(1.15); }
 }
 
-/* Vectores (FlightPaths): rayas que avanzan por la ruta y un aro que late en el punto de paso. */
+/* Vectores (FlightPaths): rayas que avanzan por la ruta y un aro que late en el punto de paso. En celulares
+   quedan quietas y sin el avión (animar el trazo del SVG redibuja en cada cuadro). */
+@media (max-width: 767px) {
+  .va-dash,
+  .va-ping {
+    animation: none !important;
+  }
+  .va-motion {
+    display: none;
+  }
+}
 .va-dash {
   stroke-dasharray: 2 10;
   stroke-linecap: round;
