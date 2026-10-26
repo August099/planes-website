@@ -518,52 +518,81 @@ header[data-home] .va-mega-panel {
 }
 
 /* ==========================================================================
-   Home · "Relieve" (elegida el 26/10 entre dos maquetas): títulos en minúscula, sombra sólida
-   desplazada, luz y grano en los fondos, brillo que sigue al cursor (components/ui/home/HomeSpotlight.tsx)
-   y entrada al hacer scroll. Destacadas toma la grilla mixta de la otra maqueta. Todo bajo .home-theme.
+   Home · Moderno (26/10): misma estructura que "Relieve" (Destacadas en grilla mixta, fichas con
+   iniciales + título + ícono), con esquinas redondeadas, sombras suaves teñidas de azul, más color
+   (los azules del cielo del hero: #0A4C96 y sus tintes) y vectores animados (FlightPaths).
+   Todo bajo .home-theme; el resto del sitio no cambia todavía.
    ========================================================================== */
+.home-theme {
+  --m-radius: 22px;
+  --m-radius-lg: 28px;
+  --m-shadow: 0 1px 2px rgb(0 32 91 / 0.06), 0 14px 34px -16px rgb(0 32 91 / 0.22);
+  --m-shadow-hover: 0 2px 4px rgb(0 32 91 / 0.08), 0 28px 56px -20px rgb(0 32 91 / 0.38);
+  --m-grad: linear-gradient(135deg, #00205b 0%, #0a4c96 100%);
+  --m-grad-red: linear-gradient(135deg, #d62828 0%, #b71f1f 100%);
+}
 
-/* Títulos en minúscula: las mayúsculas quedan para rótulos y botones. */
+/* Títulos: minúscula, número tenue en el azul del cielo, regla fina con el tramo rojo redondeado. */
 .home-theme .va-dt-h {
   text-transform: none;
   font-weight: 800;
   letter-spacing: -0.035em;
 }
+.home-theme .va-num {
+  color: rgb(10 76 150 / 0.16);
+}
+.home-theme .va-num-dark {
+  color: rgb(207 227 246 / 0.2);
+}
+.home-theme .va-rule {
+  height: 2px;
+  border-radius: 999px;
+  background: rgb(0 32 91 / 0.1);
+}
+.home-theme .va-rule-dark {
+  background: rgb(255 255 255 / 0.14);
+}
+.home-theme .va-rule::before {
+  border-radius: 999px;
+  background: var(--m-grad-red);
+}
 
-.home-theme .va-tile,
+/* Fichas y tarjetas: radio grande, sombra suave; al pasar suben y la sombra se abre. */
 .home-theme .va-card,
-.home-theme .va-sq {
-  transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 220ms cubic-bezier(0.2, 0.7, 0.2, 1),
-    background-color 300ms, color 300ms;
-}
 .home-theme .va-tile {
-  box-shadow: 4px 4px 0 var(--va2-navy);
+  border-radius: var(--m-radius);
+  box-shadow: var(--m-shadow);
+  transition: transform 300ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 300ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    background-color 300ms, color 300ms, border-color 300ms;
 }
-.home-theme .va-tile-dark {
-  box-shadow: 4px 4px 0 rgb(255 255 255 / 0.22);
+.home-theme .va-card {
+  border: 1px solid rgb(0 32 91 / 0.08);
 }
-/* Al pasar: la ficha se levanta y deja una sombra roja sólida. */
+.home-theme .va-card.va-card-square {
+  border-radius: var(--m-radius-lg);
+  border: 0;
+}
+.home-theme .group:hover .va-card,
 .home-theme .group:hover .va-tile:not(.va-static),
-.home-theme .va-tile.group:hover,
-.home-theme .group:hover .va-card {
-  transform: translate(-3px, -3px);
-  box-shadow: 8px 8px 0 var(--va2-red);
+.home-theme .va-tile.group:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--m-shadow-hover);
 }
-.home-theme .va-sq:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--va2-red);
+.home-theme .va-card::after {
+  display: none;
 }
-/* Brillo: un círculo de luz que sigue al cursor (--mx/--my desde HomeSpotlight). */
+/* Brillo que sigue al cursor (--mx/--my desde HomeSpotlight). */
 .home-theme .va-tile:not(.va-static)::before,
 .home-theme .va-card::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 1;
+  border-radius: inherit;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 250ms;
-  background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / 0.18), transparent 70%);
+  transition: opacity 300ms;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / 0.22), transparent 70%);
 }
 .home-theme .group:hover .va-tile::before,
 .home-theme .va-tile.group:hover::before,
@@ -571,56 +600,105 @@ header[data-home] .va-mega-panel {
   opacity: 1;
 }
 
-/* Fondos: luz de cielo y grano casi imperceptible. Las luces quedan lejos de los bordes de cada zona,
-   así se esfuman antes del límite (sin cortes). */
+/* Fondos: malla de luz con los azules del cielo (claro) y auroras que se mueven lento (oscuro). */
 .home-zone-1 > .home-zone-bg,
 .home-zone-2 > .home-zone-bg {
   background:
-    radial-gradient(48rem 15rem at 88% 22%, rgb(0 32 91 / 0.1), transparent 70%),
-    radial-gradient(40rem 15rem at 4% 58%, rgb(214 40 40 / 0.05), transparent 70%),
-    radial-gradient(44rem 15rem at 70% 82%, rgb(0 32 91 / 0.07), transparent 70%),
-    var(--va2-paper);
+    radial-gradient(50rem 20rem at 90% 18%, rgb(207 227 246 / 0.75), transparent 70%),
+    radial-gradient(40rem 18rem at 2% 52%, rgb(214 40 40 / 0.06), transparent 70%),
+    radial-gradient(46rem 20rem at 60% 84%, rgb(207 227 246 / 0.6), transparent 70%),
+    linear-gradient(180deg, #f5f5f5 0%, #eef5fc 50%, #f5f5f5 100%);
 }
 .home-theme .va-feat {
   isolation: isolate;
+  overflow: hidden;
   background:
-    radial-gradient(52rem 15rem at 25% 50%, rgb(0 32 91 / 0.11), transparent 70%),
-    var(--va2-paper) !important;
+    radial-gradient(56rem 22rem at 20% 50%, rgb(207 227 246 / 0.9), transparent 70%),
+    radial-gradient(30rem 16rem at 92% 40%, rgb(214 40 40 / 0.07), transparent 70%),
+    #eef5fc !important;
 }
 .home-zone-4 > .home-zone-bg {
+  overflow: hidden;
   background:
-    radial-gradient(60rem 30rem at 85% 0%, rgb(255 255 255 / 0.09), transparent 70%),
-    radial-gradient(40rem 24rem at 0% 70%, rgb(214 40 40 / 0.1), transparent 70%),
+    radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.12) 1px, transparent 1.5px) 0 0 / 28px 28px,
     linear-gradient(180deg, var(--va2-navy) 0%, var(--va2-navy-deep) 100%);
 }
-.home-zone > .home-zone-bg::after,
-.home-theme .va-feat::after {
+/* Auroras: dos manchas de color de marca (azul cielo y rojo) que derivan muy despacio. */
+.home-zone-4 > .home-zone-bg::before,
+.home-zone-4 > .home-zone-bg::after {
   content: "";
   position: absolute;
-  inset: 0;
-  z-index: -1;
+  width: 46rem;
+  height: 30rem;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.45;
   pointer-events: none;
-  opacity: 0.07;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: va-drift 26s ease-in-out infinite alternate;
+}
+.home-zone-4 > .home-zone-bg::before {
+  top: -8rem;
+  right: -10rem;
+  background: #0a4c96;
+}
+.home-zone-4 > .home-zone-bg::after {
+  bottom: 10rem;
+  left: -14rem;
+  background: rgb(214 40 40 / 0.55);
+  animation-duration: 32s;
+  animation-direction: alternate-reverse;
+}
+@keyframes va-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-6rem, 4rem, 0) scale(1.15); }
 }
 
-/* Entrada al hacer scroll: suben y aparecen. Va en el contenedor y no en la tarjeta, porque la
-   animación pisaría el transform del hover. */
+/* Vectores (FlightPaths): rayas que avanzan por la ruta y un aro que late en el punto de paso. */
+.va-dash {
+  stroke-dasharray: 2 10;
+  stroke-linecap: round;
+  animation: va-dash-move 3s linear infinite;
+}
+.va-dash-slow {
+  animation-duration: 6s;
+}
+@keyframes va-dash-move {
+  to { stroke-dashoffset: -48; }
+}
+.va-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: va-ping 2.4s ease-out infinite;
+}
+@keyframes va-ping {
+  from { transform: scale(0.4); opacity: 1; }
+  to { transform: scale(2.2); opacity: 0; }
+}
+/* "//" del cartel de publicar: franjas diagonales que se desplazan. */
+.va-stripes {
+  background-image: repeating-linear-gradient(115deg, rgb(255 255 255 / 0.08) 0 14px, transparent 14px 34px);
+  background-size: 200% 100%;
+  animation: va-stripes 18s linear infinite;
+}
+@keyframes va-stripes {
+  to { background-position: -400px 0; }
+}
+
+/* Entrada al hacer scroll (en el contenedor: la animación pisaría el transform del hover). */
 @keyframes va-rise {
-  from { opacity: 0; transform: translateY(18px); }
+  from { opacity: 0; transform: translateY(22px); }
   to { opacity: 1; transform: none; }
 }
 @supports (animation-timeline: view()) {
   .home-theme [role="region"] > ul > li,
-  .home-theme a.group:has(> .va-tile-dark) {
+  .home-theme .va-rise {
     animation: va-rise linear both;
     animation-timeline: view();
     animation-range: entry 0% entry 70%;
   }
 }
 
-/* Destacadas desde lg: grilla mixta, la primera tarjeta ocupa 2 × 2 y las otras cinco la rodean.
-   En celular y tablet sigue el carrusel. */
+/* Destacadas desde lg: grilla mixta (la primera ocupa 2 × 2, las otras cinco alrededor). */
 @media (min-width: 1024px) {
   .va-feat [role="region"] > ul {
     display: grid !important;
@@ -628,7 +706,7 @@ header[data-home] .va-mega-panel {
     grid-auto-rows: 250px;
     gap: 24px !important;
     overflow: visible;
-    padding: 8px;
+    padding: 10px;
   }
   .va-feat [role="region"] > ul > li {
     width: auto !important;
@@ -649,13 +727,21 @@ header[data-home] .va-mega-panel {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-theme .va-tile,
-  .home-theme .va-card,
-  .home-theme .va-sq,
+  .va-dash,
+  .va-ping,
+  .va-stripes,
+  .home-zone-4 > .home-zone-bg::before,
+  .home-zone-4 > .home-zone-bg::after,
   .home-theme [role="region"] > ul > li,
-  .home-theme a.group:has(> .va-tile-dark) {
-    transition: none !important;
+  .home-theme .va-rise {
     animation: none !important;
+  }
+  .va-motion {
+    display: none;
+  }
+  .home-theme .va-card,
+  .home-theme .va-tile {
+    transition: none !important;
     transform: none !important;
   }
 }

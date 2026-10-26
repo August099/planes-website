@@ -30,7 +30,7 @@ export function ProvinceExplorer({ counts }: { counts: ProvinceCounts }) {
         ? { tabIndex: 0, role: "button", "aria-label": `${label}, ${avisos(totalOf(slug))}` }
         : { "aria-hidden": true }),
       className:
-        "cursor-pointer fill-[#CFCFCF]/70 data-[has=1]:fill-[#00205B]/40 stroke-white transition-[fill] duration-150 motion-reduce:transition-none outline-none",
+        "cursor-pointer fill-[#CFCFCF]/60 data-[has=1]:fill-[#0A4C96]/55 stroke-white transition-[fill] duration-150 motion-reduce:transition-none outline-none",
     };
   };
 

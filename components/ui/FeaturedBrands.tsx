@@ -39,9 +39,9 @@ export function FeaturedBrands({ brands }: FeaturedBrandsProps) {
       </div>
 
       {/* CONTENEDOR MÓVIL */}
-      {/* VA-79: los bordes se esfuman con una máscara (antes, degradés con #FAF5F5 fijo), así funciona
-          sobre cualquier fondo. */}
-      <div className="relative w-full flex overflow-hidden border-y-2 border-[#00205B] bg-white [mask-image:linear-gradient(to_right,transparent,black_4rem,black_calc(100%-4rem),transparent)] sm:[mask-image:linear-gradient(to_right,transparent,black_6rem,black_calc(100%-6rem),transparent)]">
+      <div className="container mx-auto px-4">
+      {/* Rediseño moderno (26/10): panel redondeado; los bordes se esfuman con dos degradés blancos (una máscara borraría las esquinas). */}
+      <div className="relative w-full flex overflow-hidden rounded-[28px] border border-[#00205B]/8 bg-white shadow-[0_14px_34px_-16px_rgb(0_32_91/0.22)] before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:z-10 before:w-16 before:bg-gradient-to-r before:from-white before:to-transparent after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:z-10 after:w-16 after:bg-gradient-to-l after:from-white after:to-transparent sm:before:w-28 sm:after:w-28">
 
         {/* PISTA DE MARQUESINA */}
         <div className="flex w-max items-center animate-[marquee_60s_linear_infinite] hover:[animation-play-state:paused]">
@@ -74,6 +74,7 @@ export function FeaturedBrands({ brands }: FeaturedBrandsProps) {
             );
           })}
         </div>
+      </div>
       </div>
     </section>
   );

@@ -3,6 +3,7 @@ import { ArrowRight, BookOpen } from "lucide-react";
 import { GUIDES_PATH } from "@/lib/guides";
 import { getPublishedGuides } from "@/lib/guides-data";
 import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
+import { FlightPaths } from "@/components/ui/home/FlightPaths";
 
 // "Guías para comprar y vender" en la Home (VA-78). Server component: no suma JS de cliente.
 // VA-143 (pedido del socio, 17/10): solo el título y el enlace a /guides, sin el índice de guías.
@@ -17,15 +18,16 @@ export async function GuidesSection() {
         <DisplayTitle id="home-guides-title" tone="dark" mark={<BookOpen strokeWidth={2.25} />}>
           Guías para comprar y vender
         </DisplayTitle>
+        {/* Moderno (26/10): banner redondeado con el degradé azul de la marca y rutas de vuelo animadas. */}
         <Link
           href={GUIDES_PATH}
-          className="va-tile va-tile-dark group relative mt-10 flex min-h-28 items-center justify-between gap-6 overflow-hidden border-2 border-white px-6 py-6 text-white transition-colors duration-300 hover:bg-white hover:text-[#00205B] focus-visible:bg-white focus-visible:text-[#00205B] sm:px-10"
+          className="va-rise group relative isolate mt-10 flex min-h-36 items-center justify-between gap-6 overflow-hidden rounded-[32px] bg-[linear-gradient(120deg,#0A4C96_0%,#00205B_70%)] px-7 py-8 text-white shadow-[0_30px_60px_-30px_rgb(10_76_150/0.9)] ring-1 ring-white/10 sm:px-12"
         >
-          <span className="font-heading text-xl leading-tight font-black uppercase tracking-[-0.01em] sm:text-3xl">Ver todas las guías</span>
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#D62828] text-white sm:h-14 sm:w-14">
-            <ArrowRight className="h-6 w-6 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+          <FlightPaths id="va-route-guides" tone="dark" className="-z-10" />
+          <span className="font-heading text-2xl leading-tight font-extrabold tracking-[-0.025em] sm:text-4xl">Ver todas las guías</span>
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-[#00205B] shadow-lg transition-transform duration-300 group-hover:scale-110 sm:h-16 sm:w-16">
+            <ArrowRight className="h-6 w-6 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden />
           </span>
-          <span aria-hidden className="absolute inset-x-0 bottom-0 h-1 origin-left scale-x-0 bg-[#D62828] transition-transform duration-300 group-hover:scale-x-100" />
         </Link>
       </div>
     </section>

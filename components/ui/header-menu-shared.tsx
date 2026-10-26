@@ -24,7 +24,7 @@ export const NAV: { href: string; label: string }[] = [
 export type PartCategoryLink = { id: string; name: string };
 
 export const DESKTOP_TRIGGER_CLASS =
-  "relative flex h-10 w-10 items-center justify-center rounded-md bg-[#00205B] hover:bg-[#D62828] text-white transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#D62828] focus-visible:ring-offset-2 cursor-pointer ring-1 ring-white/25 border-none";
+  "relative flex h-10 w-10 items-center justify-center rounded-full bg-[#00205B] hover:bg-[#D62828] text-white transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#D62828] focus-visible:ring-offset-2 cursor-pointer ring-1 ring-white/25 border-none";
 export const MOBILE_TRIGGER_CLASS = "relative p-2 rounded-lg border-none hover:bg-white/10 outline-none cursor-pointer";
 
 // VA-167: hasRepublish = hay republicaciones disponibles (punto en "Mi Cuenta"). VA-185: hasMissingProfile =

@@ -55,32 +55,35 @@ export function LaunchPromoBanner({ text }: { text: string }) {
     setVisible(false);
   };
 
-  // Rediseño (25/10, v2): banda roja a todo el ancho, pegada al hero.
+  // Rediseño moderno (26/10): tarjeta roja redondeada que flota sobre el borde del hero, con las "//"
+  // de la marca como franjas diagonales que se desplazan lento.
   return (
-    <section aria-label={FREE_QUOTA_PROMO.title} className="relative bg-[#D62828] text-white">
-      <div className="container mx-auto flex flex-col gap-4 px-4 py-6 pr-16 sm:flex-row sm:items-center sm:gap-8">
-        <p className="shrink-0 self-start bg-[#00205B] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.16em] sm:self-center">
+    <section aria-label={FREE_QUOTA_PROMO.title} className="relative z-30 container mx-auto -mt-10 px-4 sm:-mt-14">
+      <div className="relative isolate flex flex-col gap-4 overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#D62828_0%,#B71F1F_100%)] px-6 py-6 pr-16 text-white shadow-[0_24px_48px_-20px_rgb(183_31_31/0.6)] sm:flex-row sm:items-center sm:gap-8 sm:px-8">
+        {/* Las franjas van en su propia capa: .va-stripes usa background-image y taparía el degradé rojo. */}
+        <span aria-hidden className="va-stripes absolute inset-0 -z-10" />
+        <p className="shrink-0 self-start rounded-full bg-[#00205B] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] sm:self-center">
           {FREE_QUOTA_PROMO.title}
         </p>
         <div className="flex-1">
-          <p className="font-heading text-xl leading-tight font-black uppercase tracking-[-0.01em] sm:text-2xl">{text}</p>
+          <p className="font-heading text-xl leading-tight font-extrabold tracking-[-0.02em] sm:text-2xl">{text}</p>
           <p className="mt-1 text-sm text-white">Creá tu cuenta y publicá en minutos.</p>
         </div>
         <Link
           href="/register"
-          className="inline-flex min-h-12 shrink-0 items-center justify-center border-2 border-white px-6 text-sm font-bold uppercase tracking-[0.06em] transition-colors hover:bg-white hover:text-[#D62828]"
+          className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-white px-6 text-sm font-bold text-[#B71F1F] shadow-sm transition-transform hover:scale-[1.03]"
         >
           Crear cuenta gratis
         </Link>
+        <button
+          type="button"
+          onClick={dismiss}
+          aria-label="Cerrar aviso"
+          className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/15 cursor-pointer"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label="Cerrar aviso"
-        className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center text-white hover:bg-white/15 cursor-pointer"
-      >
-        <X className="h-5 w-5" />
-      </button>
     </section>
   );
 }

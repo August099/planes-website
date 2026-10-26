@@ -136,14 +136,14 @@ export default function HeaderSearchBar() {
             query.trim().length >= 2 && setIsOpen(true)
           }
           placeholder="Buscar aeronaves, repuestos y más..."
-          className="h-10 w-full rounded-md border border-[#00205B]/12 bg-[#F5F5F5] py-2 pr-12 pl-4 text-xs text-[#00205B] transition-colors placeholder:text-[#00205B]/50 focus:border-[#00205B]/45 focus:bg-white focus:outline-none sm:text-sm"
+          className="h-10 w-full rounded-full border border-[#00205B]/12 bg-[#F5F5F5] py-2 pr-12 pl-4 text-xs text-[#00205B] transition-colors placeholder:text-[#00205B]/50 focus:border-[#00205B]/45 focus:bg-white focus:outline-none sm:text-sm"
         />
 
         {/* Rediseño (25/10): el botón es una placa azul pegada al borde del campo. */}
         <button
           type="button"
           onClick={handleSearchSubmit}
-          className="absolute right-1 flex h-8 w-8 items-center justify-center rounded-[4px] bg-[#00205B] text-white transition-colors hover:bg-[#D62828] cursor-pointer"
+          className="absolute right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#00205B] text-white transition-colors hover:bg-[#D62828] cursor-pointer"
           aria-label="Buscar"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}

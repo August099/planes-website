@@ -135,7 +135,7 @@ export function SparePartCard({
                 type="button"
                 onClick={handleShareClick}
                 aria-label="Compartir"
-                className="flex h-9 w-9 items-center justify-center rounded-[4px] bg-white/95 text-[#00205B] transition-colors hover:bg-white hover:text-[#D62828] cursor-pointer"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-sm text-[#00205B] transition-colors hover:bg-white hover:text-[#D62828] cursor-pointer"
               >
                 <Share2 className="w-4 h-4" />
               </button>
@@ -145,7 +145,7 @@ export function SparePartCard({
                 onClick={handleFavoriteClick}
                 disabled={loadingFav}
                 aria-label="Añadir a favoritos"
-                className={`flex h-9 w-9 items-center justify-center rounded-[4px] transition-colors cursor-pointer disabled:opacity-50 ${
+                className={`flex h-9 w-9 items-center justify-center rounded-full shadow-sm transition-colors cursor-pointer disabled:opacity-50 ${
                   isFavorite ? "bg-white text-[#D62828]" : "bg-white/95 text-[#00205B] hover:bg-white hover:text-[#D62828]"
                 }`}
               >

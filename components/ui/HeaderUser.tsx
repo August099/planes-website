@@ -99,13 +99,13 @@ export function DesktopUserMenu() {
   const dot = hasUnanswered || hasRepublish || hasMissingProfile;
 
   // Mientras se resuelve la sesión: un lugar del mismo tamaño, sin saltos.
-  if (status === "loading") return <div className="h-10 w-10 rounded-md bg-slate-200/40" aria-hidden />;
+  if (status === "loading") return <div className="h-10 w-10 rounded-full bg-slate-200/40" aria-hidden />;
 
   if (!userId) {
     return (
       <Link
         href="/login"
-        className="flex h-10 items-center gap-2 rounded-md bg-[#D62828] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B71F1F]"
+        className="flex h-10 items-center gap-2 rounded-full bg-[#D62828] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#B71F1F]"
       >
         <User className="h-4 w-4" />
         Ingresar

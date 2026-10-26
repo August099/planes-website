@@ -38,9 +38,10 @@ export default function HomeServicesCards() {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {cards.map((card) => (
-            <Link key={card.href} href={card.href} className="group block">
-              <div className="va-tile va-tile-dark relative flex h-full flex-col overflow-hidden border-2 border-white transition-colors duration-300">
-                <div className="relative h-52 overflow-hidden border-b-2 border-white sm:h-60">
+            <Link key={card.href} href={card.href} className="va-rise group block">
+              {/* Moderno (26/10): tarjeta redondeada translúcida; la foto crece al pasar y la flecha va en un círculo rojo. */}
+              <div className="va-tile va-tile-dark relative flex h-full flex-col overflow-hidden rounded-[28px] border border-white/12 bg-white/[0.06] p-2 backdrop-blur-sm group-hover:border-white/25">
+                <div className="relative h-56 overflow-hidden rounded-[22px] sm:h-64">
                   <Image
                     src={card.image}
                     alt={card.title}
@@ -48,24 +49,25 @@ export default function HomeServicesCards() {
                     sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                     className={`object-cover ${card.position ?? ""} transition-transform duration-700 ease-out group-hover:scale-105`}
                   />
-                  <div className="absolute inset-0 bg-[#00205B]/25" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#00205B]/50 to-transparent" />
                   <span
-                    className={`absolute left-3 top-3 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] ${
-                      card.isAvailable ? "bg-white text-[#00205B]" : "border-2 border-white bg-[#00205B] text-white"
+                    className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] backdrop-blur-md ${
+                      card.isAvailable ? "bg-white/90 text-[#00205B]" : "bg-[#00205B]/70 text-white ring-1 ring-white/40"
                     }`}
                   >
                     {card.status}
                   </span>
                 </div>
 
-                <div className="flex flex-1 items-center justify-between gap-4 px-5 py-5 text-white transition-colors duration-300 group-hover:bg-white group-hover:text-[#00205B] group-focus-visible:bg-white group-focus-visible:text-[#00205B]">
+                <div className="flex flex-1 items-center justify-between gap-4 px-4 pb-3 pt-5 text-white">
                   <div>
-                    <h3 className="font-heading text-2xl font-black uppercase tracking-[-0.01em] sm:text-[1.75rem]">{card.title}</h3>
-                    {card.hasArrow && <p className="mt-0.5 text-xs font-semibold">Conocé más</p>}
+                    <h3 className="font-heading text-2xl font-extrabold tracking-[-0.02em] sm:text-[1.75rem]">{card.title}</h3>
+                    {card.hasArrow && <p className="mt-0.5 text-xs font-semibold text-white/80">Conocé más</p>}
                   </div>
-                  <ArrowRight className="h-6 w-6 shrink-0 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#D62828] transition-transform duration-300 group-hover:scale-110">
+                    <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden />
+                  </span>
                 </div>
-                <span aria-hidden className="absolute inset-x-0 bottom-0 h-1 origin-left scale-x-0 bg-[#D62828] transition-transform duration-300 group-hover:scale-x-100" />
               </div>
             </Link>
           ))}

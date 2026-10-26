@@ -46,20 +46,22 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
       >
         {categories.map((cat, i) => (
           <Link key={cat.id} href={`/spareparts?category=${cat.id}`} className="group block h-full">
-            <span className="va-tile relative flex h-full min-h-44 w-full flex-col justify-between overflow-hidden border-2 border-[#00205B] bg-white p-4 transition-colors duration-300 group-hover:bg-[#00205B] group-focus-visible:bg-[#00205B]">
+            {/* Rediseño moderno (26/10): ficha redondeada; al pasar se rellena con el degradé azul de la marca. */}
+            <span className="va-tile relative flex h-full min-h-48 w-full flex-col justify-between overflow-hidden border border-[#00205B]/10 bg-white p-4 group-hover:border-transparent group-hover:bg-[linear-gradient(135deg,#00205B_0%,#0A4C96_100%)] group-focus-visible:bg-[#00205B]">
               <span className="flex items-start justify-between gap-2">
                 <span
                   aria-hidden
-                  className="font-heading text-[2.25rem] leading-none font-black tracking-[-0.04em] tabular-nums text-[#00205B]/13 transition-colors group-hover:text-white/20"
+                  className="font-heading text-[2.25rem] leading-none font-black tracking-[-0.04em] tabular-nums text-[#0A4C96]/15 transition-colors group-hover:text-white/20"
                 >
                   {initials[i]}
                 </span>
-                <SparePartIcon name={cat.name} icon={cat.icon} className="h-10 w-12 shrink-0 text-[#00205B] transition-colors group-hover:text-white" />
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#EEF5FC] text-[#00205B] transition-all duration-300 group-hover:-rotate-6 group-hover:scale-110 group-hover:bg-white/15 group-hover:text-white">
+                  <SparePartIcon name={cat.name} icon={cat.icon} className="h-8 w-9" />
+                </span>
               </span>
-              <span className="line-clamp-3 text-left text-[13px] font-black uppercase leading-tight tracking-[0.01em] text-[#00205B] transition-colors group-hover:text-white sm:text-sm">
+              <span className="line-clamp-3 text-left text-[14px] font-bold leading-snug text-[#00205B] transition-colors group-hover:text-white">
                 {cat.name}
               </span>
-              <span aria-hidden className="absolute inset-x-0 bottom-0 h-1 origin-left scale-x-0 bg-[#D62828] transition-transform duration-300 group-hover:scale-x-100" />
             </span>
           </Link>
         ))}

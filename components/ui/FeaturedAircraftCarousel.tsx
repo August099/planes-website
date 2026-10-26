@@ -6,6 +6,7 @@ import {
   AircraftCardProps,
 } from "@/components/ui/OverlayAircraftCard";
 import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
+import { FlightPaths } from "@/components/ui/home/FlightPaths";
 import { ScrollCarousel } from "@/components/ui/home/ScrollCarousel";
 import { FEATURED_AIRCRAFT_COUNT } from "@/lib/constants";
 
@@ -55,6 +56,7 @@ function FeaturedCarousel({ aircrafts }: Props) {
     // Rediseño (25/10, v2): sobre el mismo blanco papel que el resto, con un velo azul muy suave en el
     // medio (sin cortes de fondo); las tarjetas oscuras dan el contraste.
     <section className="va-feat relative py-16 sm:py-20 bg-[linear-gradient(180deg,#F5F5F5_0%,#E8EAF0_50%,#F5F5F5_100%)]">
+      <FlightPaths id="va-route-featured" className="-z-10" />
       <div className="container mx-auto px-4">
       <DisplayTitle className="mb-10">Aeronaves Destacadas</DisplayTitle>
 

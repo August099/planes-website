@@ -49,7 +49,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
 
       <div
         data-province-map
-        className="va-tile va-static h-[380px] sm:h-[460px] md:h-[600px] border-2 border-[#00205B] bg-white p-3"
+        className="va-tile va-static h-[380px] sm:h-[460px] md:h-[600px] rounded-[28px] border border-[#00205B]/10 shadow-[0_14px_34px_-16px_rgb(0_32_91/0.22)] bg-white p-3"
         {...mapHandlers}
       >
         {map}
@@ -62,7 +62,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
           <select
             value={selected ?? ""}
             onChange={(e) => setSelected(e.target.value || null)}
-            className="w-full border-2 border-[#00205B] bg-white p-3 text-sm font-semibold text-[#00205B]"
+            className="w-full rounded-2xl border border-[#00205B]/15 bg-white p-3 text-sm font-semibold text-[#00205B] shadow-sm"
           >
             <option value="">Elegí una provincia</option>
             {provinces.map((p) => (
@@ -74,13 +74,13 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
         </label>
 
         {/* Desktop: lista de las 24, sincronizada con el mapa */}
-        <ul className="va-tile va-static hidden md:grid grid-cols-2 border-2 border-[#00205B] bg-white">
+        <ul className="va-tile va-static hidden md:grid grid-cols-2 gap-1 rounded-[28px] border border-[#00205B]/10 shadow-[0_14px_34px_-16px_rgb(0_32_91/0.22)] bg-white p-3">
           {provinces.map((p) => {
             const total = p.aircraft + p.parts;
             const isSelected = p.slug === selected;
             const isHovered = p.slug === hovered;
             return (
-              <li key={p.slug} className="border-b border-[#00205B]/12 odd:border-r [&:nth-last-child(-n+2)]:border-b-0">
+              <li key={p.slug}>
                 <button
                   type="button"
                   onClick={() => setSelected(p.slug)}
@@ -89,18 +89,18 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
                   onFocus={() => setHovered(p.slug)}
                   onBlur={() => setHovered(null)}
                   aria-pressed={isSelected}
-                  className={`flex w-full items-center justify-between gap-2 px-3.5 py-2 text-left text-sm transition-colors duration-150 motion-reduce:transition-none cursor-pointer ${
+                  className={`flex w-full items-center justify-between gap-2 rounded-xl px-3.5 py-2 text-left text-sm transition-colors duration-150 motion-reduce:transition-none cursor-pointer ${
                     isSelected
-                      ? "bg-[#D62828] text-white"
+                      ? "bg-[linear-gradient(135deg,#D62828_0%,#B71F1F_100%)] text-white shadow-sm"
                       : isHovered
-                        ? "bg-[#00205B] text-white"
+                        ? "bg-[#EEF5FC] text-[#00205B]"
                         : total > 0
                           ? "text-[#00205B]"
                           : "text-slate-500"
                   }`}
                 >
-                  <span className="truncate font-bold uppercase text-[12.5px] tracking-[0.02em]">{p.label}</span>
-                  <span className={`shrink-0 text-xs tabular-nums ${isSelected || isHovered ? "text-white" : ""}`}>
+                  <span className="truncate font-semibold">{p.label}</span>
+                  <span className={`shrink-0 text-xs tabular-nums ${isSelected ? "text-white" : ""}`}>
                     {plural(total, "aviso", "avisos")}
                   </span>
                 </button>
@@ -110,7 +110,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
         </ul>
 
         {/* Panel de la provincia elegida */}
-        <div className="va-tile va-static relative border-2 border-[#00205B] bg-white p-5" aria-live="polite">
+        <div className="va-tile va-static relative rounded-[28px] border border-[#00205B]/10 shadow-[0_14px_34px_-16px_rgb(0_32_91/0.22)] bg-white p-5" aria-live="polite">
           {!current ? (
             <p className="text-sm text-slate-500">Tocá una provincia en el mapa para ver sus avisos</p>
           ) : current.aircraft + current.parts === 0 ? (
@@ -120,14 +120,14 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
               </p>
               <Link
                 href="/publish"
-                className="inline-flex min-h-11 items-center justify-center bg-[#D62828] px-5 text-sm font-bold uppercase tracking-[0.06em] text-white hover:bg-[#B71F1F] transition-colors"
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#D62828] px-5 text-sm font-bold text-white hover:bg-[#B71F1F] transition-colors"
               >
                 Publicar
               </Link>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="font-heading text-lg font-black uppercase tracking-[-0.01em] text-[#00205B]">
+              <p className="font-heading text-lg font-extrabold tracking-[-0.02em] text-[#00205B]">
                 {current.label}
                 <span className="font-body text-sm font-medium normal-case tracking-normal text-slate-500">
                   {" · "}
@@ -139,13 +139,13 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Link
                   href={`/aircraft?province=${current.slug}`}
-                  className="inline-flex min-h-11 flex-1 items-center justify-center bg-[#D62828] px-5 text-sm font-bold uppercase tracking-[0.06em] text-white hover:bg-[#B71F1F] transition-colors"
+                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-[#D62828] px-5 text-sm font-bold text-white hover:bg-[#B71F1F] transition-colors"
                 >
                   Ver aeronaves
                 </Link>
                 <Link
                   href={`/spareparts?province=${current.slug}`}
-                  className="inline-flex min-h-11 flex-1 items-center justify-center border-2 border-[#00205B] bg-white px-5 text-sm font-bold uppercase tracking-[0.06em] text-[#00205B] hover:bg-[#00205B] hover:text-white transition-colors"
+                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full border border-[#00205B]/20 bg-white px-5 text-sm font-bold text-[#00205B] hover:bg-[#00205B] hover:text-white transition-colors"
                 >
                   Ver repuestos
                 </Link>

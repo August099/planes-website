@@ -209,12 +209,11 @@ export default async function HomePage() {
             <SparePartCategoriesCarousel categories={sparePartCategories} />
           </div>
           <FeaturedBrands brands={featuredBrandsFromDb} />
-          <div className="container mx-auto px-4 pb-16">
+          <div className="container mx-auto px-4">
             <ProvinceExplorer counts={provinceCounts} />
           </div>
+          <SellerCta />
         </div>
-
-        <SellerCta />
 
         {/* Cómo funciona + guías + servicios; el footer sigue el mismo color */}
         <div className="home-zone home-zone-4 pb-8">

@@ -1,56 +1,52 @@
-import { Plane } from "lucide-react";
+import { Camera, Handshake, MessagesSquare } from "lucide-react";
 import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
+import { FlightPaths } from "@/components/ui/home/FlightPaths";
 
 const STEPS = [
   {
     title: "Publicá tu avión",
     description: "Cargá fotos, precio y detalles en pocos minutos.",
+    icon: Camera,
   },
   {
     title: "Recibí contactos",
     description: "Compradores interesados te escriben directo, sin intermediarios.",
+    icon: MessagesSquare,
   },
   {
     title: "Cerrá la venta",
     description: "Coordiná la operación vos mismo, a tu manera.",
+    icon: Handshake,
   },
 ];
 
-// VA-85: los tres pasos como una ruta. Rediseño (25/10, v2): números calados gigantes en columnas
-// separadas por filetes, y un avión que recorre la ruta con el scroll (la estela roja es el tramo hecho;
-// sin animación queda quieto al comienzo).
+// VA-85: los tres pasos como una ruta. Rediseño moderno (26/10): tarjetas redondeadas translúcidas sobre
+// el azul, cada una con su ícono en una placa de degradé (en vez de los números grandes, que ya están en
+// los títulos de sección), y la ruta de vuelo animada de fondo.
 export function HowItWorks() {
   return (
-    <section className="w-full py-20 text-white">
+    <section className="relative w-full py-20 text-white">
       <div className="container mx-auto px-4">
         <DisplayTitle tone="dark">Cómo funciona</DisplayTitle>
 
-        <div aria-hidden className="relative mt-12 hidden h-6 overflow-hidden md:block">
-          <span className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/35" />
-          <span className="va-flight absolute inset-0 flex items-center">
-            <span className="h-0.5 flex-1 bg-[#D62828]" />
-            <Plane className="h-5 w-5 shrink-0 rotate-45 fill-white text-white" />
-          </span>
-        </div>
-
-        <ol className="mt-8 grid border-t border-white/15 md:mt-6 md:grid-cols-3 md:border-t-0">
-          {STEPS.map((step, i) => (
-            <li
-              key={step.title}
-              className="border-b border-white/15 py-8 md:border-b-0 md:border-l md:px-8 md:py-2 md:first:border-l-0 md:first:pl-0"
-            >
-              <span
-                aria-hidden
-                className="block font-heading text-[5rem] leading-[0.8] font-black tracking-[-0.05em] tabular-nums text-white/16 sm:text-[6.5rem]"
+        <div className="relative mt-12">
+          <FlightPaths id="va-route-steps" tone="dark" className="hidden md:block" />
+          <ol className="relative grid gap-5 md:grid-cols-3 md:gap-6">
+            {STEPS.map((step, i) => (
+              <li
+                key={step.title}
+                className="va-rise rounded-[28px] border border-white/12 bg-white/[0.06] p-7 backdrop-blur-sm transition-colors duration-300 hover:border-white/25 hover:bg-white/[0.1]"
               >
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <p className="va-label mt-6 text-white/75">Paso {String(i + 1).padStart(2, "0")}</p>
-              <h3 className="mt-1 font-heading text-2xl font-black uppercase tracking-[-0.01em]">{step.title}</h3>
-              <p className="mt-2 max-w-xs text-sm leading-relaxed text-white/80">{step.description}</p>
-            </li>
-          ))}
-        </ol>
+                <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#D62828_0%,#B71F1F_100%)] shadow-[0_14px_30px_-12px_rgb(214_40_40/0.7)]">
+                  <step.icon aria-hidden strokeWidth={1.75} className="h-8 w-8 text-white" />
+                </span>
+                <p className="va-label mt-6 text-white/75">Paso {String(i + 1).padStart(2, "0")}</p>
+                <h3 className="mt-1 font-heading text-2xl font-extrabold tracking-[-0.02em]">{step.title}</h3>
+                <p className="mt-2 max-w-xs text-sm leading-relaxed text-white/80">{step.description}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );
