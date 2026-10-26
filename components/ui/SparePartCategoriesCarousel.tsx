@@ -1,6 +1,6 @@
 // Componente de servidor (VA-76): solo ScrollCarousel se hidrata.
 import Link from "next/link";
-import { DynamicCategoryIcon } from "@/components/ui/DynamicCategoryIcon";
+import { SparePartIcon } from "@/components/ui/SparePartIcon";
 import { DisplayTitle, HOME_SQUARE_LINK } from "@/components/ui/home/DisplayTitle";
 import { ScrollCarousel } from "@/components/ui/home/ScrollCarousel";
 import { categoryInitials } from "@/lib/category-initials";
@@ -54,7 +54,7 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
                 >
                   {initials[i]}
                 </span>
-                <DynamicCategoryIcon name={cat.icon} className="h-7 w-7 text-[#00205B] transition-colors group-hover:text-white" />
+                <SparePartIcon name={cat.name} icon={cat.icon} className="h-10 w-12 shrink-0 text-[#00205B] transition-colors group-hover:text-white" />
               </span>
               <span className="line-clamp-3 text-left text-[13px] font-black uppercase leading-tight tracking-[0.01em] text-[#00205B] transition-colors group-hover:text-white sm:text-sm">
                 {cat.name}

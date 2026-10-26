@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-// Imágenes en public/cards/ (VA-52), generadas con scripts/optimize-cards.mjs.
+// Imágenes en public/cards/ (VA-52; fotos nuevas del socio, 26/10), generadas con scripts/optimize-cards.mjs.
 // Rediseño (25/10, v2): fichas de borde grueso como las categorías de repuestos. La foto va enmarcada
 // arriba y el pie se rellena de blanco al pasar; el estado es una etiqueta cuadrada.
 export default function HomeServicesCards() {
@@ -11,22 +11,23 @@ export default function HomeServicesCards() {
       title: "AVIONES",
       status: "Disponible",
       isAvailable: true,
-      image: "/cards/aircraft.webp",
-      position: "object-[70%_65%]", // que se vea el avión, no solo el cielo
+      image: "/cards/aircraft-home.webp",
+      position: "object-[50%_88%]", // foto vertical: el avión está abajo
       href: "/aircraft",
     },
     {
       title: "REPUESTOS",
       status: "Disponible",
       isAvailable: true,
-      image: "/cards/spareparts.webp",
+      image: "/cards/sparepart-home.webp",
       href: "/spareparts",
     },
     {
       title: "SERVICIOS",
       status: "En proceso", // VA-144
       isAvailable: false,
-      image: "/cards/services.webp",
+      image: "/cards/services-home.webp",
+      position: "object-[50%_55%]", // foto vertical: la caja de herramientas al centro
       href: "/services",
       hasArrow: true,
     },
@@ -39,7 +40,7 @@ export default function HomeServicesCards() {
           {cards.map((card) => (
             <Link key={card.href} href={card.href} className="group block">
               <div className="va-tile va-tile-dark relative flex h-full flex-col overflow-hidden border-2 border-white transition-colors duration-300">
-                <div className="relative h-40 overflow-hidden border-b-2 border-white sm:h-48">
+                <div className="relative h-52 overflow-hidden border-b-2 border-white sm:h-60">
                   <Image
                     src={card.image}
                     alt={card.title}

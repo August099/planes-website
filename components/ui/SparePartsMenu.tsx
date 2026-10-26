@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 
 import type { PartCategoryLink } from "@/components/ui/header-menu-shared";
+import { SparePartIcon } from "@/components/ui/SparePartIcon";
 
 export const sparePartsCategoryHref = (id: string) => `/spareparts?category=${encodeURIComponent(id)}`;
 
@@ -48,12 +49,11 @@ export function SparePartsMenu({ linkClass, categories }: { linkClass: string; c
 
           {columns.map((column, c) => (
             <ul key={c} className="border-t border-[var(--mega-line)]">
-              {column.map((cat, i) => (
+              {column.map((cat) => (
                 <li key={cat.id} className="border-b border-[var(--mega-line)]">
                   <Link href={sparePartsCategoryHref(cat.id)} className="group/link flex min-h-11 items-center gap-4 py-2 text-sm font-semibold">
-                    <span className="w-6 shrink-0 text-xs font-bold tabular-nums text-[var(--mega-num)]">
-                      {String(c * half + i + 1).padStart(2, "0")}
-                    </span>
+                    {/* Ícono propio de la categoría (sprite public/iconos.svg) en lugar del número. */}
+                    <SparePartIcon name={cat.name} className="h-6 w-7 shrink-0 text-[var(--mega-num)]" />
                     <span className="flex-1 transition-transform duration-200 group-hover/link:translate-x-1">{cat.name}</span>
                     <span aria-hidden className="h-0.5 w-0 bg-[#D62828] transition-[width] duration-200 group-hover/link:w-6" />
                   </Link>
