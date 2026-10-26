@@ -7,30 +7,37 @@ import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata: Metadata = {
   title: "Nosotros",
-  description: "Quiénes somos y por qué hicimos Ventas Aeronáuticas, el lugar para comprar y vender aviones y repuestos en Argentina.",
+  description:
+    "Ventas Aeronáuticas es el marketplace argentino de aeronaves y repuestos, nacido en 2026 en Chajarí, Entre Ríos. Conocé nuestra misión, visión y valores.",
   alternates: { canonical: "/about" },
 };
 
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 
-// VA-122: página "Nosotros". ⚠️ PLANTILLA: los textos marcados con [COMPLETAR] son de ejemplo y los
-// reemplazan los socios con la misión real. Estructura: misión, qué hacemos, cómo trabajamos y el
-// formulario de sugerencias.
-const PILLARS = [
+// VA-122: página "Nosotros" con los textos de los socios (26/10). Estructura: quiénes somos, misión,
+// visión y valores, y el formulario de sugerencias.
+const PILLARS: { code: string; title: string; text?: string; items?: { title: string; text: string }[] }[] = [
   {
     code: "01",
-    title: "Qué hacemos",
-    text: "[COMPLETAR] Reunimos en un solo lugar aviones, helicópteros y repuestos de todo el país, con fichas técnicas completas para comparar con datos.",
+    title: "Nuestra misión",
+    text: "Ofrecer un marketplace aeronáutico eficiente y dinámico que haga más simple publicar, encontrar y vender aeronaves y repuestos.",
   },
   {
     code: "02",
-    title: "Para quién",
-    text: "[COMPLETAR] Para pilotos, aeroclubes, escuelas, talleres, brokers y fábricas que compran o venden en la aviación general argentina.",
+    title: "Nuestra visión",
+    text: "Ser un marketplace aeronáutico líder a nivel mundial, con estándares de calidad y seguridad en cada publicación.",
   },
   {
     code: "03",
-    title: "Cómo lo hacemos",
-    text: "[COMPLETAR] Contacto directo con el vendedor, sin comisiones por venta, y guías para comprar y vender con información clara.",
+    title: "Nuestros valores",
+    items: [
+      { title: "Calidad y pasión", text: "nos esmeramos en ofrecer un servicio de alta calidad, hecho por gente que vive la aviación." },
+      { title: "Compromiso", text: "hacer las cosas bien y mejorar todos los días." },
+      {
+        title: "Orientación al usuario",
+        text: "guías, herramientas y una navegación simple para que publicar y buscar sea fácil para todos.",
+      },
+    ],
   },
 ];
 
@@ -40,15 +47,27 @@ export default function AboutPage() {
       <PageBackground page="faq" />
       <div className="container mx-auto max-w-6xl px-4 pt-6 pb-20">
         <Breadcrumbs items={[{ label: "Nosotros" }]} className="mb-6" />
-        <PageHeader routeId="va-route-about" className="mb-10" eyebrow="Nosotros" title="Nuestra misión" />
+        <PageHeader
+          routeId="va-route-about"
+          className="mb-10"
+          title="Nosotros"
+          subtitle="Somos el marketplace argentino de aeronaves y repuestos aeronáuticos."
+        />
 
         <div className="grid gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
           <section>
-            {/* [COMPLETAR] Misión real de Ventas Aeronáuticas. */}
-            <p className="max-w-2xl text-base leading-relaxed text-slate-700">
-              [COMPLETAR] Hacer que comprar y vender una aeronave en Argentina sea simple, transparente y seguro, conectando a quienes
-              vuelan con la información que necesitan para decidir.
-            </p>
+            <h2 className={LABEL}>Quiénes somos</h2>
+            <div className="mt-3 max-w-2xl space-y-4 text-base leading-relaxed text-slate-700">
+              <p>
+                Ventas Aeronáuticas nació en 2026 en Chajarí, Entre Ríos, como una startup argentina de comercio electrónico pensada solo
+                para la aviación.
+              </p>
+              <p>
+                Durante años, comprar o vender un avión en el país dependió de grupos de WhatsApp, avisos dispersos y de conocer a la
+                persona indicada. Creamos un lugar donde encontrar aeronaves y repuestos de todo el país, con la información técnica que
+                importa, y contactar directo con quien vende.
+              </p>
+            </div>
 
             <ol className="mt-10 divide-y divide-[#00205B]/10 rounded-lg border border-[#00205B]/12 bg-white">
               {PILLARS.map((p) => (
@@ -56,7 +75,16 @@ export default function AboutPage() {
                   <span className="w-6 shrink-0 font-semibold tabular-nums text-[#D62828]">{p.code}</span>
                   <div>
                     <h2 className="text-sm font-bold text-[#00205B]">{p.title}</h2>
-                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{p.text}</p>
+                    {p.text && <p className="mt-1 text-sm leading-relaxed text-slate-600">{p.text}</p>}
+                    {p.items && (
+                      <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-600">
+                        {p.items.map((item) => (
+                          <li key={item.title}>
+                            <strong className="font-semibold text-[#00205B]">{item.title}:</strong> {item.text}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 </li>
               ))}
@@ -77,7 +105,8 @@ export default function AboutPage() {
               Ayudanos a mejorar
             </h2>
             <p className="mt-2 mb-5 text-sm text-slate-600">
-              Estamos empezando y queremos construir la web con quienes la usan. Contanos qué te sirve, qué falta o qué cambiarías.
+              ¿Qué te gustaría que agreguemos? ¿Qué te costó o qué te faltó? Escribinos: leemos cada mensaje y lo usamos para mejorar la
+              plataforma.
             </p>
             <SuggestionForm />
           </section>
