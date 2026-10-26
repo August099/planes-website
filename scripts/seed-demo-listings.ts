@@ -85,9 +85,10 @@ async function main() {
     select: { id: true },
   });
   // El nombre del plan cambia entre bases: se busca por lo que incluye (Broker con todo ilimitado) y, si no
-  // hay, el Broker con más cupo.
+  // hay, el Broker con más cupo. Puede estar inactivo: isActive solo decide si se vende en /plans; el
+  // bonificado del admin (lib/courtesy-plans.ts) tampoco lo pide y los beneficios salen de la suscripción.
   const brokerPlans = await prisma.plan.findMany({
-    where: { tier: "BUSINESS", billingType: "SUBSCRIPTION", archivedAt: null, isActive: true },
+    where: { tier: "BUSINESS", billingType: "SUBSCRIPTION", archivedAt: null },
     select: { id: true, name: true, isUnlimitedAircraft: true, isUnlimitedSpareParts: true, sparePartsListingsCount: true },
   });
   const brokerPlan =
@@ -102,7 +103,7 @@ async function main() {
     !model && "modelo LAVIASA PA-25 Puelche",
     !agricola && "categoría de aeronave A (Agrícola)",
     !tires && "categoría de repuesto Cubiertas y Cámaras",
-    !brokerPlan && "un plan Broker / Empresa de suscripción activo",
+    !brokerPlan && "un plan Broker / Empresa de suscripción sin archivar",
   ].filter(Boolean);
   if (missing.length) throw new Error(`No encontré en esta base: ${missing.join(", ")}.`);
 
