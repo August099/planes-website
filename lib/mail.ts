@@ -1,6 +1,21 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// El cliente se crea al mandar, no al cargar el archivo: new Resend() sin clave tira error, y creado acá
+// arriba rompía todo lo que importa este archivo (registro, publicar) si faltaba RESEND_API_KEY.
+let client: Resend | null = null;
+function resendClient(): Resend {
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key) throw new Error("RESEND_API_KEY no está configurada: no se puede mandar el mail.");
+  client ??= new Resend(key);
+  return client;
+}
+const resend = { emails: { send: (...args: Parameters<Resend["emails"]["send"]>) => resendClient().emails.send(...args) } };
+
+/** Dominio para los links de los mails: el de la app; nunca localhost en producción. */
+export function appBaseUrl(): string {
+  const raw = process.env.NEXTAUTH_URL || process.env.APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://ventasaeronauticas.com";
+  return raw.trim().replace(/\/+$/, "");
+}
 
 export const EMAIL_FROM =
   process.env.EMAIL_FROM || "Ventas Aeronáuticas <no-reply@ventasaeronauticas.com>";
@@ -21,8 +36,7 @@ export function escapeHtml(value: string): string {
 }
 
 export async function sendVerificationEmail(email: string, token: string) {
-  const domain = process.env.NEXTAUTH_URL || "http://localhost:3000";
-  const confirmLink = `${domain}/verify-email?token=${token}`;
+  const confirmLink = `${appBaseUrl()}/verify-email?token=${token}`;
 
   try {
     const { data, error } = await resend.emails.send({
@@ -48,6 +62,8 @@ export async function sendVerificationEmail(email: string, token: string) {
       throw new Error(error.message);
     }
 
+    // Queda en los logs de Vercel: si el usuario dice que no le llegó, el id se busca en Resend → Emails.
+    console.info(`[mail] verificación enviada (id ${data?.id})`);
     return data;
   } catch (err) {
     console.error("Error al enviar email de verificación:", err);

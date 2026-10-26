@@ -86,9 +86,13 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
     // VA-87 · Causa del falso "email no verificado": Auth.js crea los usuarios de OAuth con
     // emailVerified: null (ignora lo que devuelve profile()) y, al vincular Google a una cuenta que
     // ya existía, no toca el usuario. Si Google confirma el email, se guarda acá, en los dos casos.
+    // 26/10: también Facebook (solo devuelve emails que la persona ya confirmó en Facebook).
     async signIn({ user, account, profile }) {
-      if (account?.provider !== "google" || !user?.id) return;
-      if (!(profile as { email_verified?: boolean } | undefined)?.email_verified) return;
+      if (!user?.id || !user.email) return;
+      const provider = account?.provider;
+      const verifiedByProvider =
+        provider === "facebook" || (provider === "google" && (profile as { email_verified?: boolean } | undefined)?.email_verified);
+      if (!verifiedByProvider) return;
       await prisma.user.updateMany({
         where: { id: user.id, emailVerified: null },
         data: { emailVerified: new Date() },
