@@ -14,6 +14,7 @@ import { parseSelectableUserType } from "@/lib/user-types";
 import { hasCustomPage } from "@/lib/subscriptions";
 import { getAccountPlan } from "@/lib/plan-benefits";
 import { ACCENT_KEYS } from "@/lib/accent-colors";
+import { normalizeSocialUrl, type SocialNetwork } from "@/lib/social-links";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,6 +34,14 @@ export async function updateProfileAction(formData: FormData) {
       dataToUpdate[field] = value === "" ? null : value;
     }
   });
+
+  // 26/10: los links de redes tienen que ser de esa red (lib/social-links.ts).
+  for (const network of ["facebook", "instagram"] as SocialNetwork[]) {
+    if (!(network in dataToUpdate)) continue;
+    const res = normalizeSocialUrl(network, dataToUpdate[network] as string | null);
+    if (!res.ok) throw new Error(res.error);
+    dataToUpdate[network] = res.url;
+  }
 
   // VA-87: tipo de cuenta, solo uno de los que se pueden elegir.
   if (formData.has("userType")) {
