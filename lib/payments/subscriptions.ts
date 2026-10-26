@@ -14,6 +14,7 @@ import { sendSubscriptionPaymentFailedEmail } from "@/lib/mail";
 import { processInvoice } from "@/lib/billing/issue";
 import { isTestPayment } from "@/lib/billing/guard";
 import { mpAccountIsTest } from "@/lib/payments/mp-account";
+import { PAYMENTS_LOCKED_MESSAGE, realPaymentsBlocked } from "@/lib/payments-lock";
 
 // VA-92 · Etapa 2: suscripciones mensuales con la API de Suscripciones de Mercado Pago (preapproval).
 // Se crean por API, sin "Planes de suscripción" del panel: el precio y los beneficios salen de nuestro
@@ -37,6 +38,8 @@ function addPeriod(from: Date, interval: string | null): Date {
 // --------------------------------------------------------------------------- Alta
 
 export async function startSubscription(input: { userId: string; planId: string; billing: unknown; payerEmail?: string }): Promise<Result> {
+  // Candado de main (lib/payments-lock.ts): sin suscripciones reales durante la prueba de seguridad.
+  if (realPaymentsBlocked()) return { ok: false, error: PAYMENTS_LOCKED_MESSAGE };
   const plan = await prisma.plan.findFirst({ where: { id: input.planId, isActive: true, archivedAt: null, billingType: "SUBSCRIPTION", tier: { not: "BASE" } } });
   const subscriber = await prisma.user.findUnique({ where: { id: input.userId }, select: { isAdmin: true } });
   if (subscriber?.isAdmin) return { ok: false, error: "Como admin ya tenés todo lo del Broker incluido." };

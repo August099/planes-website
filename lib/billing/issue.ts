@@ -8,6 +8,7 @@ import { buildInvoicePayload, type Receiver } from "@/lib/billing/payload";
 import { mpAccountIsTest } from "@/lib/payments/mp-account";
 import { EMAIL_FROM, getSupportEmail } from "@/lib/mail";
 import { Resend } from "resend";
+import { REAL_PAYMENTS_LOCKED } from "@/lib/payments-lock";
 
 // VA-92 etapa 4 + VA-105: emisión de facturas C y notas de crédito C con TusFacturasAPP.
 // - BILLING_ENABLED=false → no se procesa: queda PENDING (así se hace el pago real de prueba).
@@ -64,7 +65,8 @@ export async function processInvoice(invoiceId: string): Promise<string | null> 
   if (!invoice || !["PENDING", "ERROR"].includes(invoice.status)) return invoice?.status ?? null;
   if (Number(invoice.total) <= 0) return invoice.status; // VA-105 1.2: nunca se factura $0
 
-  const env = readBillingEnv();
+  // Candado de main (lib/payments-lock.ts): con el candado puesto, nunca se factura (queda pendiente).
+  const env = { ...readBillingEnv(), ...(REAL_PAYMENTS_LOCKED ? { billingEnabled: false } : {}) };
   const decision = billingDecision(env, { liveMode: invoice.payment.liveMode, mpAccountIsTest: await mpAccountIsTest() });
   if (decision.action === "skip") return invoice.status;
 

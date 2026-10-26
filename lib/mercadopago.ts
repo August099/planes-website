@@ -1,5 +1,6 @@
 import "server-only";
 import { MercadoPagoConfig } from "mercadopago";
+import { REAL_PAYMENTS_LOCKED } from "@/lib/payments-lock";
 
 // VA-92: configuración de Mercado Pago. Todo sale de las variables de entorno (ver .env.example y
 // docs/PAGOS.md); el código no asume si las credenciales son de prueba o de producción, ni de qué
@@ -49,5 +50,7 @@ export function notificationUrl(): string {
 
 /** ¿Se emiten facturas? En false los pagos funcionan y las facturas quedan pendientes. */
 export function billingEnabled(): boolean {
+  // Candado de main (lib/payments-lock.ts): con el candado puesto, nunca se factura.
+  if (REAL_PAYMENTS_LOCKED) return false;
   return process.env.BILLING_ENABLED?.trim().toLowerCase() === "true";
 }

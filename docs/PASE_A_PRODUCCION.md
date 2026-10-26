@@ -144,6 +144,15 @@ backup.
 
 ---
 
+## 4 bis. Candado de pagos en `main` (26/10/2026)
+
+`main` salió a producción para una prueba de seguridad externa con un candado en el código: `lib/payments-lock.ts` (`REAL_PAYMENTS_LOCKED = true`). Mientras esté puesto, **sin importar las variables de Vercel**:
+
+- no se inicia ningún cobro ni suscripción con credenciales reales de Mercado Pago (el checkout responde "Los pagos están desactivados temporalmente"); con credenciales de prueba (`TEST-`) sí;
+- nunca se emiten facturas (quedan pendientes).
+
+**Para habilitar los pagos:** poner `REAL_PAYMENTS_LOCKED = false` en `main` (o borrar el archivo y sus cuatro usos: `lib/payments/checkout.ts`, `lib/payments/subscriptions.ts`, `lib/mercadopago.ts` y `lib/billing/issue.ts`) y seguir con los pasos 5 a 8. En `pre-production` el candado no existe.
+
 ## 5. Variables de Production en Vercel
 
 Settings → Environment Variables → entorno **Production**. Después de cambiarlas: **Redeploy**.

@@ -10,6 +10,7 @@ import { appUrl, mpClient, notificationUrl } from "@/lib/mercadopago";
 import { activatePurchase } from "@/lib/payments/activation";
 import { getBillingSettings } from "@/lib/billing-settings";
 import { startSubscription } from "@/lib/payments/subscriptions";
+import { PAYMENTS_LOCKED_MESSAGE, realPaymentsBlocked } from "@/lib/payments-lock";
 
 // VA-92: el producto y el precio se resuelven siempre en el servidor a partir de un "producto" que
 // viaja en la URL (?planId=…). Las suscripciones van por débito automático (lib/payments/subscriptions);
@@ -90,6 +91,8 @@ export async function startCheckout(input: {
   /** Suscripciones: email de la cuenta de Mercado Pago que autoriza el débito. */
   payerEmail?: string;
 }): Promise<CheckoutResult> {
+  // Candado de main (lib/payments-lock.ts): sin cobros reales durante la prueba de seguridad.
+  if (realPaymentsBlocked()) return { ok: false, error: PAYMENTS_LOCKED_MESSAGE };
   const product = await resolveProduct(input.userId, productQueryFromKey(input.productKey));
   if ("error" in product) return { ok: false, error: product.error };
   if (product.recurring) {
