@@ -84,15 +84,25 @@ async function main() {
     where: { name: "Cubiertas y Cámaras", children: { none: {} } },
     select: { id: true },
   });
-  const brokerPlan = await prisma.plan.findFirst({
-    where: { tier: "BUSINESS", billingType: "SUBSCRIPTION", archivedAt: null, isActive: true, name: { contains: "Todo ilimitado" } },
-    select: { id: true, name: true },
+  // El nombre del plan cambia entre bases: se busca por lo que incluye (Broker con todo ilimitado) y, si no
+  // hay, el Broker con más cupo.
+  const brokerPlans = await prisma.plan.findMany({
+    where: { tier: "BUSINESS", billingType: "SUBSCRIPTION", archivedAt: null, isActive: true },
+    select: { id: true, name: true, isUnlimitedAircraft: true, isUnlimitedSpareParts: true, sparePartsListingsCount: true },
   });
+  const brokerPlan =
+    brokerPlans.find((p) => p.isUnlimitedAircraft && p.isUnlimitedSpareParts) ??
+    brokerPlans.find((p) => p.isUnlimitedSpareParts) ??
+    [...brokerPlans].sort((x, y) => y.sparePartsListingsCount - x.sparePartsListingsCount)[0];
+  if (!brokerPlan) {
+    const all = await prisma.plan.findMany({ select: { name: true, tier: true, billingType: true, isActive: true, archivedAt: true } });
+    console.log("Planes en esta base:", all.map((p) => `${p.name} (${p.tier ?? "sin tier"}, ${p.billingType}${p.isActive ? "" : ", inactivo"}${p.archivedAt ? ", archivado" : ""})`).join(" | "));
+  }
   const missing = [
     !model && "modelo LAVIASA PA-25 Puelche",
     !agricola && "categoría de aeronave A (Agrícola)",
     !tires && "categoría de repuesto Cubiertas y Cámaras",
-    !brokerPlan && "plan Broker / Empresa · Todo ilimitado",
+    !brokerPlan && "un plan Broker / Empresa de suscripción activo",
   ].filter(Boolean);
   if (missing.length) throw new Error(`No encontré en esta base: ${missing.join(", ")}.`);
 
