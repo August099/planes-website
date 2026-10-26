@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { hasUnansweredQuestions } from "@/lib/cached-data";
 import { getRepublishStatus, hasRepublishAvailable, republishKey } from "@/lib/republish";
 import { missingProfileFields } from "@/lib/account-data";
+import { prisma } from "@/lib/prisma";
 
 export type HeaderIndicators = { isAdmin: boolean; hasUnanswered: boolean; republishKey: string | null; missingProfile: boolean };
 
@@ -15,6 +16,15 @@ export async function getHeaderIndicators(): Promise<HeaderIndicators | null> {
   const user = await getCurrentUser();
   if (!user?.id) return null;
   // VA-185: los datos faltantes se avisan con un punto en "Ajustes", que lleva a completarlos.
-  const [hasUnanswered, republish, missing] = await Promise.all([hasUnansweredQuestions(user.id), getRepublishStatus(user.id), missingProfileFields(user.id)]);
-  return { isAdmin: !!user.isAdmin, hasUnanswered, republishKey: hasRepublishAvailable(republish) ? republishKey(republish) : null, missingProfile: missing.length > 0 };
+  // 26/10: republicar solo mueve avisos activos; sin ninguno, el punto quedaba prendido para siempre en las
+  // cuentas que republican todo cada 30 días (Broker y admins) aunque no hubiera nada que republicar.
+  const [hasUnanswered, republish, missing, activeAircraft, activeParts] = await Promise.all([
+    hasUnansweredQuestions(user.id),
+    getRepublishStatus(user.id),
+    missingProfileFields(user.id),
+    prisma.aircraft.count({ where: { sellerId: user.id, status: "ACTIVE" } }),
+    prisma.sparePart.count({ where: { sellerId: user.id, status: "ACTIVE" } }),
+  ]);
+  const canRepublish = activeAircraft + activeParts > 0 && hasRepublishAvailable(republish);
+  return { isAdmin: !!user.isAdmin, hasUnanswered, republishKey: canRepublish ? republishKey(republish) : null, missingProfile: missing.length > 0 };
 }
