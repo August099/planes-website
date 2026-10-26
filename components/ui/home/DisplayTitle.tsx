@@ -33,7 +33,7 @@ export function DisplayTitle({
         )}
         <h2
           id={id}
-          className={`va-dt-h pb-1 font-heading text-[1.6rem] leading-[0.95] font-black uppercase tracking-[-0.025em] sm:text-[2.6rem] ${dark ? "text-white" : "text-[#00205B]"}`}
+          className={`va-dt-h pb-1 font-heading text-[1.6rem] leading-[0.95] font-extrabold tracking-[-0.035em] sm:text-[2.6rem] ${dark ? "text-white" : "text-[#00205B]"}`}
         >
           {children}
         </h2>
