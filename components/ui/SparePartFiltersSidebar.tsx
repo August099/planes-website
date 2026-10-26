@@ -34,6 +34,22 @@ function getDescendantIds(categories: CategoryRow[], id: string): string[] {
   return [id, ...directChildren.flatMap((c) => getDescendantIds(categories, c.id))];
 }
 
+// Categorías de la URL + todos sus ancestros (26/10). El árbol solo muestra las subcategorías de un padre
+// tildado: llegando con una subcategoría sola (menú Repuestos del header) quedaba oculta. El listado ignora
+// un padre que tiene un hijo tildado (getLeafSelectedIds en app/spareparts/page.tsx), así que el filtro no cambia.
+function withAncestors(categories: CategoryRow[], ids: string[]): string[] {
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  const out = new Set(ids);
+  for (const id of ids) {
+    let parent = byId.get(id)?.parentId ?? null;
+    while (parent && !out.has(parent)) {
+      out.add(parent);
+      parent = byId.get(parent)?.parentId ?? null;
+    }
+  }
+  return [...out];
+}
+
 function CategoryNode({
   node,
   selected,
@@ -109,7 +125,7 @@ function SparePartFiltersForm({ categories }: Props) {
   const [currency, setCurrency] = useState<Currency>(currencyFromUrl(searchParams.get("currency")));
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") ?? "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") ?? "");
-  const [categoryIds, setCategoryIds] = useState<string[]>(searchParams.getAll("category"));
+  const [categoryIds, setCategoryIds] = useState<string[]>(() => withAncestors(categories, searchParams.getAll("category")));
   const [condition, setCondition] = useState<string[]>(searchParams.getAll("condition"));
   const [province, setProvince] = useState(searchParams.get("province") ?? "");
 
@@ -123,7 +139,7 @@ function SparePartFiltersForm({ categories }: Props) {
   const toggleSection = (section: SectionKey) => setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
 
   const categoryTree = useMemo(() => buildTree(categories), [categories]);
-  const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>(() => searchParams.getAll("category"));
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>(() => withAncestors(categories, searchParams.getAll("category")));
 
   const toggleValue = (list: string[], setList: (v: string[]) => void, value: string) => {
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
@@ -174,7 +190,8 @@ function SparePartFiltersForm({ categories }: Props) {
 
   const counts = {
     price: (minPrice ? 1 : 0) + (maxPrice ? 1 : 0) + (currency !== "ALL" ? 1 : 0),
-    category: categoryIds.length,
+    // Solo las más específicas: un padre con un hijo tildado no suma (como el listado).
+    category: categoryIds.filter((id) => !categories.some((c) => c.parentId === id && categoryIds.includes(c.id))).length,
     condition: condition.length,
     province: province ? 1 : 0,
   };

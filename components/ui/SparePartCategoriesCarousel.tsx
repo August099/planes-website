@@ -51,12 +51,13 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
               <span className="flex items-start justify-between gap-2">
                 <span
                   aria-hidden
-                  className="font-heading text-[2.25rem] leading-none font-black tracking-[-0.04em] tabular-nums text-[#0A4C96]/15 transition-colors group-hover:text-white/20"
+                  className="min-w-0 truncate font-heading text-[1.6rem] leading-none font-black tracking-[-0.04em] tabular-nums text-[#0A4C96]/15 transition-colors group-hover:text-white/20 sm:text-[2.25rem]"
                 >
                   {initials[i]}
                 </span>
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#EEF5FC] text-[#00205B] transition-all duration-300 group-hover:-rotate-6 group-hover:scale-110 group-hover:bg-white/15 group-hover:text-white">
-                  <SparePartIcon name={cat.name} icon={cat.icon} className="h-8 w-9" />
+                {/* Las iniciales se achican en celular y el ícono no se encoge: con letras anchas (MM, WW) ya no lo empujan afuera. */}
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#EEF5FC] sm:h-14 sm:w-14 text-[#00205B] transition-all duration-300 group-hover:-rotate-6 group-hover:scale-110 group-hover:bg-white/15 group-hover:text-white">
+                  <SparePartIcon name={cat.name} icon={cat.icon} className="h-6 w-7 sm:h-8 sm:w-9" />
                 </span>
               </span>
               <span className="line-clamp-3 text-left text-[16px] font-bold leading-snug tracking-[-0.01em] text-[#00205B] sm:text-[17px] transition-colors group-hover:text-white">

@@ -35,7 +35,7 @@ export function HowItWorks() {
             {STEPS.map((step, i) => (
               <li
                 key={step.title}
-                className="va-rise rounded-[28px] border border-white/12 bg-white/[0.06] p-7 backdrop-blur-sm transition-colors duration-300 hover:border-white/25 hover:bg-white/[0.1]"
+                className="va-rise rounded-[28px] border border-white/12 bg-white/[0.07] p-7 transition-colors duration-300 hover:border-white/25 hover:bg-white/[0.1]"
               >
                 <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#D62828_0%,#B71F1F_100%)] shadow-[0_14px_30px_-12px_rgb(214_40_40/0.7)]">
                   <step.icon aria-hidden strokeWidth={1.75} className="h-8 w-8 text-white" />

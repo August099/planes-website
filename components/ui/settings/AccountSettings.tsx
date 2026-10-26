@@ -6,8 +6,10 @@ import Link from "next/link";
 import { Camera, CheckCircle2, Loader2, Lock, Trash2 } from "lucide-react";
 import { updateProfileAction, updateAvatarAction, removeAvatarAction, changePasswordAction } from "@/app/actions/profile-actions";
 import { refreshHeaderIndicators } from "@/lib/header-refresh";
+import { normalizeSocialUrl } from "@/lib/social-links";
 import { PROFILE_FIELD_LABELS, type ProfileField } from "@/lib/profile";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
+import { LocalityInput } from "@/components/ui/LocalityInput";
 import { USER_TYPE_OPTIONS } from "@/lib/user-types";
 import { StorefrontEditor } from "@/components/ui/profile/StorefrontEditor";
 import type { StorefrontData } from "@/components/ui/profile/StorefrontHeader";
@@ -67,6 +69,9 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
     missingProfileFields.includes(field) ? <span className="ml-1 inline-block h-2 w-2 rounded-full bg-red-600 align-middle" aria-label="Falta completar" /> : null;
 
   // Datos personales
+  // 26/10: ciudad con las localidades de la provincia (lib/localities, como en Publicar).
+  const [province, setProvince] = useState(user.province ?? "");
+  const [city, setCity] = useState(user.city ?? "");
   const [loadingSave, setLoadingSave] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -74,6 +79,15 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
     setLoadingSave(true);
     setSaveSuccess(false);
     const formData = new FormData(e.currentTarget);
+    // 26/10: links de redes de esa red (la misma validación corre en el servidor).
+    for (const network of ["facebook", "instagram"] as const) {
+      const res = normalizeSocialUrl(network, String(formData.get(network) ?? ""));
+      if (!res.ok) {
+        alert(res.error);
+        setLoadingSave(false);
+        return;
+      }
+    }
     try {
       await updateProfileAction(formData);
       setSaveSuccess(true);
@@ -200,19 +214,19 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-600">Ciudad{missingDot("city")}</label>
-              <input type="text" name="city" defaultValue={user.city || ""} className={INPUT} />
+              <LocalityInput name="city" value={city} province={province} onChange={setCity} placeholder="Ej: Rosario" className={INPUT} />
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-600">Provincia{missingDot("province")}</label>
-              <ProvinceSelect name="province" defaultValue={user.province} className={INPUT} />
+              <ProvinceSelect name="province" value={province} onChange={setProvince} className={INPUT} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-600">Facebook (URL)</label>
-              <input type="url" name="facebook" defaultValue={user.facebook || ""} className={INPUT} />
+              <label className="mb-1 block text-xs font-semibold text-slate-600">Facebook</label>
+              <input type="text" name="facebook" placeholder="facebook.com/tu-pagina o @tu-pagina" defaultValue={user.facebook || ""} className={INPUT} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-600">Instagram (URL)</label>
-              <input type="url" name="instagram" defaultValue={user.instagram || ""} className={INPUT} />
+              <label className="mb-1 block text-xs font-semibold text-slate-600">Instagram</label>
+              <input type="text" name="instagram" placeholder="instagram.com/tu-usuario o @tu-usuario" defaultValue={user.instagram || ""} className={INPUT} />
             </div>
           </div>
           <div className="flex items-center gap-3">
