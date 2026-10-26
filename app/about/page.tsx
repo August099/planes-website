@@ -4,6 +4,7 @@ import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { SuggestionForm } from "./SuggestionForm";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { CONTACT_PHONE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Nosotros",
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 
 // VA-122: página "Nosotros" con los textos de los socios (26/10). Estructura: quiénes somos, misión,
-// visión y valores, y el formulario de sugerencias.
+// visión y valores, cómo funciona, hoy y mañana, y el formulario de sugerencias con los contactos.
 const PILLARS: { code: string; title: string; text?: string; items?: { title: string; text: string }[] }[] = [
   {
     code: "01",
@@ -39,6 +40,22 @@ const PILLARS: { code: string; title: string; text?: string; items?: { title: st
       },
     ],
   },
+];
+
+const HOW_IT_WORKS = [
+  { title: "Publicás gratis", text: "todas las cuentas pueden tener 1 avión y 3 repuestos publicados al mismo tiempo, sin vencimiento." },
+  { title: "Sin intermediarios ni comisiones", text: "los compradores te contactan directo por WhatsApp, teléfono o email." },
+  { title: "Fichas técnicas completas", text: "horas, motor, hélice, aviónica y documentación, para comparar con datos reales." },
+  {
+    title: "Para quienes venden más",
+    text: "los planes Pro y Broker suman publicaciones, mayor visibilidad, métricas y una página personalizada.",
+  },
+];
+
+const CONTACT = [
+  { label: "WhatsApp", value: CONTACT_PHONE.display, href: `https://wa.me/${CONTACT_PHONE.e164.replace("+", "")}` },
+  { label: "Instagram", value: "@ventas.aeronauticas", href: "https://instagram.com/ventas.aeronauticas" },
+  { label: "Email", value: "aeronauticasventas@gmail.com", href: "mailto:aeronauticasventas@gmail.com" },
 ];
 
 export default function AboutPage() {
@@ -90,12 +107,27 @@ export default function AboutPage() {
               ))}
             </ol>
 
+            <h2 className={`${LABEL} mt-10`}>Cómo funciona</h2>
+            <ul className="mt-3 divide-y divide-[#00205B]/10 rounded-lg border border-[#00205B]/12 bg-white">
+              {HOW_IT_WORKS.map((item) => (
+                <li key={item.title} className="px-5 py-4 text-sm leading-relaxed text-slate-600">
+                  <strong className="font-semibold text-[#00205B]">{item.title}:</strong> {item.text}
+                </li>
+              ))}
+            </ul>
+
+            <h2 className={`${LABEL} mt-10`}>Hoy y mañana</h2>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-700">
+              Hoy reunimos aeronaves y repuestos. Mañana, todo el ecosistema aeronáutico en un solo lugar: hangares, talleres, profesionales y
+              servicios.
+            </p>
+
             <p className="mt-6 text-sm text-slate-600">
               ¿Tenés una consulta puntual? Mirá las{" "}
               <Link href="/faq" className="font-semibold text-[#00205B] hover:text-[#D62828] hover:underline">
                 preguntas frecuentes
               </Link>{" "}
-              o escribinos a los datos de contacto del pie de la página.
+              o escribinos por cualquiera de nuestros contactos.
             </p>
           </section>
 
@@ -109,6 +141,25 @@ export default function AboutPage() {
               plataforma.
             </p>
             <SuggestionForm />
+
+            <h2 className={`${LABEL} mt-8 border-t border-[#00205B]/10 pt-6`}>Contacto</h2>
+            <dl className="mt-3 space-y-2 text-sm">
+              {CONTACT.map((c) => (
+                <div key={c.label} className="flex items-center justify-between gap-3">
+                  <dt className="text-slate-500">{c.label}</dt>
+                  <dd className="min-w-0 truncate">
+                    <a
+                      href={c.href}
+                      target={c.href.startsWith("http") ? "_blank" : undefined}
+                      rel={c.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                      className="font-semibold text-[#00205B] hover:text-[#D62828] hover:underline"
+                    >
+                      {c.value}
+                    </a>
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </section>
         </div>
       </div>
