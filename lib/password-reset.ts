@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { sendPasswordResetEmail } from "@/lib/mail";
+import { appBaseUrl, sendPasswordResetEmail } from "@/lib/mail";
 import { hitRateLimit, limitKey } from "@/lib/rate-limit";
 import { PASSWORD_REGEX } from "@/lib/password-rules";
 
@@ -37,8 +37,7 @@ export async function requestPasswordReset(emailInput: string, ip: string | null
     prisma.passwordResetToken.updateMany({ where: { userId: user.id, usedAt: null }, data: { usedAt: now } }),
     prisma.passwordResetToken.create({ data: { userId: user.id, tokenHash: hashToken(token), expiresAt: new Date(now.getTime() + TOKEN_TTL_MS) } }),
   ]);
-  const base = process.env.NEXTAUTH_URL || "http://localhost:3000";
-  await sendPasswordResetEmail({ to: email, link: `${base}/reset-password?token=${token}`, hasPassword: Boolean(user.passwordHash) });
+  await sendPasswordResetEmail({ to: email, link: `${appBaseUrl()}/reset-password?token=${token}`, hasPassword: Boolean(user.passwordHash) });
   return "sent";
 }
 
