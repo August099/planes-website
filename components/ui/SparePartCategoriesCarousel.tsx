@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DynamicCategoryIcon } from "@/components/ui/DynamicCategoryIcon";
 import { DisplayTitle, HOME_SQUARE_LINK } from "@/components/ui/home/DisplayTitle";
 import { ScrollCarousel } from "@/components/ui/home/ScrollCarousel";
+import { categoryInitials } from "@/lib/category-initials";
 
 export interface CategoryItem {
   id: string;
@@ -16,6 +17,8 @@ interface Props {
 }
 
 export function SparePartCategoriesCarousel({ categories }: Props) {
+  // Iniciales de cada categoría (FE, TA...) en vez del número de orden: los números ya están en los títulos.
+  const initials = categoryInitials(categories.map((c) => c.name));
   return (
     <section className="relative">
       {/* CABECERA */}
@@ -49,7 +52,7 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
                   aria-hidden
                   className="font-heading text-[2.25rem] leading-none font-black tracking-[-0.04em] tabular-nums text-[#00205B]/13 transition-colors group-hover:text-white/20"
                 >
-                  {String(i + 1).padStart(2, "0")}
+                  {initials[i]}
                 </span>
                 <DynamicCategoryIcon name={cat.icon} className="h-7 w-7 text-[#00205B] transition-colors group-hover:text-white" />
               </span>

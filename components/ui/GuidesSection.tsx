@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { GUIDES_PATH } from "@/lib/guides";
 import { getPublishedGuides } from "@/lib/guides-data";
 import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
@@ -14,7 +14,7 @@ export async function GuidesSection() {
   return (
     <section className="w-full py-16 sm:py-20" aria-labelledby="home-guides-title">
       <div className="container mx-auto px-4">
-        <DisplayTitle id="home-guides-title" tone="dark">
+        <DisplayTitle id="home-guides-title" tone="dark" mark={<BookOpen strokeWidth={2.25} />}>
           Guías para comprar y vender
         </DisplayTitle>
         <Link

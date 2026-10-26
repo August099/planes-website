@@ -9,6 +9,7 @@ export function DisplayTitle({
   id,
   align = "left",
   aside,
+  mark,
   className = "",
 }: {
   children: ReactNode;
@@ -16,13 +17,21 @@ export function DisplayTitle({
   id?: string;
   align?: "left" | "center";
   aside?: ReactNode;
+  /** En lugar del número de sección (no cuenta en la numeración): un ícono en el mismo tono tenue. */
+  mark?: ReactNode;
   className?: string;
 }) {
   const dark = tone === "dark";
   return (
-    <div className={`va-section-title ${className}`}>
+    <div className={`${mark ? "" : "va-section-title"} ${className}`}>
       <div className={`flex items-end gap-3 sm:gap-5 ${align === "center" ? "justify-center text-center" : ""}`}>
-        <span aria-hidden className={`va-num shrink-0 text-[3.5rem] sm:text-[5.25rem] ${dark ? "va-num-dark" : ""}`} />
+        {mark ? (
+          <span aria-hidden className={`shrink-0 [&>svg]:h-12 [&>svg]:w-12 sm:[&>svg]:h-[4.5rem] sm:[&>svg]:w-[4.5rem] ${dark ? "text-white/20" : "text-[#00205B]/15"}`}>
+            {mark}
+          </span>
+        ) : (
+          <span aria-hidden className={`va-num shrink-0 text-[3.5rem] sm:text-[5.25rem] ${dark ? "va-num-dark" : ""}`} />
+        )}
         <h2
           id={id}
           className={`pb-1 font-heading text-[1.6rem] leading-[0.95] font-black uppercase tracking-[-0.025em] sm:text-[2.6rem] ${dark ? "text-white" : "text-[#00205B]"}`}
