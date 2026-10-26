@@ -53,7 +53,7 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
   return (
     <section className="va-plate overflow-hidden">
       {/* Portada */}
-      <div className="relative aspect-[3/1] w-full bg-[#00205B] sm:aspect-[4/1]">
+      <div className="relative isolate aspect-[3/1] w-full overflow-hidden bg-[linear-gradient(120deg,#0A4C96_0%,#00205B_72%)] sm:aspect-[4/1]">
         {storefront.coverUrl ? (
           <Image src={storefront.coverUrl} alt="" fill sizes="(min-width: 1280px) 1248px, 100vw" className="object-cover" priority />
         ) : (
@@ -78,7 +78,7 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
           </div>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <h1 className="text-[1.9rem] leading-[1.08] font-extrabold tracking-[-0.02em] text-[#00205B] sm:text-[2.35rem]">{name}</h1>
+            <h1 className="va-h1-keep text-[1.9rem] leading-[1.08] font-extrabold tracking-[-0.02em] text-[#00205B] sm:text-[2.35rem]">{name}</h1>
             {storefront.verified && (
               <span className="inline-flex items-center gap-1 rounded-sm bg-[#00205B] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
                 <BadgeCheck className="h-3.5 w-3.5" aria-hidden />

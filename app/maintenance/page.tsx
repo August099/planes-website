@@ -11,7 +11,7 @@ export default function MaintenancePage() {
           Trabajos en Hangar
         </div>
 
-        <h1 className="font-heading text-4xl sm:text-6xl md:text-7xl font-black text-[#00205B] tracking-tight mb-2 break-words">
+        <h1 className="va-h1-keep font-heading text-4xl sm:text-6xl md:text-7xl font-black text-[#00205B] tracking-tight mb-2 break-words">
           MAN<span className="text-[#D62828]">TENIMIENTO</span>
         </h1>
 

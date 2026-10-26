@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const policySections = [
   { id: "recoleccion", title: "1. Datos que recolectamos" },
@@ -24,7 +25,8 @@ export default function PrivacidadPage() {
       <PageBackground page="legal" />
 
       <div className="container mx-auto px-4 pt-6 pb-20 max-w-6xl">
-        <Breadcrumbs items={[{ label: "Privacidad" }]} className="mb-8 sm:mb-12" />
+        <Breadcrumbs items={[{ label: "Privacidad" }]} className="mb-6" />
+        <PageHeader routeId="va-route-privacy" className="mb-10" title="Política de privacidad" eyebrow="Última actualización: Octubre 2026" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           
           {/* MENÚ LATERAL: Índices del documento legal */}
@@ -45,12 +47,6 @@ export default function PrivacidadPage() {
 
           {/* CUERPO PRINCIPAL: Contenido de la Política de Privacidad */}
           <section className="md:col-span-3">
-            <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-[#00205B] mb-2">
-              Política de privacidad
-            </h1>
-            <p className="text-sm text-[#00205B]/60 mb-12 border-b border-[#00205B]/20 pb-4">
-              <strong>Última actualización:</strong> Octubre 2026.
-            </p>
 
             <div className="flex flex-col gap-10 font-sans text-sm text-[#00205B]/80 leading-relaxed max-w-3xl">
               

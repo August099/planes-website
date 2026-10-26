@@ -13,6 +13,7 @@ import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { featuredFirstPage, getFeaturedSellerIds } from "@/lib/featured";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -218,18 +219,8 @@ export default async function AircraftListPage({ searchParams }: Props) {
       <PageBackground page="aircraftList" />
       <Breadcrumbs items={[{ label: "Aviones" }]} className="-mt-4 mb-2" />
 
-      {/* Encabezado: Título a la izquierda, Sort (solo Desktop) a la derecha */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-[1.9rem] leading-[1.08] font-extrabold tracking-[-0.02em] text-[#00205B] sm:text-[2.2rem]">
-            Aviones en venta <span className="text-base font-semibold tracking-normal text-[#00205B]/55 tabular-nums">({totalAircrafts})</span>
-          </h1>
-          <span aria-hidden className="va-scale" />
-        </div>
-        <div className="hidden lg:block">
-          <SortDropdown />
-        </div>
-      </div>
+      {/* Encabezado (rediseño 26/10): banner con el título y la cantidad; el orden (solo desktop) a la derecha. */}
+      <PageHeader compact routeId="va-route-aircraft" title="Aviones en venta" count={totalAircrafts} className="mb-6" aside={<div className="hidden lg:block"><SortDropdown /></div>} />
 
       <section className="flex flex-col lg:flex-row items-start gap-6">
         

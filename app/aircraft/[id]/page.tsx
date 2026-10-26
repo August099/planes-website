@@ -288,7 +288,7 @@ export default async function AircraftDetailsPage({
               <AircraftActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url} />
               <Separator />
               <div>
-                <h1 className="text-[1.65rem] leading-[1.12] font-extrabold tracking-[-0.015em] text-[#00205B] break-words">{aircraft.title}</h1>
+                <h1 className="va-h1-keep text-[1.65rem] leading-[1.12] font-extrabold tracking-[-0.015em] text-[#00205B] break-words">{aircraft.title}</h1>
                 {aircraft.category && (
                   <CategoryLinks items={[{ label: aircraft.category.name, href: `/aircraft?category=${encodeURIComponent(aircraft.category.id)}` }]} />
                 )}

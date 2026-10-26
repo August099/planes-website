@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { SuggestionForm } from "./SuggestionForm";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata: Metadata = {
   title: "Nosotros",
@@ -38,14 +39,13 @@ export default function AboutPage() {
     <main className="relative isolate overflow-hidden min-h-screen">
       <PageBackground page="faq" />
       <div className="container mx-auto max-w-6xl px-4 pt-6 pb-20">
-        <Breadcrumbs items={[{ label: "Nosotros" }]} className="mb-8 sm:mb-12" />
+        <Breadcrumbs items={[{ label: "Nosotros" }]} className="mb-6" />
+        <PageHeader routeId="va-route-about" className="mb-10" eyebrow="Nosotros" title="Nuestra misión" />
 
         <div className="grid gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
           <section>
-            <p className={LABEL}>Nosotros</p>
-            <h1 className="mt-1 font-heading text-3xl sm:text-4xl font-semibold text-[#00205B]">Nuestra misión</h1>
             {/* [COMPLETAR] Misión real de Ventas Aeronáuticas. */}
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-700">
+            <p className="max-w-2xl text-base leading-relaxed text-slate-700">
               [COMPLETAR] Hacer que comprar y vender una aeronave en Argentina sea simple, transparente y seguro, conectando a quienes
               vuelan con la información que necesitan para decidir.
             </p>

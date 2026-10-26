@@ -10,7 +10,7 @@ export function DetailSections({ sections }: { sections: DetailSection[] }) {
     <section className="flex flex-col gap-6">
       <div>
         <h2 className="text-[1.6rem] leading-tight font-extrabold tracking-[-0.015em] text-[#00205B]">Información Adicional</h2>
-        <span aria-hidden className="va-scale" />
+        <span aria-hidden className="mt-3 block h-[3px] w-[72px] rounded-full bg-gradient-to-r from-[#D62828] to-[#B71F1F]" />
       </div>
       {sections.map((s) => (
         <div key={s.title} className="space-y-2">

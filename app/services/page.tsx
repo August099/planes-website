@@ -5,6 +5,7 @@ import { GuideIndex } from "@/components/ui/guides/GuideIndex";
 import { GUIDES_PATH } from "@/lib/guides";
 import { getPublishedGuides } from "@/lib/guides-data";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata: Metadata = {
   // El layout agrega " | Ventas Aeronáuticas".
@@ -52,18 +53,13 @@ export default async function ServicesPage() {
       <PageBackground page="default" />
       <Breadcrumbs items={[{ label: "Servicios" }]} className="mx-auto max-w-5xl -mt-8 mb-4" />
 
-      <div className="mx-auto max-w-5xl space-y-14 rounded-lg border border-[#00205B]/10 bg-white p-6 sm:p-10">
-        {/* Encabezado */}
-        <header className="max-w-3xl space-y-4">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#00205B] tracking-tight">
-            Todo el ecosistema aeronáutico, en un solo lugar.
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-            Estamos construyendo la próxima etapa de Ventas Aeronáuticas. Hoy podés publicar y encontrar aeronaves y
-            repuestos, y ya tenés disponibles nuestras guías para comprar y vender con más seguridad. Muy pronto vas a
-            encontrar también los servicios y profesionales que hacen posible que la aviación siga en el aire.
-          </p>
-        </header>
+      <div className="mx-auto max-w-5xl space-y-14">
+        {/* Encabezado (rediseño 26/10: banner de página) */}
+        <PageHeader
+          routeId="va-route-services"
+          title="Todo el ecosistema aeronáutico, en un solo lugar."
+          subtitle="Estamos construyendo la próxima etapa de Ventas Aeronáuticas. Hoy podés publicar y encontrar aeronaves y repuestos, y ya tenés disponibles nuestras guías para comprar y vender con más seguridad. Muy pronto vas a encontrar también los servicios y profesionales que hacen posible que la aviación siga en el aire."
+        />
 
         {/* Disponible ahora: toda la pieza lleva a las guías (link que la cubre); el índice y el botón
             quedan por encima. Al pasar, borde rojo (sin elevación, por las pautas). */}

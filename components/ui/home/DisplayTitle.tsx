@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
-// Rediseño de la Home (25/10, v2): título de sección tipo revista. Número de sección grande y
-// calado (contador CSS de .home-theme, el mismo que usa SectionTitle), título en mayúsculas y una
-// regla de 2 px con el tramo rojo de la marca. `aside` va a la derecha desde sm (links de la sección).
+// Título de sección de la Home (rediseño 25–26/10): Montserrat extra negrita en minúscula y una regla
+// fina con el tramo rojo de la marca. `mark` pone un ícono tenue a la izquierda; `aside` va a la derecha
+// desde sm (links de la sección).
 export function DisplayTitle({
   children,
   tone = "light",
@@ -23,7 +23,7 @@ export function DisplayTitle({
 }) {
   const dark = tone === "dark";
   return (
-    <div className={`${mark ? "" : "va-section-title"} ${className}`}>
+    <div className={className}>
       <div className={`va-dt-row flex items-end gap-3 sm:gap-5 ${align === "center" ? "justify-center text-center" : ""}`}>
         {/* 26/10: sin número de sección (pedido del socio); solo queda el ícono opcional (Guías). */}
         {mark && (

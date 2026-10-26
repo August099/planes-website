@@ -10,6 +10,7 @@ import { TrackSearch } from "@/components/analytics/TrackSearch";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { searchSellers } from "@/app/actions/search-actions";
 import { SellerResults } from "@/components/ui/search/SellerResults";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 interface Props {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -117,12 +118,10 @@ export default async function SearchResultsPage({ searchParams }: Props) {
       <Breadcrumbs items={[{ label: "Búsqueda" }]} className="-mt-4 mb-2" />
       {/* VA-15: la búsqueda se registra acá (una vez por pestaña y término), no en cada tecla */}
       {currentPage === 1 && <TrackSearch query={query} resultsCount={totalItems} />}
-      <h1 className="text-2xl font-medium mb-6">
-        Resultados para “{query}” ({totalItems})
-      </h1>
+      <PageHeader compact routeId="va-route-search" eyebrow="Búsqueda" title={<>Resultados para “{query}”</>} count={totalItems} className="mb-6" />
 
       {sellers.length > 0 && (
-        <section id="vendedores" className="mb-8 max-w-xl rounded-lg border border-[#00205B]/12 bg-white">
+        <section id="vendedores" className="va-plate mb-8 max-w-xl">
           <SellerResults sellers={sellers} query={query} max={12} />
         </section>
       )}

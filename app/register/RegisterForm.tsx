@@ -12,6 +12,7 @@ import { FreeQuotaNote } from "@/components/ui/FreeQuotaNote";
 import { TermsContent } from "@/lib/terms-content";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { USER_TYPE_OPTIONS } from "@/lib/user-types";
+import { FlightPaths } from "@/components/ui/home/FlightPaths";
 
 // Formulario de registro. VA-152: el texto del cupo Gratis lo arma app/register/page.tsx (servidor).
 export function RegisterForm({ quotaText }: { quotaText: string }) {
@@ -52,12 +53,14 @@ export function RegisterForm({ quotaText }: { quotaText: string }) {
       <PageBackground page="register" />
 
       <div className="container mx-auto px-4 max-w-lg">
-        <div className="bg-white border border-[#00205B]/12 rounded-lg p-6 sm:p-8 shadow-sm space-y-6">
-          <div className="space-y-1.5">
-            <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#00205B]">
+        {/* Rediseño (26/10): tarjeta de vidrio sobre el fondo, con el encabezado en la franja azul de la marca. */}
+        <div className="overflow-hidden rounded-[32px] border border-white/60 bg-white/85 p-6 shadow-[0_30px_60px_-30px_rgb(0_32_91/0.55)] backdrop-blur-xl sm:p-8 space-y-6">
+          <div className="relative isolate -mx-6 -mt-6 overflow-hidden bg-[linear-gradient(120deg,#0A4C96_0%,#00205B_72%)] px-6 py-8 text-white sm:-mx-8 sm:-mt-8 sm:px-8">
+            <FlightPaths id="va-route-register" tone="dark" className="-z-10" />
+            <h1 className="va-h1-keep font-heading text-2xl font-extrabold tracking-[-0.03em] sm:text-3xl">
               Crear cuenta
             </h1>
-            <p className="text-xs sm:text-sm text-[#00205B]/70">
+            <p className="mt-1.5 text-xs text-white/85 sm:text-sm">
               Ingresá tus datos para comenzar a publicar en Ventas Aeronáuticas
             </p>
           </div>

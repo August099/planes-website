@@ -8,6 +8,7 @@ import { PlansGridView } from "@/components/plans/PlansGridView";
 import type { PlansGrid } from "@/lib/plan-grid";
 import { getPlansViewerAction, type MyPlanState, type PlansViewer } from "@/app/actions/plan-state-actions";
 import { PlanCardAction } from "./PlanCardAction";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 // VA-166: la grilla de los socios (Base, Pro y Broker / Empresa). Los planes y las filas salen de la base
 // (lib/plans.ts, /admin/plans). Lo del usuario (plan actual, admin, visitante) se pide en el navegador:
@@ -43,13 +44,12 @@ export function PlansClient({ data }: { data: PlansGrid }) {
 
       <div className="container mx-auto max-w-6xl px-4 pb-20 pt-6">
         <Breadcrumbs items={[{ label: "Planes" }]} className="mb-8" />
-        <header className="mb-8 max-w-3xl space-y-3">
-          <h1 className="font-heading text-3xl font-bold text-[#00205B] sm:text-5xl">Planes</h1>
-          <p className="text-sm leading-relaxed text-slate-700 sm:text-base">
-            Todas las cuentas publican gratis. Tus avisos no vencen: cuentan los que están activos, y si pausás uno, liberás su
-            lugar. Si necesitás más, pasate a Pro o armá tu plan Broker / Empresa. Precios en pesos, por mes, y cancelás cuando quieras.
-          </p>
-        </header>
+        <PageHeader
+          routeId="va-route-plans"
+          className="mb-8"
+          title="Planes"
+          subtitle="Todas las cuentas publican gratis. Tus avisos no vencen: cuentan los que están activos, y si pausás uno, liberás su lugar. Si necesitás más, pasate a Pro o armá tu plan Broker / Empresa. Precios en pesos, por mes, y cancelás cuando quieras."
+        />
 
         <PlansGridView
           key={brokerPick ? `${brokerPick.aircraft}-${brokerPick.parts}` : "default"}

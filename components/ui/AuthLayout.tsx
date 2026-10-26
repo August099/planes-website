@@ -32,7 +32,7 @@ export function AuthLayout({
           <p className="text-muted-foreground text-sm mt-1">{subtitle}</p>
         </div>
 
-        <div className="bg-white border border-border rounded-xl p-6 shadow-sm space-y-4">
+        <div className="rounded-[28px] border border-[#00205B]/8 bg-white p-6 shadow-[0_24px_50px_-28px_rgb(0_32_91/0.45)] space-y-4">
           {children}
         </div>
       </div>

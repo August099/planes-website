@@ -11,6 +11,7 @@ import { missingProfileFields, ownerBillingProfile, quotaForView } from "@/lib/a
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { AccountSettings } from "@/components/ui/settings/AccountSettings";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata: Metadata = {
   title: "Ajustes",
@@ -69,12 +70,17 @@ export default async function SettingsPage() {
     <main className="relative container mx-auto min-h-[calc(100vh-80px)] max-w-2xl px-4 py-8 pb-16">
       <PageBackground page="profile" />
       <Breadcrumbs items={[{ label: "Mi cuenta", href: `/profile/${id}` }, { label: "Ajustes" }]} className="-mt-4 mb-2" />
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-heading text-3xl font-bold text-[#00205B]">Ajustes</h1>
-        <Link href={`/profile/${id}`} className="text-sm font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828]">
-          Ver mi cuenta
-        </Link>
-      </div>
+      <PageHeader
+        compact
+        routeId="va-route-settings"
+        className="mb-8"
+        title="Ajustes"
+        aside={
+          <Link href={`/profile/${id}`} className="inline-flex min-h-10 items-center rounded-full bg-white px-5 text-sm font-bold text-[#00205B] transition-colors hover:bg-[#EEF5FC]">
+            Ver mi cuenta
+          </Link>
+        }
+      />
       <AccountSettings
         user={{
           id: user.id,

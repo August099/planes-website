@@ -28,6 +28,7 @@ import { DescriptionTextarea } from "@/components/ui/DescriptionTextarea";
 import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
 import { LocalityInput } from "@/components/ui/LocalityInput";
 import { cityConflictsWithProvince } from "@/lib/localities";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export interface CategoryOption { 
     id: string; 
@@ -766,12 +767,9 @@ export default function PublishForm({
         <PageBackground page="publish" />
         {founder && <FoundingMemberDialog until={founder.until} onClose={() => router.push(founder.url)} />}
 
-        <div className="container mx-auto px-4 pt-16 pb-20 max-w-7xl">
-            <div className="text-center max-w-3xl mx-auto mb-10">
-              <h1 className="font-heading text-3xl sm:text-5xl font-semibold text-[#00205B] mb-4">
-                {isEditing ? "EDITAR PUBLICACIÓN" : "PUBLICAR PRODUCTO"}
-              </h1>
-            </div>
+        <div className="container mx-auto px-4 pt-8 pb-20 max-w-7xl">
+            {/* Rediseño (26/10): banner de página, como el resto del sitio. */}
+            <PageHeader routeId="va-route-publish" className="mb-10" title={isEditing ? "Editar publicación" : "Publicar producto"} />
 
             {/* VA-152: cupo de la cuenta. Sin lugar libre se avisa al empezar (no al final), con las salidas. */}
             {!isEditing && quota && quotaLine && !quotaFull && quotaLine.limit !== null && (

@@ -22,6 +22,7 @@ import { USER_TYPE_LABELS } from "@/lib/user-types";
 import { StorefrontHeader, type StorefrontData } from "@/components/ui/profile/StorefrontHeader";
 import type { SubscriptionSummary } from "@/lib/subscriptions";
 import { SoldDialog } from "@/components/ui/profile/SoldDialog";
+import { FlightPaths } from "@/components/ui/home/FlightPaths";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -179,9 +180,12 @@ export function ProfileView({
         />
       ) : (
         <div className="va-plate overflow-hidden">
-          <div className="h-1.5 bg-[#00205B]" aria-hidden />
-          <div className="flex flex-col items-center gap-6 p-6 md:flex-row md:items-start">
-          <div className="relative w-24 h-24 rounded-md overflow-hidden bg-[#00205B] shrink-0 flex items-center justify-center">
+          {/* Rediseño (26/10): portada con el degradé de la marca y la ruta animada; la foto se apoya encima. */}
+          <div aria-hidden className="relative isolate h-24 overflow-hidden bg-[linear-gradient(120deg,#0A4C96_0%,#00205B_72%)] sm:h-28">
+            <FlightPaths id="va-route-profile" tone="dark" className="-z-10" />
+          </div>
+          <div className="flex flex-col items-center gap-6 px-6 pb-6 md:flex-row md:items-start">
+          <div className="relative -mt-12 w-24 h-24 rounded-2xl overflow-hidden bg-[#00205B] shrink-0 flex items-center justify-center ring-4 ring-white shadow-lg">
             {profileUser.image ? (
               <Image
                 src={profileUser.image}
@@ -196,12 +200,12 @@ export function ProfileView({
             )}
           </div>
 
-          <div className="flex-1 text-center md:text-left w-full">
+          <div className="flex-1 text-center md:pt-4 md:text-left w-full">
             {/* Tipo de cuenta */}
             <p className="va-label">
               {USER_TYPE_LABELS[profileUser.userType as keyof typeof USER_TYPE_LABELS] ?? profileUser.userType}
             </p>
-            <h1 className="mt-1 text-[1.9rem] leading-[1.08] font-extrabold tracking-[-0.02em] text-[#00205B]">
+            <h1 className="va-h1-keep mt-1 text-[1.9rem] leading-[1.08] font-extrabold tracking-[-0.02em] text-[#00205B]">
               {profileUser.name || "Usuario de Ventas Aeronáuticas"}
             </h1>
 

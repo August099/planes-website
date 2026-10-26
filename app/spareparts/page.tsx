@@ -13,6 +13,7 @@ import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { featuredFirstPage, getFeaturedSellerIds } from "@/lib/featured";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -212,14 +213,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
       <Breadcrumbs items={[{ label: "Repuestos" }]} className="-mt-4 mb-2" />
       {/* Misma disposición que /aircraft (VA-45): en celular, "Filtros" (panel lateral) y "Ordenar"
           lado a lado; desde lg, barra lateral + grilla. */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-        <h1 className="text-2xl font-medium">
-          Repuestos en venta <span className="text-slate-500 font-normal text-lg">({totalSpareParts})</span>
-        </h1>
-        <div className="hidden lg:block">
-          <SortDropdown />
-        </div>
-      </div>
+      <PageHeader compact routeId="va-route-spareparts" title="Repuestos en venta" count={totalSpareParts} className="mb-6" aside={<div className="hidden lg:block"><SortDropdown /></div>} />
       <section className="flex flex-col lg:flex-row items-start gap-6">
         <div className="w-full flex lg:block items-center gap-3 lg:w-auto shrink-0">
           <div className="flex-1 lg:flex-none lg:w-72">
@@ -232,7 +226,7 @@ export default async function SparePartsPage({ searchParams }: Props) {
 
         <div className="w-full flex-1 min-w-0">
           {spareParts.length === 0 ? (
-            <div className="p-12 text-center border rounded-lg bg-neutral-50/50">
+            <div className="va-plate p-12 text-center">
               <p className="text-slate-500 font-medium">
                 No se encontraron repuestos con los filtros seleccionados.
               </p>

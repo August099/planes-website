@@ -21,7 +21,8 @@ export const NAV: { href: string; label: string }[] = [
   { href: "/publish", label: "Vender" },
 ];
 
-export type PartCategoryLink = { id: string; name: string };
+// children: subcategorías directas (menú de escritorio, 26/10).
+export type PartCategoryLink = { id: string; name: string; children?: { id: string; name: string }[] };
 
 export const DESKTOP_TRIGGER_CLASS =
   "relative flex h-10 w-10 items-center justify-center rounded-full bg-[#00205B] hover:bg-[#D62828] text-white transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#D62828] focus-visible:ring-offset-2 cursor-pointer ring-1 ring-white/25 border-none";

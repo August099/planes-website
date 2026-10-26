@@ -309,9 +309,10 @@ export default async function SparePartDetailsPage({
               />
               <Separator />
               <div>
-                <h1 className="text-2xl font-bold text-[#00205B] break-words">{sparePart.title}</h1>
+                <h1 className="va-h1-keep text-[1.65rem] leading-[1.12] font-extrabold tracking-[-0.015em] text-[#00205B] break-words">{sparePart.title}</h1>
                 <CategoryLinks items={categoryLinks} />
-                <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
+                <p className="va-label mt-4">Precio</p>
+                <p className="font-heading text-[1.9rem] leading-none font-extrabold tracking-[-0.02em] text-[#00205B] tabular-nums">{formattedPrice}</p>
               </div>
               <Separator />
               <KeyFacts title="Detalles principales" facts={keyFacts} />

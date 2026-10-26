@@ -4,6 +4,7 @@ import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { getCachedFreeQuota } from "@/lib/quota";
 import { MAX_LISTING_IMAGES } from "@/lib/listing-schema";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata: Metadata = {
   title: "Cómo publicar tu avión o repuesto",
@@ -56,12 +57,12 @@ export default async function HowToPublishPage() {
       <div className="container mx-auto max-w-6xl px-4 pt-6 pb-24">
         <Breadcrumbs items={[{ label: "Cómo publicar" }]} className="mb-8 sm:mb-12" />
 
-        <header className="mb-12 max-w-2xl">
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-[#00205B] sm:text-4xl">Cómo publicar tu avión o repuesto</h1>
-          <p className="mt-4 text-base leading-relaxed text-slate-700 sm:text-lg">
-            Publicar es gratis dentro del cupo de tu cuenta y el aviso no vence. Estos son los pasos.
-          </p>
-        </header>
+        <PageHeader
+          routeId="va-route-howto"
+          className="mb-12"
+          title="Cómo publicar tu avión o repuesto"
+          subtitle="Publicar es gratis dentro del cupo de tu cuenta y el aviso no vence. Estos son los pasos."
+        />
 
         <div className="grid gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] md:gap-12">
           <ol className="relative space-y-10">

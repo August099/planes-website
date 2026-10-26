@@ -8,9 +8,10 @@ export function KeyFacts({ title, facts }: { title?: string; facts: KeyFact[] })
   return (
     <div className="space-y-2">
       {title && <h2 className="va-label">{title}</h2>}
-      <dl className="grid grid-cols-2 border-t border-l border-[#00205B]/10">
+      {/* Rediseño (26/10): grilla redondeada; las líneas son el fondo que asoma entre celdas (gap de 1 px). */}
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-[#00205B]/10 bg-[#00205B]/10 [&>*:last-child:nth-child(odd)]:col-span-2">
         {kept.map((f) => (
-          <div key={f.label} className="min-w-0 border-r border-b border-[#00205B]/10 px-3 py-2.5">
+          <div key={f.label} className="min-w-0 bg-white px-3.5 py-3">
             <dt className="text-[11px] font-semibold text-slate-500">{f.label}</dt>
             <dd className="font-semibold text-[#00205B] break-words tabular-nums">{f.value}</dd>
           </div>

@@ -107,7 +107,7 @@ function MobileFilterPanel({
   return createPortal(
     <div className="fixed inset-0 z-[70] lg:hidden flex" role="dialog" aria-modal="true" aria-label="Filtros de búsqueda">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative ml-auto flex h-dvh w-full max-w-xs flex-col bg-[var(--primary-foreground)] shadow-2xl animate-in slide-in-from-right duration-200">
+      <div className="relative ml-auto flex h-dvh w-full max-w-xs flex-col overflow-hidden rounded-l-[28px] bg-[var(--primary-foreground)] shadow-2xl animate-in slide-in-from-right duration-200">
         <div className="flex shrink-0 items-center justify-between gap-2 border-b px-5 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2">
           <span className="font-semibold text-base">Filtros de búsqueda</span>
           <div className="flex items-center gap-1">

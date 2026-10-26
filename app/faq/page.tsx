@@ -3,6 +3,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { faqPageJsonLd } from "@/lib/structured-data";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 // VA-123: preguntas reales según cómo funciona la web (14/10). Si cambia una regla (vencimientos,
 // renovación, promoción, límites), actualizar la respuesta acá: también sale como FAQPage (JSON-LD).
@@ -50,7 +51,8 @@ export default function FAQPage() {
       <PageBackground page="faq" />
 
       <div className="container mx-auto px-4 pt-6 pb-20 max-w-6xl">
-        <Breadcrumbs items={[{ label: "Preguntas frecuentes" }]} className="mb-8 sm:mb-12" />
+        <Breadcrumbs items={[{ label: "Preguntas frecuentes" }]} className="mb-6" />
+        <PageHeader routeId="va-route-faq" className="mb-10" title="Preguntas frecuentes" subtitle="Todo lo que necesitás saber antes de comprar o publicar" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           
           <aside className="hidden md:col-span-1 md:flex flex-col gap-2 border-l border-[#00205B]/20 pl-4 md:sticky md:top-24">
@@ -73,12 +75,6 @@ export default function FAQPage() {
           </aside>
 
           <section className="md:col-span-3">
-            <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-[#00205B] mb-2">
-              Preguntas frecuentes
-            </h1>
-            <p className="text-sm text-[#00205B]/60 mb-12 border-b border-[#00205B]/20 pb-4">
-              Todo lo que necesitás saber antes de comprar o publicar
-            </p>
 
             <div className="flex flex-col gap-14">
               {groups.map((group) => (

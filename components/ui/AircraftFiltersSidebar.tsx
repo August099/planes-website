@@ -38,7 +38,7 @@ const BRANDS_VISIBLE = 6;
 
 // Rediseño (25/10): casillas en azul de marca (el rojo queda para las acciones). Solo en los filtros:
 // el Checkbox compartido no se toca porque también lo usa el admin.
-const FILTER_CHECKBOX = "size-[18px] rounded-[3px] border-[#00205B]/35 data-checked:border-[#00205B] data-checked:bg-[#00205B] data-checked:text-white";
+const FILTER_CHECKBOX = "size-[18px] rounded-[6px] border-[#00205B]/35 data-checked:border-[#00205B] data-checked:bg-[#00205B] data-checked:text-white";
 
 // El estado del formulario se arma desde la URL. Con la key, cada cambio de URL (Home, volver
 // atrás, búsqueda del header) vuelve a armarlo en vez de quedar con lo del primer montaje (VA-31).

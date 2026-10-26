@@ -19,7 +19,7 @@ export default function Error({
           Falla en Instrumental
         </div>
 
-        <h1 className="font-heading text-7xl sm:text-8xl font-black text-[#00205B] tracking-tight mb-2">
+        <h1 className="va-h1-keep font-heading text-7xl sm:text-8xl font-black text-[#00205B] tracking-tight mb-2">
           5<span className="text-[#D62828]">0</span>0
         </h1>
 
