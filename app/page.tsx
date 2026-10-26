@@ -25,6 +25,7 @@ import { provinceByName } from "@/lib/provinces";
 import { BrandSlashes } from "@/components/ui/BrandSlashes";
 import { getFeaturedSellerIds } from "@/lib/featured";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
+import { HomeVariant } from "@/components/ui/home/HomeVariant";
 
 // Título y descripción salen del layout; acá solo el canonical.
 export const metadata: Metadata = {
@@ -224,6 +225,8 @@ export default async function HomePage() {
           <HomeServicesCards />
         </div>
         <ScrollToTop />
+        {/* Maqueta temporal: /?v=a y /?v=b (26/10) */}
+        <HomeVariant />
       </main>
       </FavoriteIdsProvider>
     </>

@@ -49,7 +49,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
 
       <div
         data-province-map
-        className="h-[380px] sm:h-[460px] md:h-[600px] border-2 border-[#00205B] bg-white p-3"
+        className="va-tile va-static h-[380px] sm:h-[460px] md:h-[600px] border-2 border-[#00205B] bg-white p-3"
         {...mapHandlers}
       >
         {map}
@@ -74,7 +74,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
         </label>
 
         {/* Desktop: lista de las 24, sincronizada con el mapa */}
-        <ul className="hidden md:grid grid-cols-2 border-2 border-[#00205B] bg-white">
+        <ul className="va-tile va-static hidden md:grid grid-cols-2 border-2 border-[#00205B] bg-white">
           {provinces.map((p) => {
             const total = p.aircraft + p.parts;
             const isSelected = p.slug === selected;
@@ -110,7 +110,7 @@ export function ProvinceExplorerClient({ provinces, map }: { provinces: Province
         </ul>
 
         {/* Panel de la provincia elegida */}
-        <div className="relative border-2 border-[#00205B] bg-white p-5" aria-live="polite">
+        <div className="va-tile va-static relative border-2 border-[#00205B] bg-white p-5" aria-live="polite">
           {!current ? (
             <p className="text-sm text-slate-500">Tocá una provincia en el mapa para ver sus avisos</p>
           ) : current.aircraft + current.parts === 0 ? (

@@ -40,13 +40,13 @@ export function SparePartCategoriesCarousel({ categories }: Props) {
           Rediseño (25/10, v2): fichas altas de borde grueso que se rellenan de azul al pasar. */}
       <ScrollCarousel
         label="Categorías de repuestos"
-        className="px-1"
+        className="va-cats px-1"
         gapClassName="gap-3 min-[480px]:gap-4 md:gap-5"
         slideClassName="w-[calc((100%-15.6px)/2.3)] min-[480px]:w-[calc((100%-36.8px)/3.3)] sm:w-[calc((100%-48px)/4)] md:w-[calc((100%-80px)/5)] lg:w-[calc((100%-100px)/6)]"
       >
         {categories.map((cat, i) => (
           <Link key={cat.id} href={`/spareparts?category=${cat.id}`} className="group block h-full">
-            <span className="relative flex h-full min-h-44 w-full flex-col justify-between overflow-hidden border-2 border-[#00205B] bg-white p-4 transition-colors duration-300 group-hover:bg-[#00205B] group-focus-visible:bg-[#00205B]">
+            <span className="va-tile relative flex h-full min-h-44 w-full flex-col justify-between overflow-hidden border-2 border-[#00205B] bg-white p-4 transition-colors duration-300 group-hover:bg-[#00205B] group-focus-visible:bg-[#00205B]">
               <span className="flex items-start justify-between gap-2">
                 <span
                   aria-hidden

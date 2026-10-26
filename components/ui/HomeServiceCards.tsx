@@ -38,7 +38,7 @@ export default function HomeServicesCards() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {cards.map((card) => (
             <Link key={card.href} href={card.href} className="group block">
-              <div className="relative flex h-full flex-col overflow-hidden border-2 border-white transition-colors duration-300">
+              <div className="va-tile va-tile-dark relative flex h-full flex-col overflow-hidden border-2 border-white transition-colors duration-300">
                 <div className="relative h-40 overflow-hidden border-b-2 border-white sm:h-48">
                   <Image
                     src={card.image}

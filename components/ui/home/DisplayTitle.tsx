@@ -24,7 +24,7 @@ export function DisplayTitle({
   const dark = tone === "dark";
   return (
     <div className={`${mark ? "" : "va-section-title"} ${className}`}>
-      <div className={`flex items-end gap-3 sm:gap-5 ${align === "center" ? "justify-center text-center" : ""}`}>
+      <div className={`va-dt-row flex items-end gap-3 sm:gap-5 ${align === "center" ? "justify-center text-center" : ""}`}>
         {mark ? (
           <span aria-hidden className={`shrink-0 [&>svg]:h-12 [&>svg]:w-12 sm:[&>svg]:h-[4.5rem] sm:[&>svg]:w-[4.5rem] ${dark ? "text-white/20" : "text-[#00205B]/15"}`}>
             {mark}
@@ -34,7 +34,7 @@ export function DisplayTitle({
         )}
         <h2
           id={id}
-          className={`pb-1 font-heading text-[1.6rem] leading-[0.95] font-black uppercase tracking-[-0.025em] sm:text-[2.6rem] ${dark ? "text-white" : "text-[#00205B]"}`}
+          className={`va-dt-h pb-1 font-heading text-[1.6rem] leading-[0.95] font-black uppercase tracking-[-0.025em] sm:text-[2.6rem] ${dark ? "text-white" : "text-[#00205B]"}`}
         >
           {children}
         </h2>
@@ -47,4 +47,4 @@ export function DisplayTitle({
 
 // Botón cuadrado de la Home (links de sección): borde de 2 px que se rellena al pasar.
 export const HOME_SQUARE_LINK =
-  "inline-flex min-h-10 items-center border-2 border-[#00205B] px-4 text-xs font-bold uppercase tracking-[0.08em] text-[#00205B] transition-colors hover:bg-[#00205B] hover:text-white";
+  "va-sq inline-flex min-h-10 items-center border-2 border-[#00205B] px-4 text-xs font-bold uppercase tracking-[0.08em] text-[#00205B] transition-colors hover:bg-[#00205B] hover:text-white";

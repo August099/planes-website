@@ -19,7 +19,7 @@ export async function GuidesSection() {
         </DisplayTitle>
         <Link
           href={GUIDES_PATH}
-          className="group relative mt-10 flex min-h-28 items-center justify-between gap-6 overflow-hidden border-2 border-white px-6 py-6 text-white transition-colors duration-300 hover:bg-white hover:text-[#00205B] focus-visible:bg-white focus-visible:text-[#00205B] sm:px-10"
+          className="va-tile va-tile-dark group relative mt-10 flex min-h-28 items-center justify-between gap-6 overflow-hidden border-2 border-white px-6 py-6 text-white transition-colors duration-300 hover:bg-white hover:text-[#00205B] focus-visible:bg-white focus-visible:text-[#00205B] sm:px-10"
         >
           <span className="font-heading text-xl leading-tight font-black uppercase tracking-[-0.01em] sm:text-3xl">Ver todas las guías</span>
           <span className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#D62828] text-white sm:h-14 sm:w-14">

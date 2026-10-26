@@ -53,7 +53,7 @@ export function OverlayAircraftCard({
     <Link href={`/aircraft/${id}`} className="group block h-full">
       {/* Rediseño (25/10): la foto manda; abajo, un fundido al azul de marca (no negro) y los datos
           alineados a la izquierda con sus rótulos, como la placa de un instrumento. */}
-      <Card className="va-card relative w-full aspect-[4/3] sm:aspect-[16/11] !rounded-none !border-2 !border-[#00205B] bg-[#001331]">
+      <Card className="va-card relative w-full aspect-[4/3] sm:aspect-[16/11] va-card-square bg-[#001331]">
         <div className="absolute top-3 right-3 z-10">
           <CompareButton variant="overlay" item={{ id, title: displayTitle, image: imageUrl ?? null }} />
         </div>
