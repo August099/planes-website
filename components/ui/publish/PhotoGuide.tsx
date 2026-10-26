@@ -121,17 +121,17 @@ export function PhotoGuide({ uploaded }: { uploaded: number }) {
             <li
               key={shot.label}
               className={`relative flex w-24 shrink-0 flex-col items-center gap-1 rounded-lg border px-1.5 py-2 text-center ${
-                done ? "border-[#001F58]/30 bg-[#001F58]/5 text-[#001F58]" : "border-dashed border-[#001F58]/25 bg-white text-[#001F58]/70"
+                done ? "border-[#00205B]/30 bg-[#00205B]/5 text-[#00205B]" : "border-dashed border-[#00205B]/25 bg-white text-[#00205B]/70"
               }`}
             >
               <svg viewBox="0 0 96 64" className="h-12 w-full" aria-hidden>
                 {shot.svg}
               </svg>
               <span className="text-[10px] font-semibold leading-tight">
-                <span className="tabular-nums text-[#E70F1F]">{String(i + 1).padStart(2, "0")}</span> {shot.label}
+                <span className="tabular-nums text-[#D62828]">{String(i + 1).padStart(2, "0")}</span> {shot.label}
               </span>
               {done && (
-                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#001F58] text-white" aria-label="Foto cargada">
+                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#00205B] text-white" aria-label="Foto cargada">
                   <Check className="h-3 w-3" />
                 </span>
               )}

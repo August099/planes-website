@@ -101,7 +101,7 @@ export function BrokerDetailHeader({
   return (
     <>
       {/* 1. BANNER PRINCIPAL ESTÁTICO */}
-      <section aria-label={`Vendido por ${broker.name}`} className="relative isolate overflow-hidden w-full bg-[#001F58] print:hidden">
+      <section aria-label={`Vendido por ${broker.name}`} className="relative isolate overflow-hidden w-full bg-[#00205B] print:hidden">
         <div className="relative aspect-[16/7] xs:aspect-[16/6] sm:aspect-[6/1] w-full min-h-[160px] sm:min-h-0">
           {broker.coverUrl ? (
             <Image 
@@ -119,7 +119,7 @@ export function BrokerDetailHeader({
             </svg>
           )}
           
-          <div className="absolute inset-0 bg-gradient-to-t from-[#001F58]/95 via-[#001F58]/50 to-[#001F58]/50" aria-hidden />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#00205B]/95 via-[#00205B]/50 to-[#00205B]/50" aria-hidden />
           
           <div className="absolute top-2.5 inset-x-0 px-3 sm:top-4 sm:px-6 z-10 flex items-center justify-between gap-2">
             <div className="min-w-0 truncate text-[11px] sm:text-xs text-white/90 drop-shadow-md [&_a]:text-white/80 [&_a:hover]:text-white [&_span]:text-white">
@@ -139,7 +139,7 @@ export function BrokerDetailHeader({
                 {broker.logoUrl ? (
                   <Image src={broker.logoUrl} alt={`Logo de ${broker.name}`} fill sizes="56px" className="object-contain" />
                 ) : (
-                  <span className="flex h-full w-full items-center justify-center text-sm sm:text-lg font-bold text-[#001F58]">
+                  <span className="flex h-full w-full items-center justify-center text-sm sm:text-lg font-bold text-[#00205B]">
                     {broker.name.charAt(0).toUpperCase()}
                   </span>
                 )}
@@ -150,13 +150,13 @@ export function BrokerDetailHeader({
                   {broker.verified && (
                     <>
                       {/* Escritorio: Insignia con texto completo */}
-                      <span className="hidden sm:inline-flex items-center gap-1 rounded-sm bg-white px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#001F58] shrink-0">
+                      <span className="hidden sm:inline-flex items-center gap-1 rounded-sm bg-white px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#00205B] shrink-0">
                         <BadgeCheck className="h-3.5 w-3.5" aria-hidden /> Verificado
                       </span>
 
                       {/* Móvil: Solo ícono de verificado */}
                       <span className="sm:hidden text-white shrink-0" title="Verificado">
-                        <BadgeCheck className="h-4 w-4 fill-white text-[#001F58]" aria-hidden />
+                        <BadgeCheck className="h-4 w-4 fill-white text-[#00205B]" aria-hidden />
                       </span>
                     </>
                   )}
@@ -180,7 +180,7 @@ export function BrokerDetailHeader({
 
       {/* 2. BARRA PEGAJOSA (SCROLL ARRIBA) */}
       <div 
-        className={`fixed top-0 inset-x-0 z-50 bg-[#001F58] border-b border-white/10 shadow-lg transition-transform duration-300 print:hidden ${
+        className={`fixed top-0 inset-x-0 z-50 bg-[#00205B] border-b border-white/10 shadow-lg transition-transform duration-300 print:hidden ${
           showSticky ? "translate-y-0" : "-translate-y-full"
         }`}
       >
@@ -191,7 +191,7 @@ export function BrokerDetailHeader({
               {broker.logoUrl ? (
                 <Image src={broker.logoUrl} alt="" fill sizes="32px" className="object-contain" />
               ) : (
-                <span className="flex h-full w-full items-center justify-center text-xs font-bold text-[#001F58]">
+                <span className="flex h-full w-full items-center justify-center text-xs font-bold text-[#00205B]">
                   {broker.name.charAt(0).toUpperCase()}
                 </span>
               )}
@@ -205,13 +205,13 @@ export function BrokerDetailHeader({
               {broker.verified && (
                 <>
                   {/* Escritorio: Insignia con texto completo */}
-                  <span className="hidden sm:inline-flex items-center gap-1 rounded-sm bg-white px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#001F58] shrink-0">
+                  <span className="hidden sm:inline-flex items-center gap-1 rounded-sm bg-white px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#00205B] shrink-0">
                     <BadgeCheck className="h-3.5 w-3.5" aria-hidden /> Verificado
                   </span>
 
                   {/* Móvil: Solo ícono de verificado */}
                   <span className="sm:hidden text-white shrink-0" title="Verificado">
-                    <BadgeCheck className="h-4 w-4 fill-white text-[#001F58]" />
+                    <BadgeCheck className="h-4 w-4 fill-white text-[#00205B]" />
                   </span>
                 </>
               )}

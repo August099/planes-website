@@ -19,11 +19,11 @@ export function SellerResults({ sellers, query, onSelect, max = 3 }: { sellers: 
                 {s.logoUrl ? (
                   <Image src={s.logoUrl} alt="" fill sizes="32px" className="object-contain" />
                 ) : (
-                  <span className="flex h-full w-full items-center justify-center text-xs font-bold text-[#001F58]">{s.name.charAt(0).toUpperCase()}</span>
+                  <span className="flex h-full w-full items-center justify-center text-xs font-bold text-[#00205B]">{s.name.charAt(0).toUpperCase()}</span>
                 )}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-bold text-[#001F58]">{s.name}</span>
+                <span className="block truncate text-sm font-bold text-[#00205B]">{s.name}</span>
                 <span className="block text-[11px] text-slate-500">
                   {s.listings} aviso{s.listings === 1 ? "" : "s"} · Página personalizada
                 </span>
@@ -33,7 +33,7 @@ export function SellerResults({ sellers, query, onSelect, max = 3 }: { sellers: 
         ))}
       </ul>
       {sellers.length > max && (
-        <Link href={`/search?q=${encodeURIComponent(query.trim())}#vendedores`} onClick={onSelect} className="block px-2 pt-1 text-xs font-semibold text-[#001F58] hover:underline">
+        <Link href={`/search?q=${encodeURIComponent(query.trim())}#vendedores`} onClick={onSelect} className="block px-2 pt-1 text-xs font-semibold text-[#00205B] hover:underline">
           Ver más vendedores
         </Link>
       )}

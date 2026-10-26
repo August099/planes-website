@@ -6,13 +6,13 @@ import { AUDIENCE_LABELS, guidePath, type Guide } from "@/lib/guides";
 // en /services/guides y en "Otras guías". Server component, sin JS de cliente.
 const TONES = {
   light: {
-    list: "border-[#001F58]/12",
-    row: "border-[#001F58]/12",
-    number: "text-[#C20D1A]",
-    title: "text-[#001F58]",
+    list: "border-[#00205B]/12",
+    row: "border-[#00205B]/12",
+    number: "text-[#B71F1F]",
+    title: "text-[#00205B]",
     text: "text-slate-600",
     meta: "text-slate-500",
-    arrow: "text-[#001F58]/40 group-hover:text-[#C20D1A]",
+    arrow: "text-[#00205B]/40 group-hover:text-[#B71F1F]",
   },
   dark: {
     list: "border-white/15",

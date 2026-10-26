@@ -39,11 +39,11 @@ export default async function AccountTypePage({ searchParams }: Props) {
   return (
     <main className="relative isolate min-h-[calc(100vh-80px)] px-4 py-12">
       <PageBackground page="login" />
-      <div className="mx-auto max-w-lg rounded-lg border border-[#001F58]/10 bg-white p-6 sm:p-8">
+      <div className="mx-auto max-w-lg rounded-lg border border-[#00205B]/10 bg-white p-6 sm:p-8">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
           {fromPublish ? "Antes de publicar" : "Un paso más"}
         </p>
-        <h1 className="mt-1 text-2xl font-bold text-[#001F58]">
+        <h1 className="mt-1 text-2xl font-bold text-[#00205B]">
           {fromPublish ? (
             "¿Quién publica?"
           ) : (
@@ -61,7 +61,7 @@ export default async function AccountTypePage({ searchParams }: Props) {
             {USER_TYPE_OPTIONS.map((o) => (
               <label
                 key={o.value}
-                className="flex cursor-pointer items-start gap-3 rounded-md border border-[#001F58]/15 p-4 transition-colors hover:border-[#001F58]/40 has-[:checked]:border-[#E70F1F] has-[:checked]:bg-red-50/40"
+                className="flex cursor-pointer items-start gap-3 rounded-md border border-[#00205B]/15 p-4 transition-colors hover:border-[#00205B]/40 has-[:checked]:border-[#D62828] has-[:checked]:bg-red-50/40"
               >
                 <input
                   type="radio"
@@ -69,10 +69,10 @@ export default async function AccountTypePage({ searchParams }: Props) {
                   value={o.value}
                   defaultChecked={o.value === dbUser.userType}
                   required
-                  className="mt-1 accent-[#E70F1F]"
+                  className="mt-1 accent-[#D62828]"
                 />
                 <span>
-                  <span className="block font-semibold text-[#001F58]">{o.label}</span>
+                  <span className="block font-semibold text-[#00205B]">{o.label}</span>
                   <span className="block text-sm text-slate-600">{HINTS[o.value]}</span>
                 </span>
               </label>
@@ -81,7 +81,7 @@ export default async function AccountTypePage({ searchParams }: Props) {
           {error && <p className="text-sm font-medium text-red-700">Elegí una de las opciones.</p>}
           <button
             type="submit"
-            className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#E70F1F] px-6 text-sm font-bold text-white transition-colors hover:bg-[#C20D1A]"
+            className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#D62828] px-6 text-sm font-bold text-white transition-colors hover:bg-[#B71F1F]"
           >
             Continuar
           </button>

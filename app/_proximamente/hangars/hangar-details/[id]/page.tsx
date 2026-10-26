@@ -164,7 +164,7 @@ export default async function HangarDetailPage({ params }: Props) {
             <div className="order-5 lg:order-none flex flex-col gap-5 lg:gap-8">
               {hangar.services.length > 0 && (
                 <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4">
-                  <h2 className="text-lg font-bold text-[#001F58]">Servicios</h2>
+                  <h2 className="text-lg font-bold text-[#00205B]">Servicios</h2>
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm text-slate-700">
                     {hangar.services.map((s) => (
                       <li key={s} className="flex items-center gap-2">
@@ -184,7 +184,7 @@ export default async function HangarDetailPage({ params }: Props) {
               <PublishedLine createdAt={hangar.createdAt} location={location} />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{offerLabel(hangar)}</p>
-                <h1 className="mt-1 text-xl font-bold text-[#001F58]">{hangar.title}</h1>
+                <h1 className="mt-1 text-xl font-bold text-[#00205B]">{hangar.title}</h1>
                 <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2 tabular-nums">
                   {prices.secondary ? <span className="sr-only">Venta: </span> : null}
                   {prices.main.amount}

@@ -66,7 +66,17 @@ function HangarFiltersForm() {
     setIsOpenMobile(false);
   }, [searchParams, types, province, minDoor, aircraft, currency, minPrice, maxPrice, services, router, pathname]);
 
+  // 26/10: también vacía el formulario. Antes solo cambiaba la URL: si los filtros estaban marcados sin
+  // aplicar (URL ya limpia), "Limpiar" no hacía nada y las casillas seguían marcadas.
   const clearFilters = () => {
+    setTypes([]);
+    setProvince("");
+    setMinDoor("");
+    setAircraft([]);
+    setCurrency("ARS");
+    setMinPrice("");
+    setMaxPrice("");
+    setServices([]);
     const sort = searchParams.get("sort");
     router.push(sort ? `${pathname}?sort=${sort}` : pathname);
     setIsOpenMobile(false);
@@ -169,7 +179,7 @@ function HangarFiltersForm() {
                 aria-checked={currency === c}
                 onClick={() => setCurrency(c)}
                 className={`min-h-9 rounded text-sm font-medium cursor-pointer transition-colors ${
-                  currency === c ? "bg-white text-[#001F58] shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  currency === c ? "bg-white text-[#00205B] shadow-sm" : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 {c === "ARS" ? "Pesos" : "Dólares"}

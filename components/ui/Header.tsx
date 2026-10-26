@@ -14,9 +14,15 @@ import { getSparePartCategories } from "@/lib/cached-data";
 export async function Header() {
   const linkClass = "text-sm font-medium hover:text-red-400 transition-colors";
   // VA-120: categorías principales de repuestos para el menú (taxonomía cacheada, VA-13).
-  const partCategories = (await getSparePartCategories())
+  // 26/10: cada categoría lleva sus subcategorías directas, para desplegarlas en el menú de escritorio.
+  const allPartCategories = await getSparePartCategories();
+  const partCategories = allPartCategories
     .filter((c) => c.parentId === null)
-    .map(({ id, name }) => ({ id, name }));
+    .map(({ id, name }) => ({
+      id,
+      name,
+      children: allPartCategories.filter((s) => s.parentId === id).map((s) => ({ id: s.id, name: s.name })),
+    }));
 
   return (
     <SessionProvider>

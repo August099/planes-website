@@ -158,7 +158,15 @@ function SparePartFiltersForm({ categories }: Props) {
     setIsOpenMobile(false);
   }, [searchParams, currency, minPrice, maxPrice, categoryIds, condition, province, router, pathname]);
 
+  // 26/10: también vacía el formulario. Antes solo cambiaba la URL: si los filtros estaban marcados sin
+  // aplicar (URL ya limpia), "Limpiar" no hacía nada y las casillas seguían marcadas.
   const clearFilters = () => {
+    setCurrency(currencyFromUrl(null));
+    setMinPrice("");
+    setMaxPrice("");
+    setCategoryIds([]);
+    setCondition([]);
+    setProvince("");
     const sort = searchParams.get("sort");
     router.push(sort ? `${pathname}?sort=${sort}` : pathname);
     setIsOpenMobile(false);

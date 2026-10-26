@@ -2,80 +2,73 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-// Imágenes en public/cards/ (VA-52), generadas con scripts/optimize-cards.mjs.
+// Imágenes en public/cards/ (VA-52; fotos nuevas del socio, 26/10), generadas con scripts/optimize-cards.mjs.
+// Rediseño (25/10, v2): fichas de borde grueso como las categorías de repuestos. La foto va enmarcada
+// arriba y el pie se rellena de blanco al pasar; el estado es una etiqueta cuadrada.
 export default function HomeServicesCards() {
   const cards = [
     {
       title: "AVIONES",
       status: "Disponible",
       isAvailable: true,
-      image: "/cards/aircraft.webp",
-      position: "object-[70%_65%]", // que se vea el avión, no solo el cielo
+      image: "/cards/aircraft-home.webp",
+      position: "object-[50%_100%]", // foto vertical: el avión está abajo; así queda más arriba en la tarjeta
       href: "/aircraft",
     },
     {
       title: "REPUESTOS",
       status: "Disponible",
       isAvailable: true,
-      image: "/cards/spareparts.webp",
+      image: "/cards/sparepart-home.webp",
       href: "/spareparts",
     },
     {
       title: "SERVICIOS",
       status: "En proceso", // VA-144
       isAvailable: false,
-      image: "/cards/services.webp",
+      image: "/cards/services-home.webp",
+      position: "object-[50%_55%]", // foto vertical: la caja de herramientas al centro
       href: "/services",
       hasArrow: true,
     },
   ];
 
   return (
-    /* SECCIÓN DE ANCHO COMPLETO SIN ESQUINAS REDONDEADAS */
-    <section className="w-full py-8 sm:py-12">
+    <section className="w-full pb-16 sm:pb-20">
       <div className="container mx-auto px-4">
-        {/* GRILLA ADAPTABLE A MOBILE */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {cards.map((card, index) => (
-            <Link key={index} href={card.href} className="block group">
-              <div className="relative w-full h-40 sm:h-48 md:h-52 rounded-lg overflow-hidden border border-white/20 bg-[#001F58] transition-colors duration-300 hover:border-[#E70F1F] cursor-pointer">
-                <Image
-                  src={card.image}
-                  alt={card.title}
-                  fill
-                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  className={`object-cover ${card.position ?? ""} group-hover:scale-105 transition-transform duration-500 ease-out`}
-                />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+          {cards.map((card) => (
+            <Link key={card.href} href={card.href} className="va-rise group block">
+              {/* Moderno (26/10): tarjeta redondeada translúcida; la foto crece al pasar y la flecha va en un círculo rojo. */}
+              <div className="va-tile va-tile-dark relative flex h-full flex-col overflow-hidden rounded-[28px] border border-white/15 bg-[#001331]/70 p-2 group-hover:border-white/30">
+                <div className="relative h-56 overflow-hidden rounded-[22px] sm:h-64">
+                  <Image
+                    src={card.image}
+                    alt={card.title}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className={`object-cover ${card.position ?? ""} transition-transform duration-700 ease-out group-hover:scale-105`}
+                  />
+                  {/* Filtro azul oscuro sobre la foto (26/10), más denso abajo, donde va el título. */}
+                  <div className="absolute inset-0 bg-[#001331]/30" />
+                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#001331]/60 to-transparent" />
+                  <span
+                    className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] backdrop-blur-md ${
+                      card.isAvailable ? "bg-white/90 text-[#00205B]" : "bg-[#00205B]/70 text-white ring-1 ring-white/40"
+                    }`}
+                  >
+                    {card.status}
+                  </span>
+                </div>
 
-                <div className="absolute inset-0 bg-[#001F58]/50 mix-blend-multiply transition-opacity duration-300 group-hover:bg-[#001F58]/40" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#001F58]/95 via-[#001F58]/40 to-transparent" />
-
-                <div className="absolute inset-0 p-4 sm:p-5 flex flex-col justify-between z-10">
-                  <div className="flex justify-start">
-                    <span
-                      className={`text-xs sm:text-sm font-medium italic tracking-wide ${
-                        card.isAvailable
-                          ? "text-emerald-300/90 drop-shadow-sm"
-                          : "text-blue-200/90 drop-shadow-sm"
-                      }`}
-                    >
-                      {card.status}
-                    </span>
+                <div className="flex flex-1 items-center justify-between gap-4 px-4 pb-3 pt-5 text-white">
+                  <div>
+                    <h3 className="font-heading text-2xl font-extrabold tracking-[-0.02em] sm:text-[1.75rem]">{card.title}</h3>
+                    {card.hasArrow && <p className="mt-0.5 text-xs font-semibold text-white/80">Conocé más</p>}
                   </div>
-
-                  {/* TÍTULO Y FLECHA */}
-                  <div className="space-y-0.5 sm:space-y-1">
-                    {card.hasArrow && (
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-white/90 group-hover:text-white transition-colors pt-0.5">
-                        <span>Conocé más</span>
-                        <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1.5 transition-transform duration-300" />
-                      </div>
-                    )}
-
-                    <h3 className="text-lg sm:text-xl md:text-2xl font-black tracking-wider text-white drop-shadow-md">
-                      {card.title}
-                    </h3>
-                  </div>
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#D62828] transition-transform duration-300 group-hover:scale-110">
+                    <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden />
+                  </span>
                 </div>
               </div>
             </Link>

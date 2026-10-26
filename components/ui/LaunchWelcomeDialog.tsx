@@ -53,14 +53,14 @@ export function LaunchWelcomeDialog() {
         close();
       }}
       aria-labelledby="launch-welcome-title"
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-[#001F58]/15 p-0 text-slate-800 backdrop:bg-[#001331]/60"
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-[#00205B]/15 p-0 text-slate-800 backdrop:bg-[#001331]/60"
     >
-      <div className="border-l-2 border-[#E70F1F] p-6 space-y-4">
+      <div className="border-l-2 border-[#D62828] p-6 space-y-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Bienvenida <span className="text-[#E70F1F]">{"//"}</span> Ventas Aeronáuticas
+            Bienvenida <span className="text-[#D62828]">{"//"}</span> Ventas Aeronáuticas
           </p>
-          <h2 id="launch-welcome-title" className="mt-1 font-heading text-xl font-bold text-[#001F58]">
+          <h2 id="launch-welcome-title" className="mt-1 font-heading text-xl font-bold text-[#00205B]">
             Tu cuenta ya está lista
           </h2>
         </div>
@@ -68,16 +68,16 @@ export function LaunchWelcomeDialog() {
           {welcome.text} Tus avisos quedan publicados hasta que los pauses o los marques como vendidos. Si necesitás
           publicar más, mirá los planes.
         </p>
-        <dl className="divide-y divide-[#001F58]/10 rounded-lg border border-[#001F58]/12 bg-white text-sm">
+        <dl className="divide-y divide-[#00205B]/10 rounded-lg border border-[#00205B]/12 bg-white text-sm">
           <div className="flex items-center justify-between px-4 py-3">
             <dt className="text-slate-500">Aviones activos</dt>
-            <dd className="font-semibold tabular-nums text-[#001F58]">
+            <dd className="font-semibold tabular-nums text-[#00205B]">
               {welcome.aircraft ?? "Ilimitados"}
             </dd>
           </div>
           <div className="flex items-center justify-between px-4 py-3">
             <dt className="text-slate-500">Repuestos activos</dt>
-            <dd className="font-semibold tabular-nums text-[#001F58]">
+            <dd className="font-semibold tabular-nums text-[#00205B]">
               {welcome.spareParts ?? "Ilimitados"}
             </dd>
           </div>
@@ -86,7 +86,7 @@ export function LaunchWelcomeDialog() {
           <button
             type="button"
             onClick={() => close()}
-            className="min-h-11 rounded-md border border-[#001F58]/20 px-4 text-sm font-semibold text-[#001F58] hover:bg-slate-50 cursor-pointer"
+            className="min-h-11 rounded-md border border-[#00205B]/20 px-4 text-sm font-semibold text-[#00205B] hover:bg-slate-50 cursor-pointer"
           >
             Más tarde
           </button>
@@ -94,7 +94,7 @@ export function LaunchWelcomeDialog() {
             type="button"
             autoFocus
             onClick={() => close("/publish")}
-            className="min-h-11 rounded-md bg-[#E70F1F] px-5 text-sm font-bold text-white hover:bg-[#C20D1A] cursor-pointer"
+            className="min-h-11 rounded-md bg-[#D62828] px-5 text-sm font-bold text-white hover:bg-[#B71F1F] cursor-pointer"
           >
             Publicar mi avión
           </button>

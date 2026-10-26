@@ -151,14 +151,14 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
   return (
     <div className="space-y-10">
       {missingProfileFields.length > 0 && (
-        <p className="border-l-2 border-[#E70F1F] pl-3 text-sm text-slate-700">
+        <p className="border-l-2 border-[#D62828] pl-3 text-sm text-slate-700">
           Completá tu perfil para que te puedan contactar. Falta: {missingProfileFields.map((f) => PROFILE_FIELD_LABELS[f]).join(", ")}.
           {missingProfileFields.includes("phone") && " Sin teléfono no se puede publicar."}
         </p>
       )}
 
       <Section id="datos" title="Datos personales">
-        <div className="flex items-center gap-4 rounded-lg border border-[#001F58]/12 bg-white p-4">
+        <div className="flex items-center gap-4 rounded-lg border border-[#00205B]/12 bg-white p-4">
           <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200">
             {user.image ? <Image src={user.image} alt={user.name || "Tu foto"} fill sizes="64px" className="object-cover" /> : <span className="text-xl font-bold text-slate-500">{(user.name || "?").charAt(0).toUpperCase()}</span>}
             {loadingAvatar && (
@@ -168,7 +168,7 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
             )}
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" disabled={loadingAvatar} onClick={() => fileInputRef.current?.click()} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-[#001F58]/20 px-3 text-sm font-semibold text-[#001F58] hover:bg-slate-50 cursor-pointer">
+            <button type="button" disabled={loadingAvatar} onClick={() => fileInputRef.current?.click()} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-[#00205B]/20 px-3 text-sm font-semibold text-[#00205B] hover:bg-slate-50 cursor-pointer">
               <Camera className="h-4 w-4" /> Cambiar foto
             </button>
             {user.image && (
@@ -180,7 +180,7 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
           </div>
         </div>
 
-        <form onSubmit={handleUpdate} className="space-y-4 rounded-lg border border-[#001F58]/12 bg-white p-4 sm:p-6">
+        <form onSubmit={handleUpdate} className="space-y-4 rounded-lg border border-[#00205B]/12 bg-white p-4 sm:p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-600">Nombre completo</label>
@@ -216,7 +216,7 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button type="submit" disabled={loadingSave} className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#001F58] px-5 text-sm font-bold text-white hover:bg-[#00133A] cursor-pointer">
+            <button type="submit" disabled={loadingSave} className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#00205B] px-5 text-sm font-bold text-white hover:bg-[#001331] cursor-pointer">
               {loadingSave ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar"}
             </button>
             {saveSuccess && (
@@ -229,15 +229,15 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
       </Section>
 
       <Section id="seguridad" title="Email y contraseña">
-        <div className="rounded-lg border border-[#001F58]/12 bg-white p-4 sm:p-6">
+        <div className="rounded-lg border border-[#00205B]/12 bg-white p-4 sm:p-6">
           <p className="text-sm text-slate-600">
-            Email de la cuenta: <span className="font-semibold text-[#001F58]">{user.email}</span>
+            Email de la cuenta: <span className="font-semibold text-[#00205B]">{user.email}</span>
           </p>
           {!hasPassword ? (
             <p className="mt-3 text-sm text-slate-600">
               <Lock className="mr-1 inline h-4 w-4 text-slate-500" />
               Tu cuenta entra con Google y no tiene contraseña. Si querés poder entrar también con tu email, creá una: te mandamos un link a tu casilla.{" "}
-              <Link href="/forgot-password" className="font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">Crear una contraseña</Link>
+              <Link href="/forgot-password" className="font-semibold text-[#00205B] hover:text-[#D62828] hover:underline">Crear una contraseña</Link>
             </p>
           ) : (
             <form onSubmit={handleChangePasswordSubmit} className="mt-4 space-y-3">
@@ -262,7 +262,7 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
                   <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={INPUT} required />
                 </div>
               </div>
-              <button type="submit" disabled={loadingPassword} className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#001F58] px-5 text-sm font-bold text-white hover:bg-[#00133A] disabled:opacity-50 cursor-pointer">
+              <button type="submit" disabled={loadingPassword} className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#00205B] px-5 text-sm font-bold text-white hover:bg-[#001331] disabled:opacity-50 cursor-pointer">
                 {loadingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : "Cambiar contraseña"}
               </button>
             </form>
@@ -285,11 +285,11 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
       )}
 
       <Section id="notificaciones" title="Notificaciones y cookies">
-        <div className="space-y-2 rounded-lg border border-[#001F58]/12 bg-white p-4 text-sm text-slate-600 sm:p-6">
+        <div className="space-y-2 rounded-lg border border-[#00205B]/12 bg-white p-4 text-sm text-slate-600 sm:p-6">
           <p>Te escribimos por mail cuando te hacen una consulta, cuando cambia tu suscripción o si un aviso tuyo se pausa por moderación.</p>
           <p>
             Las cookies de medición solo se usan si las aceptaste.{" "}
-            <CookieSettingsLink label="Cambiar mi elección de cookies" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]" />
+            <CookieSettingsLink label="Cambiar mi elección de cookies" className="font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828]" />
           </p>
         </div>
       </Section>

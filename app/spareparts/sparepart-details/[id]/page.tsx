@@ -204,7 +204,7 @@ export default async function SparePartDetailsPage({
 
         {features.length > 0 && (
           <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
-            <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-100">Características</h3>
+            <h3 className="text-xs font-bold uppercase text-[#00205B] border-b pb-1 mb-1.5 border-slate-100">Características</h3>
             <p className="text-slate-700">{features.map((f) => (f.value ? `${f.label}: ${f.value}` : f.label)).join(" · ")}</p>
           </div>
         )}
@@ -213,13 +213,13 @@ export default async function SparePartDetailsPage({
 
         {sparePart.description && (
           <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
-            <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-100">Descripción</h3>
+            <h3 className="text-xs font-bold uppercase text-[#00205B] border-b pb-1 mb-1.5 border-slate-100">Descripción</h3>
             <DescriptionBody text={sparePart.description} />
           </div>
         )}
 
         <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 text-xs space-y-1 text-slate-700">
-          <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-200">Datos del Vendedor</h3>
+          <h3 className="text-xs font-bold uppercase text-[#00205B] border-b pb-1 mb-1.5 border-slate-200">Datos del Vendedor</h3>
           <p><span className="font-semibold">Nombre:</span> {seller.name}</p>
           {sellerLocation && <p><span className="font-semibold">Ubicación:</span> {sellerLocation}</p>}
           {seller.phone && <p><span className="font-semibold">Teléfono:</span> {seller.phone}</p>}
@@ -309,9 +309,10 @@ export default async function SparePartDetailsPage({
               />
               <Separator />
               <div>
-                <h1 className="text-2xl font-bold text-[#001F58] break-words">{sparePart.title}</h1>
+                <h1 className="va-h1-keep text-[1.65rem] leading-[1.12] font-extrabold tracking-[-0.015em] text-[#00205B] break-words">{sparePart.title}</h1>
                 <CategoryLinks items={categoryLinks} />
-                <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
+                <p className="va-label mt-4">Precio</p>
+                <p className="font-heading text-[1.9rem] leading-none font-extrabold tracking-[-0.02em] text-[#2563EB] tabular-nums">{formattedPrice}</p>
               </div>
               <Separator />
               <KeyFacts title="Detalles principales" facts={keyFacts} />

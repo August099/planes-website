@@ -57,7 +57,7 @@ export default async function GuidePage({ params }: Props) {
 
         {others.length > 0 && (
           <section aria-labelledby="otras-guias" className="mx-auto mt-12 max-w-3xl">
-            <h2 id="otras-guias" className="font-heading mb-5 text-xl font-bold text-[#001F58]">
+            <h2 id="otras-guias" className="font-heading mb-5 text-xl font-bold text-[#00205B]">
               Otras guías
             </h2>
             <GuideIndex guides={others} />

@@ -59,7 +59,7 @@ export function PhoneRequiredCard({ onSaved }: { onSaved: () => void }) {
           type="button"
           onClick={save}
           disabled={saving}
-          className="min-h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-[#001F58] px-5 text-sm font-semibold text-white hover:bg-[#001740] disabled:opacity-50 cursor-pointer"
+          className="min-h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-[#00205B] px-5 text-sm font-semibold text-white hover:bg-[#001740] disabled:opacity-50 cursor-pointer"
         >
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           Guardar teléfono

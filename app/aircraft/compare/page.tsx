@@ -7,6 +7,7 @@ import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { CompareTable, type CompareColumn } from "@/components/ui/compare/CompareTable";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 // Combinaciones infinitas: no se indexa (VA-83).
 export const metadata: Metadata = {
@@ -42,13 +43,13 @@ export default async function ComparePage({ searchParams }: Props) {
       <PageBackground page="aircraftList" />
       <div className="container mx-auto px-4 pb-16 pt-6">
         <Breadcrumbs items={[{ label: "Aviones", href: "/aircraft" }, { label: "Comparar" }]} className="mb-6" />
-        <div className="mb-6 max-w-2xl">
-          <h1 className="text-2xl font-bold text-[#001F58] sm:text-3xl">Comparar aeronaves</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Hasta 3 aeronaves, con todos los datos de cada aviso uno al lado del otro. Copiá el link para compartir esta
-            comparación.
-          </p>
-        </div>
+        <PageHeader variant="plain"
+          compact
+          routeId="va-route-compare"
+          className="mb-6"
+          title="Comparar aeronaves"
+          subtitle="Hasta 3 aeronaves, con todos los datos de cada aviso uno al lado del otro. Copiá el link para compartir esta comparación."
+        />
         <CompareTable columns={columns} sections={sections} />
       </div>
     </main>

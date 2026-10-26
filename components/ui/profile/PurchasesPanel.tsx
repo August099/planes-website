@@ -26,7 +26,7 @@ function Invoice({ row }: { row: PurchaseRow }) {
   if (!row.invoice) return <span className="text-slate-400">—</span>;
   if (row.invoice.downloadHref) {
     return (
-      <a href={row.invoice.downloadHref} className="inline-flex items-center gap-1 font-semibold text-[#001F58] hover:text-[#E70F1F]">
+      <a href={row.invoice.downloadHref} className="inline-flex items-center gap-1 font-semibold text-[#00205B] hover:text-[#D62828]">
         <Download className="h-3.5 w-3.5" aria-hidden />
         Descargar
       </a>
@@ -38,9 +38,9 @@ function Invoice({ row }: { row: PurchaseRow }) {
 export function PurchasesPanel({ rows }: { rows: PurchaseRow[] }) {
   if (rows.length === 0) {
     return (
-      <section className="rounded-lg border border-[#001F58]/12 bg-white p-6 text-sm text-slate-600">
+      <section className="rounded-lg border border-[#00205B]/12 bg-white p-6 text-sm text-slate-600">
         Todavía no hiciste compras.{" "}
-        <Link href="/plans" className="font-semibold text-[#001F58] underline">
+        <Link href="/plans" className="font-semibold text-[#00205B] underline">
           Ver planes
         </Link>
       </section>
@@ -48,8 +48,8 @@ export function PurchasesPanel({ rows }: { rows: PurchaseRow[] }) {
   }
 
   return (
-    <section className="rounded-lg border border-[#001F58]/12 bg-white">
-      <div id="mis-compras" className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[#001F58]/10 px-5 py-3">
+    <section className="rounded-lg border border-[#00205B]/12 bg-white">
+      <div id="mis-compras" className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[#00205B]/10 px-5 py-3">
         <p className={LABEL}>Mis compras</p>
         {/* VA-125 */}
         <p className="text-xs text-slate-500">Botón de arrepentimiento: podés pedir la devolución hasta 10 días después de cada pago.</p>
@@ -58,7 +58,7 @@ export function PurchasesPanel({ rows }: { rows: PurchaseRow[] }) {
       {/* Escritorio */}
       <table className="hidden w-full text-sm md:table">
         <thead>
-          <tr className="border-b border-[#001F58]/10 text-left">
+          <tr className="border-b border-[#00205B]/10 text-left">
             {["Fecha", "Concepto", "Monto", "Pago", "Factura", ""].map((h) => (
               <th key={h} className={`px-5 py-2 ${LABEL} ${h === "Monto" ? "text-right" : ""}`}>
                 {h}
@@ -71,7 +71,7 @@ export function PurchasesPanel({ rows }: { rows: PurchaseRow[] }) {
             <tr key={r.id}>
               <td className="whitespace-nowrap px-5 py-3 tabular-nums text-slate-600">{DATE.format(new Date(r.date))}</td>
               <td className="px-5 py-3 text-slate-800">{r.description}</td>
-              <td className="whitespace-nowrap px-5 py-3 text-right font-semibold tabular-nums text-[#001F58]">{money(r.amount)}</td>
+              <td className="whitespace-nowrap px-5 py-3 text-right font-semibold tabular-nums text-[#00205B]">{money(r.amount)}</td>
               <td className="px-5 py-3">
                 <Status row={r} />
               </td>
@@ -82,7 +82,7 @@ export function PurchasesPanel({ rows }: { rows: PurchaseRow[] }) {
                 <div className="flex items-center justify-end gap-3">
                   {r.withdrawal && <WithdrawalButton paymentId={r.withdrawal.paymentId} until={r.withdrawal.until} description={r.description} />}
                   {r.href && (
-                    <Link href={r.href} className="font-semibold text-[#001F58] hover:underline">
+                    <Link href={r.href} className="font-semibold text-[#00205B] hover:underline">
                       Ver
                     </Link>
                   )}
@@ -99,7 +99,7 @@ export function PurchasesPanel({ rows }: { rows: PurchaseRow[] }) {
           <li key={r.id} className="space-y-2 px-5 py-4 text-sm">
             <div className="flex items-start justify-between gap-3">
               <p className="min-w-0 font-medium text-slate-800">{r.description}</p>
-              <p className="shrink-0 font-semibold tabular-nums text-[#001F58]">{money(r.amount)}</p>
+              <p className="shrink-0 font-semibold tabular-nums text-[#00205B]">{money(r.amount)}</p>
             </div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               <span className="tabular-nums text-slate-500">{DATE.format(new Date(r.date))}</span>
@@ -115,7 +115,7 @@ export function PurchasesPanel({ rows }: { rows: PurchaseRow[] }) {
                 </span>
               )}
               {r.href && (
-                <Link href={r.href} className={`${r.withdrawal ? "" : "ml-auto "}font-semibold text-[#001F58] hover:underline`}>
+                <Link href={r.href} className={`${r.withdrawal ? "" : "ml-auto "}font-semibold text-[#00205B] hover:underline`}>
                   Ver
                 </Link>
               )}

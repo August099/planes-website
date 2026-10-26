@@ -35,9 +35,9 @@ export function SubscriptionPanel({ subscription, quota = null }: { subscription
 
   if (quota?.planName === "Admin") {
     return (
-      <section className="rounded-lg border border-[#001F58]/12 bg-white p-5">
+      <section className="rounded-lg border border-[#00205B]/12 bg-white p-5">
         <p className={LABEL}>Tu plan</p>
-        <p className="mt-1 text-lg font-bold text-[#001F58]">Admin</p>
+        <p className="mt-1 text-lg font-bold text-[#00205B]">Admin</p>
         <p className="text-sm text-slate-600">Todo lo del Broker / Empresa, con aviones y repuestos ilimitados, sin suscripción ni vencimiento.</p>
       </section>
     );
@@ -46,11 +46,11 @@ export function SubscriptionPanel({ subscription, quota = null }: { subscription
   if (!subscription || !subscription.active) {
     const base = quota ? `: ${quota.aircraft.limit ?? "∞"} ${quota.aircraft.limit === 1 ? "avión" : "aviones"} y ${quota.parts.limit ?? "∞"} ${quota.parts.limit === 1 ? "repuesto" : "repuestos"} activos` : "";
     return (
-      <section className="rounded-lg border border-[#001F58]/12 bg-white p-5">
+      <section className="rounded-lg border border-[#00205B]/12 bg-white p-5">
         <p className={LABEL}>Tu plan</p>
         <p className="mt-1 text-sm text-slate-700">
           {subscription ? `Tu suscripción a ${subscription.planName} terminó. ` : ""}Tenés el plan Base, gratis{base}.{" "}
-          <Link href="/plans" className="font-semibold text-[#001F58] underline">
+          <Link href="/plans" className="font-semibold text-[#00205B] underline">
             Ver planes
           </Link>
         </p>
@@ -64,15 +64,15 @@ export function SubscriptionPanel({ subscription, quota = null }: { subscription
   // VA-92: plan bonificado (lo asigna el admin o es de un fundador, VA-182): sin precio, cobros ni cancelar.
   if (subscription.courtesy) {
     return (
-      <section className="rounded-lg border border-[#001F58]/12 bg-white">
+      <section className="rounded-lg border border-[#00205B]/12 bg-white">
         <div className="p-5">
           <p className={LABEL}>Tu plan</p>
-          <p className="mt-1 text-lg font-bold text-[#001F58]">{subscription.planName}</p>
+          <p className="mt-1 text-lg font-bold text-[#00205B]">{subscription.planName}</p>
           <p className="text-sm text-slate-600">
             {subscription.founding ? "6 meses bonificados por ser miembro fundador" : "Bonificado, sin cargo"}
           </p>
         </div>
-        <p className="border-t border-[#001F58]/10 px-5 py-3 text-sm text-slate-600">
+        <p className="border-t border-[#00205B]/10 px-5 py-3 text-sm text-slate-600">
           Vigente hasta el <strong>{end}</strong>. No se cobra ni se renueva solo.
         </p>
       </section>
@@ -80,18 +80,18 @@ export function SubscriptionPanel({ subscription, quota = null }: { subscription
   }
 
   return (
-    <section className="rounded-lg border border-[#001F58]/12 bg-white">
+    <section className="rounded-lg border border-[#00205B]/12 bg-white">
       <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className={LABEL}>Tu plan</p>
-          <p className="mt-1 text-lg font-bold text-[#001F58]">{subscription.planName}</p>
+          <p className="mt-1 text-lg font-bold text-[#00205B]">{subscription.planName}</p>
           <p className="text-sm tabular-nums text-slate-600">
             AR$ {NUMBER.format(subscription.price)} por {per}
           </p>
         </div>
         <div className="flex flex-wrap items-start gap-2">
           {/* VA-186 */}
-          <Link href="/plans" className="rounded-md border border-[#001F58]/20 px-4 py-2 text-xs font-semibold text-[#001F58] hover:bg-slate-50">
+          <Link href="/plans" className="rounded-md border border-[#00205B]/20 px-4 py-2 text-xs font-semibold text-[#00205B] hover:bg-slate-50">
             Cambiar de plan
           </Link>
           {subscription.cancelAtPeriodEnd ? (
@@ -99,7 +99,7 @@ export function SubscriptionPanel({ subscription, quota = null }: { subscription
               type="button"
               disabled={pending}
               onClick={() => run(resumeSubscriptionAction)}
-              className="self-start rounded-md border border-[#001F58]/20 px-4 py-2 text-xs font-semibold text-[#001F58] hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+              className="self-start rounded-md border border-[#00205B]/20 px-4 py-2 text-xs font-semibold text-[#00205B] hover:bg-slate-50 cursor-pointer disabled:opacity-50"
             >
               Seguir suscripto
             </button>
@@ -121,7 +121,7 @@ export function SubscriptionPanel({ subscription, quota = null }: { subscription
           acredita, el plan se da de baja el <strong>{DATE.format(new Date(subscription.graceUntil))}</strong>.
         </p>
       )}
-      <p className="border-t border-[#001F58]/10 px-5 py-3 text-sm text-slate-600">
+      <p className="border-t border-[#00205B]/10 px-5 py-3 text-sm text-slate-600">
         {subscription.cancelAtPeriodEnd ? (
           <>Cancelada: la podés usar hasta el <strong>{end}</strong> y después no se cobra más.</>
         ) : (

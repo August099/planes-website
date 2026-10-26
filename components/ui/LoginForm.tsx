@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { FlightPaths } from "@/components/ui/home/FlightPaths";
 
 interface LoginFormProps {
   // Vienen de la página (searchParams del servidor). Antes se leían con useSearchParams dentro
@@ -77,13 +78,15 @@ export default function LoginForm({ errorParam = null, successParam = null, call
       <PageBackground page="login" />
 
       <div className="container mx-auto px-4 max-w-md">
-        <div className="bg-white border border-[#001F58]/12 rounded-lg p-8 shadow-sm space-y-6">
+        {/* Rediseño (26/10): tarjeta de vidrio sobre el fondo, con el encabezado en la franja azul de la marca. */}
+        <div className="overflow-hidden rounded-[32px] border border-white/60 bg-white/85 p-8 shadow-[0_30px_60px_-30px_rgb(0_32_91/0.55)] backdrop-blur-xl space-y-6">
           {/* Encabezado */}
-          <div className="space-y-1.5">
-            <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-[#001F58]">
+          <div className="relative isolate -mx-8 -mt-8 overflow-hidden bg-[linear-gradient(120deg,#0A4C96_0%,#00205B_72%)] px-8 py-8 text-white">
+            <FlightPaths id="va-route-login" tone="dark" className="-z-10" />
+            <h1 className="va-h1-keep font-heading text-2xl font-extrabold tracking-[-0.03em] sm:text-3xl">
               Ingresá a tu cuenta
             </h1>
-            <p className="text-xs sm:text-sm text-[#001F58]/70">
+            <p className="mt-1.5 text-xs text-white/85 sm:text-sm">
               Ingresá a tu cuenta para gestionar tus publicaciones
             </p>
           </div>
@@ -94,7 +97,7 @@ export default function LoginForm({ errorParam = null, successParam = null, call
               type="button"
               variant="outline"
               onClick={() => signIn("google", { callbackUrl })}
-              className="w-full gap-2 bg-white/80 border-[#001F58]/20 hover:bg-white text-[#001F58] font-medium rounded-xl shadow-sm cursor-pointer"
+              className="w-full gap-2 bg-white/80 border-[#00205B]/20 hover:bg-white text-[#00205B] font-medium rounded-xl shadow-sm cursor-pointer"
             >
               <svg width="18" height="18" viewBox="0 0 48 48">
                 <path
@@ -120,7 +123,7 @@ export default function LoginForm({ errorParam = null, successParam = null, call
               type="button"
               variant="outline"
               onClick={() => signIn("facebook", { callbackUrl })}
-              className="w-full gap-2 bg-white/80 border-[#001F58]/20 hover:bg-white text-[#001F58] font-medium rounded-xl shadow-sm cursor-pointer"
+              className="w-full gap-2 bg-white/80 border-[#00205B]/20 hover:bg-white text-[#00205B] font-medium rounded-xl shadow-sm cursor-pointer"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
                 <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.89v2.26h3.32l-.53 3.49h-2.79V24C19.61 23.09 24 18.1 24 12.07z" />
@@ -131,9 +134,9 @@ export default function LoginForm({ errorParam = null, successParam = null, call
 
           {/* Separador */}
           <div className="flex items-center gap-3 py-0.5">
-            <Separator className="flex-1 bg-[#001F58]/15" />
-            <span className="text-xs text-[#001F58]/60 uppercase font-medium">o</span>
-            <Separator className="flex-1 bg-[#001F58]/15" />
+            <Separator className="flex-1 bg-[#00205B]/15" />
+            <span className="text-xs text-[#00205B]/60 uppercase font-medium">o</span>
+            <Separator className="flex-1 bg-[#00205B]/15" />
           </div>
 
           {/* MENSAJES Y ALERTAS */}
@@ -176,7 +179,7 @@ export default function LoginForm({ errorParam = null, successParam = null, call
           {/* method="post": si se envía antes de que cargue React, la contraseña no queda en la URL */}
           <form method="post" onSubmit={handleCredentialsLogin} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-xs font-semibold text-[#001F58]">
+              <Label htmlFor="email" className="text-xs font-semibold text-[#00205B]">
                 Email
               </Label>
               <Input
@@ -184,17 +187,17 @@ export default function LoginForm({ errorParam = null, successParam = null, call
                 name="email"
                 type="email"
                 required
-                className="bg-white/80 border-[#001F58]/20 focus-visible:ring-[#001F58]"
+                className="bg-white/80 border-[#00205B]/20 focus-visible:ring-[#00205B]"
               />
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-baseline justify-between gap-3">
-                <Label htmlFor="password" className="text-xs font-semibold text-[#001F58]">
+                <Label htmlFor="password" className="text-xs font-semibold text-[#00205B]">
                   Contraseña
                 </Label>
                 {/* VA-105 · 3 */}
-                <Link href="/forgot-password" className="text-xs font-semibold text-[#001F58]/80 hover:text-[#E70F1F] hover:underline">
+                <Link href="/forgot-password" className="text-xs font-semibold text-[#00205B]/80 hover:text-[#D62828] hover:underline">
                   ¿Olvidaste tu contraseña?
                 </Link>
               </div>
@@ -204,12 +207,12 @@ export default function LoginForm({ errorParam = null, successParam = null, call
                   name="password"
                   type={showPassword ? "text" : "password"}
                   required
-                  className="bg-white/80 border-[#001F58]/20 focus-visible:ring-[#001F58] pr-10"
+                  className="bg-white/80 border-[#00205B]/20 focus-visible:ring-[#00205B] pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#001F58] transition-colors p-1"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#00205B] transition-colors p-1"
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -223,17 +226,17 @@ export default function LoginForm({ errorParam = null, successParam = null, call
             <Button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 bg-[#E70F1F] hover:bg-[#c00d1a] text-white font-medium py-2.5 rounded-xl shadow-sm transition-colors cursor-pointer disabled:opacity-70"
+              className="w-full mt-2 bg-[#D62828] hover:bg-[#c00d1a] text-white font-medium py-2.5 rounded-xl shadow-sm transition-colors cursor-pointer disabled:opacity-70"
             >
               {loading ? "Ingresando..." : "Continuar con email"}
             </Button>
           </form>
 
-          <p className="text-xs sm:text-sm text-[#001F58]/70 pt-2 border-t border-[#001F58]/10">
+          <p className="text-xs sm:text-sm text-[#00205B]/70 pt-2 border-t border-[#00205B]/10">
             ¿No tenés cuenta?{" "}
             <Link
               href="/register"
-              className="text-[#E70F1F] font-semibold hover:underline transition-colors"
+              className="text-[#D62828] font-semibold hover:underline transition-colors"
             >
               Registrate
             </Link>

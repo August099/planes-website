@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
 
 // "Explorá por tipo de aeronave" (VA-86). Server component, sin JS de cliente. Ajuste del socio
 // (10/10): en celular, grilla de 2 por fila (la séptima sola y centrada); imágenes y textos un 15 %
@@ -49,6 +49,8 @@ const TYPES = [
     width: 486,
     height: 238,
     categories: ["PR"],
+    // 26/10 (socio): un 15 % más chica que las demás.
+    scale: "scale-[0.85]",
   },
   {
     name: "Otros",
@@ -64,11 +66,11 @@ const hrefFor = (categories: string[]) => `/aircraft?${categories.map((c) => `ca
 
 export function AircraftTypesSection({ counts }: { counts: Record<string, number> }) {
   return (
-    <section className="py-12" aria-labelledby="aircraft-types-title">
+    <section className="py-16 sm:py-20" aria-labelledby="aircraft-types-title">
       <div className="container mx-auto px-4">
-        <SectionTitle id="aircraft-types-title" className="mb-10 text-center">
+        <DisplayTitle id="aircraft-types-title" align="center" className="mb-12">
           Explorá por tipo de aeronave
-        </SectionTitle>
+        </DisplayTitle>
 
         {/* Celular: 2 por fila y la última centrada. Desde md: 3 por fila; desde lg: 4 + 3 centradas,
             como la referencia. */}
@@ -79,7 +81,7 @@ export function AircraftTypesSection({ counts }: { counts: Record<string, number
               <li key={type.name} className="w-[calc((100%-1rem)/2)] md:w-[calc((100%-3rem)/3)] lg:w-[calc((100%-4.5rem)/4)]">
                 <Link
                   href={hrefFor(type.categories)}
-                  className="group block rounded-md text-center outline-none focus-visible:ring-2 focus-visible:ring-[#E70F1F] focus-visible:ring-offset-4 focus-visible:ring-offset-transparent"
+                  className="group block rounded-md text-center outline-none focus-visible:ring-2 focus-visible:ring-[#D62828] focus-visible:ring-offset-4 focus-visible:ring-offset-transparent"
                 >
                   {/* Caja de altura fija y la aeronave apoyada en la base, así los nombres quedan alineados. */}
                   <div className="relative mx-auto h-[4.25rem] w-[85%] transition-transform duration-200 ease-out group-hover:translate-x-1.5 group-focus-visible:translate-x-1.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0 motion-reduce:group-focus-visible:translate-x-0 sm:h-[6.8rem] lg:h-[7.65rem]">
@@ -89,15 +91,15 @@ export function AircraftTypesSection({ counts }: { counts: Record<string, number
                       fill
                       // En celular la caja mide ~35vw (85% de media columna): así baja la de 256 px y no la de 384.
                       sizes="(min-width: 1280px) 250px, (min-width: 1024px) 20vw, (min-width: 768px) 27vw, 35vw"
-                      className="object-contain object-bottom"
+                      className={`object-contain object-bottom origin-bottom ${"scale" in type ? type.scale : ""}`}
                     />
                   </div>
-                  <h3 className="mt-3 text-[0.95rem] leading-snug font-bold text-[#001F58] decoration-[#E70F1F] decoration-2 underline-offset-4 group-hover:underline group-focus-visible:underline">
+                  <h3 className="mt-3 text-[0.95rem] leading-snug font-bold text-[#00205B] decoration-[#D62828] decoration-2 underline-offset-4 group-hover:underline group-focus-visible:underline">
                     {type.name}
                   </h3>
                   <p
                     className={`mt-2 text-[0.6rem] font-semibold uppercase tracking-[0.14em] tabular-nums ${
-                      total > 0 ? "text-[#001F58]" : "text-slate-500"
+                      total > 0 ? "text-[#00205B]" : "text-slate-500"
                     }`}
                   >
                     {total > 0 ? `${total} ${total === 1 ? "aviso" : "avisos"}` : "Sin avisos por ahora"}

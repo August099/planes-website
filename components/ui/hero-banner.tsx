@@ -46,7 +46,7 @@ export function HeroBanner({
       {/* VA-79: la foto no termina en un borde recto; se funde con el celeste de la zona 1. */}
       <div
         aria-hidden
-        className="absolute inset-x-0 bottom-0 h-16 sm:h-24 pointer-events-none bg-gradient-to-b from-transparent to-[#CFE3F6]"
+        className="absolute inset-x-0 bottom-0 h-16 sm:h-24 pointer-events-none bg-gradient-to-b from-transparent to-[#F5F5F5]"
       />
 
       {/* Contenedor del Texto */}
@@ -65,7 +65,7 @@ export function HeroBanner({
       >
         <div>
           {/* VA-55 (pedido del socio, 9/10): se mantiene el degradé blanco → rojo en "a bordo", sin
-              recuadro oscuro detrás. El rojo final es más claro que el de marca (#E70F1F) para que
+              recuadro oscuro detrás. El rojo final es más claro que el de marca (#D62828) para que
               se lea sobre el azul de la foto, y una sombra suave le da contraste. */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight md:leading-none whitespace-normal md:whitespace-nowrap drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]">
             <span className="text-white">Bienvenido </span>

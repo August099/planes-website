@@ -47,11 +47,11 @@ export function Breadcrumbs({
                 </span>
               )}
               {i === last || !c.href ? (
-                <span aria-current={i === last ? "page" : undefined} className="truncate font-medium text-[#001F58] max-w-[16rem] sm:max-w-md">
+                <span aria-current={i === last ? "page" : undefined} className="truncate font-medium text-[#00205B] max-w-[16rem] sm:max-w-md">
                   {c.label}
                 </span>
               ) : (
-                <Link href={c.href} className="hover:text-[#001F58] hover:underline">
+                <Link href={c.href} className="hover:text-[#00205B] hover:underline">
                   {c.label}
                 </Link>
               )}

@@ -28,16 +28,16 @@ export function FoundingMemberDialog({ until, onClose }: { until: string; onClos
         onClose();
       }}
       aria-labelledby="founder-title"
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-[#001F58]/15 p-0 text-slate-800 backdrop:bg-[#001331]/60"
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-[#00205B]/15 p-0 text-slate-800 backdrop:bg-[#001331]/60"
     >
       <div className="space-y-4 p-6">
-        <p className="text-xs font-semibold text-[#E70F1F]">Miembro fundador</p>
-        <h2 id="founder-title" className="text-xl font-bold text-[#001F58]">
+        <p className="text-xs font-semibold text-[#D62828]">Miembro fundador</p>
+        <h2 id="founder-title" className="text-xl font-bold text-[#00205B]">
           ¡Gracias por ser de los primeros!
         </h2>
         <p className="text-sm text-slate-700">
-          Por ser de los primeros en apoyar a Ventas Aeronáuticas, tenés <strong className="text-[#001F58]">6 meses bonificados</strong>: te otorgamos una cuenta{" "}
-          <strong className="text-[#001F58]">Broker / Empresa</strong> hasta el {DATE.format(new Date(until))}.
+          Por ser de los primeros en apoyar a Ventas Aeronáuticas, tenés <strong className="text-[#00205B]">6 meses bonificados</strong>: te otorgamos una cuenta{" "}
+          <strong className="text-[#00205B]">Broker / Empresa</strong> hasta el {DATE.format(new Date(until))}.
         </p>
         <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
           {INCLUDES.map((i) => (
@@ -45,7 +45,7 @@ export function FoundingMemberDialog({ until, onClose }: { until: string; onClos
           ))}
         </ul>
         <p className="text-xs text-slate-500">Al terminar, tu cuenta vuelve al plan Base. No se cobra nada.</p>
-        <button type="button" onClick={onClose} className="min-h-11 w-full rounded-md bg-[#001F58] px-4 text-sm font-bold text-white hover:bg-[#00133A] cursor-pointer">
+        <button type="button" onClick={onClose} className="min-h-11 w-full rounded-md bg-[#00205B] px-4 text-sm font-bold text-white hover:bg-[#001331] cursor-pointer">
           Ver mi aviso
         </button>
       </div>

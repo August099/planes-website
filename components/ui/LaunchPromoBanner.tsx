@@ -5,6 +5,7 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import { FREE_QUOTA_PROMO } from "@/lib/promo";
 import { useViewerStatus } from "@/components/ui/FavoriteIdsProvider";
+import { BrandBars } from "@/components/ui/home/BrandBars";
 
 const STORAGE_KEY = "va_launch_promo";
 
@@ -55,17 +56,23 @@ export function LaunchPromoBanner({ text }: { text: string }) {
     setVisible(false);
   };
 
+  // Rediseño moderno (26/10): tarjeta roja redondeada que flota sobre el borde del hero, con las dos
+  // barras del logo ("//") de fondo.
   return (
-    <section aria-label={FREE_QUOTA_PROMO.title} className="container mx-auto px-4 pt-8">
-      <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border-l-2 border-[#E70F1F] bg-[#001F58] px-5 py-5 pr-14 text-white">
+    <section aria-label={FREE_QUOTA_PROMO.title} className="relative z-30 container mx-auto -mt-10 px-4 sm:-mt-14">
+      <div className="relative isolate flex flex-col gap-4 overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#D62828_0%,#B71F1F_100%)] px-6 py-6 pr-16 text-white shadow-[0_24px_48px_-20px_rgb(183_31_31/0.6)] sm:flex-row sm:items-center sm:gap-8 sm:px-8">
+        {/* Las dos barras del logo (una ancha y otra fina), detrás del contenido. */}
+        <BrandBars className="right-[22%] -z-10" />
+        <p className="shrink-0 self-start rounded-full bg-[#00205B] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] sm:self-center">
+          {FREE_QUOTA_PROMO.title}
+        </p>
         <div className="flex-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-[#FF5A64]">{FREE_QUOTA_PROMO.title}</p>
-          <p className="text-lg sm:text-xl font-bold">{text}</p>
-          <p className="mt-1 text-sm text-white/80">Creá tu cuenta y publicá en minutos.</p>
+          <p className="font-heading text-xl leading-tight font-extrabold tracking-[-0.02em] sm:text-2xl">{text}</p>
+          <p className="mt-1 text-sm text-white">Creá tu cuenta y publicá en minutos.</p>
         </div>
         <Link
           href="/register"
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#E70F1F] px-5 text-sm font-bold hover:bg-[#C20D1A] transition-colors"
+          className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-white px-6 text-sm font-bold text-[#B71F1F] shadow-sm transition-transform hover:scale-[1.03]"
         >
           Crear cuenta gratis
         </Link>
@@ -73,7 +80,7 @@ export function LaunchPromoBanner({ text }: { text: string }) {
           type="button"
           onClick={dismiss}
           aria-label="Cerrar aviso"
-          className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 cursor-pointer"
+          className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/15 cursor-pointer"
         >
           <X className="h-5 w-5" />
         </button>

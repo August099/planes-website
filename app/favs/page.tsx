@@ -9,6 +9,7 @@ import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { UnavailableFavoriteCard } from "@/components/ui/UnavailableFavoriteCard";
 import { isListingActive } from "@/lib/listing-filters";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 // VA-105 · 5.3: por qué un favorito ya no está disponible.
 function unavailableReason(listing: { status: string }) {
@@ -54,20 +55,21 @@ export default async function FavoritesPage() {
       <PageBackground page="default" />
       <Breadcrumbs items={[{ label: "Favoritos" }]} className="-mt-4 mb-2" />
 
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2.5 bg-red-50 text-red-600 rounded-xl border border-red-100">
-          <Heart className="w-6 h-6 fill-red-600" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-[#001F58]">Mis Favoritos</h1>
-          <p className="text-xs text-slate-500">
-            Publicaciones guardadas ({favorites.length})
-          </p>
-        </div>
-      </div>
+      <PageHeader variant="plain"
+        compact
+        routeId="va-route-favs"
+        className="mb-8"
+        title={
+          <span className="inline-flex items-center gap-3">
+            <Heart aria-hidden className="h-7 w-7 fill-[#D62828] text-[#D62828]" />
+            Mis Favoritos
+          </span>
+        }
+        subtitle={`Publicaciones guardadas (${favorites.length})`}
+      />
 
       {favorites.length === 0 ? (
-        <div className="py-20 text-center bg-white rounded-lg border border-slate-200">
+        <div className="va-plate py-20 text-center">
           <Heart className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <p className="text-slate-600 font-medium text-sm">
             Aún no guardaste ninguna publicación en tus favoritos.

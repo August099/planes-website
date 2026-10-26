@@ -2,7 +2,7 @@
 // así no suma JS al cliente.
 import Link from "next/link";
 import Image from "next/image";
-import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
 
 export type BrandItem = {
   id: string;
@@ -31,10 +31,11 @@ export function FeaturedBrands({ brands }: FeaturedBrandsProps) {
   ];
 
   return (
-    <section className="py-12 overflow-hidden">
+    <section className="my-10 overflow-hidden py-16 sm:my-14">
 
-      <div className="container mx-auto px-4 mb-6 text-center">
-        <SectionTitle>Explorá por Fabricante</SectionTitle>
+      {/* Rediseño (26/10): marquesina original (logos flotando sobre el fondo); solo cambia el título. */}
+      <div className="container mx-auto px-4 mb-6">
+        <DisplayTitle>Explorá por Fabricante</DisplayTitle>
       </div>
 
       {/* CONTENEDOR MÓVIL */}

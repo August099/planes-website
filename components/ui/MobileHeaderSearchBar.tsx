@@ -26,11 +26,12 @@ export default function MobileHeaderSearchBar() {
         inputRef.current?.focus();
       }, 100);
     } else {
-      document.body.style.overflow = "unset";
+      // "" quita el estilo en línea; "unset" quedaba escrito y pisaba el overflow-x: clip del body (globals.css).
+      document.body.style.overflow = "";
     }
 
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 
@@ -111,7 +112,7 @@ export default function MobileHeaderSearchBar() {
         className={`p-2 transition-colors md:hidden outline-none cursor-pointer ${
           isHome
             ? "text-white hover:text-white/80"
-            : "text-[#001F58] hover:text-blue-900"
+            : "text-[#00205B] hover:text-blue-900"
         }`}
         aria-label="Abrir buscador"
       >
@@ -158,7 +159,7 @@ export default function MobileHeaderSearchBar() {
               <button
                 type="button"
                 onClick={handleSearchSubmit}
-                className="p-2.5 bg-[#001F58] text-white rounded-xl font-bold text-xs shrink-0"
+                className="p-2.5 bg-[#00205B] text-white rounded-xl font-bold text-xs shrink-0"
               >
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -186,7 +187,7 @@ export default function MobileHeaderSearchBar() {
                       className="w-full py-3 px-2 text-left hover:bg-slate-50 transition-colors flex items-center justify-between group cursor-pointer"
                     >
                       <div className="pr-2 truncate">
-                        <p className="text-xs font-bold text-slate-800 truncate group-hover:text-[#001F58]">
+                        <p className="text-xs font-bold text-slate-800 truncate group-hover:text-[#00205B]">
                           {item.title}
                         </p>
                         <p className="text-[10px] text-slate-400 truncate mt-0.5">

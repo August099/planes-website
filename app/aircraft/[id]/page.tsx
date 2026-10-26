@@ -166,7 +166,7 @@ export default async function AircraftDetailsPage({
 
       {/* VISTA DE IMPRESIÓN PDF */}
       <div id="pdf-content" className="hidden print:block font-sans text-slate-900 p-10 max-w-4xl mx-auto space-y-6">
-        <div className="flex flex-col items-center justify-center border-b-2 border-[#001F58] pb-4 space-y-2 text-center">
+        <div className="flex flex-col items-center justify-center border-b-2 border-[#00205B] pb-4 space-y-2 text-center">
           <div className="flex items-center justify-center gap-6">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-full.png" alt="Ventas Aeronáuticas" className="h-14 w-auto object-contain" />
@@ -176,7 +176,7 @@ export default async function AircraftDetailsPage({
           <div className="flex items-center gap-4 text-[11px] text-slate-500 font-medium">
             <span>Ficha Técnica de Publicación</span>
             <span>•</span>
-            <span className="font-bold text-[#001F58]">Ref: #{aircraft.id.slice(-6).toUpperCase()}</span>
+            <span className="font-bold text-[#00205B]">Ref: #{aircraft.id.slice(-6).toUpperCase()}</span>
             <span>•</span>
             <span>{new Date().toLocaleDateString("es-AR")}</span>
           </div>
@@ -184,7 +184,7 @@ export default async function AircraftDetailsPage({
 
         <div className="flex justify-between items-baseline bg-slate-50 p-4 rounded-xl border border-slate-200">
           <div>
-            <h2 className="text-2xl font-black text-[#001F58]">{aircraft.title}</h2>
+            <h2 className="text-2xl font-black text-[#00205B]">{aircraft.title}</h2>
             <p className="text-xs text-slate-500 mt-0.5">Ubicación: {aircraft.city}, {aircraft.province}</p>
           </div>
           <span className="text-2xl font-black text-[var(--sidebar-primary)] shrink-0">{formattedPrice}</span>
@@ -192,7 +192,7 @@ export default async function AircraftDetailsPage({
 
         {aircraft.images.length > 0 && (
           <div className="space-y-2">
-            <h3 className="text-xs font-bold uppercase text-[#001F58] tracking-wider">Fotografías de la Aeronave</h3>
+            <h3 className="text-xs font-bold uppercase text-[#00205B] tracking-wider">Fotografías de la Aeronave</h3>
             <div className="grid grid-cols-3 gap-3">
               {aircraft.images.slice(0, 3).map((img, idx) => (
                 <div key={img.id || idx} className="h-36 relative rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
@@ -206,7 +206,7 @@ export default async function AircraftDetailsPage({
 
         {features.length > 0 && (
           <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
-            <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-100">Características</h3>
+            <h3 className="text-xs font-bold uppercase text-[#00205B] border-b pb-1 mb-1.5 border-slate-100">Características</h3>
             <p className="text-slate-700">{features.map((f) => (f.value ? `${f.label}: ${f.value}` : f.label)).join(" · ")}</p>
           </div>
         )}
@@ -215,13 +215,13 @@ export default async function AircraftDetailsPage({
 
         {aircraft.description && (
           <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
-            <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-100">Descripción</h3>
+            <h3 className="text-xs font-bold uppercase text-[#00205B] border-b pb-1 mb-1.5 border-slate-100">Descripción</h3>
             <DescriptionBody text={aircraft.description} />
           </div>
         )}
 
         <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 text-xs space-y-1 text-slate-700">
-          <h3 className="text-xs font-bold uppercase text-[#001F58] border-b pb-1 mb-1.5 border-slate-200">Contacto del Vendedor</h3>
+          <h3 className="text-xs font-bold uppercase text-[#00205B] border-b pb-1 mb-1.5 border-slate-200">Contacto del Vendedor</h3>
           <p><span className="font-semibold text-slate-500">Nombre / Razón Social:</span> <span className="font-bold">{seller.name}</span></p>
           {sellerLocation && <p><span className="font-semibold text-slate-500">Ubicación:</span> {sellerLocation}</p>}
           {seller.phone && <p><span className="font-semibold text-slate-500">Teléfono:</span> {seller.phone}</p>}
@@ -268,7 +268,7 @@ export default async function AircraftDetailsPage({
             </div>
 
             {aircraft.description && (
-              <div className="order-4 lg:order-none border border-slate-200 rounded-lg bg-white p-6 shadow-sm">
+              <div className="order-4 lg:order-none va-plate p-6">
                 <ListingDescription text={aircraft.description} />
               </div>
             )}
@@ -281,16 +281,19 @@ export default async function AircraftDetailsPage({
 
           <div className="contents lg:flex lg:w-1/3 lg:flex-col lg:gap-5">
             {/* Tarjeta con los Datos de la Aeronave */}
-            <div className="order-2 lg:order-none border border-slate-200 rounded-lg bg-white p-6 shadow-sm space-y-4">
+            {/* Rediseño (25/10): la placa del resumen es el foco de la página: filete rojo arriba y el
+                precio con su rótulo, como un instrumento. Mismo contenido y orden que antes. */}
+            <div className="order-2 lg:order-none va-plate border-t-2 border-t-[#D62828] p-6 space-y-4">
               <PublishedLine createdAt={aircraft.createdAt} lastPublishedAt={aircraft.lastPublishedAt} location={listingLocation} />
               <AircraftActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url} />
               <Separator />
               <div>
-                <h1 className="text-2xl font-bold text-[#001F58] break-words">{aircraft.title}</h1>
+                <h1 className="va-h1-keep text-[1.65rem] leading-[1.12] font-extrabold tracking-[-0.015em] text-[#00205B] break-words">{aircraft.title}</h1>
                 {aircraft.category && (
                   <CategoryLinks items={[{ label: aircraft.category.name, href: `/aircraft?category=${encodeURIComponent(aircraft.category.id)}` }]} />
                 )}
-                <p className="text-[var(--sidebar-primary)] text-2xl font-black mt-2">{formattedPrice}</p>
+                <p className="va-label mt-4">Precio</p>
+                <p className="font-heading text-[1.9rem] leading-none font-extrabold tracking-[-0.02em] text-[#2563EB] tabular-nums">{formattedPrice}</p>
               </div>
               <Separator />
               <KeyFacts title="Datos de la aeronave" facts={keyFacts} />
@@ -317,7 +320,7 @@ export default async function AircraftDetailsPage({
 
             <p className="order-3 lg:order-none -mt-2 px-1 text-xs text-slate-500">
               ¿Primera compra?{" "}
-              <Link href="/services/guides/buying-a-used-aircraft" className="font-semibold text-[#001F58] hover:text-[#E70F1F] hover:underline">
+              <Link href="/services/guides/buying-a-used-aircraft" className="font-semibold text-[#00205B] underline decoration-[#D62828] decoration-2 underline-offset-4 hover:text-[#D62828]">
                 Leé el checklist de pre-compra
               </Link>
             </p>
@@ -331,13 +334,13 @@ export default async function AircraftDetailsPage({
             />
 
             {aircraft.documents.length > 0 && (
-              <div className="order-6 lg:order-none border border-slate-200 rounded-lg bg-white p-6 shadow-sm space-y-3">
-                <h2 className="font-bold text-[#001F58] text-sm">Documentación adjunta</h2>
-                <div className="space-y-2">
+              <div className="order-6 lg:order-none va-plate p-6 space-y-3">
+                <h2 className="va-label">Documentación adjunta</h2>
+                <div className="divide-y divide-[#00205B]/10 border-y border-[#00205B]/10">
                   {aircraft.documents.map((doc) => (
-                    <a key={doc.id} href={`/api/listing-documents/${doc.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 border border-slate-200 rounded-xl p-3 hover:bg-slate-50 transition-colors w-full group">
-                      <FileText className="w-7 h-7 text-red-600 shrink-0" />
-                      <span className="text-xs font-semibold text-slate-700 group-hover:text-[#001F58] truncate">{doc.name}</span>
+                    <a key={doc.id} href={`/api/listing-documents/${doc.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 py-3 transition-colors w-full group hover:bg-[#F5F5F5]">
+                      <FileText className="w-6 h-6 text-[#D62828] shrink-0" />
+                      <span className="text-xs font-semibold text-[#00205B] group-hover:underline truncate">{doc.name}</span>
                     </a>
                   ))}
                 </div>

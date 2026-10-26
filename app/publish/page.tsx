@@ -25,9 +25,9 @@ export default async function PublishPage({ searchParams }: Props) {
   if (edit && !editListing) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center gap-4 text-center p-6">
-        <h1 className="text-2xl font-bold text-[#001F58]">No podés editar esta publicación</h1>
+        <h1 className="text-2xl font-bold text-[#00205B]">No podés editar esta publicación</h1>
         <p className="text-sm text-slate-600 max-w-md">No existe o no es tuya.</p>
-        <Link href={`/profile/${user.id}`} className="px-6 py-2.5 bg-[#001F58] text-white rounded-xl font-semibold">
+        <Link href={`/profile/${user.id}`} className="px-6 py-2.5 bg-[#00205B] text-white rounded-xl font-semibold">
           Ir a mi perfil
         </Link>
       </main>

@@ -67,7 +67,7 @@ function ImageField({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={loading}
-            className="rounded-md border border-[#001F58]/20 px-3 py-1.5 text-xs font-semibold text-[#001F58] hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+            className="rounded-md border border-[#00205B]/20 px-3 py-1.5 text-xs font-semibold text-[#00205B] hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
           >
             {url ? "Cambiar" : "Subir"}
           </button>
@@ -99,10 +99,10 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
   };
 
   return (
-    <section className="space-y-5 rounded-lg border border-[#001F58]/12 bg-white p-6">
+    <section className="space-y-5 rounded-lg border border-[#00205B]/12 bg-white p-6">
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Beneficio de tu plan</p>
-        <h2 className="mt-1 text-lg font-bold text-[#001F58]">Página personalizada</h2>
+        <h2 className="mt-1 text-lg font-bold text-[#00205B]">Página personalizada</h2>
         <p className="mt-1 text-sm text-slate-600">Así ven tu perfil los compradores: portada, logo, nombre comercial y contacto.</p>
       </div>
 
@@ -138,7 +138,7 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
               <legend className={LABEL}>Color de acento de tus avisos</legend>
               <div className="flex flex-wrap gap-2">
                 {ACCENT_KEYS.map((k) => (
-                  <label key={k} className="flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2.5 text-xs has-[:checked]:border-[#001F58] has-[:checked]:font-semibold">
+                  <label key={k} className="flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2.5 text-xs has-[:checked]:border-[#00205B] has-[:checked]:font-semibold">
                     <input type="radio" name="accentColor" value={k} defaultChecked={(storefront.accentColor ?? "navy") === k} className="sr-only" />
                     <span className="h-4 w-4 rounded-full" style={{ background: ACCENT_COLORS[k].hex }} aria-hidden />
                     {ACCENT_COLORS[k].label}
@@ -153,7 +153,7 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#001F58] px-5 text-xs font-bold text-white hover:bg-[#00133A] disabled:opacity-60 cursor-pointer"
+            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#00205B] px-5 text-xs font-bold text-white hover:bg-[#001331] disabled:opacity-60 cursor-pointer"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar página"}
           </button>

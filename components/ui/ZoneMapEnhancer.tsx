@@ -82,8 +82,8 @@ export function ZoneMapEnhancer({ latitude, longitude, label }: { latitude: numb
           // No se acerca más que el círculo: la ubicación es aproximada.
           map.setMaxZoom(map.getZoom());
           map.addSource("zona", { type: "geojson", data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } } });
-          map.addLayer({ id: "zona-relleno", type: "fill", source: "zona", paint: { "fill-color": "#E70F1F", "fill-opacity": 0.12 } });
-          map.addLayer({ id: "zona-borde", type: "line", source: "zona", paint: { "line-color": "#E70F1F", "line-width": 2 } });
+          map.addLayer({ id: "zona-relleno", type: "fill", source: "zona", paint: { "fill-color": "#D62828", "fill-opacity": 0.12 } });
+          map.addLayer({ id: "zona-borde", type: "line", source: "zona", paint: { "line-color": "#D62828", "line-width": 2 } });
           setReady(true);
         });
         map.on("error", (e) => console.warn("[mapa] error de MapLibre:", e.error?.message ?? e));

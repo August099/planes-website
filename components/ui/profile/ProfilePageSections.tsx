@@ -63,8 +63,8 @@ export function ProfilePageSections({
         return (
           <section key={s.id} aria-label={s.title || undefined} className="space-y-4">
             {s.title && (
-              <h2 className="font-heading text-xl font-bold text-[#001F58] sm:text-2xl">
-                <span className="mr-2 text-[#E70F1F]" aria-hidden>
+              <h2 className="font-heading text-xl font-bold text-[#00205B] sm:text-2xl">
+                <span className="mr-2 text-[#D62828]" aria-hidden>
                   {"//"}
                 </span>
                 {s.title}

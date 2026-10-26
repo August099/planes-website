@@ -46,6 +46,7 @@ export function HeaderWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <header
+      data-home={isHome || undefined}
       className={`w-full z-40 duration-300 transition-colors ${positionClass} ${
         scrollUpEnabled && !visible ? "-translate-y-full" : ""
       }`}

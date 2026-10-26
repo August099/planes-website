@@ -23,7 +23,7 @@ type Props = {
 };
 
 const DEFAULT_INPUT_CLASS =
-  "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#001F58] focus:ring-2 focus:ring-[#001F58]/15 disabled:opacity-60";
+  "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#00205B] focus:ring-2 focus:ring-[#00205B]/15 disabled:opacity-60";
 
 export function LocalityInput({
   value,
@@ -137,7 +137,7 @@ export function LocalityInput({
               }}
               onMouseEnter={() => setActive(i)}
               className={`flex cursor-pointer items-center justify-between gap-3 px-3 py-2 text-sm ${
-                i === active ? "bg-slate-100 text-[#001F58]" : "text-slate-700"
+                i === active ? "bg-slate-100 text-[#00205B]" : "text-slate-700"
               }`}
             >
               <span className="truncate">{l.name}</span>

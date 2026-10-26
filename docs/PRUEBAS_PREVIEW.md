@@ -15,6 +15,11 @@ Anotar cada resultado en `docs/REGISTRO_DE_CAMBIOS.md` → "Pruebas de pagos" (y
 
 **El Preview no puede usar la base de producción** (ver `docs/PAGOS.md` → "Base del Preview").
 
+> **Desde el 25/10/2026 el Preview tiene su propio proyecto de Supabase** (base y storage), cargado con una
+> copia de producción de ese día. Hasta el 24/10 el Preview usaba, por error, la base de producción. Cómo
+> trabajar con cada base (conexiones, migraciones, backups y refrescar el Preview): `docs/BASES_DE_DATOS.md`.
+> Los pasos de abajo quedan para armar un Preview desde cero.
+
 1. Supabase: un proyecto aparte para el Preview (base + storage). Si ya existe, usarlo.
 2. En ese proyecto, Storage: crear los buckets que usa la web, igual que en producción:
    `listings`, `avatars` y `brands` (públicos) y `documents` e `invoices` (privados).
@@ -120,6 +125,7 @@ Esperar el deploy en Vercel (Deployments) y que termine sin errores.
 Marcar cada punto. Celular real para los que dicen 📱.
 
 ### Lote del 22/10 y 24/10 (VA-176 a VA-191)
+- [ ] **Pago real (VA-164):** Pro a AR$ 100 en el Preview, suscripción con tarjeta real, factura emitida y arrepentimiento con reembolso y nota de crédito. Pasos y variables en `docs/PASE_A_PRODUCCION.md`, sección 8.
 
 - [ ] **Video (VA-176):** en un aviso de Broker con video, tocar "Ver video": el carrusel no cambia solo mientras suena. Pasar a otra foto (flecha, miniatura o deslizando 📱): el video deja de sonar y al volver aparece "Ver video".
 - [ ] **Página personalizada (VA-177):** en `/plans`, `/faq`, Ajustes, el perfil, el buscador y `/admin/plans` no aparece "Página VA".

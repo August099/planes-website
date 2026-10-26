@@ -51,16 +51,16 @@ export function ConfirmDialog({
         onClose();
       }}
       aria-label={title}
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-[#001F58]/15 p-0 text-slate-800 backdrop:bg-[#001331]/60"
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-[#00205B]/15 p-0 text-slate-800 backdrop:bg-[#001331]/60"
     >
       <div className="space-y-4 p-6">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{eyebrow}</p>
-          <h2 className="mt-1 text-lg font-bold text-[#001F58]">{title}</h2>
+          <h2 className="mt-1 text-lg font-bold text-[#00205B]">{title}</h2>
         </div>
         {children}
         {requireText && (
-          <div className="space-y-2 border-l-2 border-[#E70F1F] pl-3">
+          <div className="space-y-2 border-l-2 border-[#D62828] pl-3">
             <p className="text-sm text-slate-700">
               Para seguir, escribí <strong>{requireText}</strong>.
             </p>
@@ -88,7 +88,7 @@ export function ConfirmDialog({
             onClick={() => onConfirm(typed)}
             disabled={blocked}
             className={`rounded-md px-4 py-2 text-xs font-bold text-white disabled:opacity-50 cursor-pointer ${
-              danger ? "bg-[#E70F1F] hover:bg-[#C20D1A]" : "bg-[#001F58] hover:bg-[#00133A]"
+              danger ? "bg-[#D62828] hover:bg-[#B71F1F]" : "bg-[#00205B] hover:bg-[#001331]"
             }`}
           >
             {pending ? "Guardando…" : confirmLabel}

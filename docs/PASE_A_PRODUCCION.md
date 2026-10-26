@@ -78,7 +78,8 @@ renovación y destacados. Las compras, pagos y facturas no se tocan.
 Migraciones que entran (si no estaban): VA-43, VA-44, VA-54, VA-11, VA-16, VA-87, VA-59, VA-83, VA-85,
 VA-80, VA-84 (dos), VA-92 (dos), VA-105 facturación, contraseña, porcentaje de renovación y compra de
 renovación, y desde el 17/10: VA-150, VA-149, VA-148, VA-151 (dos), VA-96 y VA-152 (`va152_cupos` y
-`va152_limpieza`). Lote del 22/10 y 24/10: `va187_fila_pagina_personalizada` (solo datos: "Branding" →
+`va152_limpieza`). **Ya aplicadas en producción el 24/10** (por error, al migrar el que se creía el Preview; backup posterior en
+`Documents/va-backups/backup-prod-20261025-0023.dump`). Lote del 22/10 y 24/10: `va187_fila_pagina_personalizada` (solo datos: "Branding" →
 "Página personalizada"), `va182_fundadores`, `va183_ventas` (rellena fecha y precio de los ya vendidos) y
 `va190_taxonomia_usuarios`.
 
@@ -105,6 +106,20 @@ Guardar cada plan desde `/admin/plans` refresca `/plans` al momento (el script n
 caché: si se cargan los precios de otra forma, `/plans` tarda hasta una hora).
 
 ---
+
+## 3b. Producción sin datos de usuarios (pedido del socio, 25/10)
+
+Antes del lanzamiento se borran todas las cuentas (también las de los admins), los avisos y todo lo que cargaron
+los usuarios, incluidos los datos financieros de prueba. Se conserva la configuración (taxonomía, filtros,
+planes y grilla, guías, ajustes, cupones y gastos fijos). Con producción vacía, el script de VA-190 ya no
+tiene nada que corregir.
+
+1. Backup (`docs/BASES_DE_DATOS.md`, 4.3).
+2. Con `produccion.ps1`: `npx tsx --require ./scripts/stub-server-only.cjs scripts/wipe-user-data.ts` (informe).
+3. Si el informe está bien: el mismo comando con `--apply --confirm-production`.
+4. Archivos del storage (`--storage`): ver antes que el Preview y la base local usan las fotos de producción.
+5. Después del lanzamiento, cada socio se registra y se lo hace admin por SQL (sección 3, "Hacerse admin").
+6. Producción tiene 0 guías: cargarlas con `scripts/seed-guides.ts --allow-remote --apply` (sección 3).
 
 ## 4. Limpieza (solo informe primero)
 
@@ -186,20 +201,32 @@ Esperado: `robots.txt` con `Allow: /` y el sitemap responde `200`.
 
 ---
 
-## 8. Pago real de prueba y facturación
+## 8. Pago real de prueba y facturación (en el Preview)
 
-> ⏳ **A redefinir (VA-152):** el "Pago de prueba" era un pack de AR$ 100 y ya no hay packs (quedó
-> archivado). Los socios definen cómo se prueba (por ejemplo, un Pro de prueba oculto o el Pro con su
-> precio y el arrepentimiento). Los pasos de abajo se ajustan cuando esté decidido (VA-164).
+Decidido el 25/10: se prueba en el **Preview** (base propia desde el 25/10), con el **Pro a AR$ 100** y una
+tarjeta real. Prueba la suscripción completa: débito, aviso de Mercado Pago, Factura C real, arrepentimiento,
+reembolso y nota de crédito. Producción no se toca.
 
-1. Con `BILLING_ENABLED=false`, comprar el **Pago de prueba** (AR$ 100, en `/plans`) con una tarjeta real.
-2. En `/admin/payments` el pago figura aprobado y su factura **pendiente** (no se emitió nada).
-3. Pedir la devolución con el **botón de arrepentimiento** (Perfil → Mis compras → "Arrepentirme", VA-125):
-   prueba el reembolso real. En `/admin/payments` el pago queda reintegrado y la factura pendiente, descartada
-   (si no, **Descartar** la factura a mano escribiendo DESCARTAR).
-   Después, en `/admin/plans`, **Archivar** el "Pago de prueba" para que no se vea más en `/plans`.
-4. Recién ahí: `TUSFACTURAS_MODE=production` y `BILLING_ENABLED=true` (solo Production) y Redeploy.
-5. La próxima venta real emite la Factura C (punto de venta 3). Revisar la primera en `/admin/payments`.
+1. Preview, con la cuenta admin → `/admin/plans`: Pro a **AR$ 100**, **Activo**, guardar.
+2. Vercel, **solo el ambiente Preview**: `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` con las credenciales de
+   **producción** de Mercado Pago; `BILLING_ENABLED=true` y las credenciales reales de TusFacturas (punto de
+   venta 3). Redeploy.
+3. Mercado Pago → tu aplicación → Webhooks → **modo productivo**: URL
+   `https://planes-website-git-pre-production-diodo.vercel.app/api/webhooks/mercadopago` mientras dure la prueba
+   (las suscripciones avisan a la URL de la aplicación, no a una por pedido).
+4. Con una cuenta **que no sea admin**, suscribirse al Pro y pagar con una tarjeta real.
+5. `/admin/payments`: el pago aprobado y la factura **emitida** (Factura C en ARCA).
+6. Ajustes → Mis compras → **Arrepentirme**: se devuelven los AR$ 100 (puede tardar unos días según el medio de
+   pago), la suscripción termina y se emite la **nota de crédito**. Revisarlo en `/admin/payments`.
+7. Al terminar: variables del Preview de vuelta a las de prueba (y `BILLING_ENABLED` como estaba), webhook del
+   modo productivo a la URL de producción (o vacío hasta el lanzamiento) y el Pro del Preview a su precio.
+
+Lo que no tiene vuelta atrás: la Factura C y la nota de crédito quedan en ARCA (avisar a quien lleva la
+contabilidad) y el cobro de AR$ 100 es real hasta que vuelve el reintegro.
+
+Para producción, el día del lanzamiento: `TUSFACTURAS_MODE=production` y `BILLING_ENABLED=true` (solo
+Production), webhook del modo productivo a la URL de producción, y revisar la primera venta real en
+`/admin/payments`.
 
 ---
 

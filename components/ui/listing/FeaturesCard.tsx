@@ -45,31 +45,32 @@ export function FeaturesCard({ title, features }: { title: string; features: Fea
   if (features.length === 0) return null;
 
   return (
-    <section className="border border-slate-200 rounded-lg bg-slate-50 p-5 sm:p-6 shadow-sm">
+    <section className="va-plate p-5 sm:p-6">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex items-center gap-3 text-left cursor-pointer"
+        className="flex w-full items-center justify-between gap-3 text-left cursor-pointer"
       >
-        <h2 className="text-lg font-bold text-[#001F58]">{title}</h2>
-        <ChevronDown className={`w-5 h-5 text-[#001F58] transition-transform ${open ? "" : "-rotate-90"}`} />
+        <h2 className="text-lg font-extrabold tracking-[-0.01em] text-[#00205B]">{title}</h2>
+        <ChevronDown className={`h-5 w-5 text-[#00205B] transition-transform duration-300 ${open ? "" : "-rotate-90"}`} />
       </button>
 
+      {/* Rediseño (25/10): ítems en filas con línea fina e ícono en una placa cuadrada. */}
       {open && (
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 mt-5">
+        <ul className="mt-4 grid grid-cols-1 border-t border-[#00205B]/10 md:grid-cols-2 md:gap-x-8">
           {features.map((feature) => {
             const Icon = ICONS[feature.icon];
             return (
-              <li key={feature.label} className="flex items-center gap-3 text-sm text-slate-700">
-                <span className="w-9 h-9 shrink-0 rounded-full bg-slate-200/70 flex items-center justify-center">
-                  <Icon className="w-4 h-4 text-[#001F58]" />
+              <li key={feature.label} className="flex items-center gap-3 border-b border-[#00205B]/10 py-2.5 text-sm text-slate-700">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[4px] border border-[#00205B]/12 bg-[#F5F5F5]">
+                  <Icon className="h-4 w-4 text-[#00205B]" />
                 </span>
                 <span>
                   {feature.label}
                   {feature.value && (
                     <>
-                      : <strong className="font-bold text-slate-900">{feature.value}</strong>
+                      : <strong className="font-bold text-[#00205B]">{feature.value}</strong>
                     </>
                   )}
                 </span>

@@ -136,20 +136,17 @@ export default function HeaderSearchBar() {
             query.trim().length >= 2 && setIsOpen(true)
           }
           placeholder="Buscar aeronaves, repuestos y más..."
-          className="w-full py-2 pl-5 pr-11 bg-white/95 text-slate-800 text-xs sm:text-sm rounded-full border border-slate-200/80 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#001F58]/30 placeholder:text-slate-400 placeholder:font-light"
+          className="h-10 w-full rounded-full border border-[#00205B]/12 bg-[#F5F5F5] py-2 pr-12 pl-4 text-xs text-[#00205B] transition-colors placeholder:text-[#00205B]/50 focus:border-[#00205B]/45 focus:bg-white focus:outline-none sm:text-sm"
         />
 
+        {/* Rediseño (25/10): el botón es una placa azul pegada al borde del campo. */}
         <button
           type="button"
           onClick={handleSearchSubmit}
-          className="absolute right-3.5 flex items-center text-slate-400 hover:text-[#001F58] transition-colors cursor-pointer"
+          className="absolute right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#00205B] text-white transition-colors hover:bg-[#D62828] cursor-pointer"
           aria-label="Buscar"
         >
-          {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin text-[#001F58]" />
-          ) : (
-            <Search className="w-4 h-4" />
-          )}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
         </button>
       </div>
 
@@ -178,7 +175,7 @@ export default function HeaderSearchBar() {
                 onClick={() => handleTypeChange("Aeronave")}
                 className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                   searchType === "Aeronave"
-                    ? "text-[#001F58]"
+                    ? "text-[#00205B]"
                     : "text-slate-400"
                 }`}
               >
@@ -192,7 +189,7 @@ export default function HeaderSearchBar() {
                 onClick={() => handleTypeChange("Repuesto")}
                 className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                   searchType === "Repuesto"
-                    ? "text-[#001F58]"
+                    ? "text-[#00205B]"
                     : "text-slate-400"
                 }`}
               >
@@ -217,7 +214,7 @@ export default function HeaderSearchBar() {
                   className="w-full p-3 text-left hover:bg-slate-50 transition-colors flex items-center justify-between group cursor-pointer"
                 >
                   <div className="pr-2 truncate">
-                    <p className="text-xs font-bold text-slate-800 truncate group-hover:text-[#001F58]">
+                    <p className="text-xs font-bold text-slate-800 truncate group-hover:text-[#00205B]">
                       {item.title}
                     </p>
 

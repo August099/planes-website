@@ -15,7 +15,7 @@ export function BigFacts({ facts, accent }: { facts: BigFact[]; accent: string }
             <Icon className="h-4 w-4 shrink-0" style={{ color: accent }} aria-hidden />
             {label}
           </dt>
-          <dd className="mt-0.5 text-base font-bold tabular-nums text-[#001F58]">{value}</dd>
+          <dd className="mt-0.5 text-base font-bold tabular-nums text-[#00205B]">{value}</dd>
         </div>
       ))}
     </dl>

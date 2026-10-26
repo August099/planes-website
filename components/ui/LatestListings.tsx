@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { AircraftCard } from "@/components/ui/AircraftCard";
 import { SparePartCard } from "@/components/ui/SparePartCard";
-import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { DisplayTitle, HOME_SQUARE_LINK } from "@/components/ui/home/DisplayTitle";
 import { ScrollCarousel } from "@/components/ui/home/ScrollCarousel";
 
 type CategoryProp = { id?: string; name: string } | string | null;
@@ -44,25 +44,24 @@ export function LatestAircraft({ items }: LatestListingsProps) {
   if (!items || items.length === 0) return null;
 
   return (
-    <section className="py-8 relative">
+    <section className="relative">
       {/* TÍTULO Y NAVEGACIÓN */}
-      <div className="flex justify-between items-end mb-6">
-        <div>
-          <SectionTitle>Últimas Publicaciones</SectionTitle>
-          <p className="text-sm text-slate-600 mt-1">
-            Lo último en aeronaves y repuestos certificados ingresados al
-            mercado
-          </p>
-        </div>
-        <div className="flex gap-4 hidden sm:flex text-sm font-semibold text-[#001F58]">
-          <Link href="/aircraft" className="hover:underline">
-            Ver aviones
-          </Link>
-          <span className="text-slate-300">•</span>
-          <Link href="/spareparts" className="hover:underline">
-            Ver repuestos
-          </Link>
-        </div>
+      <div className="mb-8">
+        <DisplayTitle
+          aside={
+            <div className="flex gap-2">
+              <Link href="/aircraft" className={HOME_SQUARE_LINK}>
+                Ver aviones
+              </Link>
+              <Link href="/spareparts" className={HOME_SQUARE_LINK}>
+                Ver repuestos
+              </Link>
+            </div>
+          }
+        >
+          Últimas Publicaciones
+        </DisplayTitle>
+        <p className="mt-3 text-sm text-slate-600">Lo último en aeronaves y repuestos certificados ingresados al mercado</p>
       </div>
 
       {/* VA-139: en celular se asoma la tarjeta siguiente (1,15); 2 desde 480 px, 3 desde md y 4 desde xl. */}

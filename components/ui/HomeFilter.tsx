@@ -165,7 +165,7 @@ export default function HomeHeroFilter() {
         <button
           type="button"
           onClick={handleSearch}
-          className="col-span-2 md:col-span-1 h-11 bg-[#DC2626] hover:bg-red-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+          className="col-span-2 md:col-span-1 h-11 bg-[#D62828] hover:bg-[#B71F1F] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
         >
           <span>Buscar</span>
         </button>

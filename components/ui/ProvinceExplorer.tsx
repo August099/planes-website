@@ -1,7 +1,7 @@
 import { PROVINCES, provinceShortName } from "@/lib/provinces";
 import { ARGENTINA_VIEWBOX, CABA_MARKER, PROVINCE_PATHS } from "@/components/ui/argentina-map/paths";
 import { ProvinceExplorerClient, type ProvinceCount } from "@/components/ui/ProvinceExplorerClient";
-import { SectionTitle } from "@/components/ui/home/SectionTitle";
+import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
 
 // "Explorá por provincia" (VA-77). El mapa SVG se arma en el servidor (los paths van en el HTML,
 // no en el JS del cliente); ProvinceExplorerClient solo maneja hover y selección.
@@ -30,7 +30,7 @@ export function ProvinceExplorer({ counts }: { counts: ProvinceCounts }) {
         ? { tabIndex: 0, role: "button", "aria-label": `${label}, ${avisos(totalOf(slug))}` }
         : { "aria-hidden": true }),
       className:
-        "cursor-pointer fill-[#CFE3F6] data-[has=1]:fill-[#0A4C96]/45 stroke-white transition-[fill] duration-150 motion-reduce:transition-none outline-none",
+        "cursor-pointer fill-[#CFCFCF]/60 data-[has=1]:fill-[#0A4C96]/55 stroke-white transition-[fill] duration-150 motion-reduce:transition-none outline-none",
     };
   };
 
@@ -46,10 +46,10 @@ export function ProvinceExplorer({ counts }: { counts: ProvinceCounts }) {
   );
 
   return (
-    <section className="py-8" aria-labelledby="province-explorer-title">
-      <div className="mb-6">
-        <SectionTitle id="province-explorer-title">Explorá por provincia</SectionTitle>
-        <p className="text-sm text-slate-600 mt-1">Encontrá aeronaves y repuestos cerca tuyo</p>
+    <section aria-labelledby="province-explorer-title">
+      <div className="mb-8">
+        <DisplayTitle id="province-explorer-title">Explorá por provincia</DisplayTitle>
+        <p className="mt-3 text-sm text-slate-600">Encontrá aeronaves y repuestos cerca tuyo</p>
       </div>
       <ProvinceExplorerClient provinces={provinces} map={map} />
     </section>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const policySections = [
   { id: "recoleccion", title: "1. Datos que recolectamos" },
@@ -24,19 +25,20 @@ export default function PrivacidadPage() {
       <PageBackground page="legal" />
 
       <div className="container mx-auto px-4 pt-6 pb-20 max-w-6xl">
-        <Breadcrumbs items={[{ label: "Privacidad" }]} className="mb-8 sm:mb-12" />
+        <Breadcrumbs items={[{ label: "Privacidad" }]} className="mb-6" />
+        <PageHeader variant="plain" routeId="va-route-privacy" className="mb-10" title="Política de privacidad" eyebrow="Última actualización: Octubre 2026" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
           
           {/* MENÚ LATERAL: Índices del documento legal */}
-          <aside className="md:col-span-1 flex flex-col gap-2 border-l border-[#001F58]/20 pl-4 md:sticky md:top-24">
-            <p className="text-xs font-semibold text-[#001F58]/50 uppercase tracking-wider mb-2">
+          <aside className="md:col-span-1 flex flex-col gap-2 border-l border-[#00205B]/20 pl-4 md:sticky md:top-24">
+            <p className="text-xs font-semibold text-[#00205B]/50 uppercase tracking-wider mb-2">
               Índice
             </p>
             {policySections.map((section) => (
               <a
                 key={section.id}
                 href={`#${section.id}`}
-                className="text-sm py-1.5 font-medium text-[#001F58]/70 hover:text-[#001F58] transition-colors scroll-smooth"
+                className="text-sm py-1.5 font-medium text-[#00205B]/70 hover:text-[#00205B] transition-colors scroll-smooth"
               >
                 {section.title}
               </a>
@@ -45,14 +47,8 @@ export default function PrivacidadPage() {
 
           {/* CUERPO PRINCIPAL: Contenido de la Política de Privacidad */}
           <section className="md:col-span-3">
-            <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-[#001F58] mb-2">
-              Política de privacidad
-            </h1>
-            <p className="text-sm text-[#001F58]/60 mb-12 border-b border-[#001F58]/20 pb-4">
-              <strong>Última actualización:</strong> Octubre 2026.
-            </p>
 
-            <div className="flex flex-col gap-10 font-sans text-sm text-[#001F58]/80 leading-relaxed max-w-3xl">
+            <div className="flex flex-col gap-10 font-sans text-sm text-[#00205B]/80 leading-relaxed max-w-3xl">
               
               <p>
                 El presente documento establece los términos en que <strong>Ventas Aeronáuticas</strong> trata los datos personales de sus usuarios en la República Argentina, de conformidad con la Ley N° 25.326 de Protección de Datos Personales y las normativas vigentes de la Agencia de Acceso a la Información Pública (AAIP).
@@ -60,11 +56,11 @@ export default function PrivacidadPage() {
 
               {/* SECCIÓN 1 */}
               <div id="recoleccion" className="flex flex-col gap-3 scroll-mt-24">
-                <h2 className="font-heading text-xl font-semibold text-[#001F58]">
+                <h2 className="font-heading text-xl font-semibold text-[#00205B]">
                   1. Datos que recolectamos
                 </h2>
                 <p>Dependiendo de cómo uses la plataforma, recolectamos la siguiente información:</p>
-                <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
+                <ul className="list-disc pl-5 space-y-2 text-[#00205B]/90">
                   <li><strong>Datos de cuenta:</strong> nombre, correo electrónico, contraseña (guardada cifrada, nunca en texto), teléfono, ciudad y provincia, tipo de cuenta (particular o empresa) y foto de perfil. Si iniciás sesión con <strong>Google</strong>, recibimos de Google tu nombre, tu correo y tu foto de perfil; no accedemos a tu contraseña de Google ni a otros datos de tu cuenta.</li>
                   <li><strong>Datos de las publicaciones:</strong> detalles técnicos de las aeronaves y repuestos, precio, ubicación, fotografías, el link de YouTube si agregás un video y los documentos que decidas adjuntar.</li>
                   {/* VA-189 */}
@@ -79,11 +75,11 @@ export default function PrivacidadPage() {
 
               {/* SECCIÓN 2 */}
               <div id="finalidad" className="flex flex-col gap-3 scroll-mt-24">
-                <h2 className="font-heading text-xl font-semibold text-[#001F58]">
+                <h2 className="font-heading text-xl font-semibold text-[#00205B]">
                   2. Finalidad del tratamiento de los datos
                 </h2>
                 <p>Usamos la información únicamente para:</p>
-                <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
+                <ul className="list-disc pl-5 space-y-2 text-[#00205B]/90">
                   <li>Crear y administrar tu cuenta, verificar tu correo y permitirte recuperar el acceso.</li>
                   <li>Mostrar tus publicaciones y permitir que los interesados te contacten por WhatsApp, teléfono o correo.</li>
                   <li>Cobrar los planes, emitir las facturas, gestionar cancelaciones, cambios de plan y devoluciones (incluido el derecho de arrepentimiento).</li>
@@ -97,10 +93,10 @@ export default function PrivacidadPage() {
 
               {/* SECCIÓN 3 */}
               <div id="publicidad" className="flex flex-col gap-3 scroll-mt-24">
-                <h2 className="font-heading text-xl font-semibold text-[#001F58]">
+                <h2 className="font-heading text-xl font-semibold text-[#00205B]">
                   3. Qué se publica y qué no
                 </h2>
-                <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
+                <ul className="list-disc pl-5 space-y-2 text-[#00205B]/90">
                   <li><strong>Público:</strong> el contenido de tus avisos (título, datos técnicos, precio, fotos, video, la matrícula si la cargás, ciudad y provincia, y una zona aproximada en un mapa, nunca la dirección exacta), los documentos que adjuntes (cualquier visitante los puede ver y descargar, como avisa el formulario), tu nombre de vendedor, tu tipo de cuenta, los medios de contacto que figuran en tu aviso (teléfono, WhatsApp y correo), tu página personalizada si la tenés, y las preguntas y respuestas.</li>
                   <li><strong>Privado:</strong> tus datos de facturación y tus pagos, lo que nos contás sobre tus ventas y los reportes que hacés.</li>
                   <li><strong>Responsabilidad del vendedor:</strong> es responsabilidad del vendedor no incluir en fotos, descripciones o documentos datos personales de terceros sin su consentimiento.</li>
@@ -109,7 +105,7 @@ export default function PrivacidadPage() {
 
               {/* SECCIÓN 4 */}
               <div id="exencion" className="flex flex-col gap-3 scroll-mt-24">
-                <h2 className="font-heading text-xl font-semibold text-[#001F58]">
+                <h2 className="font-heading text-xl font-semibold text-[#00205B]">
                   4. Exención de responsabilidad por transacciones entre particulares
                 </h2>
                 <p>
@@ -119,11 +115,11 @@ export default function PrivacidadPage() {
 
               {/* SECCIÓN 5 */}
               <div id="terceros" className="flex flex-col gap-3 scroll-mt-24">
-                <h2 className="font-heading text-xl font-semibold text-[#001F58]">
+                <h2 className="font-heading text-xl font-semibold text-[#00205B]">
                   5. Proveedores y compartición de datos
                 </h2>
                 <p>Tus datos personales no se venden, alquilan ni ceden. Solo se comparten con los proveedores que necesitamos para prestar el servicio, y únicamente lo indispensable para cada función:</p>
-                <ul className="list-disc pl-5 space-y-2 text-[#001F58]/90">
+                <ul className="list-disc pl-5 space-y-2 text-[#00205B]/90">
                   <li><strong>Mercado Pago:</strong> procesamiento de pagos, suscripciones y devoluciones.</li>
                   <li><strong>Google:</strong> inicio de sesión con tu cuenta de Google, si elegís esa opción.</li>
                   <li><strong>Supabase:</strong> base de datos y almacenamiento de fotos y documentos.</li>
@@ -139,14 +135,14 @@ export default function PrivacidadPage() {
 
               {/* SECCIÓN 6 */}
               <div id="cookies" className="flex flex-col gap-3 scroll-mt-24">
-                <h2 className="font-heading text-xl font-semibold text-[#001F58]">
+                <h2 className="font-heading text-xl font-semibold text-[#00205B]">
                   6. Cookies y medición
                 </h2>
                 <p>Usamos cookies y el almacenamiento del navegador para que el sitio funcione y, solo si lo aceptás, para medir su uso. No usamos cookies de publicidad ni de seguimiento de terceros.</p>
                 <p>La primera vez que entrás, un cartel te pregunta: con <strong>&quot;Aceptar&quot;</strong> se usan también las de medición; con <strong>&quot;Solo necesarias&quot;</strong>, no se crean. Las visitas se siguen contando igual, sin identificarte. Podés cambiar la elección cuando quieras desde el link <strong>&quot;Cookies&quot;</strong> del pie de la página; se recuerda por un año.</p>
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[560px] text-left text-sm text-[#001F58]/90">
-                    <thead className="border-b border-[#001F58]/15 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                  <table className="w-full min-w-[560px] text-left text-sm text-[#00205B]/90">
+                    <thead className="border-b border-[#00205B]/15 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                       <tr>
                         <th className="py-2 pr-3">Qué</th>
                         <th className="py-2 pr-3">Tipo</th>
@@ -154,7 +150,7 @@ export default function PrivacidadPage() {
                         <th className="py-2">Duración</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#001F58]/10">
+                    <tbody className="divide-y divide-[#00205B]/10">
                       <tr>
                         <td className="py-2 pr-3 align-top font-mono text-xs">authjs.session-token (y sus variantes __Secure-/__Host-), authjs.csrf-token, authjs.callback-url</td>
                         <td className="py-2 pr-3 align-top">Necesaria</td>
@@ -214,17 +210,17 @@ export default function PrivacidadPage() {
 
               {/* SECCIÓN 7 */}
               <div id="derechos" className="flex flex-col gap-3 scroll-mt-24">
-                <h2 className="font-heading text-xl font-semibold text-[#001F58]">
+                <h2 className="font-heading text-xl font-semibold text-[#00205B]">
                   7. Derechos del titular de los datos
                 </h2>
                 <p>
                   Podés acceder a tus datos, actualizarlos, rectificarlos o pedir que los eliminemos (Ley N° 25.326). Buena parte se edita directamente desde tu perfil. Para el resto, o para eliminar tu cuenta, escribinos a{" "}
-                  <a href="mailto:aeronauticasventas@gmail.com" className="font-semibold text-[#001F58] underline hover:text-[#001F58]/80 transition-colors">aeronauticasventas@gmail.com</a> desde el correo de tu cuenta o adjuntando una prueba que acredite tu identidad. Los datos de pagos y facturas se conservan el tiempo que exige la normativa fiscal.
+                  <a href="mailto:aeronauticasventas@gmail.com" className="font-semibold text-[#00205B] underline hover:text-[#00205B]/80 transition-colors">aeronauticasventas@gmail.com</a> desde el correo de tu cuenta o adjuntando una prueba que acredite tu identidad. Los datos de pagos y facturas se conservan el tiempo que exige la normativa fiscal.
                 </p>
               </div>
 
               {/* Marco Legal Oficial Destacado */}
-              <div className="bg-[#001F58]/5 border-l-2 border-[#001F58] p-5 mt-4 rounded-r-md italic text-xs text-[#001F58]/90 space-y-3">
+              <div className="bg-[#00205B]/5 border-l-2 border-[#00205B] p-5 mt-4 rounded-r-md italic text-xs text-[#00205B]/90 space-y-3">
                 <p>
                   “El titular de los datos personales tiene la facultad de ejercer el derecho de acceso a los mismos en forma gratuita a intervalos no inferiores a seis meses, salvo que se acredite un interés legítimo al efecto conforme lo establecido en el artículo 14, inciso 3 de la Ley Nº 25.326.”
                 </p>

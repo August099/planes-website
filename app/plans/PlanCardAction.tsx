@@ -31,8 +31,8 @@ export function PlanCardAction({
 
   const base = "w-full min-h-11 py-3 px-4 rounded-md font-bold text-sm text-center transition-colors flex items-center justify-center gap-2";
   // El plan destacado lleva el CTA rojo; el resto, el azul de marca (pautas de diseño).
-  const primary = plan.popular ? "bg-[#E70F1F] hover:bg-[#C20D1A] text-white" : "bg-[#001F58] hover:bg-[#00133A] text-white";
-  const secondary = "border border-[#001F58]/25 text-[#001F58] hover:bg-[#001F58]/5";
+  const primary = plan.popular ? "bg-[#D62828] hover:bg-[#B71F1F] text-white" : "bg-[#00205B] hover:bg-[#001331] text-white";
+  const secondary = "border border-[#00205B]/25 text-[#00205B] hover:bg-[#00205B]/5";
   const note = "mt-2 text-xs text-slate-500";
 
   const checkout = (label: string) => (

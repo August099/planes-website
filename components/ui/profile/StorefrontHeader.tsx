@@ -33,7 +33,7 @@ type Props = {
   editHref?: string;
 };
 
-const LABEL = "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
+const LABEL = "va-label";
 
 export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, location, memberSince, instagram, facebook }: Props) {
   const name = storefront.businessName || fallbackName;
@@ -51,9 +51,9 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
   ].filter(Boolean) as { label: string; value: string; href: string; icon: React.ReactNode }[];
 
   return (
-    <section className="overflow-hidden rounded-lg border border-[#001F58]/10 bg-white">
+    <section className="va-plate overflow-hidden">
       {/* Portada */}
-      <div className="relative aspect-[3/1] w-full bg-[#001F58] sm:aspect-[4/1]">
+      <div className="relative isolate aspect-[3/1] w-full overflow-hidden bg-[linear-gradient(120deg,#0A4C96_0%,#00205B_72%)] sm:aspect-[4/1]">
         {storefront.coverUrl ? (
           <Image src={storefront.coverUrl} alt="" fill sizes="(min-width: 1280px) 1248px, 100vw" className="object-cover" priority />
         ) : (
@@ -71,16 +71,16 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
             {storefront.logoUrl ? (
               <Image src={storefront.logoUrl} alt={`Logo de ${name}`} fill sizes="112px" className="object-contain" />
             ) : (
-              <span className="flex h-full w-full items-center justify-center bg-[#001F58]/5 text-3xl font-bold text-[#001F58]">
+              <span className="flex h-full w-full items-center justify-center bg-[#00205B]/5 text-3xl font-bold text-[#00205B]">
                 {name.charAt(0).toUpperCase()}
               </span>
             )}
           </div>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <h1 className="text-2xl font-bold text-[#001F58] sm:text-3xl">{name}</h1>
+            <h1 className="va-h1-keep text-[1.9rem] leading-[1.08] font-extrabold tracking-[-0.02em] text-[#00205B] sm:text-[2.35rem]">{name}</h1>
             {storefront.verified && (
-              <span className="inline-flex items-center gap-1 rounded-sm bg-[#001F58] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
+              <span className="inline-flex items-center gap-1 rounded-sm bg-[#00205B] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
                 <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
                 {/* VA-105 (14/10): solo con un plan que incluye la insignia (la Suscripción VA no la tiene). */}
                 Cuenta verificada
@@ -94,9 +94,9 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
         </div>
 
         {/* Placa de contacto */}
-        <aside className="self-start rounded-md border border-[#001F58]/12 lg:mt-2">
-          <p className={`border-b border-[#001F58]/12 px-4 py-3 ${LABEL}`}>Contacto</p>
-          <dl className="divide-y divide-[#001F58]/10 text-sm">
+        <aside className="self-start rounded-md border border-[#00205B]/14 border-t-2 border-t-[#D62828] lg:mt-2">
+          <p className={`border-b border-[#00205B]/12 px-4 py-3 ${LABEL}`}>Contacto</p>
+          <dl className="divide-y divide-[#00205B]/10 text-sm">
             {location && (
               <div className="flex items-center justify-between gap-3 px-4 py-3">
                 <dt className="flex items-center gap-2 text-slate-500">
@@ -113,7 +113,7 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
                   {c.label}
                 </dt>
                 <dd className="min-w-0 truncate text-right">
-                  <a href={c.href} target="_blank" rel="noopener noreferrer" className="font-medium text-[#001F58] hover:text-[#C20D1A] hover:underline">
+                  <a href={c.href} target="_blank" rel="noopener noreferrer" className="font-medium text-[#00205B] hover:text-[#B71F1F] hover:underline">
                     {c.value}
                   </a>
                 </dd>

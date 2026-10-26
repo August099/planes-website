@@ -9,7 +9,7 @@ export function CategoryLinks({ items }: { items: { label: string; href: string 
       {items.map((item, i) => (
         <span key={item.href} className="flex items-center gap-x-1.5">
           {i > 0 && <span aria-hidden className="text-slate-400">›</span>}
-          <Link href={item.href} className="font-medium text-[#001F58] hover:text-[#E70F1F] hover:underline">
+          <Link href={item.href} className="font-medium text-[#00205B] hover:text-[#D62828] hover:underline">
             {item.label}
           </Link>
         </span>

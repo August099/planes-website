@@ -45,7 +45,7 @@ export function RepublishNotice({ view, onChooseListings }: { view: RepublishVie
       refreshHeaderIndicators();
     };
     return (
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#001F58]/12 bg-white px-4 py-3 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#00205B]/12 bg-white px-4 py-3 text-sm">
         <p className="text-slate-700">
           {done ??
             (view.availableAt
@@ -56,7 +56,7 @@ export function RepublishNotice({ view, onChooseListings }: { view: RepublishVie
           type="button"
           disabled={!!view.availableAt || pending}
           onClick={() => setConfirm(true)}
-          className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#001F58] px-4 text-sm font-bold text-white hover:bg-[#00133A] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#00205B] px-4 text-sm font-bold text-white hover:bg-[#001331] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
         >
           <RefreshCw className="h-4 w-4" aria-hidden />
           Republicar todas
@@ -82,11 +82,11 @@ export function RepublishNotice({ view, onChooseListings }: { view: RepublishVie
 
   if (view.remaining <= 0 || dismissed) return null;
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[#001F58]/12 bg-white px-4 py-3 text-sm">
-      <p className="min-w-0 flex-1 border-l-2 border-[#E70F1F] pl-3 text-slate-700">
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[#00205B]/12 bg-white px-4 py-3 text-sm">
+      <p className="min-w-0 flex-1 border-l-2 border-[#D62828] pl-3 text-slate-700">
         Tenés <strong>{plural(view.remaining)}</strong> disponible{view.remaining === 1 ? "" : "s"}: volvé a poner tus avisos primero en Últimas publicaciones.
       </p>
-      <button type="button" onClick={onChooseListings} className="min-h-10 rounded-md border border-[#001F58]/20 px-3 text-sm font-semibold text-[#001F58] hover:bg-slate-50 cursor-pointer">
+      <button type="button" onClick={onChooseListings} className="min-h-10 rounded-md border border-[#00205B]/20 px-3 text-sm font-semibold text-[#00205B] hover:bg-slate-50 cursor-pointer">
         Elegir avisos
       </button>
       <button
@@ -96,7 +96,7 @@ export function RepublishNotice({ view, onChooseListings }: { view: RepublishVie
           dismissRepublishNotice(view.key);
           setDismissed(true);
         }}
-        className="p-2 text-slate-400 hover:text-[#001F58] cursor-pointer"
+        className="p-2 text-slate-400 hover:text-[#00205B] cursor-pointer"
       >
         <X className="h-4 w-4" />
       </button>

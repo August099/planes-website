@@ -36,6 +36,10 @@ const SELLER_TYPE_LABELS: Record<string, string> = {
 
 const BRANDS_VISIBLE = 6;
 
+// Rediseño (25/10): casillas en azul de marca (el rojo queda para las acciones). Solo en los filtros:
+// el Checkbox compartido no se toca porque también lo usa el admin.
+const FILTER_CHECKBOX = "size-[18px] rounded-[6px] border-[#00205B]/35 data-checked:border-[#00205B] data-checked:bg-[#00205B] data-checked:text-white";
+
 // El estado del formulario se arma desde la URL. Con la key, cada cambio de URL (Home, volver
 // atrás, búsqueda del header) vuelve a armarlo en vez de quedar con lo del primer montaje (VA-31).
 export function FiltersSidebar(props: Props) {
@@ -170,7 +174,23 @@ function FiltersSidebarForm({ categories, brands }: Props) {
     setIsOpenMobile(false);
   }, [searchParams, minPrice, maxPrice, minYear, maxYear, categoryIds, brandIds, modelIds, subModelIds, sellerTypes, condition, financing, trade, rent, province, router, pathname]);
 
+  // 26/10: también vacía el formulario. Antes solo cambiaba la URL: si los filtros estaban marcados sin
+  // aplicar (URL ya limpia), "Limpiar" no hacía nada y las casillas seguían marcadas.
   const clearFilters = () => {
+    setMinPrice("");
+    setMaxPrice("");
+    setMinYear("");
+    setMaxYear("");
+    setCategoryIds([]);
+    setBrandIds([]);
+    setModelIds([]);
+    setSubModelIds([]);
+    setSellerTypes([]);
+    setCondition([]);
+    setFinancing(false);
+    setTrade(false);
+    setRent(false);
+    setProvince("");
     const sort = searchParams.get("sort");
     router.push(sort ? `${pathname}?sort=${sort}` : pathname);
     setIsOpenMobile(false);
@@ -288,9 +308,9 @@ function FiltersSidebarForm({ categories, brands }: Props) {
   );
 
   const checkRow = (id: string, checked: boolean, onChange: () => void, label: React.ReactNode, extraClass = "") => (
-    <div key={id} className={`flex items-center gap-2 min-h-9 ${extraClass}`}>
-      <Checkbox id={id} checked={checked} onCheckedChange={onChange} />
-      <label htmlFor={id} className="text-sm cursor-pointer flex-1 select-none py-1">
+    <div key={id} className={`flex items-center gap-2.5 min-h-9 ${extraClass}`}>
+      <Checkbox id={id} checked={checked} onCheckedChange={onChange} className={FILTER_CHECKBOX} />
+      <label htmlFor={id} className="text-sm text-[#00205B] cursor-pointer flex-1 select-none py-1">
         {label}
       </label>
     </div>
@@ -337,8 +357,8 @@ function FiltersSidebarForm({ categories, brands }: Props) {
             return (
               <div key={brand.id} className="flex flex-col">
                 <div className="flex items-center gap-2 min-h-9">
-                  <Checkbox id={`brand-${brand.id}`} checked={isSelected} onCheckedChange={() => toggleBrand(brand.id)} />
-                  <label htmlFor={`brand-${brand.id}`} className="text-sm cursor-pointer flex-1 select-none py-1">
+                  <Checkbox id={`brand-${brand.id}`} checked={isSelected} onCheckedChange={() => toggleBrand(brand.id)} className={FILTER_CHECKBOX} />
+                  <label htmlFor={`brand-${brand.id}`} className="text-sm text-[#00205B] cursor-pointer flex-1 select-none py-1">
                     {brand.name}
                   </label>
                   {isSelected && brand.models.length > 0 && (

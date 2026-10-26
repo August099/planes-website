@@ -6,9 +6,10 @@ import sharp from "sharp";
 import { mkdir, stat } from "node:fs/promises";
 
 const CARDS = {
-  "planes.webp": "bkg-aircraft.png", // agrícola al atardecer (elegida por el socio, 9/10)
-  "spareparts.webp": "bkg-spareparts.png", // depósito de repuestos (elegida por el socio, 9/10)
-  "services.webp": "card-service.png",
+  // Fotos nuevas del socio (26/10) para las tarjetas del final de la Home.
+  "aircraft-home.webp": "aircraft-home.jpg",
+  "sparepart-home.webp": "sparepart-home.jpg",
+  "services-home.webp": "services-home.jpg",
 };
 
 await mkdir("public/cards", { recursive: true });

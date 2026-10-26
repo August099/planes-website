@@ -22,12 +22,12 @@ export function ListingLocationMap({ latitude, longitude, city, province, title 
   const label = `Mapa de la zona aproximada${place ? `: ${place}` : ""}`;
 
   return (
-    <section className={`overflow-hidden rounded-lg border border-[#001F58]/12 bg-white ${className}`}>
-      <p className="border-b border-[#001F58]/10 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{title}</p>
+    <section className={`overflow-hidden rounded-lg border border-[#00205B]/12 bg-white ${className}`}>
+      <p className="border-b border-[#00205B]/10 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{title}</p>
       <div className="relative h-[220px] bg-[#F3F7FB] sm:h-[260px]">
         <ZoneMapEnhancer latitude={latitude} longitude={longitude} label={label} />
       </div>
-      {place && <p className="border-t border-[#001F58]/10 px-4 py-3 text-sm text-slate-600">Ubicación aproximada: {place}</p>}
+      {place && <p className="border-t border-[#00205B]/10 px-4 py-3 text-sm text-slate-600">Ubicación aproximada: {place}</p>}
     </section>
   );
 }

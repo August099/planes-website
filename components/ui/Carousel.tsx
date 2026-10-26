@@ -154,7 +154,7 @@ export function AircraftGallery({ images, title, video = null, fade = false }: G
                         mainSwiperRef.current?.autoplay?.stop();
                         setPlaying(true);
                       }} className="flex flex-col items-center gap-3 text-white cursor-pointer">
-                      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#E70F1F]">
+                      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#D62828]">
                         <Play className="ml-1 h-7 w-7" fill="currentColor" />
                       </span>
                       <span className="text-sm font-semibold">Ver video</span>

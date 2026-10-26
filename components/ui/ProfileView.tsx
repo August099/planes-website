@@ -22,6 +22,7 @@ import { USER_TYPE_LABELS } from "@/lib/user-types";
 import { StorefrontHeader, type StorefrontData } from "@/components/ui/profile/StorefrontHeader";
 import type { SubscriptionSummary } from "@/lib/subscriptions";
 import { SoldDialog } from "@/components/ui/profile/SoldDialog";
+import { FlightPaths } from "@/components/ui/home/FlightPaths";
 
 function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -178,8 +179,13 @@ export function ProfileView({
           isOwner={isOwner}
         />
       ) : (
-        <div className="p-6 rounded-lg bg-white border border-[#001F58]/12 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6">
-          <div className="relative group w-24 h-24 rounded-full overflow-hidden bg-slate-200 border-2 border-[#001F58]/10 shrink-0 flex items-center justify-center">
+        <div className="va-plate overflow-hidden">
+          {/* Rediseño (26/10): portada con el degradé de la marca y la ruta animada; la foto se apoya encima. */}
+          <div aria-hidden className="relative isolate h-24 overflow-hidden bg-[linear-gradient(120deg,#0A4C96_0%,#00205B_72%)] sm:h-28">
+            <FlightPaths id="va-route-profile" tone="dark" className="-z-10" />
+          </div>
+          <div className="flex flex-col items-center gap-6 px-6 pb-6 md:flex-row md:items-start">
+          <div className="relative -mt-12 w-24 h-24 rounded-2xl overflow-hidden bg-[#00205B] shrink-0 flex items-center justify-center ring-4 ring-white shadow-lg">
             {profileUser.image ? (
               <Image
                 src={profileUser.image}
@@ -188,68 +194,56 @@ export function ProfileView({
                 className="object-cover"
               />
             ) : (
-              <svg
-                className="w-16 h-16 text-slate-400 translate-y-2"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-              </svg>
+              <span className="text-4xl font-extrabold text-white">
+                {(profileUser.name || "V").charAt(0).toUpperCase()}
+              </span>
             )}
-
           </div>
 
-          <div className="flex-1 text-center md:text-left space-y-2 w-full">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-              <div>
-                {/* NOMBRE DEL USUARIO */}
-                <h1 className="text-2xl font-bold text-[#001F58]">
-                  {profileUser.name || "Usuario de Ventas Aeronáuticas"}
-                </h1>
+          <div className="flex-1 text-center md:pt-4 md:text-left w-full">
+            {/* Tipo de cuenta */}
+            <p className="va-label">
+              {USER_TYPE_LABELS[profileUser.userType as keyof typeof USER_TYPE_LABELS] ?? profileUser.userType}
+            </p>
+            <h1 className="va-h1-keep mt-1 text-[1.9rem] leading-[1.08] font-extrabold tracking-[-0.02em] text-[#00205B]">
+              {profileUser.name || "Usuario de Ventas Aeronáuticas"}
+            </h1>
 
-                {/* INSIGNIA: TIPO DE CUENTA */}
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-1.5">
-                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-semibold uppercase tracking-wider">
-                    {USER_TYPE_LABELS[profileUser.userType as keyof typeof USER_TYPE_LABELS] ?? profileUser.userType}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-slate-500 pt-1">
+            <div className="mt-3 flex flex-wrap items-center justify-center md:justify-start gap-x-5 gap-y-2 text-[13px] text-slate-600">
               {locationText && (
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5" />
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-[#D62828]" />
                   {locationText}
                 </span>
               )}
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
+              <span className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#00205B]/60" />
                 Miembro desde {memberSince}
               </span>
 
               {isOwner && profileUser.phone && (
-                <span className="flex items-center gap-1 font-medium text-slate-700">
-                  <Phone className="w-3.5 h-3.5 text-blue-600" />
+                <span className="flex items-center gap-1.5 font-medium text-[#00205B] tabular-nums">
+                  <Phone className="w-3.5 h-3.5 text-[#00205B]/60" />
                   {profileUser.phone}
                 </span>
               )}
               {isOwner && (
-                <span className="flex items-center gap-1 font-medium text-slate-700">
-                  <Mail className="w-3.5 h-3.5 text-blue-600" />
+                <span className="flex items-center gap-1.5 font-medium text-[#00205B]">
+                  <Mail className="w-3.5 h-3.5 text-[#00205B]/60" />
                   {profileUser.email}
                 </span>
               )}
             </div>
 
             {(profileUser.facebook || profileUser.instagram) && (
-              <div className="flex items-center justify-center md:justify-start gap-3 pt-2">
+              <div className="flex items-center justify-center md:justify-start gap-2 pt-3">
                 {profileUser.facebook && (
                   <a
                     href={profileUser.facebook}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-slate-400 hover:text-blue-600 transition-colors"
+                    aria-label="Facebook"
+                    className="flex h-9 w-9 items-center justify-center rounded-[4px] border border-[#00205B]/15 text-[#00205B] transition-colors hover:border-[#D62828] hover:text-[#D62828]"
                   >
                     <FacebookIcon className="w-4 h-4" />
                   </a>
@@ -259,7 +253,8 @@ export function ProfileView({
                     href={profileUser.instagram}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-slate-400 hover:text-pink-600 transition-colors"
+                    aria-label="Instagram"
+                    className="flex h-9 w-9 items-center justify-center rounded-[4px] border border-[#00205B]/15 text-[#00205B] transition-colors hover:border-[#D62828] hover:text-[#D62828]"
                   >
                     <InstagramIcon className="w-4 h-4" />
                   </a>
@@ -267,18 +262,19 @@ export function ProfileView({
               </div>
             )}
           </div>
+          </div>
         </div>
       )}
 
 
       {/* VA-94: CTA para el dueño sin plan: beneficios de la Página VA (discreto, sin pop-up). VA-105: "Pro" pasó a "Página VA". */}
       {isOwner && !storefront && !subscription?.active && (
-        <aside className="flex flex-col gap-3 rounded-lg border border-[#001F58]/12 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <aside className="va-plate flex flex-col gap-3 border-l-2 border-l-[#D62828] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-slate-700">
-            <span className="font-semibold text-[#001F58]">Con la página personalizada</span> tu perfil pasa a ser tu página: portada, logo, nombre
+            <span className="font-semibold text-[#00205B]">Con la página personalizada</span> tu perfil pasa a ser tu página: portada, logo, nombre
             comercial y WhatsApp.
           </p>
-          <Link href="/plans" className="shrink-0 text-sm font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+          <Link href="/plans" className="shrink-0 text-sm font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828]">
             Ver planes
           </Link>
         </aside>
@@ -293,7 +289,7 @@ export function ProfileView({
               <button
                 type="button"
                 onClick={() => setEditingPage(true)}
-                className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#001F58] px-4 text-sm font-bold text-white hover:bg-[#00133A] cursor-pointer"
+                className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#00205B] px-4 text-sm font-bold text-white hover:bg-[#D62828] cursor-pointer"
               >
                 <Edit className="h-4 w-4" />
                 Editar
@@ -312,13 +308,13 @@ export function ProfileView({
       <>
       {/* Selector de pestañas responsive */}
       {/* En celular las pestañas van en grilla de 2 columnas: con scroll horizontal "Ajustes" quedaba escondida (VA-60) */}
-      <div className="grid grid-cols-2 gap-x-4 border-b border-slate-200 sm:flex sm:gap-6 sm:overflow-x-auto scrollbar-none">
+      <div className="grid grid-cols-2 gap-x-4 border-b border-[#00205B]/12 sm:flex sm:gap-6 sm:overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab("listings")}
-          className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+          className={`pt-2 pb-3 sm:pt-0 text-sm font-bold tabular-nums flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
             activeTab === "listings"
-              ? "border-[#001F58] text-[#001F58]"
-              : "border-transparent text-slate-400 hover:text-slate-600"
+              ? "border-[#D62828] text-[#00205B]"
+              : "border-transparent text-[#00205B]/50 hover:text-[#00205B]"
           }`}
         >
           <Plane className="w-4 h-4" />
@@ -329,10 +325,10 @@ export function ProfileView({
         {isOwner && hasSellerMetrics && (
           <button
             onClick={() => setActiveTab("metrics")}
-            className={`pt-2 pb-3 sm:pt-0 text-sm font-semibold flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+            className={`pt-2 pb-3 sm:pt-0 text-sm font-bold tabular-nums flex items-center justify-center sm:justify-start gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
               activeTab === "metrics"
-                ? "border-[#001F58] text-[#001F58]"
-                : "border-transparent text-slate-400 hover:text-slate-600"
+                ? "border-[#D62828] text-[#00205B]"
+                : "border-transparent text-[#00205B]/50 hover:text-[#00205B]"
             }`}
           >
             <BarChart3 className="w-4 h-4" />
@@ -351,7 +347,7 @@ export function ProfileView({
           {isOwner && !hasSellerMetrics && (
             <p className="mb-4 text-sm text-slate-600">
               Con los planes Pro y Broker / Empresa ves la evolución de tus avisos y de dónde llegan tus contactos.{" "}
-              <Link href="/plans" className="font-semibold text-[#001F58] underline underline-offset-2 hover:text-[#E70F1F]">
+              <Link href="/plans" className="font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828]">
                 Ver planes
               </Link>
             </p>

@@ -53,12 +53,12 @@ export function CookieBanner() {
       ref={ref}
       role="region"
       aria-label="Cookies"
-      className="fixed inset-x-0 bottom-0 z-[60] border-t border-[#001F58]/15 bg-white shadow-[0_-4px_16px_rgba(0,31,88,0.08)] print:hidden"
+      className="fixed inset-x-0 bottom-0 z-[60] border-t border-[#00205B]/15 bg-white shadow-[0_-4px_16px_rgba(0,31,88,0.08)] print:hidden"
     >
       <div className="container mx-auto flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs leading-relaxed text-slate-700 sm:text-sm">
           Usamos cookies necesarias para que el sitio funcione y, si aceptás, cookies de medición para mejorarlo.{" "}
-          <Link href="/privacy#cookies" className="font-semibold text-[#001F58] underline underline-offset-2">
+          <Link href="/privacy#cookies" className="font-semibold text-[#00205B] underline underline-offset-2">
             Privacidad
           </Link>
           {current && (
@@ -69,14 +69,14 @@ export function CookieBanner() {
           <button
             type="button"
             onClick={() => choose("necessary")}
-            className="min-h-10 flex-1 rounded-md border border-[#001F58]/25 px-4 text-sm font-semibold text-[#001F58] hover:bg-[#001F58]/5 cursor-pointer sm:flex-none"
+            className="min-h-10 flex-1 rounded-md border border-[#00205B]/25 px-4 text-sm font-semibold text-[#00205B] hover:bg-[#00205B]/5 cursor-pointer sm:flex-none"
           >
             Solo necesarias
           </button>
           <button
             type="button"
             onClick={() => choose("all")}
-            className="min-h-10 flex-1 rounded-md bg-[#001F58] px-5 text-sm font-bold text-white hover:bg-[#00133A] cursor-pointer sm:flex-none"
+            className="min-h-10 flex-1 rounded-md bg-[#00205B] px-5 text-sm font-bold text-white hover:bg-[#001331] cursor-pointer sm:flex-none"
           >
             Aceptar
           </button>
