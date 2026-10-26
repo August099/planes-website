@@ -12,7 +12,7 @@ export default function HomeServicesCards() {
       status: "Disponible",
       isAvailable: true,
       image: "/cards/aircraft-home.webp",
-      position: "object-[50%_88%]", // foto vertical: el avión está abajo
+      position: "object-[50%_100%]", // foto vertical: el avión está abajo; así queda más arriba en la tarjeta
       href: "/aircraft",
     },
     {
@@ -40,7 +40,7 @@ export default function HomeServicesCards() {
           {cards.map((card) => (
             <Link key={card.href} href={card.href} className="va-rise group block">
               {/* Moderno (26/10): tarjeta redondeada translúcida; la foto crece al pasar y la flecha va en un círculo rojo. */}
-              <div className="va-tile va-tile-dark relative flex h-full flex-col overflow-hidden rounded-[28px] border border-white/12 bg-white/[0.06] p-2 backdrop-blur-sm group-hover:border-white/25">
+              <div className="va-tile va-tile-dark relative flex h-full flex-col overflow-hidden rounded-[28px] border border-white/15 bg-[#0A4C96]/25 p-2 backdrop-blur-md group-hover:border-white/30">
                 <div className="relative h-56 overflow-hidden rounded-[22px] sm:h-64">
                   <Image
                     src={card.image}
@@ -49,7 +49,9 @@ export default function HomeServicesCards() {
                     sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                     className={`object-cover ${card.position ?? ""} transition-transform duration-700 ease-out group-hover:scale-105`}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#00205B]/50 to-transparent" />
+                  {/* Velo azul leve con un poco de desenfoque abajo (26/10). */}
+                  <div className="absolute inset-0 bg-[#0A4C96]/15" />
+                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#00205B]/55 to-transparent backdrop-blur-[2px] [mask-image:linear-gradient(to_top,black,transparent)]" />
                   <span
                     className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] backdrop-blur-md ${
                       card.isAvailable ? "bg-white/90 text-[#00205B]" : "bg-[#00205B]/70 text-white ring-1 ring-white/40"

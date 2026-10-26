@@ -698,33 +698,7 @@ header[data-home] .va-mega-panel {
   }
 }
 
-/* Destacadas desde lg: grilla mixta (la primera ocupa 2 × 2, las otras cinco alrededor). */
-@media (min-width: 1024px) {
-  .va-feat [role="region"] > ul {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-auto-rows: 250px;
-    gap: 24px !important;
-    overflow: visible;
-    padding: 10px;
-  }
-  .va-feat [role="region"] > ul > li {
-    width: auto !important;
-  }
-  .va-feat [role="region"] > ul > li:first-child {
-    grid-column: span 2;
-    grid-row: span 2;
-  }
-  .va-feat [role="region"] > ul > li > a,
-  .va-feat .va-card {
-    height: 100%;
-    aspect-ratio: auto !important;
-  }
-  .va-feat [role="region"] > button,
-  .va-feat [role="region"] > .va-dots {
-    display: none !important;
-  }
-}
+/* Destacadas: carrusel con dos tarjetas por pantalla (26/10, a pedido del socio; lo arma ScrollCarousel). */
 
 @media (prefers-reduced-motion: reduce) {
   .va-dash,

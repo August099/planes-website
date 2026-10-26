@@ -25,12 +25,11 @@ export function DisplayTitle({
   return (
     <div className={`${mark ? "" : "va-section-title"} ${className}`}>
       <div className={`va-dt-row flex items-end gap-3 sm:gap-5 ${align === "center" ? "justify-center text-center" : ""}`}>
-        {mark ? (
+        {/* 26/10: sin número de sección (pedido del socio); solo queda el ícono opcional (Guías). */}
+        {mark && (
           <span aria-hidden className={`shrink-0 [&>svg]:h-12 [&>svg]:w-12 sm:[&>svg]:h-[4.5rem] sm:[&>svg]:w-[4.5rem] ${dark ? "text-white/20" : "text-[#00205B]/15"}`}>
             {mark}
           </span>
-        ) : (
-          <span aria-hidden className={`va-num shrink-0 text-[3.5rem] sm:text-[5.25rem] ${dark ? "va-num-dark" : ""}`} />
         )}
         <h2
           id={id}

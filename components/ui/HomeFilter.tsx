@@ -87,13 +87,15 @@ export default function HomeHeroFilter() {
 
   // Rediseño (25/10): una "tira de plan de vuelo" sólida en vez del panel de vidrio. Cada campo lleva su
   // rótulo arriba; la única sombra separa la tira de la foto del hero.
-  const field = "group/field relative block min-w-0 border-[#00205B]/10 px-4 pt-3 pb-2.5 transition-colors focus-within:bg-[#F5F5F5]";
+  const field = "group/field relative block min-w-0 rounded-[20px] border-white/0 px-4 pt-3 pb-2.5 transition-colors hover:bg-white/45 focus-within:bg-white/70";
   const select = "mt-0.5 w-full min-w-0 appearance-none truncate bg-transparent pr-6 text-sm font-semibold text-[#00205B] focus:outline-none cursor-pointer disabled:cursor-not-allowed disabled:text-[#00205B]/45";
-  const chevron = "pointer-events-none absolute right-3 bottom-3 h-4 w-4 text-[#00205B]/45";
+  const chevron = "pointer-events-none absolute right-3 bottom-3 h-4 w-4 text-[#00205B]/60";
   return (
-    <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-md bg-white text-left shadow-[0_22px_48px_-28px_rgba(0,19,49,0.75)]">
-      <div className="grid grid-cols-2 md:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
-        <label className={`${field} border-r border-b md:border-b-0`}>
+    <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-[28px] border border-white/70 bg-white/70 p-1.5 text-left shadow-[inset_0_1px_0_rgb(255_255_255/0.8),0_24px_50px_-24px_rgba(0,19,49,0.55)] backdrop-blur-2xl">
+      {/* Rediseño (26/10): "vidrio líquido" con filtro blanco sobre el hero: fondo blanco translúcido con desenfoque,
+          borde y brillo interior claros. Mismos campos y misma lógica. */}
+      <div className="grid grid-cols-2 gap-1 md:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
+        <label className={`${field}`}>
           <span className="va-label block">Categoría</span>
           <select value={selectedCategory} onChange={(e) => void handleCategoryChange(e.target.value)} className={select}>
             <option value="">Todas</option>
@@ -106,7 +108,7 @@ export default function HomeHeroFilter() {
           <ChevronDown className={chevron} />
         </label>
 
-        <label className={`${field} border-b md:border-r md:border-b-0`}>
+        <label className={`${field}`}>
           <span className="va-label block">Marca</span>
           <select value={selectedBrand} onChange={(e) => handleBrandChange(e.target.value)} className={select}>
             <option value="">Todas</option>
@@ -119,7 +121,7 @@ export default function HomeHeroFilter() {
           <ChevronDown className={chevron} />
         </label>
 
-        <label className={`${field} border-r border-b md:border-b-0`}>
+        <label className={`${field}`}>
           <span className="va-label block">Modelo</span>
           <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} disabled={!selectedBrand || loadingModels} className={select}>
             <option value="">{!selectedBrand ? "Elegí una marca" : "Todos"}</option>
@@ -132,7 +134,7 @@ export default function HomeHeroFilter() {
           {loadingModels ? <Loader2 className={`${chevron} animate-spin`} /> : <ChevronDown className={chevron} />}
         </label>
 
-        <label className={`${field} border-b md:border-b-0`}>
+        <label className={`${field}`}>
           <span className="va-label block">Precio</span>
           <select value={selectedPrice} onChange={(e) => setSelectedPrice(e.target.value)} className={select}>
             <option value="">Cualquiera</option>
@@ -146,7 +148,7 @@ export default function HomeHeroFilter() {
         <button
           type="button"
           onClick={handleSearch}
-          className="col-span-2 flex min-h-12 items-center justify-center gap-2 bg-[#D62828] px-8 text-sm font-bold text-white transition-colors hover:bg-[#B71F1F] focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white md:col-span-1 cursor-pointer"
+          className="col-span-2 mt-1.5 flex min-h-12 items-center justify-center gap-2 rounded-[20px] bg-[linear-gradient(135deg,#D62828_0%,#B71F1F_100%)] px-8 text-sm font-bold text-white shadow-[0_10px_24px_-10px_rgb(214_40_40/0.8)] transition-transform hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white md:col-span-1 md:mt-0 cursor-pointer"
         >
           <Search className="h-4 w-4" aria-hidden />
           Buscar aviones
