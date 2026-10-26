@@ -317,6 +317,19 @@ Los commits de VA-106 a VA-110 dicen VA-92 a VA-96 (choque de numeración con el
 | VA-177 | ver git log | **Fuera "Página VA" de los textos visibles:** "Página personalizada" en la grilla de `/plans` y del admin ("Página personalizada completa", "Sin página personalizada"), la FAQ y el error de Ajustes. Lo demás ya lo había cambiado el socio. En código y docs internos sigue el nombre "Página VA". La lista vieja `Plan.features` ("Página VA: tu portada…") quedó en la base pero no se muestra en ningún lado. | `/plans`, `/faq`, `/admin/plans` |
 | VA-176 | ver git log | **El video se pausa al cambiar de foto:** mientras suena, el carrusel deja de pasar solo; al ir a otra foto (flechas, miniaturas o deslizando) el reproductor se cierra y vuelve "Ver video" (el loop mueve las diapositivas y un iframe movido se recarga y volvía a sonar fuera de vista). Al abrir una foto a pantalla completa se pausa con la API de iframe de YouTube (`postMessage`, `enablejsapi=1`), sin librerías. | Detalle de un aviso de Broker con video |
 
+## Rediseño "Moderno" del sitio público (25/10 y 26/10, rama `milton/rediseno`)
+
+Estilo elegido por el socio después de varias rondas de maquetas. Las reglas quedaron en `docs/DESIGN.md`, sección "Sistema Moderno". El panel admin no se tocó. Pasado a `pre-production` el 26/10 (`31ef1ae`).
+
+| Qué | Commits | Dónde verlo |
+|---|---|---|
+| Home: títulos de sección, cartel rojo flotante, destacadas en carrusel de dos, categorías de repuestos con iniciales e íconos propios (`public/iconos.svg`), CTA rojo, "Cómo funciona" con íconos, guías y servicios con fotos nuevas, rutas de vuelo animadas | `3d0dc86` a `ca7049a` | `/` |
+| Estándares globales (radios, sombras, botones en píldora, campos, casillas, títulos con la regla roja) y encabezado de página (`PageHeader`) | `8edfd28`, `dcbae73` | Todas las páginas públicas |
+| Menú Repuestos con subcategorías desplegables; se cierra al tocar un link | `8edfd28`, `dcbae73` | Header en escritorio |
+| Arreglos: limpiar filtros, sugeridas en carrusel, precio del detalle, scroll horizontal en detalles | `dcbae73` | `/aircraft`, detalles |
+| Servicios rediseñado | `636c5bd` | `/services` |
+| VA-122: textos de Nosotros | `cdb1bdd`, `109bd6c` | `/about` |
+
 ## Lote del 18/10 (VA-152 a VA-164)
 
 | Tarea | Commit | Qué cambió | Dónde verlo |
