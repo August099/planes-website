@@ -329,6 +329,8 @@ Estilo elegido por el socio después de varias rondas de maquetas. Las reglas qu
 | Arreglos: limpiar filtros, sugeridas en carrusel, precio del detalle, scroll horizontal en detalles | `dcbae73` | `/aircraft`, detalles |
 | Servicios rediseñado | `636c5bd` | `/services` |
 | VA-122: textos de Nosotros | `cdb1bdd`, `109bd6c` | `/about` |
+| Cuenta completa obligatoria (27/10): aceptar términos y verificar el email también al entrar con Google o Facebook. Migración `20261027120000_terminos_aceptados` | `0b7eda6` | `/onboarding/completar` |
+| Imágenes nuevas de "Explorá por tipo de aeronave" (27/10): renders del socio recortados con `scripts/process-aircraft-types.mjs` (originales en `assets/originals/aircraft-types`); Proyecto ya no se achica | ver git log | `/`, sección de tipos |
 
 ## Lote del 18/10 (VA-152 a VA-164)
 

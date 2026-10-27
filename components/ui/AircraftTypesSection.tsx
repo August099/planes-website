@@ -7,56 +7,56 @@ import { DisplayTitle } from "@/components/ui/home/DisplayTitle";
 // más chicos que la primera versión. Correspondencia con AircraftCategory confirmada por el socio (10/10):
 // Monomotor = MP + MT, Bimotor = BP + BT, Experimental / LSA = E, Agrícola = A,
 // Helicóptero = H, Proyecto = PR, Otros = S/C. VA-149 (17/10): orden y nombre como en lib/aircraft-categories.ts.
+// 27/10: renders nuevos del socio, todos a la misma escala (Proyecto ya no se achica); se generan con
+// scripts/process-aircraft-types.mjs.
 const TYPES = [
   {
     name: "Monomotor",
     image: "monomotor",
-    width: 484,
-    height: 196,
+    width: 500,
+    height: 171,
     categories: ["MP", "MT"],
   },
   {
     name: "Bimotor",
     image: "bimotor",
-    width: 484,
-    height: 212,
+    width: 500,
+    height: 198,
     categories: ["BP", "BT"],
   },
   {
     name: "Experimental / LSA",
     image: "experimental-lsa",
-    width: 494,
-    height: 176,
+    width: 500,
+    height: 214,
     categories: ["E"],
   },
   {
     name: "Agrícola",
     image: "agricola",
-    width: 496,
-    height: 180,
+    width: 500,
+    height: 177,
     categories: ["A"],
   },
   {
     name: "Helicóptero",
     image: "helicoptero",
-    width: 502,
-    height: 224,
+    width: 500,
+    height: 234,
     categories: ["H"],
   },
   {
     name: "Proyecto",
     image: "proyecto",
-    width: 486,
-    height: 238,
+    width: 500,
+    height: 182,
     categories: ["PR"],
-    // 26/10 (socio): un 15 % más chica que las demás.
-    scale: "scale-[0.85]",
   },
   {
     name: "Otros",
     image: "otros",
-    width: 494,
-    height: 188,
+    width: 500,
+    height: 216,
     categories: ["S/C"],
     // Ajustado (10/10): los turbohélices tienen categoría propia (MT y BT).
   },
@@ -91,7 +91,7 @@ export function AircraftTypesSection({ counts }: { counts: Record<string, number
                       fill
                       // En celular la caja mide ~35vw (85% de media columna): así baja la de 256 px y no la de 384.
                       sizes="(min-width: 1280px) 250px, (min-width: 1024px) 20vw, (min-width: 768px) 27vw, 35vw"
-                      className={`object-contain object-bottom origin-bottom ${"scale" in type ? type.scale : ""}`}
+                      className="object-contain object-bottom"
                     />
                   </div>
                   <h3 className="mt-3 text-[0.95rem] leading-snug font-bold text-[#00205B] decoration-[#D62828] decoration-2 underline-offset-4 group-hover:underline group-focus-visible:underline">
