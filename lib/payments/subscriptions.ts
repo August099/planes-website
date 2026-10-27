@@ -13,6 +13,7 @@ import { invalidateFeaturedSellers } from "@/lib/featured";
 import { sendSubscriptionPaymentFailedEmail } from "@/lib/mail";
 import { processInvoice } from "@/lib/billing/issue";
 import { isTestPayment } from "@/lib/billing/guard";
+import { trackEvent } from "@/lib/track-event";
 import { mpAccountIsTest } from "@/lib/payments/mp-account";
 import { PAYMENTS_LOCKED_MESSAGE, realPaymentsBlocked } from "@/lib/payments-lock";
 
@@ -100,6 +101,7 @@ export async function startSubscription(input: { userId: string; planId: string;
       where: { id: subId },
       data: { pendingPlanId: plan.id, pendingMpSubscriptionId: preapproval.id },
     });
+    await trackEvent("CHECKOUT_STARTED", { userId: input.userId, metadata: { kind: "SUBSCRIPTION", plan: plan.name, amount: price, change: true } }, { withContext: true });
     return { ok: true, redirectTo: preapproval.init_point };
   }
 
@@ -120,6 +122,7 @@ export async function startSubscription(input: { userId: string; planId: string;
     pendingMpSubscriptionId: null,
   };
   await prisma.subscription.upsert({ where: { userId: input.userId }, create: { id: subId, userId: input.userId, ...fields }, update: fields });
+  await trackEvent("CHECKOUT_STARTED", { userId: input.userId, metadata: { kind: "SUBSCRIPTION", plan: plan.name, amount: price } }, { withContext: true });
   return { ok: true, redirectTo: preapproval.init_point };
 }
 
@@ -244,6 +247,8 @@ async function handleAuthorizedPayment(authorizedPaymentId: string): Promise<Out
         lastPaymentAt: approvedAt,
       },
     });
+    // 27/10: primer cobro = alta (o cambio de plan); los siguientes, renovación. Una vez por pago (los webhooks se reintentan).
+    await trackEvent(!pendingChange && sub.lastPaymentAt ? "SUBSCRIPTION_RENEWED" : "SUBSCRIPTION_STARTED", { userId: sub.userId, metadata: { plan: sub.plan.name, mpPaymentId, amount } }, { onceKey: `mp:${mpPaymentId}` });
     await enforceQuota(sub.userId); // VA-152: si el plan nuevo tiene menos cupo, se pausan los más nuevos
     invalidateFeaturedSellers();
     await queueInvoice({
@@ -263,6 +268,7 @@ async function handleAuthorizedPayment(authorizedPaymentId: string): Promise<Out
   const rejected = paymentStatus === "rejected" || ap.status === "recycling" || ap.status === "cancelled";
   if (rejected) {
     if (mpPaymentId) await recordPaymentStatus(mpPaymentId, sub.id, paymentStatus ?? ap.status ?? "rejected", ap);
+    await trackEvent("PAYMENT_FAILED", { userId: sub.userId, metadata: { subscriptionId: sub.id, mpPaymentId, status: paymentStatus ?? ap.status ?? "rejected" } }, { onceKey: `ap:${authorizedPaymentId}` });
     // VA-121: si falla el primer cobro de un cambio de plan, el plan actual sigue igual (sin gracia).
     if (pendingChange) return { status: "PROCESSED", note: `Cobro ${authorizedPaymentId}: rechazado el primer cobro del cambio de plan; sigue el plan actual` };
     return openGrace(sub);
@@ -361,6 +367,7 @@ export async function cancelAtPeriodEnd(userId: string): Promise<{ ok: true } | 
   if (sub.cancelAtPeriodEnd) return { ok: true };
   if (sub.mpSubscriptionId) await new PreApproval(mpClient()).update({ id: sub.mpSubscriptionId, body: { status: "paused" } });
   await prisma.subscription.update({ where: { id: sub.id }, data: { cancelAtPeriodEnd: true, mpStatus: sub.mpSubscriptionId ? "paused" : sub.mpStatus } });
+  await trackEvent("SUBSCRIPTION_CANCELLED", { userId, metadata: { subscriptionId: sub.id } });
   return { ok: true };
 }
 

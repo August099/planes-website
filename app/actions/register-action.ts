@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { UserType } from "@prisma/client";
 import { issueVerificationEmail } from "@/lib/verification";
+import { trackEvent } from "@/lib/track-event";
 import { parseSelectableUserType } from "@/lib/user-types";
 
 export async function registerUserAction(formData: FormData) {
@@ -50,7 +51,8 @@ export async function registerUserAction(formData: FormData) {
 
 
     // 8. Crear el usuario en la base de datos
-    await prisma.user.create({
+    const created = await prisma.user.create({
+      select: { id: true },
       data: {
         name: name.trim(),
         email: email.toLowerCase().trim(),
@@ -60,6 +62,8 @@ export async function registerUserAction(formData: FormData) {
         termsAcceptedAt: new Date(), // aceptó en el formulario (validado arriba)
       },
     });
+
+    await trackEvent("USER_REGISTERED", { userId: created.id, metadata: { method: "email" } }, { withContext: true });
 
     // 9. Token + mail de verificación (VA-20). Si el mail falla, la cuenta queda creada y
     //    se puede pedir otro desde el login ("Reenviar mail de verificación").

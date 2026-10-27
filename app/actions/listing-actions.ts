@@ -6,6 +6,7 @@ import { lockAndCheckRoom, QUOTA_KIND_TEXT } from "@/lib/quota";
 import { prisma } from "@/lib/prisma";
 import { assertListingOwner } from "@/lib/listing-auth";
 import { pathFromPublicUrl, removeUploads } from "@/lib/listing-uploads";
+import { trackEvent } from "@/lib/track-event";
 import { CLEARED_SALE, saleSnapshot } from "@/lib/sales";
 
 // Alta y edición de publicaciones: app/publish/actions.ts (createListing / updateListing).
@@ -66,6 +67,8 @@ export async function setListingStatusAction(
       const text = QUOTA_KIND_TEXT[kind];
       return { success: false, quotaFull: true, error: `No te queda cupo de ${text.many}: pausá otro aviso o pasate a un plan con más cupo.` };
     }
+
+    if (to === "SOLD") await trackEvent("LISTING_SOLD", { userId: current.sellerId, ...(type === "aircraft" ? { aircraftId: id } : { sparePartId: id }) });
 
     revalidatePath(type === "aircraft" ? "/aircraft" : "/spareparts");
     revalidatePath(type === "aircraft" ? `/aircraft/${id}` : `/spareparts/sparepart-details/${id}`);

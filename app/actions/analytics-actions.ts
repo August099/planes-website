@@ -43,6 +43,23 @@ export async function logContactClick(
 
 const VIEW_DEDUP_MS = 30 * 60 * 1000;
 
+// 27/10 (socio): visita a una página del sitio (el tráfico general del panel admin; antes solo se
+// registraban las vistas de avisos). La llama AnalyticsBootstrap una vez por página y pestaña. Sin el
+// panel admin, la API ni los admins. Solo la ruta, sin la query (puede traer datos de búsqueda).
+export async function logPageView(path: string) {
+  if (typeof path !== "string" || !path.startsWith("/") || path.length > 300) return;
+  if (path === "/admin" || path.startsWith("/admin/") || path.startsWith("/api/")) return;
+  try {
+    const [session, context] = await Promise.all([auth(), getAnalyticsContext()]);
+    if (session?.user?.isAdmin) return;
+    await prisma.analyticsEvent.create({
+      data: { eventType: AnalyticsEventType.PAGE_VIEW, userId: session?.user?.id ?? null, ...context, metadata: { path } },
+    });
+  } catch (error) {
+    console.error("Error al registrar la visita:", error);
+  }
+}
+
 // Vista de una publicación (VA-17). La llama TrackListingView al montar el detalle en el
 // navegador, una vez por pestaña: así no suman los re-renders del servidor (refresh, server
 // actions, volver atrás), el prefetch ni los bots sin JS. No cuenta al dueño ni repite la vista

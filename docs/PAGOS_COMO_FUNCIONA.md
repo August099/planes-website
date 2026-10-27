@@ -265,6 +265,18 @@ pendiente) y después se descarta desde el admin.
 - **`/admin/plans` ("Planes y precios"):** la grilla editable de `/plans` (VA-166: Base, Pro y Broker /
   Empresa, con precios real y tachado, cupos, beneficios, filas propias, vista previa y la lista de lo que
   cambia antes de guardar) y, abajo, los planes del modelo anterior archivados con sus compras.
+- **Plan de prueba (27/10, `lib/test-plan.ts`):** tarjeta aparte en `/admin/plans`, fuera de la grilla.
+  Es un pago único (precio editable, $100 por defecto) que no da cupo ni beneficios: sirve para probar el
+  cobro y la factura. Con el interruptor "Mostrar en /plans" se publica (aparece al pie de `/plans` con
+  "Pagar prueba" y se puede comprar) o queda como borrador (no se ve ni se puede pagar). La fila del plan
+  (`id = plan-de-prueba`, sin nivel) se crea la primera vez que se guarda. En `main`, mientras siga el
+  bloqueo de pagos reales (`lib/payments-lock.ts`), tampoco se puede pagar.
+- **Eventos (27/10, `lib/track-event.ts`):** además de los pagos en sus tablas, quedan como eventos de
+  analíticas: inicio del checkout (`CHECKOUT_STARTED`, pago único o suscripción), pago aprobado
+  (`PAYMENT_COMPLETED`, también el cupón del 100 %), rechazado (`PAYMENT_FAILED`), reembolso
+  (`REFUND_ISSUED`), alta y renovación de la suscripción (`SUBSCRIPTION_STARTED` / `_RENEWED`, por cobro
+  aprobado) y cancelación (`SUBSCRIPTION_CANCELLED`). Uno por pago aunque Mercado Pago reintente el aviso;
+  si el registro falla, el pago sigue igual.
 - **`/admin/users`:** plan y cupo usado/total de cada cuenta (en ámbar si está por encima) y el plan de
   cortesía.
 - **KPIs** (`/admin/kpi`): ingresos solo de suscripciones pagas (sin cortesías ni pagos de prueba), en
