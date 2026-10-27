@@ -225,7 +225,8 @@ export default async function AircraftListPage({ searchParams }: Props) {
       <section className="flex flex-col lg:flex-row items-start gap-6">
         
         {/* Barra móvil simétrica: 50% Filtros | 50% Ordenar */}
-        <div className="w-full flex lg:block items-center gap-3 lg:w-auto shrink-0">
+        {/* 26/10: en celular la barra Filtros | Ordenar queda pegada arriba (debajo del header cuando aparece). */}
+        <div className="va-list-toolbar w-full flex lg:block items-center gap-3 lg:w-auto shrink-0">
           <div className="flex-1 lg:flex-none lg:w-72">
             <AircraftFiltersWrapper categories={categories} brands={filterBrands} />
           </div>

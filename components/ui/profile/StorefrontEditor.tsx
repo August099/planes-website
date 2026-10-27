@@ -4,9 +4,9 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
 import { updateProfileAction, uploadStorefrontImageAction } from "@/app/actions/profile-actions";
-import { ACCENT_COLORS, ACCENT_KEYS } from "@/lib/accent-colors";
 import { compressImage } from "@/lib/image-compressor";
 import type { StorefrontData } from "@/components/ui/profile/StorefrontHeader";
+import { PhoneInput } from "@/components/ui/PhoneInput";
 
 // Edición de la página personalizada (VA-87), solo para quien tiene el beneficio del plan.
 // Las imágenes se comprimen en el navegador antes de subir (límite de 4,5 MB por request en Vercel).
@@ -121,8 +121,9 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
             <input id="sf-business" name="businessName" defaultValue={storefront.businessName ?? ""} maxLength={200} className={INPUT} />
           </div>
           <div>
-            <label htmlFor="sf-whatsapp" className={LABEL}>WhatsApp (con código de país)</label>
-            <input id="sf-whatsapp" name="whatsapp" inputMode="tel" placeholder="5493456445758" defaultValue={storefront.whatsapp ?? ""} className={INPUT} />
+            <label htmlFor="sf-whatsapp" className={LABEL}>WhatsApp</label>
+            {/* Se guarda solo con dígitos (incluye el código de país); el "+" es para que PhoneInput lo lea como internacional. */}
+            <PhoneInput id="sf-whatsapp" name="whatsapp" defaultValue={storefront.whatsapp ? `+${storefront.whatsapp}` : null} className={INPUT} />
           </div>
           <div className="sm:col-span-2">
             <label htmlFor="sf-website" className={LABEL}>Web</label>
@@ -132,22 +133,6 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
             <label htmlFor="sf-bio" className={LABEL}>Descripción del negocio</label>
             <textarea id="sf-bio" name="bio" rows={4} maxLength={1500} defaultValue={storefront.bio ?? ""} className={INPUT} />
           </div>
-          {/* VA-170: color de acento de los detalles (paleta cerrada; botones y letras siguen siendo los de VA). */}
-          {storefront.customDetail && (
-            <fieldset className="sm:col-span-2">
-              <legend className={LABEL}>Color de acento de tus avisos</legend>
-              <div className="flex flex-wrap gap-2">
-                {ACCENT_KEYS.map((k) => (
-                  <label key={k} className="flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2.5 text-xs has-[:checked]:border-[#00205B] has-[:checked]:font-semibold">
-                    <input type="radio" name="accentColor" value={k} defaultChecked={(storefront.accentColor ?? "navy") === k} className="sr-only" />
-                    <span className="h-4 w-4 rounded-full" style={{ background: ACCENT_COLORS[k].hex }} aria-hidden />
-                    {ACCENT_COLORS[k].label}
-                  </label>
-                ))}
-              </div>
-              <p className="mt-1 text-[11px] text-slate-500">Se usa en bordes, íconos y subrayados del detalle de tus avisos.</p>
-            </fieldset>
-          )}
         </div>
         <div className="flex items-center gap-3">
           <button

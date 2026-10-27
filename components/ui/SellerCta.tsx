@@ -1,10 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { LogoSlashes } from "@/components/ui/LogoSlashes";
 
 // "¿Querés vender tu aeronave?" (VA-79, VA-84). Rediseño (25/10, v2): bloque partido, el único gran plano
-// rojo de la Home; texto sobre rojo (blanco sobre #D62828: 4,9:1) y la foto con el corte diagonal de las
-// "//" del logo. Moderno (26/10): tarjeta redondeada dentro del contenedor, rojo liso y sombra roja suave.
+// rojo de la Home; texto sobre rojo (blanco sobre #D62828: 4,9:1), la foto y las "//" del logo en el borde. Moderno (26/10): tarjeta redondeada dentro del contenedor, rojo liso y sombra roja suave.
 // En celular, foto arriba.
 export function SellerCta() {
   return (
@@ -26,8 +26,7 @@ export function SellerCta() {
           </Link>
         </div>
 
-        {/* La foto se recorta en diagonal: deja ver el rojo de la tarjeta (las "//" del logo). */}
-        <div className="relative order-1 aspect-[16/10] md:order-2 md:aspect-auto md:[clip-path:polygon(112px_0,100%_0,100%_100%,0_100%)]">
+        <div className="relative order-1 aspect-[16/10] md:order-2 md:aspect-auto">
           <Image
             src="/backgrounds/cta.webp"
             alt=""
@@ -36,9 +35,14 @@ export function SellerCta() {
             sizes="(min-width: 768px) 50vw, 100vw"
             className="object-cover object-[center_60%] transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
           />
-          {/* Segunda barra de las "//", en azul */}
-          <div aria-hidden className="absolute inset-y-0 left-0 hidden w-36 bg-[#00205B] [clip-path:polygon(124px_0,138px_0,26px_100%,12px_100%)] md:block" />
         </div>
+        {/* 27/10: las "//" del logo con sus proporciones reales (LogoSlashes), montadas sobre el borde entre el
+            rojo y la foto: la barra ancha en rojo y la fina en azul. Reemplaza el corte diagonal, que no las respetaba. */}
+        <LogoSlashes
+          wide="#D62828"
+          thin="#00205B"
+          className="pointer-events-none absolute left-[51.2%] top-1/2 z-10 hidden h-24 -translate-x-[30%] -translate-y-1/2 md:block lg:h-28"
+        />
       </div>
     </section>
   );

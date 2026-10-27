@@ -410,7 +410,9 @@ header[data-home]:has(.va-mega:not([data-closed]):focus-within) {
   --mega-fg: var(--va2-navy);
   --mega-muted: rgb(51 65 85);
   --mega-line: rgb(0 32 91 / 0.12);
-  --mega-num: var(--va2-red);
+  /* 27/10: sobre blanco, íconos azules y flecha roja. */
+  --mega-num: var(--va2-navy);
+  --mega-arrow: var(--va2-red);
 }
 header[data-home] .va-mega-panel {
   --mega-bg: var(--va2-navy);
@@ -418,6 +420,7 @@ header[data-home] .va-mega-panel {
   --mega-muted: rgb(255 255 255 / 0.78);
   --mega-line: rgb(255 255 255 / 0.16);
   --mega-num: rgb(255 255 255 / 0.55);
+  --mega-arrow: rgb(255 255 255 / 0.8);
 }
 
 /* VA-156: atribución del mapa del detalle (OpenFreeMap, OpenMapTiles, OpenStreetMap) visible pero chica. */
@@ -749,4 +752,49 @@ html:not(:has([aria-label="Abrir menú del panel"])) main:not(.home-theme) h1.te
    Los banners de página (PageHeader) usan .va-h1-keep y no entran acá. */
 html:not(:has([aria-label="Abrir menú del panel"])) main:not(.home-theme) h1.text-2xl:not(.va-h1-keep) {
   font-size: clamp(1.9rem, 3.2vw, 2.4rem);
+}
+
+/* Listados en celular (26/10): la barra "Filtros | Ordenar" queda pegada arriba al hacer scroll. Debajo del
+   header cuando el header está visible (al subir) y arriba de todo cuando se esconde (al bajar). */
+@media (max-width: 1023px) {
+  .va-list-toolbar {
+    position: sticky;
+    top: 80px;
+    z-index: 30;
+    margin-inline: -1rem;
+    width: calc(100% + 2rem);
+    padding: 0.5rem 1rem;
+    background: rgb(245 245 245 / 0.92);
+    backdrop-filter: blur(8px);
+    transition: top 300ms;
+  }
+  html:has(header.-translate-y-full) .va-list-toolbar {
+    top: 0;
+  }
+}
+
+/* Formulario de publicar (27/10): el asterisco de un campo obligatorio se pone rojo si ese campo tiene error. */
+.va-req {
+  font-weight: 700;
+}
+:has(> .va-field-error) > label .va-req,
+:has(> .va-field-error) > div > label .va-req {
+  color: var(--va2-red);
+}
+/* Al intentar avanzar con datos faltantes (data-tried en el formulario): rojo en los obligatorios vacíos. */
+/* Reglas separadas: si el procesador de CSS no entiende un selector de una lista, descarta la regla entera. */
+[data-tried] div:has(> input:placeholder-shown) > label .va-req {
+  color: var(--va2-red);
+}
+[data-tried] div:has(> textarea:placeholder-shown) > label .va-req {
+  color: var(--va2-red);
+}
+[data-tried] div:has(> select:invalid) > label .va-req {
+  color: var(--va2-red);
+}
+[data-tried] div:has(> div > input:placeholder-shown) > label .va-req {
+  color: var(--va2-red);
+}
+[data-tried] div:has(> select option[value=""]:checked) > label .va-req {
+  color: var(--va2-red);
 }

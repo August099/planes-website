@@ -215,7 +215,8 @@ export default async function SparePartsPage({ searchParams }: Props) {
           lado a lado; desde lg, barra lateral + grilla. */}
       <PageHeader compact variant="desktop-banner" routeId="va-route-spareparts" title="Repuestos en venta" count={totalSpareParts} className="mb-6" aside={<div className="hidden lg:block"><SortDropdown /></div>} />
       <section className="flex flex-col lg:flex-row items-start gap-6">
-        <div className="w-full flex lg:block items-center gap-3 lg:w-auto shrink-0">
+        {/* 26/10: en celular la barra Filtros | Ordenar queda pegada arriba (debajo del header cuando aparece). */}
+        <div className="va-list-toolbar w-full flex lg:block items-center gap-3 lg:w-auto shrink-0">
           <div className="flex-1 lg:flex-none lg:w-72">
             <SparePartFiltersWrapper />
           </div>

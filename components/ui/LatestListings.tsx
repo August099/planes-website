@@ -64,11 +64,11 @@ export function LatestAircraft({ items }: LatestListingsProps) {
         <p className="mt-3 text-sm text-slate-600">Lo último en aeronaves y repuestos certificados ingresados al mercado</p>
       </div>
 
-      {/* VA-139: en celular se asoma la tarjeta siguiente (1,15); 2 desde 480 px, 3 desde md y 4 desde xl. */}
+      {/* VA-139: en celular se asoma la tarjeta siguiente (1,45: más chicas que Destacadas, 26/10); 2 desde 480 px, 3 desde md y 4 desde xl. */}
       <ScrollCarousel
         label="Últimas publicaciones"
         gapClassName="gap-3 min-[480px]:gap-4 md:gap-5 xl:gap-6"
-        slideClassName="w-[calc((100%-1.8px)/1.15)] min-[480px]:w-[calc((100%-16px)/2)] md:w-[calc((100%-40px)/3)] xl:w-[calc((100%-72px)/4)]"
+        slideClassName="w-[calc((100%-5.4px)/1.45)] min-[480px]:w-[calc((100%-16px)/2)] md:w-[calc((100%-40px)/3)] xl:w-[calc((100%-72px)/4)]"
       >
         {items.map((item) =>
           item.type === "AIRCRAFT" ? (

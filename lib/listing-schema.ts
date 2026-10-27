@@ -161,8 +161,9 @@ export const aircraftListingSchema = z
       });
     }
     data.engines.forEach((engine, i) => {
-      if (!engine.brand && !engine.model) {
-        ctx.addIssue({ code: "custom", path: ["engines", i, "brand"], message: "Completá la marca o el modelo del motor." });
+      // 27/10: la marca del motor es obligatoria (antes alcanzaba con la marca o el modelo).
+      if (!engine.brand) {
+        ctx.addIssue({ code: "custom", path: ["engines", i, "brand"], message: "Completá la marca del motor." });
       }
     });
     if (data.propellers.length > data.engines.length) {

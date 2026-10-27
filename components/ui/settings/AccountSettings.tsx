@@ -21,6 +21,7 @@ import { BillingProfilePanel, type BillingProfileValues } from "@/components/ui/
 import type { ProfileQuota } from "@/components/ui/profile/ProfileListings";
 import { CookieSettingsLink } from "@/components/ui/CookieSettingsLink";
 import { PASSWORD_REGEX } from "@/lib/password-rules";
+import { PhoneInput } from "@/components/ui/PhoneInput";
 
 // VA-175: "Ajustes" (/settings). Toda la configuración de la cuenta en un solo lugar, una columna y un
 // "Guardar" por sección. Son los mismos formularios que estaban en el perfil (pestaña Ajustes, "Mis
@@ -210,7 +211,7 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-600">Teléfono de contacto{missingDot("phone")}</label>
-              <input type="text" name="phone" defaultValue={user.phone || ""} className={INPUT} />
+              <PhoneInput name="phone" defaultValue={user.phone} className={INPUT} />
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-slate-600">Ciudad{missingDot("city")}</label>
