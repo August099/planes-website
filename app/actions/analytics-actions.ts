@@ -1,5 +1,7 @@
 "use server";
 
+import { createHash } from "node:crypto";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { AnalyticsEventType } from "@prisma/client";
@@ -45,15 +47,26 @@ const VIEW_DEDUP_MS = 30 * 60 * 1000;
 
 // 27/10 (socio): visita a una página del sitio (el tráfico general del panel admin; antes solo se
 // registraban las vistas de avisos). La llama AnalyticsBootstrap una vez por página y pestaña. Sin el
-// panel admin, la API ni los admins. Solo la ruta, sin la query (puede traer datos de búsqueda).
+// panel admin, la API ni robots. Solo la ruta, sin la query (puede traer datos de búsqueda).
 export async function logPageView(path: string) {
   if (typeof path !== "string" || !path.startsWith("/") || path.length > 300) return;
   if (path === "/admin" || path.startsWith("/admin/") || path.startsWith("/api/")) return;
   try {
+    const h = await headers();
+    const ua = h.get("user-agent") ?? "";
+    // Robots que ejecutan JavaScript (Google, previsualizaciones de links, navegadores automáticos): no son personas.
+    if (!ua || /bot|crawl|spider|slurp|preview|headless|lighthouse|pingdom|uptime/i.test(ua)) return;
     const [session, context] = await Promise.all([auth(), getAnalyticsContext()]);
-    if (session?.user?.isAdmin) return;
+    // 27/10 (socio): para contar personas aunque no acepten cookies: huella del día (IP + navegador + fecha,
+    // con hash y una clave del servidor). No se guarda la IP, no queda nada en el dispositivo y cambia cada día.
+    const ip = (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || h.get("x-real-ip") || "";
+    const day = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10); // día de la Argentina
+    const v = createHash("sha256").update(`${day}|${ip}|${ua}|${process.env.AUTH_SECRET ?? ""}`).digest("hex").slice(0, 24);
+    // Los admins también se registran (marcados), así el panel muestra quién entró con su cuenta; las
+    // cifras de visitantes los dejan afuera.
+    const admin = session?.user?.isAdmin === true;
     await prisma.analyticsEvent.create({
-      data: { eventType: AnalyticsEventType.PAGE_VIEW, userId: session?.user?.id ?? null, ...context, metadata: { path } },
+      data: { eventType: AnalyticsEventType.PAGE_VIEW, userId: session?.user?.id ?? null, ...context, metadata: { path, v, ...(admin ? { admin: true } : {}) } },
     });
   } catch (error) {
     console.error("Error al registrar la visita:", error);
