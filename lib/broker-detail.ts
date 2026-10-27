@@ -23,12 +23,12 @@ export async function getBrokerDetail(sellerId: string): Promise<BrokerDetail | 
   if (!plan.customDetail) return null;
   const u = await prisma.user.findUnique({
     where: { id: sellerId },
-    select: { name: true, businessName: true, logoUrl: true, coverUrl: true, detailCoverUrl: true, accentColor: true },
+    select: { name: true, businessName: true, image: true, logoUrl: true, coverUrl: true, detailCoverUrl: true, accentColor: true },
   });
   if (!u) return null;
   return {
     name: u.businessName || u.name || "Vendedor",
-    logoUrl: u.logoUrl,
+    logoUrl: u.image ?? u.logoUrl, // 27/10: el logo es la foto de perfil
     coverUrl: u.detailCoverUrl || u.coverUrl || null,
     verified: plan.verified,
     accent: accentHex(null), // 27/10: sin paleta propia (se quitó de Ajustes); siempre el azul de la marca

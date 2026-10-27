@@ -197,6 +197,7 @@ export async function searchSellers(query: string, take = 2): Promise<SellerResu
       id: true,
       name: true,
       businessName: true,
+      image: true,
       logoUrl: true,
       _count: {
         select: {
@@ -211,7 +212,7 @@ export async function searchSellers(query: string, take = 2): Promise<SellerResu
   return users.map((u) => ({
     id: u.id,
     name: u.businessName || u.name || "Vendedor",
-    logoUrl: u.logoUrl,
+    logoUrl: u.image ?? u.logoUrl, // 27/10: el logo es la foto de perfil
     listings: u._count.aircrafts + u._count.spareParts,
     url: `/profile/${u.id}`,
   }));

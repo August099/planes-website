@@ -17,7 +17,7 @@ export function SellerResults({ sellers, query, onSelect, max = 3 }: { sellers: 
             <Link href={s.url} onClick={onSelect} className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-slate-50">
               <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white">
                 {s.logoUrl ? (
-                  <Image src={s.logoUrl} alt="" fill sizes="32px" className="object-contain" />
+                  <Image src={s.logoUrl} alt="" fill sizes="32px" className="object-cover" />
                 ) : (
                   <span className="flex h-full w-full items-center justify-center text-xs font-bold text-[#00205B]">{s.name.charAt(0).toUpperCase()}</span>
                 )}

@@ -102,7 +102,8 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         businessName: rawProfileUser.businessName,
         bio: rawProfileUser.bio,
         coverUrl: rawProfileUser.coverUrl,
-        logoUrl: rawProfileUser.logoUrl,
+        // 27/10: foto y logo son una sola imagen (cuentas viejas con solo logo: se usa el logo).
+        logoUrl: rawProfileUser.image ?? rawProfileUser.logoUrl,
         website: rawProfileUser.website,
         whatsapp: rawProfileUser.whatsapp,
         verified: await hasVerifiedBadge(id),
@@ -112,6 +113,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   // Sanitización de objetos Prisma (Decimal y Date) para el Client Component 
   const profileUser = {
     ...rawProfileUser,
+    image: rawProfileUser.image ?? rawProfileUser.logoUrl,
     createdAt: rawProfileUser.createdAt.toISOString(),
     aircrafts: rawProfileUser.aircrafts.map((a) => ({
       ...a,

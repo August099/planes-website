@@ -12,6 +12,7 @@ const SELLER_PUBLIC_SELECT = {
   email: true,
   phone: true,
   image: true,
+  logoUrl: true,
   city: true,
   province: true,
 } as const;

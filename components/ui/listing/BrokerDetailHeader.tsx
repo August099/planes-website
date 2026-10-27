@@ -137,7 +137,7 @@ export function BrokerDetailHeader({
             <div className="flex items-center sm:items-end gap-2.5 sm:gap-3 min-w-0">
               <span className="relative h-9 w-9 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-md border-2 border-white bg-white">
                 {broker.logoUrl ? (
-                  <Image src={broker.logoUrl} alt={`Logo de ${broker.name}`} fill sizes="56px" className="object-contain" />
+                  <Image src={broker.logoUrl} alt={`Logo de ${broker.name}`} fill sizes="56px" className="object-cover" />
                 ) : (
                   <span className="flex h-full w-full items-center justify-center text-sm sm:text-lg font-bold text-[#00205B]">
                     {broker.name.charAt(0).toUpperCase()}
@@ -189,7 +189,7 @@ export function BrokerDetailHeader({
           <div className="flex items-center gap-2 min-w-0">
             <span className="hidden sm:flex relative h-8 w-8 shrink-0 overflow-hidden rounded-md border border-white bg-white">
               {broker.logoUrl ? (
-                <Image src={broker.logoUrl} alt="" fill sizes="32px" className="object-contain" />
+                <Image src={broker.logoUrl} alt="" fill sizes="32px" className="object-cover" />
               ) : (
                 <span className="flex h-full w-full items-center justify-center text-xs font-bold text-[#00205B]">
                   {broker.name.charAt(0).toUpperCase()}

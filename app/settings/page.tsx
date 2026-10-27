@@ -87,7 +87,7 @@ export default async function SettingsPage() {
           name: user.name,
           email: user.email,
           phone: user.phone,
-          image: user.image,
+          image: user.image ?? user.logoUrl, // 27/10: foto y logo son una sola imagen
           city: user.city,
           province: user.province,
           userType: user.userType,

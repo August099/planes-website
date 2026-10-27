@@ -12,6 +12,7 @@ import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
 import { LocalityInput } from "@/components/ui/LocalityInput";
 import { USER_TYPE_OPTIONS } from "@/lib/user-types";
 import { StorefrontEditor } from "@/components/ui/profile/StorefrontEditor";
+import { cropSquare } from "@/lib/square-crop";
 import type { StorefrontData } from "@/components/ui/profile/StorefrontHeader";
 import { SubscriptionPanel } from "@/components/ui/profile/SubscriptionPanel";
 import type { SubscriptionSummary } from "@/lib/subscriptions";
@@ -108,9 +109,9 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
     const file = e.target.files?.[0];
     if (!file) return;
     setLoadingAvatar(true);
-    const formData = new FormData();
-    formData.append("avatar", file);
     try {
+      const formData = new FormData();
+      formData.append("avatar", await cropSquare(file));
       await updateAvatarAction(formData);
     } catch {
       alert("Error al subir la imagen.");
@@ -192,6 +193,8 @@ export function AccountSettings({ user, missingProfileFields, storefront, subscr
               </button>
             )}
             <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/jpeg,image/png,image/webp" className="hidden" />
+            {/* 27/10: una sola imagen para el perfil y la página personalizada (antes había un logo aparte). */}
+            <p className="w-full text-xs text-slate-500">Tu foto o el logo de tu empresa. Se recorta un cuadrado centrado.</p>
           </div>
         </div>
 

@@ -19,7 +19,7 @@ function ImageField({
   hint,
   current,
 }: {
-  kind: "cover" | "logo" | "detailCover";
+  kind: "cover" | "detailCover";
   label: string;
   hint: string;
   current: string | null;
@@ -35,7 +35,7 @@ function ImageField({
     setLoading(true);
     setError(null);
     try {
-      const compressed = await compressImage(file, kind === "logo" ? "brands" : "covers");
+      const compressed = await compressImage(file, "covers");
       if (compressed.size > 4.5 * 1024 * 1024) throw new Error("La imagen sigue siendo muy pesada.");
       const fd = new FormData();
       fd.append("kind", kind);
@@ -54,8 +54,8 @@ function ImageField({
     <div>
       <span className={LABEL}>{label}</span>
       <div className="flex items-center gap-4">
-        <div className={`relative overflow-hidden rounded-md border border-slate-200 bg-slate-100 ${kind === "logo" ? "h-16 w-16" : "aspect-[4/1] w-48"}`}>
-          {url && <Image src={url} alt="" fill sizes="192px" className={kind === "logo" ? "object-contain" : "object-cover"} />}
+        <div className="relative aspect-[4/1] w-48 overflow-hidden rounded-md border border-slate-200 bg-slate-100">
+          {url && <Image src={url} alt="" fill sizes="192px" className="object-cover" />}
           {loading && (
             <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -103,12 +103,11 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Beneficio de tu plan</p>
         <h2 className="mt-1 text-lg font-bold text-[#00205B]">Página personalizada</h2>
-        <p className="mt-1 text-sm text-slate-600">Así ven tu perfil los compradores: portada, logo, nombre comercial y contacto.</p>
+        <p className="mt-1 text-sm text-slate-600">Así ven tu perfil los compradores: portada, logo, nombre comercial y contacto. El logo es tu foto de perfil (en Datos personales).</p>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <ImageField kind="cover" label="Portada" hint="Ancha, por ejemplo 1600 × 400 px." current={storefront.coverUrl} />
-        <ImageField kind="logo" label="Logo" hint="Cuadrado, con fondo claro." current={storefront.logoUrl} />
         {storefront.customDetail && (
           <ImageField kind="detailCover" label="Portada de tus avisos" hint="Opcional: si no subís una, se usa la de tu Página." current={storefront.detailCoverUrl ?? null} />
         )}
