@@ -138,15 +138,16 @@ export function ProfileListings({
   return (
     <div className="space-y-5">
       {isOwner && quota && (
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 va-plate border-l-2 border-l-[#D62828] px-4 py-3 text-sm text-slate-600">
+        // 27/10 (socio): en rojo para que se note.
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[20px] bg-[#D62828] px-4 py-3 text-sm text-white shadow-sm">
           <span>
-            <span className="font-semibold text-[#00205B]">Plan {quota.planName}</span> ·{" "}
+            <span className="font-bold">Plan {quota.planName}</span> ·{" "}
             <span className="tabular-nums">
               {quotaPart("Aviones", quota.aircraft)} · {quotaPart("Repuestos", quota.parts)}
             </span>
           </span>
           {/* VA-186: siempre, no solo con el cupo lleno. */}
-          <Link href="/plans" className="font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828]">
+          <Link href="/plans" className="font-bold text-white underline underline-offset-2 hover:text-white/80">
             {full(quota.aircraft) || full(quota.parts) ? "Ver planes con más cupo" : "Planes y precios"}
           </Link>
         </p>
