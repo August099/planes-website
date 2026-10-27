@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Phone, Loader2 } from "lucide-react";
 import { updateProfileAction } from "@/app/actions/profile-actions";
 import { refreshHeaderIndicators } from "@/lib/header-refresh";
+import { PhoneInput } from "@/components/ui/PhoneInput";
 
 // VA-46 (decisión D7): sin teléfono no se puede publicar, porque sin él no hay botón de WhatsApp.
 // Se carga acá mismo y queda guardado en el perfil.
@@ -22,7 +23,7 @@ export function PhoneRequiredCard({ onSaved }: { onSaved: () => void }) {
     setError(null);
     try {
       const fd = new FormData();
-      fd.set("phone", phone.trim());
+      fd.set("phone", phone); // ya viene con el código de país (PhoneInput)
       await updateProfileAction(fd);
       refreshHeaderIndicators();
       onSaved();
@@ -45,16 +46,13 @@ export function PhoneRequiredCard({ onSaved }: { onSaved: () => void }) {
         </div>
       </div>
       <div className="flex flex-col sm:flex-row gap-2">
-        <input
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          aria-label="Teléfono de contacto"
-          placeholder="Ej: +54 9 11 2345 6789"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="flex-1 min-h-11 rounded-xl border border-amber-300 bg-white px-3 text-sm"
-        />
+        <div className="flex-1">
+          <PhoneInput
+            ariaLabel="Teléfono de contacto"
+            onChange={setPhone}
+            className="min-h-11 rounded-xl border border-amber-300 bg-white px-3 text-sm"
+          />
+        </div>
         <button
           type="button"
           onClick={save}

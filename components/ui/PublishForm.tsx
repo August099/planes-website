@@ -29,6 +29,8 @@ import { ProvinceSelect } from "@/components/ui/ProvinceSelect";
 import { LocalityInput } from "@/components/ui/LocalityInput";
 import { cityConflictsWithProvince } from "@/lib/localities";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PhoneInput } from "@/components/ui/PhoneInput";
+import { ReferencePhotos } from "@/components/ui/publish/ReferencePhotos";
 
 export interface CategoryOption { 
     id: string; 
@@ -108,10 +110,22 @@ const DOCUMENT_TYPES = [
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 // Error de validación debajo de un campo (viene del mismo esquema que usa el servidor).
+// .va-field-error: con un error, el asterisco del campo se pone rojo (globals.css, 27/10).
 function FieldError({ message }: { message?: string }) {
     if (!message) return null;
-    return <p className="text-[11px] text-red-600 font-semibold mt-1">{message}</p>;
+    return <p className="va-field-error text-[11px] text-red-600 font-semibold mt-1">{message}</p>;
 }
+
+// Asterisco de campo obligatorio (27/10): un elemento, para poder pintarlo de rojo si falta completarlo.
+function Req() {
+    return <span className="va-req" aria-hidden> *</span>;
+}
+
+function markFor(field: Parameters<typeof requiredMark>[0], categoryId: string | null | undefined) {
+    return requiredMark(field, categoryId) === " *" ? <Req /> : " (opcional)";
+}
+
+const REQUIRED_NOTE = <p className="mt-2 text-[11px] font-semibold text-slate-600">Los campos marcados con <span className="text-[#D62828]">*</span> son obligatorios.</p>;
 
 const EMPTY_ENGINE: EngineInput = { brand: "", model: "", engineHours: "", TBO: "", horsepower: "", description: "" };
 
@@ -524,7 +538,7 @@ export default function PublishForm({
                 const neededEngines = minEngines(aircraftForm.categoryId);
                 if (engines.length < neededEngines) return neededEngines === 2 ? "Un bimotor necesita los dos motores." : "Agregá al menos un motor.";
                 for (let i = 0; i < engines.length; i++) {
-                    if (!engines[i].brand.trim() && !engines[i].model.trim()) return `Completá la marca o el modelo del Motor #${i + 1}.`;
+                    if (!engines[i].brand.trim()) return `Completá la marca del Motor #${i + 1}.`;
                 }
                 for (let i = 0; i < engines.length; i++) {
                     if (!engines[i].TBO && isRequired("TBO", aircraftForm.categoryId)) return `El TBO del Motor #${i + 1} es obligatorio.`;
@@ -880,7 +894,8 @@ export default function PublishForm({
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div className="lg:col-span-2">
-                    <div className="bg-white border border-[#00205B]/12 rounded-lg p-6 sm:p-8 shadow-sm text-[#00205B]">
+                    {/* data-tried: se intentó avanzar con datos faltantes; los asteriscos de lo vacío se ponen rojos (globals.css). */}
+                    <div data-tried={(stepAttempted && !!currentStepError) || undefined} className="bg-white border border-[#00205B]/12 rounded-lg p-6 sm:p-8 shadow-sm text-[#00205B]">
                         
                         {/* ======================= FORMULARIO AVIONES ======================= */}
                         {activeTab === "aircraft" ? (
@@ -924,17 +939,18 @@ export default function PublishForm({
                                                 Paso 1: Datos principales de la aeronave
                                             </h3>
                                             <p className="text-xs text-slate-500 mt-1">Completá la información básica obligatoria para identificar tu aeronave.</p>
+                                            {REQUIRED_NOTE}
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="sm:col-span-2">
-                                                <label className="block text-xs font-bold uppercase mb-1">Título de Publicación *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Título de Publicación<Req /></label>
                                                 <input type="text" value={aircraftForm.title} onChange={e => setAircraftForm({...aircraftForm, title: e.target.value})} placeholder="Ej: Cessna 172 Skyhawk" className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.title} />
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Año *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Año<Req /></label>
                                                 {/* VA-145: vacío se guarda como 0 y se muestra vacío (antes quedaba un "0" imposible de borrar). */}
                                                 <input type="number" min="1900" max={currentYear} value={aircraftForm.year || ""} onChange={e => {
                                                     const year = Number(e.target.value);
@@ -944,7 +960,7 @@ export default function PublishForm({
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Condición *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Condición<Req /></label>
                                                 <select value={aircraftForm.condition} onChange={e => setAircraftForm({...aircraftForm, condition: e.target.value as "USADO" | "NUEVO"})} disabled={aircraftForm.year !== currentYear} className="w-full p-2.5 rounded-xl border border-slate-300 disabled:bg-slate-100 bg-white">
                                                     <option value="USADO">Usado</option>
                                                     {aircraftForm.year === currentYear && <option value="NUEVO">Nuevo</option>}
@@ -954,7 +970,7 @@ export default function PublishForm({
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Precio (USD) *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Precio (USD)<Req /></label>
                                                 <input type="number" min="0" disabled={aircraftForm.priceOnRequest} placeholder={aircraftForm.priceOnRequest ? "A Consultar" : "Ej: 150000"} value={aircraftForm.price} onChange={e => setAircraftForm({...aircraftForm, price: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white disabled:bg-slate-100" />
                                                 <label className="flex items-center gap-2 mt-2 text-xs font-semibold cursor-pointer">
                                                     <input type="checkbox" checked={aircraftForm.priceOnRequest} onChange={e => setAircraftForm({...aircraftForm, priceOnRequest: e.target.checked, price: ""})} className="rounded text-[#00205B]" /> 
@@ -964,7 +980,7 @@ export default function PublishForm({
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Horas Totales (TT){requiredMark("totalTimeHours", aircraftForm.categoryId)}</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Horas Totales (TT){markFor("totalTimeHours", aircraftForm.categoryId)}</label>
                                                 <input type="number" min="0" placeholder="Ej: 3200" value={aircraftForm.totalTimeHours} onChange={e => setAircraftForm({...aircraftForm, totalTimeHours: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.totalTimeHours} />
                                             </div>
@@ -972,7 +988,7 @@ export default function PublishForm({
                                             {/* VA-153/VA-165: primero el tipo (opcional): acota las marcas y los modelos por su categoría
                                                 recomendada. Con un modelo de la lista, se propone la recomendada y se puede cambiar. */}
                                             <div className="sm:col-span-2">
-                                                <label className="block text-xs font-bold uppercase mb-1">Tipo de aeronave *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Tipo de aeronave<Req /></label>
                                                 <select value={selectedGroup} onChange={e => handleGroupChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 font-medium bg-white">
                                                     <option value="">-- Seleccionar tipo --</option>
                                                     {AIRCRAFT_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
@@ -1005,7 +1021,7 @@ export default function PublishForm({
                                             )}
 
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Marca *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Marca<Req /></label>
                                                 <select value={aircraftForm.brandId} onChange={(e) => handleBrandChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
                                                     <option value="">Seleccionar Marca</option>
                                                     {brandOptions.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -1028,7 +1044,7 @@ export default function PublishForm({
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Modelo/Submodelo *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Modelo/Submodelo<Req /></label>
                                                 <select value={aircraftForm.modelId} onChange={(e) => handleModelChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
                                                     <option value="">Seleccionar Modelo</option>
                                                     {modelOptions.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -1086,7 +1102,7 @@ export default function PublishForm({
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
                                             <h4 className="font-bold uppercase text-xs text-[#00205B]">Aviónica / Radio / Equipamiento</h4>
                                             <div>
-                                                <label className="block text-xs font-bold mb-1">Descripción del panel{requiredMark("avDescription", aircraftForm.categoryId)}</label>
+                                                <label className="block text-xs font-bold mb-1">Descripción del panel{markFor("avDescription", aircraftForm.categoryId)}</label>
                                                 <textarea rows={3} placeholder="Ej: Garmin G1000, 2 NAV/COM, Transponder GXR..." value={aircraftForm.avDescription} onChange={e => setAircraftForm({...aircraftForm, avDescription: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.avDescription} />
                                             </div>
@@ -1114,7 +1130,7 @@ export default function PublishForm({
                                         {/* MOTOR */}
                                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
                                             <div className="flex justify-between items-center">
-                                                <h4 className="font-bold uppercase text-xs text-[#00205B]">Motor{requiredMark("engines", aircraftForm.categoryId)}</h4>
+                                                <h4 className="font-bold uppercase text-xs text-[#00205B]">Motor{markFor("engines", aircraftForm.categoryId)}</h4>
                                                 <button type="button" onClick={addEngine} className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#00205B]/10 text-[#00205B] hover:bg-[#00205B]/20 transition-colors">
                                                     <Plus className="w-4 h-4" /> Agregar Motor
                                                 </button>
@@ -1124,9 +1140,9 @@ export default function PublishForm({
                                                     <span className="absolute top-2 left-3 text-[10px] font-bold text-[#00205B] uppercase bg-blue-50 px-2 py-0.5 rounded">Motor #{idx + 1}</span>
                                                     <button type="button" onClick={() => removeEngine(idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold text-[10px] uppercase flex items-center gap-1"><Trash2 className="w-3 h-3" /> Quitar</button>
                                                     
-                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca</label><input type="text" placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.brand`]} /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca<Req /></label><input type="text" required placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.brand`]} /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Modelo</label><input type="text" placeholder="Ej: O-320" value={eng.model} onChange={e => updateEngine(idx, "model", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
-                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO{requiredMark("TBO", aircraftForm.categoryId)}</label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.TBO`]} /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO{markFor("TBO", aircraftForm.categoryId)}</label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.TBO`]} /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Potencia (HP)</label><input type="number" min="0" placeholder="Ej: 150" value={eng.horsepower} onChange={e => updateEngine(idx, "horsepower", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Horas del motor</label><input type="number" min="0" placeholder="Ej: 2200" value={eng.engineHours} onChange={e => updateEngine(idx, "engineHours", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div className="col-span-2"><label className="text-[10px] font-bold uppercase mb-1 block">Descripción Adicional</label><input type="text" placeholder="Detalles de cilindros, overhaul o accesorios." value={eng.description} onChange={e => updateEngine(idx, "description", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
@@ -1180,7 +1196,6 @@ export default function PublishForm({
                                                 Paso 3: Fotos y Documentos
                                             </h3>
                                             <p className="text-xs text-slate-500 mt-1">Mostrale al comprador el estado real de tu aeronave. La primera foto será la portada.</p>
-                                            {/* VA-126 (socio, 14/10): por ahora, sin las plantillas dibujadas de VA-124 (PhotoGuide queda en components/ui/publish). */}
                                             <p className="mt-2 border-l-2 border-[#D62828] pl-3 text-xs text-slate-600">
                                                 Sacá buenas fotos: con luz de día, nítidas y de todos los ángulos (exterior, cabina, tablero y motor). Podés subir hasta {MAX_LISTING_IMAGES}.
                                             </p>
@@ -1188,14 +1203,16 @@ export default function PublishForm({
                                         
                                         <div>
                                             <div className="flex justify-between items-center mb-2">
-                                                <label className="text-xs font-bold uppercase">Imágenes (Max 15) *</label>
+                                                <label className="text-xs font-bold uppercase">Imágenes (Max 15)<Req /></label>
                                                 <span className="text-[10px] text-slate-500 font-medium">Mantén apretado y arrastrá para reordenar</span>
                                             </div>
                                             {compressing && (
                                                 <p className="text-xs font-semibold text-[#00205B] mb-2">Optimizando fotos {compressing.done}/{compressing.total}...</p>
                                             )}
                                             <FieldError message={fieldErrors.images} />
-                                            
+                                            {/* 27/10: fotos de referencia (recuadros sin fotos; botón en la esquina cuando ya hay). */}
+                                            <div className="mb-3"><ReferencePhotos hasImages={images.length > 0} /></div>
+
                                             <div className="flex flex-wrap gap-3">
                                                 {images.map((img, idx) => (
                                                     <div 
@@ -1238,7 +1255,7 @@ export default function PublishForm({
                                             <h4 className="font-bold uppercase text-xs text-[#00205B]">Documentación</h4>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-[10px] font-bold uppercase mb-1">Estado de Habilitación *</label>
+                                                    <label className="block text-[10px] font-bold uppercase mb-1">Estado de Habilitación<Req /></label>
                                                     <div className="flex items-center gap-6 mt-2 text-sm font-medium">
                                                         <label className="flex items-center gap-2 cursor-pointer">
                                                             <input type="radio" name="certified" checked={aircraftForm.certified === true} onChange={() => setAircraftForm({...aircraftForm, certified: true})} className="w-4 h-4 text-[#00205B]" />
@@ -1316,12 +1333,12 @@ export default function PublishForm({
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Ciudad *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Ciudad<Req /></label>
                                                 <LocalityInput placeholder="Ej: San Fernando" value={aircraftForm.city} province={aircraftForm.province} onChange={city => setAircraftForm(f => ({...f, city}))} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.city} />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Provincia *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Provincia<Req /></label>
                                                 <ProvinceSelect required value={aircraftForm.province} onChange={(province) => { setAircraftForm(f => ({...f, province})); cityConflictsWithProvince(aircraftForm.city, province).then(conflict => conflict && setAircraftForm(f => ({...f, city: ""}))); }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.province} />
                                             </div>
@@ -1355,7 +1372,7 @@ export default function PublishForm({
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold uppercase mb-1">Descripción General y Comentarios Adicionales *</label>
+                                            <label className="block text-xs font-bold uppercase mb-1">Descripción General y Comentarios Adicionales<Req /></label>
                                             <DescriptionTextarea required placeholder={"Historial:\n- Siempre hangarado\n- Último anual en marzo 2026\n\nMotivo de venta: cambio por un bimotor."} value={aircraftForm.description} onChange={(description) => setAircraftForm({...aircraftForm, description})} />
                                             <FieldError message={fieldErrors.description} />
                                         </div>
@@ -1408,11 +1425,12 @@ export default function PublishForm({
                                                 Paso 1: Datos principales del repuesto
                                             </h3>
                                             <p className="text-xs text-slate-500 mt-1">Ingresá la información más importante para clasificar tu producto.</p>
+                                            {REQUIRED_NOTE}
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="sm:col-span-2">
-                                                <label className="block text-xs font-bold uppercase mb-1">Título de Publicación *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Título de Publicación<Req /></label>
                                                 <input type="text" placeholder="Ej: Cilindro Lycoming Superior con válvulas" value={partsForm.title} onChange={e => setPartsForm({...partsForm, title: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.title} />
                                             </div>
@@ -1421,7 +1439,7 @@ export default function PublishForm({
                                                 <input type="text" placeholder="Ej: Lycoming, Superior..." value={partsForm.brand} onChange={e => setPartsForm({...partsForm, brand: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Estado del Producto *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Estado del Producto<Req /></label>
                                                 <select value={partsForm.condition} onChange={e => setPartsForm({...partsForm, condition: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
                                                     <option value="NUEVO">Nuevo</option>
                                                     <option value="USADO">Usado</option>
@@ -1430,7 +1448,7 @@ export default function PublishForm({
                                                 </select>
                                             </div>
                                             <div className="sm:col-span-2 pt-2">
-                                                <label className="block text-xs font-bold uppercase mb-1">Precio *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Precio<Req /></label>
                                                 <div className="flex gap-2 mb-2">
                                                     <input type="number" min="0" disabled={partsForm.priceOnRequest} placeholder={partsForm.priceOnRequest ? "A Consultar" : "Ej: 1200"} value={partsForm.price} onChange={e => setPartsForm({...partsForm, price: e.target.value})} className="flex-1 p-2.5 rounded-xl border border-slate-300 bg-white disabled:bg-slate-100 font-semibold" />
                                                     <select value={partsForm.inPesos ? "ARS" : "USD"} onChange={e => setPartsForm({...partsForm, inPesos: e.target.value === "ARS"})} disabled={partsForm.priceOnRequest} className="p-2.5 rounded-xl border border-slate-300 font-bold bg-slate-50 disabled:bg-slate-100">
@@ -1468,7 +1486,7 @@ export default function PublishForm({
 
                                         <div>
                                             <div className="flex justify-between items-center mb-2">
-                                                <label className="text-xs font-bold uppercase">Imágenes (Max 15) *</label>
+                                                <label className="text-xs font-bold uppercase">Imágenes (Max 15)<Req /></label>
                                                 <span className="text-[10px] text-slate-500 font-medium">Mantén apretado para reordenar</span>
                                             </div>
                                             {compressing && (
@@ -1497,19 +1515,19 @@ export default function PublishForm({
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Ciudad *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Ciudad<Req /></label>
                                                 <LocalityInput placeholder="Ej: Morón" value={partsForm.city} province={partsForm.province} onChange={city => setPartsForm(f => ({...f, city}))} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.city} />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Provincia *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Provincia<Req /></label>
                                                 <ProvinceSelect required value={partsForm.province} onChange={(province) => { setPartsForm(f => ({...f, province})); cityConflictsWithProvince(partsForm.city, province).then(conflict => conflict && setPartsForm(f => ({...f, city: ""}))); }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.province} />
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold uppercase mb-1">Descripción del Artículo *</label>
+                                            <label className="block text-xs font-bold uppercase mb-1">Descripción del Artículo<Req /></label>
                                             <DescriptionTextarea placeholder="Detallá uso, tiempo remanente si aplica, fallas, compatibilidades generales..." value={partsForm.description} onChange={(description) => setPartsForm({...partsForm, description})} />
                                             <FieldError message={fieldErrors.description} />
                                         </div>
@@ -1551,13 +1569,13 @@ export default function PublishForm({
                                                 <input type="text" placeholder="Opcional" value={partsForm.partNumber} onChange={e => setPartsForm({...partsForm, partNumber: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Stock Disponible *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Stock Disponible<Req /></label>
                                                 <input type="number" min="1" value={partsForm.stock} onChange={e => setPartsForm({...partsForm, stock: e.target.value})} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.stock} />
                                             </div>
 
                                             <div className="col-span-2 sm:col-span-1">
-                                                <label className="block text-xs font-bold uppercase mb-1">Categoría *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Categoría<Req /></label>
                                                 <select value={selectedParentCategoryId} onChange={e => handleParentCategoryChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium">
                                                     <option value="">Seleccionar principal</option>
                                                     {spareCategoriesData.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -1565,7 +1583,7 @@ export default function PublishForm({
                                             </div>
 
                                             <div className="col-span-2 sm:col-span-1">
-                                                <label className="block text-xs font-bold uppercase mb-1">Subcategoría *</label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Subcategoría<Req /></label>
                                                 <select value={selectedSubCategoryId} onChange={e => handleSubCategoryChange(e.target.value)} disabled={!selectedParentCategoryId} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium disabled:bg-slate-100">
                                                     <option value="">Seleccionar subcategoría</option>
                                                     {subCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -1575,7 +1593,7 @@ export default function PublishForm({
 
                                             {subSubCategories.length > 0 && (
                                                 <div className="col-span-2">
-                                                    <label className="block text-xs font-bold uppercase mb-1">Subcategoría Específica *</label>
+                                                    <label className="block text-xs font-bold uppercase mb-1">Subcategoría Específica<Req /></label>
                                                     <select value={partsForm.categoryId} onChange={e => handleSubSubCategoryChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium">
                                                         <option value="">Seleccionar la opción más específica</option>
                                                         {subSubCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -1667,10 +1685,11 @@ export default function PublishForm({
                 {/* Sidebar Asistencia */}
                 <div className="lg:col-span-1 hidden lg:block">
                   <div className="bg-[#00205B] text-white rounded-lg p-6 border border-white/10 sticky top-24">
-                    <div className="flex items-center gap-2 text-red-500 font-bold text-xs uppercase tracking-wider mb-2">
+                    {/* 27/10: la pregunta en blanco y el título sobre una franja roja. */}
+                    <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-wider mb-3">
                       <HelpCircle className="w-4 h-4" /> ¿Preferís que nos encarguemos?
                     </div>
-                    <h3 className="font-heading text-xl font-bold mb-3">Publicación Asistida</h3>
+                    <h3 className="mb-3 inline-block rounded-lg bg-[#D62828] px-3 py-1.5 font-heading text-xl font-bold">Publicación Asistida</h3>
                     <p className="text-xs text-white/80 leading-relaxed mb-6">Dejanos tus datos, una breve descripción, y nuestro equipo preparará la publicación oficial por vos.</p>
 
                     {managedSuccess ? (
@@ -1681,7 +1700,7 @@ export default function PublishForm({
                     ) : (
                       <form onSubmit={handleManagedSubmit} className="space-y-4">
                         <div><input type="text" required placeholder="Tu Nombre *" value={managedListingForm.name} onChange={e => setManagedListingForm({...managedListingForm, name: e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm" /></div>
-                        <div><input type="tel" required placeholder="Tu WhatsApp *" value={managedListingForm.whatsapp} onChange={e => setManagedListingForm({...managedListingForm, whatsapp: e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm" /></div>
+                        <div><PhoneInput required ariaLabel="Tu WhatsApp" placeholder="Tu WhatsApp *" onChange={whatsapp => setManagedListingForm(f => ({...f, whatsapp}))} className="px-3 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm [&>option]:text-black" /></div>
                         <div>
                           <select value={managedListingForm.itemType} onChange={e => setManagedListingForm({...managedListingForm, itemType: e.target.value})} className="w-full px-3 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm [&>option]:text-black">
                             <option value="Aeronave">Quiero vender una Aeronave</option>
