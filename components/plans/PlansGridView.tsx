@@ -45,6 +45,9 @@ function Cell({ cell }: { cell: GridCell | null }) {
   return <span className="font-medium tabular-nums text-[#00205B]">{cell.text}</span>;
 }
 
+/** Se puede contratar: activo y con precio. Si no, la columna muestra lo que incluye y "Muy pronto". */
+const isSellablePlan = (p: GridPlan | null): p is GridPlan => !!p && p.isActive && p.price > 0;
+
 function PriceBlock({ column, plan }: { column: GridColumn; plan: GridPlan | null }) {
   if (column === "BASE") {
     return (
@@ -54,7 +57,7 @@ function PriceBlock({ column, plan }: { column: GridColumn; plan: GridPlan | nul
       </div>
     );
   }
-  if (!plan) return <p className="font-heading text-2xl font-bold text-[#00205B]">Muy pronto</p>;
+  if (!isSellablePlan(plan)) return <p className="font-heading text-2xl font-bold text-[#00205B]">Muy pronto</p>;
   return (
     <div className="space-y-1">
       <p className={`${LABEL} !text-[#D62828]`}>Promo de lanzamiento</p>
@@ -132,7 +135,10 @@ export function PlansGridView({ grid, renderAction, initialBrokerPick }: Props) 
   );
   const action = (column: GridColumn) => {
     const plan = plans[column];
-    return plan && renderAction ? renderAction(column, plan) : null;
+    // Base siempre tiene botón; los pagos, solo si se pueden contratar.
+    if (!renderAction || !plan) return null;
+    if (column !== "BASE" && !isSellablePlan(plan)) return null;
+    return renderAction(column, plan);
   };
   const columns: GridColumn[] = ["BASE", "PRO", "BROKER"];
 
