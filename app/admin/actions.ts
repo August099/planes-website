@@ -63,6 +63,9 @@ const activeListingSql = () =>
   Prisma.sql`"status" = 'ACTIVE'`;
 
 const DIRECT_TRAFFIC_LABEL = "Tráfico Directo / App";
+// 27/10: sin "Aceptar" en el cartel de cookies no se guarda el origen (ni el id anónimo): antes esas visitas
+// se contaban como directas e inflaban "Directo".
+const NO_CONSENT_LABEL = "Sin dato (no aceptó cookies)";
 
 async function requireAdmin(message = "Acceso denegado.") {
   const user = await getCurrentUser();
@@ -744,19 +747,27 @@ export async function getTrafficSourcesAnalytics(period: PeriodFilter = "30d", r
   const { start, end } = resolveDateRange(period, range);
 
   const rows = await prisma.$queryRaw<{ source: string; registered: boolean; events: number; contacts: number }[]>`
-    SELECT "source", "registered", COUNT(*)::int AS "events", COUNT(*) FILTER (WHERE "isContact")::int AS "contacts"
+    SELECT "source", "registered", COUNT(*) FILTER (WHERE "isView")::int AS "events", COUNT(*) FILTER (WHERE "isContact")::int AS "contacts"
     FROM (
       SELECT
-        COALESCE(
-          lower(substring(btrim("referrer") from '^[A-Za-z][A-Za-z0-9+.-]*://(?:www[.])?([^/:?#]+)')),
-          NULLIF(btrim("referrer"), ''),
-          NULLIF(lower(btrim("utmSource")), ''),
-          ${DIRECT_TRAFFIC_LABEL}
-        ) AS "source",
-        ("userId" IS NOT NULL) AS "registered",
-        ("eventType" IN ${CONTACT_TYPES_SQL}) AS "isContact"
-      FROM "AnalyticsEvent"
-      WHERE "createdAt" >= ${start} AND "createdAt" <= ${end}
+        CASE
+          WHEN e."anonymousId" IS NULL AND e."referrer" IS NULL AND e."utmSource" IS NULL THEN ${NO_CONSENT_LABEL}
+          ELSE COALESCE(
+            lower(substring(btrim(e."referrer") from '^[A-Za-z][A-Za-z0-9+.-]*://(?:www[.])?([^/:?#]+)')),
+            NULLIF(btrim(e."referrer"), ''),
+            NULLIF(lower(btrim(e."utmSource")), ''),
+            ${DIRECT_TRAFFIC_LABEL}
+          )
+        END AS "source",
+        (e."userId" IS NOT NULL) AS "registered",
+        (e."eventType" IN ${VIEW_TYPES_SQL}) AS "isView",
+        (e."eventType" IN ${CONTACT_TYPES_SQL}) AS "isContact"
+      FROM "AnalyticsEvent" e
+      LEFT JOIN "User" u ON u."id" = e."userId"
+      -- 27/10: solo visitas y contactos (antes sumaba búsquedas, filtros, altas, pagos...) y sin los admins.
+      WHERE e."createdAt" >= ${start} AND e."createdAt" <= ${end}
+        AND (e."eventType" IN ${VIEW_TYPES_SQL} OR e."eventType" IN ${CONTACT_TYPES_SQL})
+        AND COALESCE(u."isAdmin", false) = false
     ) t
     GROUP BY 1, 2`;
 
