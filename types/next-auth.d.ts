@@ -10,6 +10,8 @@ declare module "next-auth" {
       // VA-87: fecha (ISO) en que se verificó el email, leída de la base.
       emailVerifiedAt?: string | null;
       userTypeConfirmed?: boolean;
+      // 27/10: aceptó los términos (sin esto y sin email verificado, la cuenta va a /onboarding/completar).
+      termsAccepted?: boolean;
     } & DefaultSession["user"];
   }
 
@@ -25,5 +27,6 @@ declare module "next-auth/jwt" {
     isAdminCheckedAt?: number;
     emailVerified?: string | null;
     userTypeConfirmed?: boolean;
+    termsAccepted?: boolean;
   }
 }

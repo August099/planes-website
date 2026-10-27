@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SessionProvider from "@/components/ui/SessionProvider";
+import { AccountGate } from "@/components/ui/AccountGate";
 import { HeaderWrapper } from "./header-wrapper";
 import { HeaderLogo } from "./header-logo";
 import HeaderSearchBar from "./HeaderSearchBar";
@@ -26,6 +27,7 @@ export async function Header() {
 
   return (
     <SessionProvider>
+      <AccountGate />
       <HeaderWrapper>
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-2">
           <HeaderLogo />

@@ -57,6 +57,7 @@ export async function registerUserAction(formData: FormData) {
         passwordHash,
         userType,
         userTypeConfirmed: true,
+        termsAcceptedAt: new Date(), // aceptó en el formulario (validado arriba)
       },
     });
 

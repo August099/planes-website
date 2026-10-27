@@ -16,6 +16,15 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/", req.nextUrl.origin));
   }
 
+  // 27/10: sin términos aceptados o sin email verificado, primero se completa la cuenta (AccountGate hace lo
+  // mismo en el navegador para el resto del sitio).
+  const u = req.auth.user;
+  if (!u.termsAccepted || !u.emailVerifiedAt) {
+    const url = new URL("/onboarding/completar", req.nextUrl.origin);
+    url.searchParams.set("next", pathname + search);
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
 });
 
