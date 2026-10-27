@@ -62,6 +62,8 @@ model User {
   listingPriceChanges       ListingPriceChange[]
   // VA-105 · 3: al cambiar o restablecer la contraseña se cierran las sesiones iniciadas antes (callback jwt).
   passwordChangedAt         DateTime?
+  // 27/10: cuándo aceptó los términos (registro con formulario, o al completar la cuenta después de Google/Facebook).
+  termsAcceptedAt           DateTime?
   passwordResetTokens       PasswordResetToken[]
   // VA-150: lotes de saldo y registro de con qué se pagó cada aviso.
   creditLots                CreditLot[]

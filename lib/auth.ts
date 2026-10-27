@@ -81,24 +81,12 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   ],
   session: { strategy: "jwt" },
   // VA-87: después del primer login con Google, elegir el tipo de cuenta una sola vez.
-  pages: { newUser: "/onboarding/account-type" },
-  events: {
-    // VA-87 · Causa del falso "email no verificado": Auth.js crea los usuarios de OAuth con
-    // emailVerified: null (ignora lo que devuelve profile()) y, al vincular Google a una cuenta que
-    // ya existía, no toca el usuario. Si Google confirma el email, se guarda acá, en los dos casos.
-    // 26/10: también Facebook (solo devuelve emails que la persona ya confirmó en Facebook).
-    async signIn({ user, account, profile }) {
-      if (!user?.id || !user.email) return;
-      const provider = account?.provider;
-      const verifiedByProvider =
-        provider === "facebook" || (provider === "google" && (profile as { email_verified?: boolean } | undefined)?.email_verified);
-      if (!verifiedByProvider) return;
-      await prisma.user.updateMany({
-        where: { id: user.id, emailVerified: null },
-        data: { emailVerified: new Date() },
-      });
-    },
-  },
+  // 27/10: primero términos y verificación (/onboarding/completar), que después lleva al tipo de cuenta.
+  pages: { newUser: "/onboarding/completar" },
+  // 27/10 (socio): el email se verifica con nuestro mail también al entrar con Google o Facebook (antes se daba
+  // por verificado con lo que decía el proveedor). Auth.js crea esas cuentas con emailVerified: null; las que ya
+  // estaban verificadas siguen así. Sin email verificado o sin términos aceptados, la cuenta va a
+  // /onboarding/completar (components/ui/AccountGate.tsx y proxy.ts).
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
@@ -111,11 +99,12 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
       // update() y, para que quitar un admin no tarde días, como mucho cada 5 minutos.
       const checkedAt = typeof token.isAdminCheckedAt === "number" ? token.isAdminCheckedAt : 0;
       const stale = Date.now() - checkedAt > ADMIN_RECHECK_MS;
-      if (token?.email && (user || trigger === "update" || stale)) {
+      // 27/10: las sesiones de antes de termsAccepted lo leen ya (si no, AccountGate las mandaba a completar la cuenta).
+      if (token?.email && (user || trigger === "update" || stale || token.termsAccepted === undefined)) {
         // VA-87: también emailVerified y userTypeConfirmed, leídos de la base (no del proveedor).
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
-          select: { id: true, isAdmin: true, emailVerified: true, userTypeConfirmed: true, passwordChangedAt: true },
+          select: { id: true, isAdmin: true, emailVerified: true, userTypeConfirmed: true, passwordChangedAt: true, termsAcceptedAt: true },
         });
         // VA-105 · 3: la contraseña cambió después de iniciar esta sesión → se cierra (null borra la
         // cookie). El dispositivo que la cambió presenta la prueba firmada y sigue adentro. Como este
@@ -129,6 +118,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         token.isAdmin = dbUser?.isAdmin ?? false;
         token.emailVerified = dbUser?.emailVerified ? dbUser.emailVerified.toISOString() : null;
         token.userTypeConfirmed = dbUser?.userTypeConfirmed ?? false;
+        token.termsAccepted = !!dbUser?.termsAcceptedAt;
         token.isAdminCheckedAt = Date.now();
       }
 
@@ -140,6 +130,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         session.user.isAdmin = (token.isAdmin as boolean) || false;
         session.user.emailVerifiedAt = (token.emailVerified as string | null | undefined) ?? null;
         session.user.userTypeConfirmed = (token.userTypeConfirmed as boolean | undefined) ?? false;
+        session.user.termsAccepted = (token.termsAccepted as boolean | undefined) ?? false;
       }
       return session;
     },

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { consumeVerificationToken } from "@/lib/verification";
+import { getCurrentUser } from "@/lib/auth-helpers";
 
 export const metadata: Metadata = {
   title: "Activar cuenta",
@@ -16,7 +17,9 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
   const { token } = await searchParams;
   const result = token ? await consumeVerificationToken(token) : "invalid";
 
-  if (result === "ok") redirect("/login?success=EmailVerified");
+  // 27/10: si ya hay sesión (cuenta de Google o Facebook completando sus datos), vuelve a completar la cuenta
+  // en vez de al login; esa pantalla actualiza la sesión y sigue.
+  if (result === "ok") redirect((await getCurrentUser())?.id ? "/onboarding/completar" : "/login?success=EmailVerified");
 
   return (
     <main className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center p-6">
