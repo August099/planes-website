@@ -29,7 +29,11 @@ function resolveDateRange(period: PeriodFilter, range?: DateRange) {
   let start = new Date();
 
   if (period === "today") {
-    start.setHours(0, 0, 0, 0);
+    // 27/10: desde la medianoche de la Argentina (UTC-3, sin horario de verano); el servidor corre en UTC.
+    const AR_OFFSET_MS = 3 * 60 * 60 * 1000;
+    start = new Date(now.getTime() - AR_OFFSET_MS);
+    start.setUTCHours(0, 0, 0, 0);
+    start = new Date(start.getTime() + AR_OFFSET_MS);
   } else if (period === "30d") {
     start.setDate(now.getDate() - 30);
   } else if (period === "all") {
@@ -375,11 +379,13 @@ export async function getDashboardOverview(period: PeriodFilter = "30d", range?:
     sparePartLeadCount,
     dailyRows,
   ] = await Promise.all([
-    // Visitantes únicos: cookie va_anon (VA-15); si un evento no la tiene, cuenta el usuario.
+    // 27/10 (socio): personas que entraron = cuenta (si tiene sesión), cookie de visitante (si aceptó) o
+    // huella del día (lib: logPageView), sin los admins. Aparte, cuántos entraron con su cuenta y cuántos admins.
     prisma.$queryRaw<
       {
         visitors: number;
         users: number;
+        admins: number;
         aircraftViews: number;
         partsViews: number;
         whatsapp: number;
@@ -388,19 +394,23 @@ export async function getDashboardOverview(period: PeriodFilter = "30d", range?:
         pageViews: number;
       }[]
     >`
+      WITH t AS (
+        SELECT e.*, (COALESCE(u."isAdmin", false) OR COALESCE(e."metadata"->>'admin', '') = 'true') AS "isAdminEvent"
+        FROM "AnalyticsEvent" e
+        LEFT JOIN "User" u ON u."id" = e."userId"
+        WHERE e."createdAt" >= ${start} AND e."createdAt" <= ${end}
+      )
       SELECT
-        COUNT(DISTINCT COALESCE(e."anonymousId", 'user:' || e."userId"))::int AS "visitors",
-        COUNT(DISTINCT e."userId")::int AS "users",
-        COUNT(*) FILTER (WHERE "eventType" = 'PAGE_VIEW')::int AS "pageViews",
-        COUNT(*) FILTER (WHERE "eventType" = 'AIRCRAFT_VIEW')::int AS "aircraftViews",
-        COUNT(*) FILTER (WHERE "eventType" = 'SPARE_PART_VIEW')::int AS "partsViews",
-        COUNT(*) FILTER (WHERE "eventType" = 'WHATSAPP_CLICK')::int AS "whatsapp",
-        COUNT(*) FILTER (WHERE "eventType" = 'PHONE_CLICK')::int AS "phone",
-        COUNT(*) FILTER (WHERE "eventType" = 'EMAIL_CLICK')::int AS "email"
-      FROM "AnalyticsEvent" e
-      LEFT JOIN "User" u ON u."id" = e."userId"
-      -- 27/10: sin los admins (como en Tráfico).
-      WHERE e."createdAt" >= ${start} AND e."createdAt" <= ${end} AND COALESCE(u."isAdmin", false) = false`,
+        COUNT(DISTINCT COALESCE('u:' || "userId", 'a:' || "anonymousId", 'h:' || ("metadata"->>'v'))) FILTER (WHERE NOT "isAdminEvent")::int AS "visitors",
+        COUNT(DISTINCT "userId") FILTER (WHERE NOT "isAdminEvent")::int AS "users",
+        COUNT(DISTINCT "userId") FILTER (WHERE "isAdminEvent")::int AS "admins",
+        COUNT(*) FILTER (WHERE "eventType" = 'PAGE_VIEW' AND NOT "isAdminEvent")::int AS "pageViews",
+        COUNT(*) FILTER (WHERE "eventType" = 'AIRCRAFT_VIEW' AND NOT "isAdminEvent")::int AS "aircraftViews",
+        COUNT(*) FILTER (WHERE "eventType" = 'SPARE_PART_VIEW' AND NOT "isAdminEvent")::int AS "partsViews",
+        COUNT(*) FILTER (WHERE "eventType" = 'WHATSAPP_CLICK' AND NOT "isAdminEvent")::int AS "whatsapp",
+        COUNT(*) FILTER (WHERE "eventType" = 'PHONE_CLICK' AND NOT "isAdminEvent")::int AS "phone",
+        COUNT(*) FILTER (WHERE "eventType" = 'EMAIL_CLICK' AND NOT "isAdminEvent")::int AS "email"
+      FROM t`,
     prisma.aircraft.count({ where: activeListingWhere() }),
     prisma.sparePart.count({ where: activeListingWhere() }),
     prisma.aircraft.count({ where: dateWhere }),
@@ -408,15 +418,19 @@ export async function getDashboardOverview(period: PeriodFilter = "30d", range?:
     prisma.lead.count({ where: dateWhere }),
     prisma.sparePartLead.count({ where: dateWhere }),
     // Gráfico diario agrupado en la base (antes se traían todos los eventos del período).
-    prisma.$queryRaw<{ date: string; visits: number; views: number; contacts: number }[]>`
+    // Días de la Argentina (la base guarda UTC). 27/10: personas y con sesión por día.
+    prisma.$queryRaw<{ date: string; people: number; users: number; visits: number; views: number; contacts: number }[]>`
       SELECT
-        to_char(date_trunc('day', e."createdAt"), 'YYYY-MM-DD') AS "date",
+        to_char(date_trunc('day', (e."createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'America/Argentina/Buenos_Aires'), 'YYYY-MM-DD') AS "date",
+        COUNT(DISTINCT COALESCE('u:' || e."userId", 'a:' || e."anonymousId", 'h:' || (e."metadata"->>'v')))::int AS "people",
+        COUNT(DISTINCT e."userId")::int AS "users",
         COUNT(*) FILTER (WHERE "eventType" = 'PAGE_VIEW')::int AS "visits",
         COUNT(*) FILTER (WHERE "eventType" IN ${VIEW_TYPES_SQL})::int AS "views",
         COUNT(*) FILTER (WHERE "eventType" IN ${CONTACT_TYPES_SQL})::int AS "contacts"
       FROM "AnalyticsEvent" e
       LEFT JOIN "User" u ON u."id" = e."userId"
-      WHERE e."createdAt" >= ${start} AND e."createdAt" <= ${end} AND COALESCE(u."isAdmin", false) = false
+      WHERE e."createdAt" >= ${start} AND e."createdAt" <= ${end}
+        AND COALESCE(u."isAdmin", false) = false AND COALESCE(e."metadata"->>'admin', '') <> 'true'
       GROUP BY 1
       ORDER BY 1`,
   ]);
@@ -442,6 +456,7 @@ export async function getDashboardOverview(period: PeriodFilter = "30d", range?:
       uniqueVisitors: totals?.visitors ?? 0,
       pageViews: totals?.pageViews ?? 0,
       identifiedUsers: totals?.users ?? 0,
+      adminsLoggedIn: totals?.admins ?? 0,
       activeListings: activeAircraftCount + activePartsCount,
       newListings: newAircraftCount + newPartsCount,
       totalViews: viewsBreakdown.aircraftViews + viewsBreakdown.partsViews,
