@@ -69,7 +69,7 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
           {/* Logo sobre la portada */}
           <div className="relative -mt-14 mb-4 h-24 w-24 overflow-hidden rounded-md border-4 border-white bg-white shadow-sm sm:-mt-16 sm:h-28 sm:w-28">
             {storefront.logoUrl ? (
-              <Image src={storefront.logoUrl} alt={`Logo de ${name}`} fill sizes="112px" className="object-contain" />
+              <Image src={storefront.logoUrl} alt={`Logo de ${name}`} fill sizes="112px" className="object-cover" />
             ) : (
               <span className="flex h-full w-full items-center justify-center bg-[#00205B]/5 text-3xl font-bold text-[#00205B]">
                 {name.charAt(0).toUpperCase()}

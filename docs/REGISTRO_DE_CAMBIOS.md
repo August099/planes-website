@@ -331,6 +331,8 @@ Estilo elegido por el socio después de varias rondas de maquetas. Las reglas qu
 | VA-122: textos de Nosotros | `cdb1bdd`, `109bd6c` | `/about` |
 | Cuenta completa obligatoria (27/10): aceptar términos y verificar el email también al entrar con Google o Facebook. Migración `20261027120000_terminos_aceptados` | `0b7eda6` | `/onboarding/completar` |
 | Imágenes nuevas de "Explorá por tipo de aeronave" (27/10): renders del socio recortados con `scripts/process-aircraft-types.mjs` (originales en `assets/originals/aircraft-types`); Proyecto ya no se achica | ver git log | `/`, sección de tipos |
+| Monomotor y Experimental / LSA con el render nuevo del socio (27/10) | ver git log | `/`, sección de tipos |
+| Foto de perfil (27/10): se recorta en el navegador un cuadrado centrado de 600 px (`lib/square-crop.ts`); foto y logo de la página personalizada son una sola imagen (se sube en Ajustes → Datos personales; las cuentas con solo logo lo siguen mostrando) | ver git log | `/settings`, perfiles, detalles de Broker |
 
 ## Lote del 18/10 (VA-152 a VA-164)
 

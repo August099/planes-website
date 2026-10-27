@@ -10,7 +10,7 @@ export function SellerContactCard({
   entityType,
   className = "",
 }: {
-  seller: { id: string; name: string | null; image: string | null; phone: string | null; email: string | null; city: string | null; province: string | null };
+  seller: { id: string; name: string | null; image: string | null; logoUrl?: string | null; phone: string | null; email: string | null; city: string | null; province: string | null };
   whatsappUrl: string | null;
   emailUrl: string | null;
   entityId: string;
@@ -18,6 +18,7 @@ export function SellerContactCard({
   className?: string;
 }) {
   const sellerLocation = [seller.city, seller.province].filter(Boolean).join(", ");
+  const photo = seller.image ?? seller.logoUrl ?? null; // 27/10: foto y logo son una sola imagen
   return (
     <div className={`va-plate p-6 space-y-4 ${className}`}>
       <div className="flex items-center justify-between">
@@ -28,10 +29,10 @@ export function SellerContactCard({
       </div>
 
       <div className="flex items-center gap-3">
-        {seller.image ? (
+        {photo ? (
           <AppImage
             className="h-12 w-12 rounded-md border border-[#00205B]/12 object-cover"
-            src={seller.image}
+            src={photo}
             alt={seller.name || "Foto de vendedor"}
             width={48}
             height={48}

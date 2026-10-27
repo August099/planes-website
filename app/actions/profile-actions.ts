@@ -130,10 +130,12 @@ export async function updateAvatarAction(formData: FormData) {
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { image: imageUrl },
+    // 27/10: la foto es también el logo de la página personalizada; el logo aparte que hubiera queda reemplazado.
+    data: { image: imageUrl, logoUrl: null },
   });
 
   revalidatePath(`/profile/${user.id}`);
+  revalidatePath("/settings");
   return { success: true, imageUrl };
 }
 
@@ -143,10 +145,11 @@ export async function removeAvatarAction() {
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { image: null },
+    data: { image: null, logoUrl: null },
   });
 
   revalidatePath(`/profile/${user.id}`);
+  revalidatePath("/settings");
   return { success: true };
 }
 
@@ -214,7 +217,7 @@ export async function changePasswordAction({ currentPassword, newPassword }: Cha
     return { error: "Ocurrió un error inesperado en el servidor." };
   }
 }
-// VA-87: portada y logo de la página personalizada. Llegan ya comprimidas desde el navegador
+// VA-87: portada de la página personalizada (el logo es la foto de perfil desde el 27/10). Llegan ya comprimidas desde el navegador
 // (límite de 4,5 MB de Vercel) y se validan igual que el avatar.
 export async function uploadStorefrontImageAction(formData: FormData) {
   const user = await getCurrentUser();
@@ -222,7 +225,7 @@ export async function uploadStorefrontImageAction(formData: FormData) {
   if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye la página personalizada.");
 
   const kind = formData.get("kind");
-  if (kind !== "cover" && kind !== "logo" && kind !== "detailCover") throw new Error("Imagen inválida.");
+  if (kind !== "cover" && kind !== "detailCover") throw new Error("Imagen inválida.");
   // VA-170: la portada de los detalles es de los detalles personalizados (Broker y admins).
   if (kind === "detailCover" && !(await getAccountPlan(user.id)).customDetail) throw new Error("Tu plan no incluye detalles personalizados.");
   const file = formData.get("image") as File | null;
@@ -240,7 +243,7 @@ export async function uploadStorefrontImageAction(formData: FormData) {
 
   const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
   const url = `${data.publicUrl}?t=${Date.now()}`;
-  await prisma.user.update({ where: { id: user.id }, data: kind === "cover" ? { coverUrl: url } : kind === "logo" ? { logoUrl: url } : { detailCoverUrl: url } });
+  await prisma.user.update({ where: { id: user.id }, data: kind === "cover" ? { coverUrl: url } : { detailCoverUrl: url } });
 
   revalidatePath(`/profile/${user.id}`);
   return { success: true, url };
