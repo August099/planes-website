@@ -1,15 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import { LogoSlashes } from "@/components/ui/LogoSlashes";
 
 // "¿Querés vender tu aeronave?" (VA-79, VA-84). Rediseño (25/10, v2): bloque partido, el único gran plano
-// rojo de la Home; texto sobre rojo (blanco sobre #D62828: 4,9:1), la foto y las "//" del logo en el borde. Moderno (26/10): tarjeta redondeada dentro del contenedor, rojo liso y sombra roja suave.
+// rojo de la Home; texto sobre rojo (blanco sobre #D62828: 4,9:1) y la foto, con el rojo entrando en diagonal a 45°. Moderno (26/10): tarjeta redondeada dentro del contenedor, rojo liso y sombra roja suave.
 // En celular, foto arriba.
 export function SellerCta() {
   return (
     <section className="container mx-auto px-4 py-16 sm:py-20">
-      <div className="group relative isolate grid overflow-hidden rounded-[32px] bg-[#D62828] shadow-[0_30px_60px_-28px_rgb(183_31_31/0.7)] md:min-h-[440px] md:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+      <div className="group relative isolate grid overflow-hidden rounded-[32px] bg-[#D62828] shadow-[0_30px_60px_-28px_rgb(183_31_31/0.7)] md:min-h-[440px] md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
         <div className="relative order-2 flex flex-col justify-center gap-5 px-6 py-12 sm:px-12 md:order-1 lg:px-16">
           <h2 className="font-heading text-[2.4rem] leading-[0.95] font-extrabold tracking-[-0.035em] text-white sm:text-[3.4rem] lg:text-[4rem]">
             ¿Querés vender tu aeronave?
@@ -35,14 +34,13 @@ export function SellerCta() {
             sizes="(min-width: 768px) 50vw, 100vw"
             className="object-cover object-[center_60%] transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
           />
+          {/* 27/10: el rojo termina en una diagonal a 45° (el SVG es tan alto como la foto y su ancho sale del
+              viewBox, así el ángulo no depende del tamaño) y le sigue una franja azul paralela, como las // del logo. */}
+          <svg aria-hidden viewBox="0 0 118 100" preserveAspectRatio="xMinYMin meet" className="pointer-events-none absolute inset-y-0 -left-px hidden h-full aspect-[118/100] md:block">
+            <polygon points="0,0 100,0 0,100" fill="#D62828" />
+            <polygon points="106,0 118,0 18,100 6,100" fill="#00205B" />
+          </svg>
         </div>
-        {/* 27/10: las "//" del logo con sus proporciones reales (LogoSlashes), montadas sobre el borde entre el
-            rojo y la foto: la barra ancha en rojo y la fina en azul. Reemplaza el corte diagonal, que no las respetaba. */}
-        <LogoSlashes
-          wide="#D62828"
-          thin="#00205B"
-          className="pointer-events-none absolute left-[51.2%] top-1/2 z-10 hidden h-24 -translate-x-[30%] -translate-y-1/2 md:block lg:h-28"
-        />
       </div>
     </section>
   );
