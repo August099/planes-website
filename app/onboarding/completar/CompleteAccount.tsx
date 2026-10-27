@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { getCsrfToken } from "next-auth/react";
 import { CheckCircle2, Loader2, Mail } from "lucide-react";
 import { acceptTermsAction, myAccountStatusAction, sendMyVerificationEmailAction } from "./actions";
 
@@ -21,15 +21,22 @@ export function CompleteAccount({
   emailVerified: boolean;
   next: string;
 }) {
-  const { update } = useSession();
   const [terms, setTerms] = useState(initialTerms);
   const [verified, setVerified] = useState(initialVerified);
   const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState<null | "terms" | "mail" | "check">(null);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
 
+  // Vuelve a leer términos y verificación en el token (trigger "update" del callback jwt). No sirve update() de
+  // useSession: sin argumentos hace un GET que no refresca el token, y mientras la sesión carga no hace nada; el
+  // token quedaba viejo y AccountGate y esta página se mandaban una a la otra sin fin.
   const finish = async () => {
-    await update(); // vuelve a leer términos y verificación en el token
+    const csrfToken = await getCsrfToken();
+    await fetch("/api/auth/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ csrfToken, data: {} }),
+    });
     window.location.assign(next);
   };
 
