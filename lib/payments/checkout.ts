@@ -9,6 +9,8 @@ import { billingSnapshot, parseBilling, type BillingData } from "@/lib/billing-r
 import { appUrl, mpClient, notificationUrl } from "@/lib/mercadopago";
 import { activatePurchase } from "@/lib/payments/activation";
 import { getBillingSettings } from "@/lib/billing-settings";
+import { trackEvent } from "@/lib/track-event";
+import { TEST_PLAN_ID } from "@/lib/test-plan";
 import { startSubscription } from "@/lib/payments/subscriptions";
 
 // VA-92: el producto y el precio se resuelven siempre en el servidor a partir de un "producto" que
@@ -53,7 +55,8 @@ export async function resolveProduct(userId: string, q: ProductQuery): Promise<C
   const planId = q.planId ?? "";
   if (!planId) return { error: "Elegí un plan para continuar." };
   // VA-166: Base es gratis (no se cobra) y los admins no se suscriben (tienen todo incluido, VA-174).
-  const plan = await prisma.plan.findFirst({ where: { id: planId, isActive: true, archivedAt: null, tier: { not: "BASE" } } });
+  // 27/10: el plan de prueba (lib/test-plan.ts, sin nivel) también se puede pagar mientras esté publicado.
+  const plan = await prisma.plan.findFirst({ where: { id: planId, isActive: true, archivedAt: null, OR: [{ tier: { not: "BASE" } }, { id: TEST_PLAN_ID }] } });
   if (!plan) return { error: "Ese plan no está disponible." };
   return {
     key: `plan:${plan.id}`,
@@ -132,9 +135,11 @@ export async function startCheckout(input: {
   }
 
   const statusUrl = `/payment/status?purchase=${purchaseId}`;
+  // 27/10: evento para el panel admin (no corta el pago si falla).
+  await trackEvent("CHECKOUT_STARTED", { userId: input.userId, metadata: { purchaseId, product: product.key, amount: finalPrice } }, { withContext: true });
   // Cupón del 100%: se activa directo, sin Mercado Pago ni factura.
   if (finalPrice <= 0) {
-    await activatePurchase(purchaseId);
+    if (await activatePurchase(purchaseId)) await trackEvent("PAYMENT_COMPLETED", { userId: input.userId, metadata: { purchaseId, amount: 0, coupon: true } }, { onceKey: `purchase:${purchaseId}` });
     return { ok: true, redirectTo: statusUrl };
   }
 

@@ -9,6 +9,7 @@ import { processInvoice } from "@/lib/billing/issue";
 import { isTestPayment } from "@/lib/billing/guard";
 import { mpAccountIsTest } from "@/lib/payments/mp-account";
 import { handleSubscriptionTopic } from "@/lib/payments/subscriptions";
+import { trackEvent } from "@/lib/track-event";
 import { revertSubscriptionCharge } from "@/lib/payments/subscription-reversal";
 
 // VA-92 · Etapa 3: procesamiento de un WebhookEvent ya guardado. Nunca se confía en el payload:
@@ -133,6 +134,7 @@ export async function handlePayment(mpPaymentId: string): Promise<Outcome> {
 
   if (status === "approved") {
     const activated = await activatePurchase(purchase.id, approvedAt ?? new Date());
+    await trackEvent("PAYMENT_COMPLETED", { userId: purchase.userId, metadata: { purchaseId: purchase.id, mpPaymentId: String(mp.id ?? mpPaymentId), amount, isTest } }, { onceKey: `mp:${mp.id ?? mpPaymentId}` });
     notes.push(activated ? "compra activada" : "la compra ya estaba activada");
     if (purchaseStatus === "PARTIALLY_REFUNDED") {
       await prisma.purchase.update({ where: { id: purchase.id }, data: { paymentStatus: "PARTIALLY_REFUNDED" } });
@@ -143,12 +145,16 @@ export async function handlePayment(mpPaymentId: string): Promise<Outcome> {
     notes.push(await invoiceNote(payment.id));
     if (refunded > 0) notes.push(await handleRefunds(payment.id, mp.refunds ?? [], amount, refunded));
   } else if (purchaseStatus === "REFUNDED") {
+    await trackEvent("REFUND_ISSUED", { userId: purchase.userId, metadata: { purchaseId: purchase.id, mpPaymentId: String(mp.id ?? mpPaymentId), amount: refunded || amount, isTest } }, { onceKey: `mp:${mp.id ?? mpPaymentId}` });
     const revoked = await revokePurchase(purchase.id);
     notes.push(revoked ? "compra revertida" : "la compra ya estaba revertida o no se había activado");
     if (!revoked) await setStatusIfNotActivated(purchase.id, "REFUNDED");
     notes.push(await handleRefunds(payment.id, mp.refunds ?? [], amount, refunded || amount));
   } else {
     // Pendiente, en proceso, rechazado o cancelado: solo se informa (permite reintentar el pago).
+    if (status === "rejected" || status === "cancelled") {
+      await trackEvent("PAYMENT_FAILED", { userId: purchase.userId, metadata: { purchaseId: purchase.id, mpPaymentId: String(mp.id ?? mpPaymentId), status, statusDetail: mp.status_detail ?? null, isTest } }, { onceKey: `mp:${mp.id ?? mpPaymentId}` });
+    }
     await setStatusIfNotActivated(purchase.id, purchaseStatus);
   }
   return { status: "PROCESSED", note: notes.join("; ") };

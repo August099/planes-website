@@ -5,6 +5,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { PLANS_TAG } from "@/lib/plans";
+import { TEST_PLAN_DEFAULTS, TEST_PLAN_ID } from "@/lib/test-plan";
 import { QUOTA_TAG } from "@/lib/quota";
 import { FEATURED_SELLERS_TAG } from "@/lib/featured";
 import { gridDraftSchema, type GridBenefits, type GridDraft } from "@/lib/plan-grid-rules";
@@ -110,5 +111,28 @@ export async function savePlanGridAction(input: GridDraft, opts: { confirmPrice?
   updateTag(FEATURED_SELLERS_TAG); // VA-168: el interruptor "Destacadas" de un plan
   revalidatePath("/admin/plans");
   revalidatePath("/"); // VA-76: la Home es estática y muestra el cartel del cupo de Base
+  return { ok: true };
+}
+
+// 27/10: plan de prueba (lib/test-plan.ts). Publicado = aparece al pie de /plans y se puede pagar; borrador =
+// no se ve ni se puede comprar. La primera vez crea la fila.
+export async function saveTestPlanAction(input: { isActive: boolean; price: number }): Promise<Result> {
+  const admin = await getCurrentUser();
+  if (!admin?.isAdmin) return { ok: false, error: "No autorizado." };
+  const price = Math.round(Number(input.price));
+  if (!Number.isFinite(price) || price < 1 || price > 10_000_000) return { ok: false, error: "Cargá un precio válido (al menos $1)." };
+  const isActive = input.isActive === true;
+  try {
+    await prisma.plan.upsert({
+      where: { id: TEST_PLAN_ID },
+      create: { id: TEST_PLAN_ID, ...TEST_PLAN_DEFAULTS, price, isActive, sortOrder: 9999 },
+      update: { price, isActive, archivedAt: null },
+    });
+  } catch (error) {
+    console.error("Error al guardar el plan de prueba:", error);
+    return { ok: false, error: "No se pudo guardar el plan de prueba." };
+  }
+  updateTag(PLANS_TAG);
+  revalidatePath("/admin/plans");
   return { ok: true };
 }

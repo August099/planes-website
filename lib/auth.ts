@@ -7,6 +7,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { isValidPasswordChangeProof } from "@/lib/password-proof";
+import { trackEvent } from "@/lib/track-event";
 
 // En Auth.js v5 un throw común en authorize() llega al cliente como "CredentialsSignin".
 // Con CredentialsSignin + code, el login recibe res.code === "EmailNotVerified" (VA-20).
@@ -83,6 +84,12 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   // VA-87: después del primer login con Google, elegir el tipo de cuenta una sola vez.
   // 27/10: primero términos y verificación (/onboarding/completar), que después lleva al tipo de cuenta.
   pages: { newUser: "/onboarding/completar" },
+  // 27/10: alta de cuenta con Google o Facebook (el adapter crea el usuario) para el panel admin.
+  events: {
+    async createUser({ user }) {
+      if (user.id) await trackEvent("USER_REGISTERED", { userId: user.id, metadata: { method: "oauth" } }, { withContext: true });
+    },
+  },
   // 27/10 (socio): el email se verifica con nuestro mail también al entrar con Google o Facebook (antes se daba
   // por verificado con lo que decía el proveedor). Auth.js crea esas cuentas con emailVerified: null; las que ya
   // estaban verificadas siguen así. Sin email verificado o sin términos aceptados, la cuenta va a
