@@ -112,7 +112,7 @@ export function SparePartCard({
   return (
     <>
       <Link href={`/spareparts/sparepart-details/${id}`} className="group block h-full">
-        <Card data-card className="va-card h-full flex flex-col gap-0 p-0 rounded-md">
+        <Card data-card className="va-card h-full flex flex-col gap-0 p-0">
           <div className="relative w-full aspect-[16/10] overflow-hidden bg-slate-100">
             <AppImage
               src={imageUrl}
