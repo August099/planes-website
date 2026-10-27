@@ -176,7 +176,7 @@ export default function AdminOverviewPage() {
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tráfico de Usuarios</p>
                 <h3 className="text-2xl font-bold text-[#001F58] mt-1">{data.kpis.uniqueVisitors}</h3>
-                <p className="text-[11px] text-slate-500 mt-1">{data.kpis.identifiedUsers} usuarios registrados/logueados</p>
+                <p className="text-[11px] text-slate-500 mt-1">{data.kpis.pageViews} páginas vistas · {data.kpis.identifiedUsers} usuarios registrados/logueados</p>
               </div>
               <div className="p-3 bg-blue-50 text-[#001F58] rounded-xl">
                 <Users className="w-6 h-6" />
@@ -257,7 +257,8 @@ export default function AdminOverviewPage() {
                   <thead>
                     <tr className="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase">
                       <th className="py-2">Fecha</th>
-                      <th className="py-2">Vistas</th>
+                      <th className="py-2">Páginas vistas</th>
+                      <th className="py-2">Vistas de avisos</th>
                       <th className="py-2">Contactos</th>
                       <th className="py-2">Ratio Conversión</th>
                     </tr>
@@ -265,7 +266,7 @@ export default function AdminOverviewPage() {
                   <tbody className="divide-y divide-slate-100 text-xs">
                     {data.chartData.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="py-6 text-center text-slate-400">
+                        <td colSpan={5} className="py-6 text-center text-slate-400">
                           Sin actividad registrada en este rango de tiempo.
                         </td>
                       </tr>
@@ -275,6 +276,7 @@ export default function AdminOverviewPage() {
                         return (
                           <tr key={row.date} className="hover:bg-slate-50">
                             <td className="py-2.5 font-medium text-slate-700">{row.date}</td>
+                            <td className="py-2.5 text-slate-600">{row.visits}</td>
                             <td className="py-2.5 text-slate-600">{row.views}</td>
                             <td className="py-2.5 text-emerald-600 font-semibold">{row.contacts}</td>
                             <td className="py-2.5 text-slate-500 font-medium">{ratio}%</td>

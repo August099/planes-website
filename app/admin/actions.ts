@@ -385,18 +385,22 @@ export async function getDashboardOverview(period: PeriodFilter = "30d", range?:
         whatsapp: number;
         phone: number;
         email: number;
+        pageViews: number;
       }[]
     >`
       SELECT
-        COUNT(DISTINCT COALESCE("anonymousId", 'user:' || "userId"))::int AS "visitors",
-        COUNT(DISTINCT "userId")::int AS "users",
+        COUNT(DISTINCT COALESCE(e."anonymousId", 'user:' || e."userId"))::int AS "visitors",
+        COUNT(DISTINCT e."userId")::int AS "users",
+        COUNT(*) FILTER (WHERE "eventType" = 'PAGE_VIEW')::int AS "pageViews",
         COUNT(*) FILTER (WHERE "eventType" = 'AIRCRAFT_VIEW')::int AS "aircraftViews",
         COUNT(*) FILTER (WHERE "eventType" = 'SPARE_PART_VIEW')::int AS "partsViews",
         COUNT(*) FILTER (WHERE "eventType" = 'WHATSAPP_CLICK')::int AS "whatsapp",
         COUNT(*) FILTER (WHERE "eventType" = 'PHONE_CLICK')::int AS "phone",
         COUNT(*) FILTER (WHERE "eventType" = 'EMAIL_CLICK')::int AS "email"
-      FROM "AnalyticsEvent"
-      WHERE "createdAt" >= ${start} AND "createdAt" <= ${end}`,
+      FROM "AnalyticsEvent" e
+      LEFT JOIN "User" u ON u."id" = e."userId"
+      -- 27/10: sin los admins (como en Tráfico).
+      WHERE e."createdAt" >= ${start} AND e."createdAt" <= ${end} AND COALESCE(u."isAdmin", false) = false`,
     prisma.aircraft.count({ where: activeListingWhere() }),
     prisma.sparePart.count({ where: activeListingWhere() }),
     prisma.aircraft.count({ where: dateWhere }),
@@ -404,13 +408,15 @@ export async function getDashboardOverview(period: PeriodFilter = "30d", range?:
     prisma.lead.count({ where: dateWhere }),
     prisma.sparePartLead.count({ where: dateWhere }),
     // Gráfico diario agrupado en la base (antes se traían todos los eventos del período).
-    prisma.$queryRaw<{ date: string; views: number; contacts: number }[]>`
+    prisma.$queryRaw<{ date: string; visits: number; views: number; contacts: number }[]>`
       SELECT
-        to_char(date_trunc('day', "createdAt"), 'YYYY-MM-DD') AS "date",
+        to_char(date_trunc('day', e."createdAt"), 'YYYY-MM-DD') AS "date",
+        COUNT(*) FILTER (WHERE "eventType" = 'PAGE_VIEW')::int AS "visits",
         COUNT(*) FILTER (WHERE "eventType" IN ${VIEW_TYPES_SQL})::int AS "views",
         COUNT(*) FILTER (WHERE "eventType" IN ${CONTACT_TYPES_SQL})::int AS "contacts"
-      FROM "AnalyticsEvent"
-      WHERE "createdAt" >= ${start} AND "createdAt" <= ${end}
+      FROM "AnalyticsEvent" e
+      LEFT JOIN "User" u ON u."id" = e."userId"
+      WHERE e."createdAt" >= ${start} AND e."createdAt" <= ${end} AND COALESCE(u."isAdmin", false) = false
       GROUP BY 1
       ORDER BY 1`,
   ]);
@@ -434,6 +440,7 @@ export async function getDashboardOverview(period: PeriodFilter = "30d", range?:
     range: { start: start.toISOString(), end: end.toISOString() },
     kpis: {
       uniqueVisitors: totals?.visitors ?? 0,
+      pageViews: totals?.pageViews ?? 0,
       identifiedUsers: totals?.users ?? 0,
       activeListings: activeAircraftCount + activePartsCount,
       newListings: newAircraftCount + newPartsCount,
@@ -760,13 +767,13 @@ export async function getTrafficSourcesAnalytics(period: PeriodFilter = "30d", r
           )
         END AS "source",
         (e."userId" IS NOT NULL) AS "registered",
-        (e."eventType" IN ${VIEW_TYPES_SQL}) AS "isView",
+        (e."eventType" IN ${VIEW_TYPES_SQL} OR e."eventType" = 'PAGE_VIEW') AS "isView",
         (e."eventType" IN ${CONTACT_TYPES_SQL}) AS "isContact"
       FROM "AnalyticsEvent" e
       LEFT JOIN "User" u ON u."id" = e."userId"
-      -- 27/10: solo visitas y contactos (antes sumaba búsquedas, filtros, altas, pagos...) y sin los admins.
+      -- 27/10: solo visitas (páginas del sitio y avisos) y contactos (antes sumaba búsquedas, filtros, altas, pagos...) y sin los admins.
       WHERE e."createdAt" >= ${start} AND e."createdAt" <= ${end}
-        AND (e."eventType" IN ${VIEW_TYPES_SQL} OR e."eventType" IN ${CONTACT_TYPES_SQL})
+        AND (e."eventType" IN ${VIEW_TYPES_SQL} OR e."eventType" = 'PAGE_VIEW' OR e."eventType" IN ${CONTACT_TYPES_SQL})
         AND COALESCE(u."isAdmin", false) = false
     ) t
     GROUP BY 1, 2`;

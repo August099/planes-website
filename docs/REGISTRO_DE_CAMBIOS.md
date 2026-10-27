@@ -333,6 +333,9 @@ Estilo elegido por el socio después de varias rondas de maquetas. Las reglas qu
 | Imágenes nuevas de "Explorá por tipo de aeronave" (27/10): renders del socio recortados con `scripts/process-aircraft-types.mjs` (originales en `assets/originals/aircraft-types`); Proyecto ya no se achica | ver git log | `/`, sección de tipos |
 | Monomotor y Experimental / LSA con el render nuevo del socio (27/10) | ver git log | `/`, sección de tipos |
 | Foto de perfil (27/10): se recorta en el navegador un cuadrado centrado de 600 px (`lib/square-crop.ts`); foto y logo de la página personalizada son una sola imagen (se sube en Ajustes → Datos personales; las cuentas con solo logo lo siguen mostrando) | ver git log | `/settings`, perfiles, detalles de Broker |
+| Analíticas del admin (27/10): se registran las visitas a cada página del sitio (`PAGE_VIEW`, una por página y pestaña, sin admins ni el panel) y los eventos de negocio (altas de cuenta, ventas, republicaciones, checkout, pagos, reembolsos y suscripciones, `lib/track-event.ts`). El Resumen muestra páginas vistas y no cuenta a los admins; Tráfico suma las visitas al sitio | ver git log | `/admin`, `/admin/traffic` |
+| Plan de prueba (27/10): aparte de la grilla, publicado o borrador desde `/admin/plans`; pago único que no da nada, para probar cobro y factura | ver git log | `/admin/plans`, pie de `/plans` |
+| Perfil: la barra de plan y cupo de publicaciones en rojo (27/10) | ver git log | Perfil propio |
 
 ## Lote del 18/10 (VA-152 a VA-164)
 

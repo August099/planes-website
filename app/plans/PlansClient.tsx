@@ -9,6 +9,7 @@ import type { PlansGrid } from "@/lib/plan-grid";
 import { getPlansViewerAction, type MyPlanState, type PlansViewer } from "@/app/actions/plan-state-actions";
 import { PlanCardAction } from "./PlanCardAction";
 import { PageHeader } from "@/components/ui/PageHeader";
+import type { TestPlan } from "@/lib/test-plan";
 
 // VA-166: la grilla de los socios (Base, Pro y Broker / Empresa). Los planes y las filas salen de la base
 // (lib/plans.ts, /admin/plans). Lo del usuario (plan actual, admin, visitante) se pide en el navegador:
@@ -17,7 +18,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 const SECONDARY = "flex min-h-11 w-full items-center justify-center rounded-md border border-[#00205B]/25 px-4 text-sm font-bold text-[#00205B] hover:bg-[#00205B]/5";
 const NOTE = "flex min-h-11 w-full items-center justify-center rounded-md border border-[#00205B]/15 px-4 text-center text-sm font-semibold text-slate-600";
 
-export function PlansClient({ data }: { data: PlansGrid }) {
+export function PlansClient({ data, testPlan }: { data: PlansGrid; testPlan: TestPlan | null }) {
   const [viewer, setViewer] = useState<PlansViewer>({ loggedIn: false, isAdmin: false, plan: null });
   useEffect(() => {
     getPlansViewerAction()
@@ -76,6 +77,22 @@ export function PlansClient({ data }: { data: PlansGrid }) {
           Si cancelás o pasás a un plan con menos cupo y tenés más avisos activos, se pausan los más nuevos. Después elegís
           cuáles quedan activos desde tu perfil. Los cambios de plan son inmediatos y sin prorrateo.
         </p>
+
+        {/* 27/10: plan de prueba, solo cuando el admin lo publica (/admin/plans). */}
+        {testPlan && (
+          <section aria-labelledby="plan-prueba" className="mt-8 flex flex-col gap-4 rounded-[20px] border border-dashed border-[#00205B]/30 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 id="plan-prueba" className="font-heading text-lg font-extrabold text-[#00205B]">{testPlan.name}</h2>
+              <p className="mt-1 text-sm text-slate-600">Pago único de AR$ {new Intl.NumberFormat("es-AR").format(testPlan.price)} para probar el cobro y la factura. No incluye avisos ni beneficios.</p>
+            </div>
+            <Link
+              href={viewer.loggedIn ? `/checkout?planId=${testPlan.id}` : "/login?callbackUrl=/plans"}
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-[#00205B] px-5 text-sm font-bold text-white hover:bg-[#D62828]"
+            >
+              Pagar prueba
+            </Link>
+          </section>
+        )}
       </div>
     </main>
   );

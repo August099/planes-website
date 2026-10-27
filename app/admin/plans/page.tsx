@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { loadPlansGrid } from "@/lib/plans";
 import { PlanGridEditor } from "@/components/admin/PlanGridEditor";
+import { TestPlanCard } from "@/components/admin/TestPlanCard";
+import { loadTestPlan, TEST_PLAN_ID } from "@/lib/test-plan";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +19,10 @@ export default async function AdminPlansPage() {
   if (!admin?.isAdmin) redirect("/");
 
   const now = new Date();
-  const [grid, legacy, activeSubs] = await Promise.all([
+  const [grid, legacy, activeSubs, testPlan] = await Promise.all([
     loadPlansGrid(),
     prisma.plan.findMany({
-      where: { tier: null },
+      where: { tier: null, id: { not: TEST_PLAN_ID } },
       orderBy: { createdAt: "asc" },
       include: { _count: { select: { purchases: true, subscriptions: true } } },
     }),
@@ -30,6 +32,7 @@ export default async function AdminPlansPage() {
       where: { source: { not: "MANUAL" }, OR: [{ status: "ACTIVE", currentPeriodEnd: { gt: now } }, { status: "PAST_DUE", graceUntil: { gt: now } }] },
       _count: { _all: true },
     }),
+    loadTestPlan(),
   ]);
   const subscribers = Object.fromEntries(activeSubs.map((s) => [s.planId, s._count._all]));
   const { all, ...plansGrid } = grid;
@@ -55,6 +58,8 @@ export default async function AdminPlansPage() {
       </div>
 
       <PlanGridEditor initial={plansGrid} ids={ids} subscribers={subscribers} />
+
+      <TestPlanCard initial={testPlan} />
 
       {legacy.length > 0 && (
         <section className="space-y-3">
