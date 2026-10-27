@@ -25,7 +25,7 @@ export function SellerCta() {
           </Link>
         </div>
 
-        <div className="relative order-1 aspect-[16/10] md:order-2 md:aspect-auto">
+        <div className="relative order-1 aspect-[16/10] overflow-hidden md:order-2 md:aspect-auto">
           <Image
             src="/backgrounds/cta.webp"
             alt=""

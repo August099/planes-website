@@ -53,18 +53,14 @@ export async function loadPlansGrid(): Promise<PlansGrid & { all: Plan[] }> {
   };
 }
 
-/** Lo que ve /plans: solo los planes pagos activos y con precio. */
+/** Lo que ve /plans. 27/10: van todos los planes sin archivar, también los inactivos o sin precio: la grilla
+ *  muestra lo que incluyen y "Muy pronto" en vez del precio y el botón (isSellablePlan). Antes se mandaban como
+ *  null y la columna quedaba toda en guiones. */
 export const getPlansPage = unstable_cache(
   async (): Promise<PlansGrid> => {
     const { base, pro, broker, rows } = await loadPlansGrid();
-    const sellable = (p: GridPlan | null) => (p && p.isActive && p.price > 0 ? p : null);
-    return {
-      base,
-      pro: sellable(pro),
-      broker: { aircraft: sellable(broker.aircraft), parts: sellable(broker.parts), both: sellable(broker.both) },
-      rows,
-    };
+    return { base, pro, broker, rows };
   },
-  ["plans-page", "va187"],
+  ["plans-page", "va187", "unsellable-visible"],
   { tags: [PLANS_TAG, "quota"], revalidate: 3600 }
 );
