@@ -77,7 +77,7 @@ export function SparePartsMenu({ linkClass, categories }: { linkClass: string; c
                           {cat.name}
                         </Link>
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors group-hover/sub:bg-[var(--mega-line)]">
-                          <ChevronRight aria-hidden className="h-4 w-4 transition-transform duration-200 group-open/sub:rotate-90" />
+                          <ChevronRight aria-hidden className="h-4 w-4 text-[var(--mega-arrow)] transition-transform duration-200 group-open/sub:rotate-90" />
                           <span className="sr-only">Ver subcategorías de {cat.name}</span>
                         </span>
                       </summary>

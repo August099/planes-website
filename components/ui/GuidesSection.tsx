@@ -21,9 +21,12 @@ export async function GuidesSection() {
           className="va-rise group relative isolate flex min-h-36 items-center justify-between gap-6 overflow-hidden rounded-[32px] bg-[linear-gradient(120deg,#0A4C96_0%,#00205B_70%)] px-7 py-8 text-white shadow-[0_30px_60px_-30px_rgb(10_76_150/0.9)] ring-1 ring-white/10 sm:px-12"
         >
           <FlightPaths id="va-route-guides" tone="dark" className="-z-10" />
-          <span className="flex items-center gap-4 font-heading text-2xl leading-tight font-extrabold tracking-[-0.025em] sm:text-4xl">
+          <span className="flex items-center gap-4">
             <BookOpen aria-hidden strokeWidth={2} className="h-8 w-8 shrink-0 text-white/70 sm:h-10 sm:w-10" />
-            Guías de ayuda
+            <span>
+              <span className="block font-heading text-2xl leading-tight font-extrabold tracking-[-0.025em] sm:text-4xl">Guías de ayuda</span>
+              <span className="mt-1 block text-sm font-medium text-white/85 sm:text-base">Todo lo que te conviene saber antes de cerrar una venta</span>
+            </span>
           </span>
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-[#00205B] shadow-lg transition-transform duration-300 group-hover:scale-110 sm:h-16 sm:w-16">
             <ArrowRight className="h-6 w-6 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden />

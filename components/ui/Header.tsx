@@ -56,7 +56,7 @@ export async function Header() {
           </nav>
 
           {/* Acciones Mobile (Lupa + Menú) */}
-          <div className="flex md:hidden items-center gap-1">
+          <div className="flex min-w-0 flex-1 md:hidden items-center justify-end gap-1 pl-3">
             <MobileHeaderSearchBar />
             <MobileMenu partCategories={partCategories} />
           </div>

@@ -105,18 +105,19 @@ export default function MobileHeaderSearchBar() {
 
   return (
     <>
-      {/* Botón Lupa con color dinámico: blanco en Home, azul en el resto */}
+      {/* 26/10: barra de búsqueda chica (en vez de solo la lupa); al tocarla abre la pantalla de búsqueda. */}
       <button
         type="button"
         onClick={open}
-        className={`p-2 transition-colors md:hidden outline-none cursor-pointer ${
+        className={`flex h-9 w-full min-w-0 items-center gap-2 rounded-full px-3 text-left text-xs outline-none cursor-pointer md:hidden ${
           isHome
-            ? "text-white hover:text-white/80"
-            : "text-[#00205B] hover:text-blue-900"
+            ? "bg-white/90 text-[#00205B]/60 ring-1 ring-white/60"
+            : "border border-[#00205B]/12 bg-[#F5F5F5] text-[#00205B]/55"
         }`}
         aria-label="Abrir buscador"
       >
-        <Search className="w-5 h-5" />
+        <Search className="h-4 w-4 shrink-0 text-[#00205B]" />
+        <span className="truncate">Buscar aviones, repuestos…</span>
       </button>
 
       {/* Pantalla Blanca de Búsqueda para Mobile */}

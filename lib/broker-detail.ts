@@ -31,7 +31,7 @@ export async function getBrokerDetail(sellerId: string): Promise<BrokerDetail | 
     logoUrl: u.logoUrl,
     coverUrl: u.detailCoverUrl || u.coverUrl || null,
     verified: plan.verified,
-    accent: accentHex(u.accentColor),
+    accent: accentHex(null), // 27/10: sin paleta propia (se quitó de Ajustes); siempre el azul de la marca
     pageHref: `/profile/${sellerId}`,
   };
 }

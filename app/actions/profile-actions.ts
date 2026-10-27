@@ -13,7 +13,6 @@ import { normalizeProvince } from "@/lib/provinces";
 import { parseSelectableUserType } from "@/lib/user-types";
 import { hasCustomPage } from "@/lib/subscriptions";
 import { getAccountPlan } from "@/lib/plan-benefits";
-import { ACCENT_KEYS } from "@/lib/accent-colors";
 import { normalizeSocialUrl, type SocialNetwork } from "@/lib/social-links";
 
 const supabase = createClient(
@@ -76,13 +75,7 @@ export async function updateProfileAction(formData: FormData) {
     }
   }
 
-  // VA-170: color de acento de los detalles (paleta cerrada), solo con detalles personalizados.
-  if (formData.has("accentColor")) {
-    const accent = String(formData.get("accentColor") ?? "");
-    if (!(await getAccountPlan(user.id)).customDetail) throw new Error("Tu plan no incluye detalles personalizados.");
-    if (!(ACCENT_KEYS as string[]).includes(accent)) throw new Error("Elegí un color de la lista.");
-    dataToUpdate.accentColor = accent;
-  }
+  // VA-170: el color de acento se quitó el 27/10 (socio: con el rediseño ya no hace falta); el detalle usa el azul.
 
   // VA-77: la provincia del perfil también es una de las 24 canónicas.
   if (typeof dataToUpdate.province === "string") {
