@@ -14,7 +14,7 @@ const TYPES = [
     name: "Monomotor",
     image: "monomotor",
     width: 500,
-    height: 214,
+    height: 212,
     categories: ["MP", "MT"],
   },
   {
@@ -28,7 +28,7 @@ const TYPES = [
     name: "Experimental / LSA",
     image: "experimental-lsa",
     width: 500,
-    height: 171,
+    height: 203,
     categories: ["E"],
   },
   {

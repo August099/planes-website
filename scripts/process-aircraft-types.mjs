@@ -13,10 +13,10 @@ const WIDTH = 500;
 
 // [archivo, lado ("left" | "right" | "full"), tipo]
 const JOBS = [
-  ["Avioneta Blanca Tricolor en Estudio.png", "full", "experimental-lsa"],
+  ["Avionetas Blancas con Rayas Rojas y Azules.png", "left", "monomotor"],
+  ["Avionetas Blancas con Rayas Rojas y Azules.png", "right", "experimental-lsa"],
   ["Aviones gemelos con franjas rojas y azules.png", "left", "bimotor"],
   ["Aviones gemelos con franjas rojas y azules.png", "right", "otros"],
-  ["Aviones de aviación ligera y experimental.png", "left", "monomotor"],
   ["Aviones de aviación ligera y experimental.png", "right", "proyecto"],
   ["Avión fumigador y helicóptero bicolor.png", "left", "agricola"],
   ["Avión fumigador y helicóptero bicolor.png", "right", "helicoptero"],
