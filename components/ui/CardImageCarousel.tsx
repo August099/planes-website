@@ -53,7 +53,7 @@ export function ImageCarousel({
 
   if (finalImages.length === 0) {
     return (
-      <div className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100 flex items-center justify-center">
+      <div className="relative w-full aspect-[16/10] overflow-hidden bg-slate-100 flex items-center justify-center">
         <span className="text-xs text-slate-400">
           Sin imagen
         </span>
@@ -65,7 +65,7 @@ export function ImageCarousel({
 
   return (
     <div
-      className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-slate-100"
+      className="relative w-full aspect-[16/10] overflow-hidden bg-slate-100"
       onMouseEnter={() => {
         setIsHovered(true);
         reveal();

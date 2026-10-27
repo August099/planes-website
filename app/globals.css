@@ -798,3 +798,9 @@ html:not(:has([aria-label="Abrir menú del panel"])) main:not(.home-theme) h1.te
 [data-tried] div:has(> select option[value=""]:checked) > label .va-req {
   color: var(--va2-red);
 }
+
+/* Tarjetas de avisos (27/10): un solo radio, el de la tarjeta; la foto no tiene radio propio y la recorta la
+   tarjeta (overflow: hidden), así las esquinas de arriba coinciden. Le gana a la regla general de [data-slot=card]. */
+html [data-slot="card"].va-card {
+  border-radius: 20px;
+}
