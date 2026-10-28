@@ -148,7 +148,9 @@ confirmando tu pago…" (y se actualiza sola), "El pago no se completó" (con "I
 
 ---
 
-**Miembros fundadores (VA-182):** las primeras 15 cuentas no admin que publican su primer aviso (límite
+**Miembros fundadores (VA-182; desde el 28/10, manual):** la bonificación ya no se otorga sola al publicar:
+se asigna a mano en `/admin/users` ("Plan bonificado"). Cada cuenta de empresa nueva (no particular) manda un
+mail a aeronauticasventas@gmail.com; el aviso se pausa con el interruptor de `/admin/users`. Antes: las primeras 15 cuentas no admin que publican su primer aviso (límite
 editable en `/admin/users`) reciben **6 meses bonificados** de Broker / Empresa con todo ilimitado: una
 suscripción sin cobro (`MANUAL`, nota "Miembro fundador") hasta esa fecha, que vence sola y vuelve a Base
 como cualquier plan. No pasa por Mercado Pago ni factura, y no cuenta como ingreso. Si la cuenta ya tenía

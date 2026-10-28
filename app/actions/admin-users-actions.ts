@@ -62,7 +62,8 @@ export async function revokeCourtesyPlanAction(userId: string): Promise<{ ok: tr
   return res;
 }
 
-// VA-182: cuántas cuentas pueden ser fundadoras. No quita el beneficio a las que ya lo tienen.
+// VA-182: antes, cuántas cuentas podían ser fundadoras. 28/10: la bonificación es manual y este valor es el
+// interruptor del mail por cuenta de empresa nueva (0 = pausado; lib/business-signup-notice.ts).
 export async function updateFoundingLimitAction(limit: number): Promise<{ ok: true } | { ok: false; error: string }> {
   const admin = await getCurrentUser();
   if (!admin?.isAdmin) return { ok: false, error: "No autorizado." };

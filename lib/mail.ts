@@ -11,6 +11,12 @@ function resendClient(): Resend {
 }
 const resend = { emails: { send: (...args: Parameters<Resend["emails"]["send"]>) => resendClient().emails.send(...args) } };
 
+/** Envío genérico (28/10): tira error si Resend lo rechaza. */
+export async function sendMail(input: { from: string; to: string; subject: string; html: string }) {
+  const { error } = await resend.emails.send(input);
+  if (error) throw new Error(error.message);
+}
+
 /** Dominio para los links de los mails: el de la app; nunca localhost en producción. */
 export function appBaseUrl(): string {
   const raw = process.env.NEXTAUTH_URL || process.env.APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://ventasaeronauticas.com";

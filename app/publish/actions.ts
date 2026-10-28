@@ -20,12 +20,12 @@ import {
   type ListingResult,
 } from "@/lib/listing-schema";
 import { assertListingOwner } from "@/lib/listing-auth";
-import { claimFoundingMembership } from "@/lib/founders";
 import { adoptCustomTaxonomy, linkAdoptedSource } from "@/lib/taxonomy-adopt";
 import { normalizeTaxonomyName } from "@/lib/taxonomy-normalize";
 import { AIRCRAFT_TAXONOMY_TAG } from "@/lib/cached-data";
 import { FEATURED_SELLERS_TAG } from "@/lib/featured";
 import { engineTypeForCategory } from "@/lib/aircraft-categories";
+import type { FoundingGrant } from "@/lib/founders";
 import {
   createUploadTargets,
   pathFromPublicUrl,
@@ -287,7 +287,7 @@ export async function createListing(input: ListingInput, opts: { saveAsPaused?: 
           select: { id: true },
         });
         // VA-182: si es el primer aviso (activo) de la cuenta y hay lugar, queda fundadora.
-        return { id: aircraft.id, paused: !room, founder: room ? await claimFoundingMembership(tx, sellerId, now) : null };
+        return { id: aircraft.id, paused: !room, founder: null as FoundingGrant | null }; // 28/10: bonificación solo manual (lib/founders.ts)
       }
       const sparePart = await tx.sparePart.create({
         data: {
@@ -299,7 +299,7 @@ export async function createListing(input: ListingInput, opts: { saveAsPaused?: 
         },
         select: { id: true },
       });
-      return { id: sparePart.id, paused: !room, founder: room ? await claimFoundingMembership(tx, sellerId, now) : null };
+      return { id: sparePart.id, paused: !room, founder: null as FoundingGrant | null }; // 28/10: bonificación solo manual (lib/founders.ts)
     });
 
     if (!created) {
