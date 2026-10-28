@@ -40,25 +40,27 @@ const ICONS: Record<FeatureIcon, LucideIcon> = {
 
 // "Características de la aeronave" / "del repuesto" (VA-57, maqueta 1): ítems con íconos, 2 columnas en desktop y 1
 // en celular. Solo muestra ítems con valor o en "Sí". 27/10 (socio): ya no es un desplegable; se ven las primeras
-// 2 y "Ver más características" muestra el resto.
+// 2 y "Ver más características" muestra el resto. 28/10 (socio): en el celular arranca 100 % colapsada (ninguna
+// a la vista, solo el botón); en escritorio siguen las 2 primeras.
 const PREVIEW = 2;
 
 export function FeaturesCard({ title, features }: { title: string; features: Feature[] }) {
   const [expanded, setExpanded] = useState(false);
   if (features.length === 0) return null;
-  const visible = expanded ? features : features.slice(0, PREVIEW);
   const hidden = features.length - PREVIEW;
+  // Colapsada: en el celular no se ve ninguna; en escritorio, las primeras PREVIEW.
+  const itemClass = (i: number) => (expanded ? "flex" : i < PREVIEW ? "hidden md:flex" : "hidden");
 
   return (
     <section className="va-plate p-5 sm:p-6">
       <h2 className="text-lg font-extrabold tracking-[-0.01em] text-[#00205B]">{title}</h2>
 
       {/* Rediseño (25/10): ítems en filas con línea fina e ícono en una placa cuadrada. */}
-      <ul id="features-list" className="mt-4 grid grid-cols-1 border-t border-[#00205B]/10 md:grid-cols-2 md:gap-x-8">
-        {visible.map((feature) => {
+      <ul id="features-list" className={`mt-4 grid-cols-1 border-t border-[#00205B]/10 md:grid md:grid-cols-2 md:gap-x-8 ${expanded ? "grid" : "hidden"}`}>
+        {features.map((feature, i) => {
           const Icon = ICONS[feature.icon];
           return (
-            <li key={feature.label} className="flex items-center gap-3 border-b border-[#00205B]/10 py-2.5 text-sm text-slate-700">
+            <li key={feature.label} className={`${itemClass(i)} items-center gap-3 border-b border-[#00205B]/10 py-2.5 text-sm text-slate-700`}>
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[4px] border border-[#00205B]/12 bg-[#F5F5F5]">
                 <Icon className="h-4 w-4 text-[#00205B]" />
               </span>
@@ -75,18 +77,24 @@ export function FeaturesCard({ title, features }: { title: string; features: Fea
         })}
       </ul>
 
-      {hidden > 0 && (
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          aria-expanded={expanded}
-          aria-controls="features-list"
-          className="mt-4 inline-flex min-h-10 items-center gap-1.5 rounded-full border border-[#00205B]/20 px-4 text-xs font-bold text-[#00205B] transition-colors hover:border-[#00205B] hover:bg-[#00205B] hover:text-white cursor-pointer"
-        >
-          {expanded ? "Ver menos características" : `Ver más características (${hidden})`}
-          <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`} aria-hidden />
-        </button>
-      )}
+      {/* En el celular el botón está siempre; en escritorio, solo si hay más de PREVIEW. */}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        aria-controls="features-list"
+        className={`mt-4 min-h-10 items-center gap-1.5 rounded-full border border-[#00205B]/20 px-4 text-xs font-bold text-[#00205B] transition-colors hover:border-[#00205B] hover:bg-[#00205B] hover:text-white cursor-pointer ${hidden > 0 ? "inline-flex" : "inline-flex md:hidden"}`}
+      >
+        {expanded ? (
+          "Ver menos características"
+        ) : (
+          <>
+            <span className="md:hidden">Ver características ({features.length})</span>
+            <span className="hidden md:inline">Ver más características ({hidden})</span>
+          </>
+        )}
+        <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`} aria-hidden />
+      </button>
     </section>
   );
 }
