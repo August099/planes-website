@@ -76,13 +76,17 @@ export function PhoneInput({
     onChange?.(joinPhone(nextCode, nextLocal));
   };
 
+  // 28/10: los formularios pasan su clase de campo con w-full, que le ganaba al ancho del código y en el
+  // celular dejaba el número aplastado al costado. El código lleva siempre su ancho fijo.
+  const selectCls = (selectClassName || className).replace(/(^|\s)w-(full|auto)(?=\s|$)/g, " ");
+
   return (
-    <div className="flex gap-2">
+    <div className="flex w-full gap-2">
       <select
         aria-label="Código de país"
         value={code}
         onChange={(e) => update(e.target.value, local)}
-        className={`w-[5.75rem] shrink-0 ${selectClassName || className}`}
+        className={`w-[6.5rem] shrink-0 ${selectCls}`}
       >
         {PHONE_COUNTRIES.map((c) => (
           <option key={c.code} value={c.code} aria-label={`${c.name} (+${c.code})`}>
