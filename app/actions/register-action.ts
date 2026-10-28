@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { UserType } from "@prisma/client";
 import { issueVerificationEmail } from "@/lib/verification";
 import { trackEvent } from "@/lib/track-event";
+import { notifyBusinessSignup } from "@/lib/business-signup-notice";
 import { parseSelectableUserType } from "@/lib/user-types";
 
 export async function registerUserAction(formData: FormData) {
@@ -63,6 +64,7 @@ export async function registerUserAction(formData: FormData) {
       },
     });
 
+    await notifyBusinessSignup(created.id);
     await trackEvent("USER_REGISTERED", { userId: created.id, metadata: { method: "email" } }, { withContext: true });
 
     // 9. Token + mail de verificación (VA-20). Si el mail falla, la cuenta queda creada y

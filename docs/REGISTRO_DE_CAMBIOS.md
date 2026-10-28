@@ -337,6 +337,7 @@ Estilo elegido por el socio después de varias rondas de maquetas. Las reglas qu
 | Resumen del admin (27/10): "Personas que entraron" cuenta también a quien no acepta cookies (huella del día: IP + navegador + fecha con hash, sin guardar la IP) y sin robots; "con su cuenta" y los admins aparte (sus visitas se registran marcadas); "Hoy" y los días de la tabla en hora argentina | ver git log | `/admin` |
 | 28/10: "Descripción adicional" de motores y hélices en varias líneas (antes era un campo de una línea y no aceptaba Enter); el código de país del teléfono ya no ocupa todo el ancho en el celular; `scripts/remove-demo-listings.ts` borra las dos cuentas de demostración con sus avisos | ver git log | `/publish`, `/settings`, Página personalizada |
 | 28/10: en el celular, las características del aviso arrancan 100 % colapsadas (solo el botón "Ver características"); en escritorio siguen las 2 primeras | ver git log | Detalle de aeronave o repuesto |
+| 28/10: bonificación de fundadores 100 % manual (publicar ya no la otorga); mail a aeronauticasventas@gmail.com por cada cuenta de empresa nueva (registro, primer ingreso con Google/Facebook o cambio a empresa en Ajustes), con interruptor para pausarlo en `/admin/users` | ver git log | `/admin/users` |
 | Plan de prueba (27/10): aparte de la grilla, publicado o borrador desde `/admin/plans`; pago único que no da nada, para probar cobro y factura | ver git log | `/admin/plans`, pie de `/plans` |
 | Perfil: la barra de plan y cupo de publicaciones en rojo (27/10) | ver git log | Perfil propio |
 

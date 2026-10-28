@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 // Empresa con todo ilimitado (suscripción MANUAL hasta esa fecha; al vencer vuelve a Base como cualquier
 // plan). Se decide en la misma transacción que crea el aviso, con la fila de la configuración bloqueada:
 // dos que publican a la vez no pasan el límite.
+// 28/10 (socio): DESACTIVADO. La bonificación es 100 % manual desde /admin/users; publicar ya no la otorga
+// (app/publish/actions.ts no llama a claimFoundingMembership). Ver lib/business-signup-notice.ts.
 
 export const FOUNDING_MONTHS = 6;
 export const FOUNDING_NOTE = "Miembro fundador: 6 meses bonificados";

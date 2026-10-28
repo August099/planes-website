@@ -14,6 +14,7 @@ import { parseSelectableUserType } from "@/lib/user-types";
 import { hasCustomPage } from "@/lib/subscriptions";
 import { getAccountPlan } from "@/lib/plan-benefits";
 import { normalizeSocialUrl, type SocialNetwork } from "@/lib/social-links";
+import { notifyBusinessSignup } from "@/lib/business-signup-notice";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -85,10 +86,13 @@ export async function updateProfileAction(formData: FormData) {
   }
 
   if (Object.keys(dataToUpdate).length > 0) {
+    const before = dataToUpdate.userType ? await prisma.user.findUnique({ where: { id: user.id }, select: { userType: true } }) : null;
     await prisma.user.update({
       where: { id: user.id },
       data: dataToUpdate,
     });
+    // 28/10: pasó de particular a empresa → aviso a los socios.
+    if (before) await notifyBusinessSignup(user.id, before.userType);
   }
 
   revalidatePath(`/profile/${user.id}`);
