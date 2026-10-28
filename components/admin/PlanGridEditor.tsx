@@ -109,7 +109,7 @@ function describeChanges(a: GridDraft, b: GridDraft): string[] {
     num("Pro", "aviones activos", a.pro.aircraft, b.pro.aircraft);
     num("Pro", "repuestos activos", a.pro.parts, b.pro.parts);
     num("Pro", "republicaciones por año", a.pro.republishesPerYear, b.pro.republishesPerYear);
-    if (a.pro.isActive !== b.pro.isActive) out.push(`Pro ${b.pro.isActive ? "se activa" : "se desactiva"} en /plans`);
+    if (a.pro.isActive !== b.pro.isActive) out.push(`Pro ${b.pro.isActive ? "pasa a estar a la venta" : "pasa a \"Muy pronto\""} en /plans`);
     flags("Pro", a.pro, b.pro);
   }
   if (a.broker && b.broker) {
@@ -118,7 +118,7 @@ function describeChanges(a: GridDraft, b: GridDraft): string[] {
     num("Broker (ambos)", "de precio real", a.broker.priceBoth, b.broker.priceBoth, formatArs);
     num("Broker (ambos)", "de precio tachado", a.broker.listBoth, b.broker.listBoth, formatArs);
     num("Broker", "días entre \"Republicar todas\"", a.broker.republishAllEveryDays, b.broker.republishAllEveryDays);
-    if (a.broker.isActive !== b.broker.isActive) out.push(`Broker ${b.broker.isActive ? "se activa" : "se desactiva"} en /plans`);
+    if (a.broker.isActive !== b.broker.isActive) out.push(`Broker ${b.broker.isActive ? "pasa a estar a la venta" : "pasa a \"Muy pronto\""} en /plans`);
     flags("Broker", a.broker, b.broker);
   }
   const rowsA = JSON.stringify(a.rows);
@@ -318,7 +318,7 @@ export function PlanGridEditor({ initial, ids, subscribers }: { initial: PlansGr
                     (draft.pro ? (
                       <div className="mt-2 space-y-2">
                         {priceInputs("Precio por mes", draft.pro.price, draft.pro.listPrice, (n) => setPro({ price: n }), (n) => setPro({ listPrice: n }))}
-                        <Toggle label="Pro activo en /plans" on="Visible en /plans" off="Oculto en /plans" checked={draft.pro.isActive} onChange={(v) => setPro({ isActive: v })} />
+                        <Toggle label="Pro a la venta en /plans" on="A la venta" off="Muy pronto (sin precio ni botón)" checked={draft.pro.isActive} onChange={(v) => setPro({ isActive: v })} />
                         <p className="text-xs text-slate-500">{ids.pro ? subscribers[ids.pro] ?? 0 : 0} suscriptores</p>
                       </div>
                     ) : (
@@ -329,7 +329,7 @@ export function PlanGridEditor({ initial, ids, subscribers }: { initial: PlansGr
                       <div className="mt-2 space-y-2">
                         {priceInputs("Un rubro ilimitado", draft.broker.priceOne, draft.broker.listOne, (n) => setBroker({ priceOne: n }), (n) => setBroker({ listOne: n }))}
                         {priceInputs("Ambos ilimitados", draft.broker.priceBoth, draft.broker.listBoth, (n) => setBroker({ priceBoth: n }), (n) => setBroker({ listBoth: n }))}
-                        <Toggle label="Broker activo en /plans" on="Visible en /plans" off="Oculto en /plans" checked={draft.broker.isActive} onChange={(v) => setBroker({ isActive: v })} />
+                        <Toggle label="Broker a la venta en /plans" on="A la venta" off="Muy pronto (sin precio ni botón)" checked={draft.broker.isActive} onChange={(v) => setBroker({ isActive: v })} />
                         <p className="text-xs text-slate-500">
                           {[ids.brokerAircraft, ids.brokerParts, ids.brokerBoth].reduce((n, id) => n + (id ? subscribers[id] ?? 0 : 0), 0)} suscriptores
                         </p>
