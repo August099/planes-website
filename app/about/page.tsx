@@ -133,7 +133,7 @@ export default function AboutPage() {
 
           <section aria-labelledby="sugerencias" className="h-fit rounded-lg border border-[#00205B]/12 bg-white p-6">
             <p className={LABEL}>Sugerencias</p>
-            <h2 id="sugerencias" className="mt-1 text-lg font-bold text-[#00205B]">
+            <h2 id="sugerencias" className="mt-1 scroll-mt-32 text-lg font-bold text-[#00205B]">
               Ayudanos a mejorar
             </h2>
             <p className="mt-2 mb-5 text-sm text-slate-600">
