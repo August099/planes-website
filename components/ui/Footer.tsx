@@ -43,6 +43,12 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                {/* 28/10 (socio): el formulario de sugerencias está en Nosotros. */}
+                <Link href="/about#sugerencias" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
+                  Sugerencias
+                </Link>
+              </li>
+              <li>
                 <Link href="/faq" className="inline-block py-1.5 sm:py-0 hover:text-white transition-colors">
                   Preguntas frecuentes
                 </Link>
