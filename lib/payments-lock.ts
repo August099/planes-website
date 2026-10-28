@@ -3,7 +3,7 @@
 // Vercel: no se inicia ningún cobro ni suscripción con credenciales reales de Mercado Pago (con
 // credenciales de prueba, TEST-, sí) y nunca se emiten facturas (quedan pendientes). Se pasa a false al
 // habilitar los pagos (docs/PASE_A_PRODUCCION.md). En pre-production no existe.
-export const REAL_PAYMENTS_LOCKED = true;
+export const REAL_PAYMENTS_LOCKED = false; // 28/10: levantado por el socio para probar cobro y facturación en producción
 
 export const PAYMENTS_LOCKED_MESSAGE = "Los pagos están desactivados temporalmente.";
 
