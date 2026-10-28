@@ -143,7 +143,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
               <th className="px-4 py-3 text-center" title="Pagos con pedido de arrepentimiento (VA-150). Solo informativo.">Arrepent.</th>
               <th className="px-4 py-3">Tipo de cuenta</th>
               <th className="px-4 py-3">Plan</th>
-              <th className="px-4 py-3" title="VA-182: primeras cuentas que publicaron, con 6 meses bonificados">Fundador</th>
+              <th className="px-4 py-3" title="VA-182: cuentas fundadoras con 6 meses bonificados (desde el 28/10 se asignan a mano)">Fundador</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
