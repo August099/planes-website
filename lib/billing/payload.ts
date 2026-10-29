@@ -65,8 +65,10 @@ const money = (n: number) => Math.round(n * 100) / 100;
 const digits = (s: string | null | undefined) => (s ?? "").replace(/\D/g, "");
 
 export function provinceCode(name: string | null | undefined): number {
-  if (!name) return 26; // "sin provincia"
-  return PROVINCE_CODES[name] ?? (/tierra del fuego/i.test(name) ? 23 : /caba|ciudad aut/i.test(name) ? 1 : 26);
+  // 29/10: sin provincia o desconocida → 25 ("Otro" en la tabla de TusFacturas). Antes 26, una fila sin nombre
+  // que TusFacturas rechazaba al crear el cliente.
+  if (!name) return 25;
+  return PROVINCE_CODES[name] ?? (/tierra del fuego/i.test(name) ? 23 : /caba|ciudad aut/i.test(name) ? 1 : 25);
 }
 
 /** Bloque "cliente": empresa con CUIT, consumidor final con DNI o consumidor final sin datos. */
@@ -78,12 +80,15 @@ export function buildCliente(r: Receiver, customerCode: string, province: string
     documento_tipo: isCompany ? "CUIT" : dni ? "DNI" : "OTRO",
     documento_nro: isCompany ? cuit : dni || "0",
     razon_social: (r.name?.trim() || "Consumidor final").slice(0, 255),
-    domicilio: (r.address?.trim() || "-").slice(0, 255),
+    // 29/10: como el ejemplo oficial de consumidor final ("-" daba "Error al crear al cliente").
+    domicilio: (r.address?.trim() || "No especifica").slice(0, 255),
     provincia: provinceCode(province),
     envia_por_mail: r.email ? "S" : "N",
     email: r.email ?? "",
     condicion_pago: 216, // MercadoPago
     condicion_iva: isCompany ? (["RI", "M", "E"].includes(r.ivaCondition ?? "") ? r.ivaCondition : "RI") : "CF",
+    // RG 5616/2024 (desde el 15/04/2025): condición frente al IVA de la operación, la misma.
+    condicion_iva_operacion: isCompany ? (["RI", "M", "E"].includes(r.ivaCondition ?? "") ? r.ivaCondition : "RI") : "CF",
     codigo: customerCode.slice(0, 20),
     rg5329: "N",
   };

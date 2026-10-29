@@ -204,6 +204,11 @@ Cómo funciona:
   monotributo.
 - **Tope del monotributo:** indicador en el admin con alerta por mail al llegar al porcentaje elegido.
 
+**Datos del cliente (29/10, primera prueba real):** TusFacturas exige que su API acepte la IP de Vercel (en su
+panel: aceptar cualquier IP, porque Vercel cambia de IP). Sin dirección se manda "No especifica", sin provincia el
+código 25 ("Otro") y va `condicion_iva_operacion` (RG 5616/2024); con "-" y la provincia 26 respondía "Error al
+crear al cliente".
+
 Para el **pago real de prueba** en producción: se hace con `BILLING_ENABLED=false` (la factura queda
 pendiente) y después se descarta desde el admin.
 
