@@ -66,8 +66,11 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   const subscriptionPlans = await prisma.plan.findMany({
     where: { billingType: "SUBSCRIPTION", archivedAt: null, tier: { in: ["PRO", "BUSINESS"] } },
     orderBy: [{ isActive: "desc" }, { sortOrder: "asc" }],
-    select: { id: true, name: true, isActive: true },
+    select: { id: true, name: true, isActive: true, tier: true, isUnlimitedAircraft: true, isUnlimitedSpareParts: true },
   });
+  // 28/10 (socio): los bonificados llevan el Broker / Empresa con todo ilimitado: va primero (opción por defecto).
+  const rank = (p: (typeof subscriptionPlans)[number]) => (p.tier === "BUSINESS" ? (p.isUnlimitedAircraft && p.isUnlimitedSpareParts ? 0 : 1) : 2);
+  subscriptionPlans.sort((a, b) => rank(a) - rank(b));
   // VA-150: arrepentimientos por usuario (solo informativo: el derecho no se puede negar).
   const userIds = users.map((u) => u.id);
   const withdrawalRows = await prisma.payment.findMany({
@@ -79,7 +82,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
     const id = w.purchase?.userId ?? w.subscription?.userId;
     if (id) withdrawalsByUser.set(id, (withdrawalsByUser.get(id) ?? 0) + 1);
   }
-  const planOptions = subscriptionPlans.map((p) => ({ id: p.id, name: p.isActive ? p.name : `${p.name} (no visible en /plans)` }));
+  const planOptions = subscriptionPlans.map((p) => ({ id: p.id, name: p.isActive ? p.name : `${p.name} ("Muy pronto" en /plans)` }));
   const now = new Date();
   // VA-152: plan efectivo y cupo usado/total de cada cuenta de la página.
   const usages = new Map(await Promise.all(users.map(async (u) => [u.id, await getQuotaUsage(u.id)] as const)));
