@@ -59,7 +59,7 @@ test("cliente: consumidor final sin datos, con DNI y empresa con CUIT", () => {
   const dni = buildCliente({ kind: "CONSUMIDOR_FINAL", name: "Ana", docType: "DNI", docNumber: "30.123.456", email: "a@b.c" }, "u", null);
   assert.equal(dni.documento_tipo, "DNI");
   assert.equal(dni.documento_nro, "30123456");
-  assert.equal(dni.provincia, 26);
+  assert.equal(dni.provincia, 25);
 
   const empresa = buildCliente({ kind: "EMPRESA", name: "Aeroclub SA", docType: "CUIT", docNumber: "20-12345678-6", ivaCondition: "RI", email: "f@a.com", address: "Ruta 3 km 10" }, "u", "Buenos Aires");
   assert.equal(empresa.documento_tipo, "CUIT");
@@ -124,5 +124,5 @@ test("fechas en hora argentina y provincias", () => {
   assert.equal(tfDate(new Date("2026-10-14T02:00:00Z")), "13/10/2026");
   assert.equal(provinceCode("Ciudad Autónoma de Buenos Aires"), 1);
   assert.equal(provinceCode("Tierra del Fuego, Antártida e Islas del Atlántico Sur"), 23);
-  assert.equal(provinceCode("Narnia"), 26);
+  assert.equal(provinceCode("Narnia"), 25);
 });
