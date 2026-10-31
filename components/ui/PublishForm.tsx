@@ -251,7 +251,8 @@ export default function PublishForm({
     });
 
     // ESTADO: Formulario de aeronaves
-    const [aircraftForm, setAircraftForm] = useState(() => withInitialFixes(editListing?.aircraft ?? {
+    // 29/10: ciudad y provincia son opcionales; un aviso sin ubicación llega con null y el formulario usa "".
+    const [aircraftForm, setAircraftForm] = useState(() => withInitialFixes(editListing?.aircraft ? { ...editListing.aircraft, city: editListing.aircraft.city ?? "", province: editListing.aircraft.province ?? "" } : {
         title: "",
         year: currentYear,
         condition: "USADO" as "USADO" | "NUEVO",
@@ -350,7 +351,7 @@ export default function PublishForm({
     const [propellers, setPropellers] = useState<PropellerInput[]>(editListing?.propellers ?? []);
 
     // ESTADO: Formulario de repuestos
-    const [partsForm, setPartsForm] = useState(() => editListing?.parts ?? {
+    const [partsForm, setPartsForm] = useState(() => editListing?.parts ? { ...editListing.parts, city: editListing.parts.city ?? "", province: editListing.parts.province ?? "" } : {
         title: "",
         brand: "",
         price: "",
@@ -556,7 +557,6 @@ export default function PublishForm({
             }
             if (step === 2) {
                 if (images.length === 0) return "Debe adjuntar al menos una imagen.";
-                if (!partsForm.city.trim() || !partsForm.province.trim()) return "Ciudad y Provincia son obligatorias.";
                 if (!partsForm.description.trim()) return "La Descripción del repuesto es obligatoria.";
             }
             if (step === 3) {
@@ -577,8 +577,9 @@ export default function PublishForm({
             const err = validateStep(activeTab, i);
             if (err) return err;
         }
-        if (activeTab === "aircraft" && (!aircraftForm.description.trim() || !aircraftForm.city.trim() || !aircraftForm.province.trim())) {
-            return "Faltan datos en el último paso (Descripción, Ciudad o Provincia).";
+        // 29/10 (socio): ciudad y provincia son opcionales.
+        if (activeTab === "aircraft" && !aircraftForm.description.trim()) {
+            return "Falta la Descripción en el último paso.";
         }
         return null;
     };
@@ -1333,13 +1334,13 @@ export default function PublishForm({
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Ciudad<Req /></label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Ciudad <span className="font-normal normal-case text-slate-500">(opcional)</span></label>
                                                 <LocalityInput placeholder="Ej: San Fernando" value={aircraftForm.city} province={aircraftForm.province} onChange={city => setAircraftForm(f => ({...f, city}))} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.city} />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Provincia<Req /></label>
-                                                <ProvinceSelect required value={aircraftForm.province} onChange={(province) => { setAircraftForm(f => ({...f, province})); cityConflictsWithProvince(aircraftForm.city, province).then(conflict => conflict && setAircraftForm(f => ({...f, city: ""}))); }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <label className="block text-xs font-bold uppercase mb-1">Provincia <span className="font-normal normal-case text-slate-500">(opcional)</span></label>
+                                                <ProvinceSelect value={aircraftForm.province} onChange={(province) => { setAircraftForm(f => ({...f, province})); cityConflictsWithProvince(aircraftForm.city, province).then(conflict => conflict && setAircraftForm(f => ({...f, city: ""}))); }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.province} />
                                             </div>
                                         </div>
@@ -1515,13 +1516,13 @@ export default function PublishForm({
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Ciudad<Req /></label>
+                                                <label className="block text-xs font-bold uppercase mb-1">Ciudad <span className="font-normal normal-case text-slate-500">(opcional)</span></label>
                                                 <LocalityInput placeholder="Ej: Morón" value={partsForm.city} province={partsForm.province} onChange={city => setPartsForm(f => ({...f, city}))} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.city} />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-bold uppercase mb-1">Provincia<Req /></label>
-                                                <ProvinceSelect required value={partsForm.province} onChange={(province) => { setPartsForm(f => ({...f, province})); cityConflictsWithProvince(partsForm.city, province).then(conflict => conflict && setPartsForm(f => ({...f, city: ""}))); }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
+                                                <label className="block text-xs font-bold uppercase mb-1">Provincia <span className="font-normal normal-case text-slate-500">(opcional)</span></label>
+                                                <ProvinceSelect value={partsForm.province} onChange={(province) => { setPartsForm(f => ({...f, province})); cityConflictsWithProvince(partsForm.city, province).then(conflict => conflict && setPartsForm(f => ({...f, city: ""}))); }} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white" />
                                                 <FieldError message={fieldErrors.province} />
                                             </div>
                                         </div>

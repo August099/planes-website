@@ -22,8 +22,8 @@ type Listing = {
   id: string;
   title: string;
   price: number | null;
-  city: string;
-  province: string;
+  city: string | null;
+  province: string | null;
   category: { id: string; name: string } | null;
   images: { url: string }[];
   status?: string;

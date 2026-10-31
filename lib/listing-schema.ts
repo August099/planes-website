@@ -55,6 +55,11 @@ const price = z.preprocess(
 
 // Rutas dentro del bucket, devueltas por prepareListingUploads (no URLs completas).
 const storagePath = z.string().min(1).max(300);
+const nullableText = (max: number) =>
+  z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? null : v),
+    z.string().trim().max(max, `Máximo ${max} caracteres.`).nullish().transform((v) => v ?? null)
+  );
 
 const images = z
   .array(storagePath)
@@ -70,9 +75,10 @@ const common = {
   title: requiredText("El título es obligatorio.", 150),
   priceOnRequest: z.boolean().default(false),
   price,
-  city: requiredText("La ciudad es obligatoria.", 100),
-  // VA-77: una de las 24 provincias canónicas. Un alias ("Bs. As.", "CABA") se guarda normalizado.
-  province: requiredText("La provincia es obligatoria.", 100).transform((value, ctx) => {
+    city: nullableText(100),
+  // VA-77: si viene, tiene que ser una de las 24 provincias canónicas.
+  province: nullableText(100).transform((value, ctx) => {
+    if (value === null) return null;
     const canonical = normalizeProvince(value);
     if (!canonical) {
       ctx.addIssue({ code: "custom", message: "Elegí una provincia de la lista." });
@@ -261,8 +267,8 @@ export interface EditListingData {
     certDate: string;
     plate: string;
     youtubeUrl?: string;
-    city: string;
-    province: string;
+    city: string | null;
+    province: string | null;
     intDescription: string;
     passengers: string;
     airconditioner: boolean;
@@ -279,8 +285,8 @@ export interface EditListingData {
     inPesos: boolean;
     priceOnRequest: boolean;
     condition: string;
-    city: string;
-    province: string;
+    city: string | null;
+    province: string | null;
     description: string;
     partNumber: string;
     stock: string;
