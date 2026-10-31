@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 // Título de sección de la Home (rediseño 25–26/10): Montserrat extra negrita en minúscula y una regla
 // fina con el tramo rojo de la marca. `mark` pone un ícono tenue a la izquierda; `aside` va a la derecha
-// desde sm (links de la sección).
+// desde sm (links de la sección). 31/10 (socio): en el celular `aside` va debajo de la regla, alineado a la izquierda.
 export function DisplayTitle({
   children,
   tone = "light",
@@ -40,6 +40,7 @@ export function DisplayTitle({
         {aside && <div className="ml-auto hidden shrink-0 pb-1.5 sm:block">{aside}</div>}
       </div>
       <span aria-hidden className={`va-rule mt-4 ${dark ? "va-rule-dark" : ""}`} />
+      {aside && <div className="mt-4 sm:hidden">{aside}</div>}
     </div>
   );
 }
