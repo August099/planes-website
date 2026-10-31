@@ -286,7 +286,9 @@ export default async function AircraftDetailsPage({
                 precio con su rótulo, como un instrumento. Mismo contenido y orden que antes. */}
             <div className="order-2 lg:order-none va-plate border-t-2 border-t-[#D62828] p-6 space-y-4">
               <PublishedLine createdAt={aircraft.createdAt} lastPublishedAt={aircraft.lastPublishedAt} location={listingLocation} />
-              <AircraftActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url} />
+              <AircraftActionsHeader title={aircraft.title} aircraftId={aircraft.id} isFavoriteInitial={isFavoriteInitial} compareImage={aircraft.images[0]?.url}
+                editHref={isOwner ? `/publish?edit=${aircraft.id}&type=aircraft` : undefined}
+              />
               <Separator />
               <div>
                 <h1 className="va-h1-keep text-[1.65rem] leading-[1.12] font-extrabold tracking-[-0.015em] text-[#00205B] break-words">{aircraft.title}</h1>
