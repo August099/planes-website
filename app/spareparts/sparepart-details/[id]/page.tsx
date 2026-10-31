@@ -307,6 +307,7 @@ export default async function SparePartDetailsPage({
                 aircraftId={sparePart.id}
                 type="SPARE_PART"
                 isFavoriteInitial={isFavoriteInitial}
+                editHref={session?.user?.id === sparePart.sellerId ? `/publish?edit=${sparePart.id}&type=parts` : undefined}
               />
               <Separator />
               <div>
