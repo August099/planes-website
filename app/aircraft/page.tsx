@@ -13,6 +13,9 @@ import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { featuredFirstPage, getFeaturedSellerIds } from "@/lib/featured";
+import { aircraftLanding } from "@/lib/seo-landing";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl } from "@/lib/site";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 interface Props {
@@ -24,11 +27,14 @@ function toArray(value: string | string[] | undefined): string[] {
   return Array.isArray(value) ? value : [value];
 }
 
-// Canonical: los filtros no generan URLs indexables propias (apuntan a /aircraft);
+// 31/10: con UN solo filtro (lib/seo-landing.ts) la página es propia: título, descripción y canonical.
+// Canonical: los demás filtros no generan URLs indexables propias (apuntan a /aircraft);
 // sin filtros, cada página del listado es su propia URL (/aircraft?page=N).
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const params = await searchParams;
   const page = Number(params.page) || 1;
+  const landing = await aircraftLanding(params);
+  if (landing) return { title: landing.title, description: landing.description, alternates: { canonical: landing.path }, openGraph: { title: landing.title, description: landing.description, url: landing.path } };
   const hasFilters = Object.keys(params).some((key) => key !== "page");
   const canonical = !hasFilters && page > 1 ? `/aircraft?page=${page}` : "/aircraft";
 
@@ -42,6 +48,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 export default async function AircraftListPage({ searchParams }: Props) {
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
+  const landing = await aircraftLanding(params); // 31/10: título propio con un solo filtro (lib/seo-landing.ts)
   const itemsPerPage = 21;
   const skip = (currentPage - 1) * itemsPerPage;
 
@@ -220,7 +227,9 @@ export default async function AircraftListPage({ searchParams }: Props) {
       <Breadcrumbs items={[{ label: "Aviones" }]} className="-mt-4 mb-2" />
 
       {/* Encabezado (rediseño 26/10): banner con el título y la cantidad; el orden (solo desktop) a la derecha. */}
-      <PageHeader compact variant="desktop-banner" routeId="va-route-aircraft" title="Aviones en venta" count={totalAircrafts} className="mb-6" aside={<div className="hidden lg:block"><SortDropdown /></div>} />
+      {/* 31/10: los avisos de esta página como lista (schema.org ItemList) para los buscadores. */}
+      <JsonLd data={{ "@context": "https://schema.org", "@type": "ItemList", itemListElement: aircrafts.map((a, i) => ({ "@type": "ListItem", position: skip + i + 1, url: absoluteUrl(`/aircraft/${a.id}`), name: a.title })) }} />
+      <PageHeader compact variant="desktop-banner" routeId="va-route-aircraft" title={landing?.heading ?? "Aviones en venta"} count={totalAircrafts} className="mb-6" aside={<div className="hidden lg:block"><SortDropdown /></div>} />
 
       <section className="flex flex-col lg:flex-row items-start gap-6">
         

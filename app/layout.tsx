@@ -40,6 +40,23 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
   },
+  // 31/10: palabras clave (los buscadores las usan poco, pero no molestan) y verificación de Google Search Console
+  // y Bing Webmaster Tools con variables de Vercel (GOOGLE_SITE_VERIFICATION, BING_SITE_VERIFICATION).
+  keywords: [
+    "aviones en venta",
+    "aviones usados Argentina",
+    "repuestos aeronáuticos",
+    "helicópteros en venta",
+    "aviones agrícolas",
+    "avionetas en venta",
+    "motores de avión",
+    "hélices",
+    "aviónica",
+  ],
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } : {}),
+  },
 };
 
 export default function RootLayout({
