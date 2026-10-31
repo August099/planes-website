@@ -185,7 +185,8 @@ export default async function AircraftDetailsPage({
         <div className="flex justify-between items-baseline bg-slate-50 p-4 rounded-xl border border-slate-200">
           <div>
             <h2 className="text-2xl font-black text-[#00205B]">{aircraft.title}</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Ubicación: {aircraft.city}, {aircraft.province}</p>
+            {/* 29/10: ciudad y provincia son opcionales. */}
+            {listingLocation && <p className="text-xs text-slate-500 mt-0.5">Ubicación: {listingLocation}</p>}
           </div>
           <span className="text-2xl font-black text-[var(--sidebar-primary)] shrink-0">{formattedPrice}</span>
         </div>

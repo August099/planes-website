@@ -107,8 +107,8 @@ function aircraftFields(data: AircraftListing, categoryId: string) {
     year: data.year,
     totalTimeHours: data.totalTimeHours ?? null,
     price: data.priceOnRequest ? null : data.price ?? null,
-    city: data.city,
-    province: data.province,
+    city: data.city ?? null,
+    province: data.province ?? null,
     description: data.description,
     condition: data.condition,
     // VA-21/VA-43: el tipo de motor sale de la categoría (MP/BP pistón, MT/BT turbohélice).
@@ -166,8 +166,8 @@ function sparePartFields(data: SparePartListing) {
     inPesos: data.inPesos,
     stock: data.stock,
     condition: data.condition,
-    city: data.city,
-    province: data.province,
+    city: data.city ?? null,
+    province: data.province ?? null,
     description: data.description,
     aircrafts: data.aircrafts,
   };

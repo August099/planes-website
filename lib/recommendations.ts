@@ -131,8 +131,8 @@ export type AircraftRec = {
   price: number | null;
   year: number;
   totalTimeHours: number | null;
-  city: string;
-  province: string;
+  city: string | null;
+  province: string | null;
   category: { id: string; name: string };
   images: { id: string; aircraftId: string; order: number; url: string }[];
 };
@@ -142,8 +142,8 @@ export type SparePartRec = {
   title: string;
   price: number | null;
   inPesos: boolean;
-  city: string;
-  province: string;
+  city: string | null;
+  province: string | null;
   category: { name: string };
   imageUrl: string | null;
 };
@@ -204,7 +204,7 @@ type AircraftSource = {
   modelId: string | null;
   price: unknown;
   year: number;
-  province: string;
+  province: string | null;
 };
 
 /** Puntaje de similitud (VA-88). La categoría no suma: es el filtro de los niveles 1 y 2. */

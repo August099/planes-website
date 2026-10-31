@@ -104,7 +104,8 @@ export default async function SparePartDetailsPage({
     : null;
 
   const formattedPrice = formatPrice(sparePart.price, { inPesos: sparePart.inPesos });
-  const locationText = `${sparePart.city}, ${sparePart.province}`;
+  // 29/10: ciudad y provincia son opcionales (sin ninguna, no se muestra la línea).
+  const locationText = [sparePart.city, sparePart.province].filter(Boolean).join(", ");
   const sellerLocation = [seller.city, seller.province].filter(Boolean).join(", ");
 
   const features = sparePartFeatures(sparePart);
@@ -200,7 +201,7 @@ export default async function SparePartDetailsPage({
           </div>
         )}
 
-        <p className="text-xs text-slate-500">Ubicación: {locationText}</p>
+        {locationText && <p className="text-xs text-slate-500">Ubicación: {locationText}</p>}
 
         {features.length > 0 && (
           <div className="border border-slate-200 rounded-xl p-3 bg-white text-xs">
