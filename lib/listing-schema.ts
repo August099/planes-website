@@ -97,6 +97,8 @@ const engine = z.object({
   model: optionalText(100),
   engineHours: optionalInt("Horas del motor"),
   TBO: optionalInt("TBO"),
+  // 31/10 (socio): DURG/SMOH obligatorio (texto: "350", "350 h", "Cero"...).
+  smoh: requiredText("El DURG/SMOH del motor es obligatorio.", 30),
   horsepower: optionalInt("Potencia"),
   description: optionalText(500),
 });
@@ -182,13 +184,7 @@ export const aircraftListingSchema = z
     if (!data.avDescription && isRequired("avDescription", data.categoryId)) {
       ctx.addIssue({ code: "custom", path: ["avDescription"], message: "La descripción de aviónica es obligatoria." });
     }
-    if (isRequired("TBO", data.categoryId)) {
-      data.engines.forEach((engine, i) => {
-        if (engine.TBO === undefined) {
-          ctx.addIssue({ code: "custom", path: ["engines", i, "TBO"], message: "El TBO del motor es obligatorio." });
-        }
-      });
-    }
+    // 31/10 (socio): el TBO pasó a ser opcional en todas las categorías.
   });
 
 export const sparePartListingSchema = z
@@ -276,7 +272,7 @@ export interface EditListingData {
     extDescription: string;
     description: string;
   };
-  engines?: { brand: string; model: string; engineHours: string; TBO: string; horsepower: string; description: string }[];
+  engines?: { brand: string; model: string; engineHours: string; TBO: string; smoh: string; horsepower: string; description: string }[];
   propellers?: { brand: string; model: string; propellerHours: string; description: string }[];
   parts?: {
     title: string;
