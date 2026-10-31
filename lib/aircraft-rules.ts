@@ -7,7 +7,7 @@ export type RuleField = "totalTimeHours" | "avDescription" | "TBO" | "engines";
 const OPTIONAL_IN: Record<RuleField, string[]> = {
   totalTimeHours: ["A", "E", "PR"], // Agrícola, Experimental/LSA, Proyecto
   avDescription: ["A", "PR"], // Agrícola, Proyecto
-  TBO: ["PR"], // Proyecto (decisión D16)
+  TBO: ["PR"], // Proyecto (decisión D16). 31/10: ya no se usa, el TBO es opcional en todas
   engines: ["PR"], // VA-90 / VA-112: opcional en Proyecto (D19)
 };
 

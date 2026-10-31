@@ -165,6 +165,7 @@ export const ENGINE_FIELDS: { key: string; label: string; value: (e: Engine) => 
   { key: "model", label: "Modelo", value: (e) => text(e.model) },
   { key: "horsepower", label: "Potencia", value: (e) => (e.horsepower != null ? `${e.horsepower} HP` : undefined) },
   { key: "engineHours", label: "Horas totales", value: (e) => hours(e.engineHours), numeric: (e) => e.engineHours ?? undefined, best: "min" },
+  { key: "smoh", label: "DURG/SMOH", value: (e) => (e.smoh && e.smoh.trim() !== "-" ? e.smoh.trim() : undefined) },
   { key: "TBO", label: "TBO", value: (e) => hours(e.TBO) },
   { key: "description", label: "Descripción", value: (e) => text(e.description) },
 ];

@@ -89,6 +89,7 @@ interface EngineInput {
     model: string;
     engineHours: string;
     TBO: string;
+    smoh: string;
     horsepower: string;
     description: string;
 }
@@ -127,7 +128,7 @@ function markFor(field: Parameters<typeof requiredMark>[0], categoryId: string |
 
 const REQUIRED_NOTE = <p className="mt-2 text-[11px] font-semibold text-slate-600">Los campos marcados con <span className="text-[#D62828]">*</span> son obligatorios.</p>;
 
-const EMPTY_ENGINE: EngineInput = { brand: "", model: "", engineHours: "", TBO: "", horsepower: "", description: "" };
+const EMPTY_ENGINE: EngineInput = { brand: "", model: "", engineHours: "", TBO: "", smoh: "", horsepower: "", description: "" };
 
 export default function PublishForm({
     userId,
@@ -542,7 +543,7 @@ export default function PublishForm({
                     if (!engines[i].brand.trim()) return `Completá la marca del Motor #${i + 1}.`;
                 }
                 for (let i = 0; i < engines.length; i++) {
-                    if (!engines[i].TBO && isRequired("TBO", aircraftForm.categoryId)) return `El TBO del Motor #${i + 1} es obligatorio.`;
+                    if (!engines[i].smoh.trim()) return `El DURG/SMOH del Motor #${i + 1} es obligatorio.`;
                 }
                 if (propellers.length > engines.length) return "Demasiadas hélices (máximo igual a la cantidad de motores).";
             }
@@ -554,6 +555,9 @@ export default function PublishForm({
             if (step === 1) {
                 if (!partsForm.title.trim()) return "Falta el Título del repuesto.";
                 if (!partsForm.priceOnRequest && (!partsForm.price || Number(partsForm.price) < 0)) return "Ingrese el Precio (o marque 'A Consultar').";
+                if (!selectedParentCategoryId) return "Seleccione la Categoría principal.";
+                if (!selectedSubCategoryId) return "Seleccione la Subcategoría.";
+                if (!partsForm.categoryId) return "Seleccione la Subcategoría específica (la opción más detallada disponible).";
             }
             if (step === 2) {
                 if (images.length === 0) return "Debe adjuntar al menos una imagen.";
@@ -561,9 +565,6 @@ export default function PublishForm({
             }
             if (step === 3) {
                 if (!partsForm.stock || Number(partsForm.stock) < 1) return "El stock mínimo es de 1 unidad.";
-                if (!selectedParentCategoryId) return "Seleccione la Categoría principal.";
-                if (!selectedSubCategoryId) return "Seleccione la Subcategoría.";
-                if (!partsForm.categoryId) return "Seleccione la Subcategoría específica (la opción más detallada disponible).";
             }
         }
         return null;
@@ -1143,9 +1144,11 @@ export default function PublishForm({
                                                     
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Marca<Req /></label><input type="text" required placeholder="Ej: Lycoming" value={eng.brand} onChange={e => updateEngine(idx, "brand", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.brand`]} /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Modelo</label><input type="text" placeholder="Ej: O-320" value={eng.model} onChange={e => updateEngine(idx, "model", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
-                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO{markFor("TBO", aircraftForm.categoryId)}</label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.TBO`]} /></div>
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">TBO <span className="font-normal normal-case text-slate-500">(opcional)</span></label><input type="number" min="0" placeholder="Ej: 2000" value={eng.TBO} onChange={e => updateEngine(idx, "TBO", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.TBO`]} /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Potencia (HP)</label><input type="number" min="0" placeholder="Ej: 150" value={eng.horsepower} onChange={e => updateEngine(idx, "horsepower", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                     <div><label className="text-[10px] font-bold uppercase mb-1 block">Horas del motor</label><input type="number" min="0" placeholder="Ej: 2200" value={eng.engineHours} onChange={e => updateEngine(idx, "engineHours", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
+                                                    {/* 31/10 (socio): horas desde la última recorrida general, obligatorio. */}
+                                                    <div><label className="text-[10px] font-bold uppercase mb-1 block">DURG/SMOH<Req /></label><input type="text" required maxLength={30} placeholder="Ej: 350" value={eng.smoh} onChange={e => updateEngine(idx, "smoh", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /><FieldError message={fieldErrors[`engines.${idx}.smoh`]} /></div>
                                                     <div className="col-span-2"><label className="text-[10px] font-bold uppercase mb-1 block">Descripción Adicional</label><textarea rows={2} placeholder="Detalles de cilindros, overhaul o accesorios." value={eng.description} onChange={e => updateEngine(idx, "description", e.target.value)} className="w-full p-2 text-xs rounded-xl border border-slate-300" /></div>
                                                 </div>
                                             ))}
@@ -1465,6 +1468,37 @@ export default function PublishForm({
                                             </div>
                                         </div>
 
+                                        {/* 31/10 (socio): la categoría va en el primer paso. */}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="col-span-2 sm:col-span-1">
+                                                <label className="block text-xs font-bold uppercase mb-1">Categoría<Req /></label>
+                                                <select value={selectedParentCategoryId} onChange={e => handleParentCategoryChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium">
+                                                    <option value="">Seleccionar principal</option>
+                                                    {spareCategoriesData.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                </select>
+                                            </div>
+
+                                            <div className="col-span-2 sm:col-span-1">
+                                                <label className="block text-xs font-bold uppercase mb-1">Subcategoría<Req /></label>
+                                                <select value={selectedSubCategoryId} onChange={e => handleSubCategoryChange(e.target.value)} disabled={!selectedParentCategoryId} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium disabled:bg-slate-100">
+                                                    <option value="">Seleccionar subcategoría</option>
+                                                    {subCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                                </select>
+                                                <FieldError message={fieldErrors.categoryId} />
+                                            </div>
+
+                                            {subSubCategories.length > 0 && (
+                                                <div className="col-span-2">
+                                                    <label className="block text-xs font-bold uppercase mb-1">Subcategoría Específica<Req /></label>
+                                                    <select value={partsForm.categoryId} onChange={e => handleSubSubCategoryChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium">
+                                                        <option value="">Seleccionar la opción más específica</option>
+                                                        {subSubCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                                    </select>
+                                                    <p className="text-[10px] text-slate-400 mt-1">Esta subcategoría tiene opciones más detalladas: elegí siempre la más específica.</p>
+                                                </div>
+                                            )}
+                                        </div>
+
                                         {stepAttempted && currentStepError && (
                                             <div className="p-3 mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold flex items-center gap-2">
                                                 <AlertCircle className="w-4 h-4 shrink-0" />
@@ -1575,33 +1609,6 @@ export default function PublishForm({
                                                 <FieldError message={fieldErrors.stock} />
                                             </div>
 
-                                            <div className="col-span-2 sm:col-span-1">
-                                                <label className="block text-xs font-bold uppercase mb-1">Categoría<Req /></label>
-                                                <select value={selectedParentCategoryId} onChange={e => handleParentCategoryChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium">
-                                                    <option value="">Seleccionar principal</option>
-                                                    {spareCategoriesData.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                </select>
-                                            </div>
-
-                                            <div className="col-span-2 sm:col-span-1">
-                                                <label className="block text-xs font-bold uppercase mb-1">Subcategoría<Req /></label>
-                                                <select value={selectedSubCategoryId} onChange={e => handleSubCategoryChange(e.target.value)} disabled={!selectedParentCategoryId} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium disabled:bg-slate-100">
-                                                    <option value="">Seleccionar subcategoría</option>
-                                                    {subCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                                </select>
-                                                <FieldError message={fieldErrors.categoryId} />
-                                            </div>
-
-                                            {subSubCategories.length > 0 && (
-                                                <div className="col-span-2">
-                                                    <label className="block text-xs font-bold uppercase mb-1">Subcategoría Específica<Req /></label>
-                                                    <select value={partsForm.categoryId} onChange={e => handleSubSubCategoryChange(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-medium">
-                                                        <option value="">Seleccionar la opción más específica</option>
-                                                        {subSubCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                                    </select>
-                                                    <p className="text-[10px] text-slate-400 mt-1">Esta subcategoría tiene opciones más detalladas: elegí siempre la más específica.</p>
-                                                </div>
-                                            )}
                                         </div>
 
                                         <div className="p-5 bg-blue-50/60 rounded-xl border-2 border-[#00205B]/20">
