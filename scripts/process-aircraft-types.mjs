@@ -17,8 +17,8 @@ const JOBS = [
   ["Avionetas Blancas con Rayas Rojas y Azules.png", "right", "experimental-lsa"],
   ["Aviones gemelos con franjas rojas y azules.png", "left", "bimotor"],
   ["Aviones gemelos con franjas rojas y azules.png", "right", "otros"],
-  ["Aviones de aviación ligera y experimental.png", "right", "proyecto"],
-  ["Avión fumigador y helicóptero bicolor.png", "left", "agricola"],
+  ["avion-proyecto-render.png", "full", "proyecto"], // 31/10: render propio
+  ["avion-agricola-render.png", "full", "agricola"], // 31/10: render propio
   ["Avión fumigador y helicóptero bicolor.png", "right", "helicoptero"],
 ];
 
