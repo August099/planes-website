@@ -47,8 +47,8 @@ type ProfileListing = {
   id: string;
   title: string;
   price: number | null;
-  city: string;
-  province: string;
+  city: string | null;
+  province: string | null;
   category: { id: string; name: string } | null;
   images: { url: string }[];
   // VA-97: estado y fecha de alta (filtros por estado y orden de la grilla).

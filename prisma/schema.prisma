@@ -476,8 +476,8 @@ model Aircraft {
   year             Int
   totalTimeHours   Int?
   price            Decimal?            @db.Decimal(12, 2)
-  city             String
-  province         String
+  city             String?
+  province         String?
   // VA-152: sin vencimiento; ACTIVE cuenta en el cupo (lib/quota.ts).
   status           AircraftStatus      @default(ACTIVE)
   listingStartsAt  DateTime?
@@ -686,8 +686,8 @@ model SparePart {
   title            String
   partNumber       String?
   price            Decimal?            @db.Decimal(12, 2)
-  city             String
-  province         String
+  city             String?
+  province         String?
   // VA-152: sin vencimiento; ACTIVE cuenta en el cupo (lib/quota.ts).
   status           SparePartStatus     @default(ACTIVE)
   condition        SparepartCondition  @default(USADO)

@@ -12,8 +12,8 @@ import { listingsFor, type PageListing, type PageSection } from "@/lib/profile-p
 export type PageCard = PageListing & {
   id: string;
   price: number | null;
-  city: string;
-  province: string;
+  city: string | null;
+  province: string | null;
   category: { id: string; name: string } | null;
   imageUrl: string;
   year?: number;
