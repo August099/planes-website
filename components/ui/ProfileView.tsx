@@ -292,7 +292,9 @@ export function ProfileView({
                 className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#00205B] px-4 text-sm font-bold text-white hover:bg-[#D62828] cursor-pointer"
               >
                 <Edit className="h-4 w-4" />
-                Editar
+                {/* 31/10 (socio): "Editar" solo confundía con editar los avisos. */}
+                Editar página
+                <span className="rounded-sm bg-white/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em]">Beta</span>
               </button>
             </div>
           )}

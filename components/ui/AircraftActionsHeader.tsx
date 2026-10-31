@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, Share2, Printer, TriangleAlert } from "lucide-react";
+import Link from "next/link";
+import { Heart, Pencil, Share2, Printer, TriangleAlert } from "lucide-react";
 import { ShareDialog } from "@/components/ui/ShareDialog";
 import { CompareButton } from "@/components/ui/compare/CompareButton";
 import { toggleFavoriteAction } from "@/app/actions/favorite-actions";
@@ -16,9 +17,11 @@ interface Props {
   type?: "AIRCRAFT" | "SPARE_PART";
   // VA-83: foto para la bandeja de comparación (solo aeronaves).
   compareImage?: string | null;
+  /** 31/10 (socio): si el que mira es el dueño, "Editar" al lado de Imprimir. */
+  editHref?: string;
 }
 
-export function AircraftActionsHeader({ title, aircraftId, isFavoriteInitial = false, type = "AIRCRAFT", compareImage = null }: Props) {
+export function AircraftActionsHeader({ title, aircraftId, isFavoriteInitial = false, type = "AIRCRAFT", compareImage = null, editHref }: Props) {
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(isFavoriteInitial);
   const [isPending, setIsPending] = useState(false);
@@ -112,6 +115,16 @@ export function AircraftActionsHeader({ title, aircraftId, isFavoriteInitial = f
               Imprimir
             </span>
           </button>
+
+          {editHref && (
+            <Link
+              href={editHref}
+              className="inline-flex min-h-11 items-center gap-1.5 self-center rounded-full bg-[#00205B] px-3.5 text-xs font-bold text-white transition-colors hover:bg-[#D62828] sm:min-h-8"
+            >
+              <Pencil className="h-3.5 w-3.5" aria-hidden />
+              Editar
+            </Link>
+          )}
         </div>
 
         {/* VA-161: "Reportar" siempre a la vista (antes solo aparecía al pasar el mouse). */}

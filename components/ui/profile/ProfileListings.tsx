@@ -188,10 +188,28 @@ export function ProfileListings({
           {shown.map(({ kind, l }) => {
             const type = kind === "aeronaves" ? "aircraft" : "sparepart";
             const st = statusOf(l);
+            const owner = isOwner
+              ? {
+                  editHref: editHref(l.id, type),
+                  footer: (
+                    <OwnerPanel
+                      l={l}
+                      type={type}
+                      st={st}
+                      moderation={l.status === "MODERATED" ? moderation[l.id] ?? { reason: null, reviewRequested: false } : null}
+                      republish={republish}
+                      onStatus={onStatus}
+                      onRequestReview={onRequestReview}
+                      onDelete={onDelete}
+                      loadingId={loadingId}
+                    />
+                  ),
+                }
+              : undefined;
             return (
               <div
                 key={`${kind}-${l.id}`}
-                className="flex h-full flex-col justify-between space-y-2"
+                className="h-full"
                 onClickCapture={
                   !isOwner && profileUserId
                     ? (e) => {
@@ -202,6 +220,7 @@ export function ProfileListings({
                     : undefined
                 }
               >
+                {/* 31/10 (socio): la tarjeta y el panel del dueño son una sola pieza; editar va sobre la foto. */}
                 {kind === "aeronaves" ? (
                   <AircraftCard
                     id={l.id}
@@ -214,6 +233,7 @@ export function ProfileListings({
                     province={l.province}
                     imageUrl={l.images[0]?.url ?? PLACEHOLDER_IMAGE}
                     isFavoriteInitial={favIds.includes(l.id)}
+                    owner={owner}
                   />
                 ) : (
                   <SparePartCard
@@ -226,22 +246,10 @@ export function ProfileListings({
                     province={l.province}
                     imageUrl={l.images[0]?.url ?? PLACEHOLDER_IMAGE}
                     isFavoriteInitial={favIds.includes(l.id)}
+                    owner={owner}
                   />
                 )}
 
-                {isOwner && (
-                  <OwnerPanel
-                    l={l}
-                    type={type}
-                    st={st}
-                    moderation={l.status === "MODERATED" ? moderation[l.id] ?? { reason: null, reviewRequested: false } : null}
-                    republish={republish}
-                    onStatus={onStatus}
-                    onRequestReview={onRequestReview}
-                    onDelete={onDelete}
-                    loadingId={loadingId}
-                  />
-                )}
               </div>
             );
           })}
@@ -250,6 +258,8 @@ export function ProfileListings({
     </div>
   );
 }
+
+const editHref = (id: string, type: "aircraft" | "sparepart") => `/publish?edit=${id}&type=${type === "aircraft" ? "aircraft" : "parts"}`;
 
 const ACTION =
   "inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-1 rounded-[4px] px-3 py-1 text-xs font-semibold transition-colors disabled:opacity-50 sm:min-h-0 sm:px-2.5 sm:text-[10px]";
@@ -279,43 +289,36 @@ function OwnerPanel({
   const busy = loadingId === l.id;
 
   return (
-    <div className="space-y-2 va-plate p-3 text-[11px] text-slate-600">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#00205B]/10 pb-1.5">
+    // Pie de la tarjeta: estado y métricas arriba; debajo, Editar (lo principal) y el resto de las acciones.
+    <div className="space-y-2.5 border-t border-[#00205B]/10 bg-[#F7F9FC] px-4 py-3 text-[11px] text-slate-600">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${badge.tone}`}>{badge.text}</span>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2.5">
           {busy && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" aria-label="Guardando" />}
-          {moderation && (
-            <button
-              type="button"
-              disabled={busy || moderation.reviewRequested}
-              onClick={() => onRequestReview(l.id, type)}
-              className={`${ACTION} bg-[#00205B] text-white hover:bg-[#D62828]`}
-              title="Editalo primero y después pedí que lo revisemos"
-            >
-              {moderation.reviewRequested ? "Revisión pedida" : "Pedir revisión"}
-            </button>
-          )}
-          {!moderation && st === "activos" && republish && (
-            <RepublishButton view={republish} id={l.id} kind={type === "aircraft" ? "AIRCRAFT" : "SPARE_PART"} className={`${ACTION} border border-[#00205B]/20 text-[#00205B] hover:border-[#00205B]`} />
-          )}
-          {!moderation && st === "activos" && (
-            <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "PAUSED")} className={`${ACTION} border border-[#00205B]/20 text-[#00205B] hover:border-[#00205B]`}>
-              <Pause className="h-3 w-3" />
-              Pausar
-            </button>
-          )}
-          {!moderation && st !== "activos" && (
-            <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "ACTIVE")} className={`${ACTION} bg-[#00205B] text-white hover:bg-[#D62828]`}>
-              <Play className="h-3 w-3" />
-              {st === "vendidos" ? "Volver a publicar" : "Activar"}
-            </button>
-          )}
-          {!moderation && st !== "vendidos" && (
-            <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "SOLD")} className={`${ACTION} border border-[#00205B]/20 text-[#00205B] hover:border-[#00205B]`}>
-              <CheckCircle2 className="h-3 w-3" />
-              Vendido
-            </button>
-          )}
+          <span className="flex items-center gap-0.5 tabular-nums" title="Vistas">
+            <Eye className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+            {l._count?.analyticsEvents || 0}
+            <span className="sr-only">vistas</span>
+          </span>
+          <span className="flex items-center gap-0.5 tabular-nums" title="Favoritos">
+            <Heart className="h-3.5 w-3.5 text-[#D62828]" aria-hidden />
+            {l._count?.favorites || 0}
+            <span className="sr-only">favoritos</span>
+          </span>
+          <span className="flex items-center gap-0.5 tabular-nums" title="Consultas">
+            <MessageSquare className="h-3.5 w-3.5 text-[#00205B]/60" aria-hidden />
+            {l._count?.questions || 0}
+            <span className="sr-only">consultas</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => onDelete(l.id, type)}
+            className="-my-2 -mr-2 inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-[4px] text-[#D62828] hover:bg-[#D62828]/8 sm:min-h-8 sm:min-w-8"
+            aria-label="Eliminar publicación"
+            title="Eliminar publicación"
+          >
+            <Trash2 className="h-3.5 w-3.5" aria-hidden />
+          </button>
         </div>
       </div>
       {moderation?.reason && (
@@ -324,41 +327,41 @@ function OwnerPanel({
         </p>
       )}
 
-      <div className="flex items-center justify-between gap-1">
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-0.5" title="Vistas">
-            <Eye className="h-3.5 w-3.5 text-slate-400" />
-            {l._count?.analyticsEvents || 0}
-          </span>
-          <span className="flex items-center gap-0.5" title="Favoritos">
-            <Heart className="h-3.5 w-3.5 text-[#D62828]" />
-            {l._count?.favorites || 0}
-          </span>
-          <span className="flex items-center gap-0.5" title="Consultas">
-            <MessageSquare className="h-3.5 w-3.5 text-[#00205B]/60" />
-            {l._count?.questions || 0}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
-          <Link
-            href={`/publish?edit=${l.id}&type=${type === "aircraft" ? "aircraft" : "parts"}`}
-            className="cursor-pointer rounded-[4px] p-3 text-[#00205B] hover:bg-[#F5F5F5] sm:p-1"
-            aria-label="Editar publicación"
-            title="Editar publicación"
-          >
-            <Edit className="h-3.5 w-3.5" />
-          </Link>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Link href={editHref(l.id, type)} className={`${ACTION} bg-[#00205B] text-white hover:bg-[#D62828]`}>
+          <Edit className="h-3 w-3" aria-hidden />
+          Editar
+        </Link>
+        {moderation && (
           <button
             type="button"
-            onClick={() => onDelete(l.id, type)}
-            className="cursor-pointer rounded-[4px] p-3 text-[#D62828] hover:bg-[#D62828]/8 sm:p-1"
-            aria-label="Eliminar publicación"
-            title="Eliminar publicación"
+            disabled={busy || moderation.reviewRequested}
+            onClick={() => onRequestReview(l.id, type)}
+            className={`${ACTION} border border-[#00205B]/20 text-[#00205B] hover:border-[#00205B]`}
+            title="Editalo primero y después pedí que lo revisemos"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            {moderation.reviewRequested ? "Revisión pedida" : "Pedir revisión"}
           </button>
-        </div>
+        )}
+        {!moderation && st !== "activos" && (
+          <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "ACTIVE")} className={`${ACTION} border border-[#00205B]/20 text-[#00205B] hover:border-[#00205B]`}>
+            <Play className="h-3 w-3" aria-hidden />
+            {st === "vendidos" ? "Volver a publicar" : "Activar"}
+          </button>
+        )}
+        {!moderation && st === "activos" && republish && <RepublishButton view={republish} id={l.id} kind={type === "aircraft" ? "AIRCRAFT" : "SPARE_PART"} className={`${ACTION} border border-[#00205B]/20 text-[#00205B] hover:border-[#00205B]`} />}
+        {!moderation && st === "activos" && (
+          <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "PAUSED")} className={`${ACTION} border border-[#00205B]/20 text-[#00205B] hover:border-[#00205B]`}>
+            <Pause className="h-3 w-3" aria-hidden />
+            Pausar
+          </button>
+        )}
+        {!moderation && st !== "vendidos" && (
+          <button type="button" disabled={busy} onClick={() => onStatus(l.id, type, "SOLD")} className={`${ACTION} border border-[#00205B]/20 text-[#00205B] hover:border-[#00205B]`}>
+            <CheckCircle2 className="h-3 w-3" aria-hidden />
+            Vendido
+          </button>
+        )}
       </div>
     </div>
   );
