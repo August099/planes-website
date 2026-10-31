@@ -4,6 +4,7 @@ import { activeListingWhere } from "@/lib/listing-filters";
 import { absoluteUrl } from "@/lib/site";
 import { GUIDES_PATH, guidePath } from "@/lib/guides";
 import { getPublishedGuides } from "@/lib/guides-data";
+import { landingPaths } from "@/lib/seo-landing";
 
 // Se regenera como máximo una vez por hora.
 export const revalidate = 3600;
@@ -25,9 +26,11 @@ const STATIC_PAGES: { path: string; changeFrequency: "daily" | "weekly" | "month
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const where = activeListingWhere();
 
-  const [aircrafts, spareParts] = await Promise.all([
+  const [aircrafts, spareParts, landings] = await Promise.all([
+    // 31/10: listados por tipo, marca, categoría y provincia con avisos activos (lib/seo-landing.ts).
     prisma.aircraft.findMany({ where, select: { id: true, updatedAt: true }, orderBy: { updatedAt: "desc" } }),
     prisma.sparePart.findMany({ where, select: { id: true, updatedAt: true }, orderBy: { updatedAt: "desc" } }),
+    landingPaths(),
   ]);
 
   return [
@@ -36,6 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: page.changeFrequency,
       priority: page.priority,
     })),
+    ...landings.map((path) => ({ url: absoluteUrl(path), changeFrequency: "daily" as const, priority: 0.7 })),
     // Guías (VA-78)
     // VA-85: solo las guías publicadas.
     ...(await getPublishedGuides()).map((g) => ({

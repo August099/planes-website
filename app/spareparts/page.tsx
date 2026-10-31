@@ -13,6 +13,9 @@ import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { featuredFirstPage, getFeaturedSellerIds } from "@/lib/featured";
+import { sparePartLanding } from "@/lib/seo-landing";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl } from "@/lib/site";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 interface Props {
@@ -24,11 +27,14 @@ function toArray(value: string | string[] | undefined): string[] {
   return Array.isArray(value) ? value : [value];
 }
 
-// Canonical: los filtros no generan URLs indexables propias (apuntan a /spareparts);
+// 31/10: con UN solo filtro (lib/seo-landing.ts) la página es propia: título, descripción y canonical.
+// Canonical: los demás filtros no generan URLs indexables propias (apuntan a /spareparts);
 // sin filtros, cada página del listado es su propia URL (/spareparts?page=N).
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const params = await searchParams;
   const page = Number(params.page) || 1;
+  const landing = await sparePartLanding(params);
+  if (landing) return { title: landing.title, description: landing.description, alternates: { canonical: landing.path }, openGraph: { title: landing.title, description: landing.description, url: landing.path } };
   const hasFilters = Object.keys(params).some((key) => key !== "page");
   const canonical = !hasFilters && page > 1 ? `/spareparts?page=${page}` : "/spareparts";
 
@@ -42,6 +48,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 export default async function SparePartsPage({ searchParams }: Props) {
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
+  const landing = await sparePartLanding(params); // 31/10: título propio con un solo filtro (lib/seo-landing.ts)
   const itemsPerPage = 20;
   const skip = (currentPage - 1) * itemsPerPage;
 
@@ -213,7 +220,9 @@ export default async function SparePartsPage({ searchParams }: Props) {
       <Breadcrumbs items={[{ label: "Repuestos" }]} className="-mt-4 mb-2" />
       {/* Misma disposición que /aircraft (VA-45): en celular, "Filtros" (panel lateral) y "Ordenar"
           lado a lado; desde lg, barra lateral + grilla. */}
-      <PageHeader compact variant="desktop-banner" routeId="va-route-spareparts" title="Repuestos en venta" count={totalSpareParts} className="mb-6" aside={<div className="hidden lg:block"><SortDropdown /></div>} />
+      {/* 31/10: los avisos de esta página como lista (schema.org ItemList) para los buscadores. */}
+      <JsonLd data={{ "@context": "https://schema.org", "@type": "ItemList", itemListElement: spareParts.map((a, i) => ({ "@type": "ListItem", position: skip + i + 1, url: absoluteUrl(`/spareparts/sparepart-details/${a.id}`), name: a.title })) }} />
+      <PageHeader compact variant="desktop-banner" routeId="va-route-spareparts" title={landing?.heading ?? "Repuestos en venta"} count={totalSpareParts} className="mb-6" aside={<div className="hidden lg:block"><SortDropdown /></div>} />
       <section className="flex flex-col lg:flex-row items-start gap-6">
         {/* 26/10: en celular la barra Filtros | Ordenar queda pegada arriba (debajo del header cuando aparece). */}
         <div className="va-list-toolbar w-full flex lg:block items-center gap-3 lg:w-auto shrink-0">
