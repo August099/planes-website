@@ -583,6 +583,9 @@ model AircraftEngine {
   aircraftId  String
   engineHours Int?
   TBO         Int?
+  // 31/10 (socio): horas desde la última recorrida general (DURG / SMOH). Texto, obligatorio en el formulario;
+  // los motores anteriores quedaron con "-".
+  smoh        String?
   horsepower  Int?
   brand       String?
   model       String?
