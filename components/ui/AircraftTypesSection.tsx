@@ -35,7 +35,7 @@ const TYPES = [
     name: "Agrícola",
     image: "agricola",
     width: 500,
-    height: 177,
+    height: 166,
     categories: ["A"],
   },
   {
@@ -49,7 +49,7 @@ const TYPES = [
     name: "Proyecto",
     image: "proyecto",
     width: 500,
-    height: 182,
+    height: 250,
     categories: ["PR"],
   },
   {
