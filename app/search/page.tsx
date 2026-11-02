@@ -9,6 +9,7 @@ import { PageBackground } from "@/components/ui/PageBackground";
 import { TrackSearch } from "@/components/analytics/TrackSearch";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { searchSellers } from "@/app/actions/search-actions";
+import { aircraftIdsMatching, sparePartIdsMatching } from "@/lib/listing-text-search";
 import { SellerResults } from "@/components/ui/search/SellerResults";
 import { PageHeader } from "@/components/ui/PageHeader";
 
@@ -32,41 +33,16 @@ export default async function SearchResultsPage({ searchParams }: Props) {
   // N × 20 de cada tabla (antes se traían todas, sin límite; VA-13).
   const takeEach = skip + itemsPerPage;
 
-  const tokens = query.trim().toLowerCase().split(" ").filter((t) => t.length > 0);
-
-  // El insensitive es la clave pa, algún día nos pasaremos a los GIN pero no ahora
+  // 3/11: sin distinguir acentos (lib/listing-text-search.ts).
+  const hasQuery = query.trim().length > 0;
   const aircraftWhere = {
     ...activeListingWhere(),
-    ...(tokens.length > 0 && {
-      AND: tokens.map((token) => ({
-        OR: [
-          { title: { contains: token, mode: "insensitive" as const } },
-          { description: { contains: token, mode: "insensitive" as const } },
-          { city: { contains: token, mode: "insensitive" as const } },
-          { province: { contains: token, mode: "insensitive" as const } },
-          { brand: { name: { contains: token, mode: "insensitive" as const } } },
-          { category: { name: { contains: token, mode: "insensitive" as const } } },
-          { customBrand: { contains: token, mode: "insensitive" as const } },
-          { customModel: { contains: token, mode: "insensitive" as const } },
-        ],
-      })),
-    }),
+    ...(hasQuery && { id: { in: await aircraftIdsMatching(query) } }),
   };
 
   const sparePartWhere = {
     ...activeListingWhere(),
-    ...(tokens.length > 0 && {
-      AND: tokens.map((token) => ({
-        OR: [
-          { title: { contains: token, mode: "insensitive" as const } },
-          { description: { contains: token, mode: "insensitive" as const } },
-          { partNumber: { contains: token, mode: "insensitive" as const } },
-          { city: { contains: token, mode: "insensitive" as const } },
-          { province: { contains: token, mode: "insensitive" as const } },
-          { category: { name: { contains: token, mode: "insensitive" as const } } },
-        ],
-      })),
-    }),
+    ...(hasQuery && { id: { in: await sparePartIdsMatching(query) } }),
   };
 
   const [aircrafts, totalAircrafts, spareParts, totalSpareParts] = await Promise.all([
