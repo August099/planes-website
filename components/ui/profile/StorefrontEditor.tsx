@@ -6,7 +6,6 @@ import { Loader2 } from "lucide-react";
 import { updateProfileAction, uploadStorefrontImageAction } from "@/app/actions/profile-actions";
 import { compressImage } from "@/lib/image-compressor";
 import type { StorefrontData } from "@/components/ui/profile/StorefrontHeader";
-import { PhoneInput } from "@/components/ui/PhoneInput";
 
 // Edición de la página personalizada (VA-87), solo para quien tiene el beneficio del plan.
 // Las imágenes se comprimen en el navegador antes de subir (límite de 4,5 MB por request en Vercel).
@@ -92,7 +91,7 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
       await updateProfileAction(new FormData(e.currentTarget));
       setMessage({ ok: true, text: "Página actualizada." });
     } catch {
-      setMessage({ ok: false, text: "No se pudo guardar. Revisá la web y el WhatsApp." });
+      setMessage({ ok: false, text: "No se pudo guardar. Revisá la web." });
     } finally {
       setSaving(false);
     }
@@ -103,7 +102,7 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Beneficio de tu plan</p>
         <h2 className="mt-1 text-lg font-bold text-[#00205B]">Página personalizada</h2>
-        <p className="mt-1 text-sm text-slate-600">Así ven tu perfil los compradores: portada, logo, nombre comercial y contacto. El logo es tu foto de perfil (en Datos personales).</p>
+        <p className="mt-1 text-sm text-slate-600">Así ven tu perfil los compradores: portada, logo, nombre comercial y contacto. El logo es tu foto de perfil, y el contacto son tu teléfono y tu email (en Datos personales).</p>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -115,14 +114,9 @@ export function StorefrontEditor({ storefront }: { storefront: StorefrontData })
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
+          <div className="sm:col-span-2">
             <label htmlFor="sf-business" className={LABEL}>Nombre comercial</label>
             <input id="sf-business" name="businessName" defaultValue={storefront.businessName ?? ""} maxLength={200} className={INPUT} />
-          </div>
-          <div>
-            <label htmlFor="sf-whatsapp" className={LABEL}>WhatsApp</label>
-            {/* Se guarda solo con dígitos (incluye el código de país); el "+" es para que PhoneInput lo lea como internacional. */}
-            <PhoneInput id="sf-whatsapp" name="whatsapp" defaultValue={storefront.whatsapp ? `+${storefront.whatsapp}` : null} className={INPUT} />
           </div>
           <div className="sm:col-span-2">
             <label htmlFor="sf-website" className={LABEL}>Web</label>

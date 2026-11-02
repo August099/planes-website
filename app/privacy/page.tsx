@@ -64,7 +64,7 @@ export default function PrivacidadPage() {
                   <li><strong>Datos de cuenta:</strong> nombre, correo electrónico, contraseña (guardada cifrada, nunca en texto), teléfono, ciudad y provincia, tipo de cuenta (particular o empresa) y foto de perfil. Si iniciás sesión con <strong>Google</strong>, recibimos de Google tu nombre, tu correo y tu foto de perfil; no accedemos a tu contraseña de Google ni a otros datos de tu cuenta.</li>
                   <li><strong>Datos de las publicaciones:</strong> detalles técnicos de las aeronaves y repuestos, precio, ubicación, fotografías, el link de YouTube si agregás un video y los documentos que decidas adjuntar.</li>
                   {/* VA-189 */}
-                  <li><strong>Página personalizada:</strong> si tu plan la incluye, la portada, el logo, el nombre comercial, el WhatsApp, la web, la descripción y las secciones que armes.</li>
+                  <li><strong>Página personalizada:</strong> si tu plan la incluye, la portada, el logo, el nombre comercial, la web, la descripción y las secciones que armes.</li>
                   <li><strong>Ventas:</strong> si al marcar un aviso como vendido nos contás si fue gracias a un contacto del sitio y por cuánto, guardamos esa respuesta y la fecha de la venta.</li>
                   <li><strong>Preguntas en los avisos:</strong> el texto de las preguntas y respuestas que dejás en una publicación, que se muestran públicamente junto a tu nombre.</li>
                   <li><strong>Reportes y sugerencias:</strong> los motivos y detalles que escribís al reportar una publicación, y lo que nos mandás desde el formulario de sugerencias (con tu nombre y correo, si decidís dejarlos).</li>
@@ -97,7 +97,7 @@ export default function PrivacidadPage() {
                   3. Qué se publica y qué no
                 </h2>
                 <ul className="list-disc pl-5 space-y-2 text-[#00205B]/90">
-                  <li><strong>Público:</strong> el contenido de tus avisos (título, datos técnicos, precio, fotos, video, la matrícula si la cargás, ciudad y provincia, y una zona aproximada en un mapa, nunca la dirección exacta), los documentos que adjuntes (cualquier visitante los puede ver y descargar, como avisa el formulario), tu nombre de vendedor, tu tipo de cuenta, los medios de contacto que figuran en tu aviso (teléfono, WhatsApp y correo), tu página personalizada si la tenés, y las preguntas y respuestas.</li>
+                  <li><strong>Público:</strong> el contenido de tus avisos (título, datos técnicos, precio, fotos, video, la matrícula si la cargás, ciudad y provincia, y una zona aproximada en un mapa, nunca la dirección exacta), los documentos que adjuntes (cualquier visitante los puede ver y descargar, como avisa el formulario), tu nombre de vendedor, tu tipo de cuenta, los medios de contacto que figuran en tu aviso y en tu perfil mientras tengas avisos activos (teléfono, WhatsApp y correo), tu página personalizada si la tenés, y las preguntas y respuestas.</li>
                   <li><strong>Privado:</strong> tus datos de facturación y tus pagos, lo que nos contás sobre tus ventas y los reportes que hacés.</li>
                   <li><strong>Responsabilidad del vendedor:</strong> es responsabilidad del vendedor no incluir en fotos, descripciones o documentos datos personales de terceros sin su consentimiento.</li>
                 </ul>
