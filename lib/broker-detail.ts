@@ -15,7 +15,6 @@ export type BrokerDetail = {
   pageHref: string;
   email?: string | null;
   phone?: string | null;
-  whatsapp?: string | null;
 };
 
 export async function getBrokerDetail(sellerId: string): Promise<BrokerDetail | null> {

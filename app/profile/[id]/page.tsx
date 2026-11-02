@@ -35,8 +35,8 @@ export default async function ProfilePage({ params, searchParams }: Props) {
     select: {
       id: true,
       name: true,
-      email: isOwner,
-      phone: isOwner,
+      email: true,
+      phone: true,
       image: true,
       city: true,
       province: true,
@@ -50,7 +50,6 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       coverUrl: true,
       logoUrl: true,
       website: true,
-      whatsapp: true,
       aircrafts: {
         where: isOwner ? undefined : activeListingWhere(),
         include: {
@@ -96,6 +95,13 @@ export default async function ProfilePage({ params, searchParams }: Props) {
     notFound();
   }
 
+  // 2/11 (socio): un solo juego de datos de contacto, el teléfono y el email de la cuenta (los mismos de los botones
+  // de cada aviso). A los visitantes solo se les muestran si la cuenta tiene avisos activos: quien no vende no
+  // tiene por qué publicar su email. Se filtra acá para que no viajen al navegador.
+  const showContact = isOwner || rawProfileUser.aircrafts.length + rawProfileUser.spareParts.length > 0;
+  const contactPhone = showContact ? rawProfileUser.phone : null;
+  const contactEmail = showContact ? rawProfileUser.email : null;
+
   // VA-87: con el beneficio del plan, el perfil se muestra como página personalizada.
   const storefront = (await hasCustomPage(id))
     ? {
@@ -105,7 +111,8 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         // 27/10: foto y logo son una sola imagen (cuentas viejas con solo logo: se usa el logo).
         logoUrl: rawProfileUser.image ?? rawProfileUser.logoUrl,
         website: rawProfileUser.website,
-        whatsapp: rawProfileUser.whatsapp,
+        phone: contactPhone,
+        email: contactEmail,
         verified: await hasVerifiedBadge(id),
       }
     : null;
@@ -113,6 +120,8 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   // Sanitización de objetos Prisma (Decimal y Date) para el Client Component 
   const profileUser = {
     ...rawProfileUser,
+    phone: contactPhone,
+    email: contactEmail,
     image: rawProfileUser.image ?? rawProfileUser.logoUrl,
     createdAt: rawProfileUser.createdAt.toISOString(),
     aircrafts: rawProfileUser.aircrafts.map((a) => ({

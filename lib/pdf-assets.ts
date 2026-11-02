@@ -82,7 +82,7 @@ export async function pdfSeller(sellerId: string) {
   const [user, custom, verified] = await Promise.all([
     prisma.user.findUnique({
       where: { id: sellerId },
-      select: { name: true, phone: true, email: true, city: true, province: true, userType: true, businessName: true, website: true, whatsapp: true },
+      select: { name: true, phone: true, email: true, city: true, province: true, userType: true, businessName: true, website: true },
     }),
     hasCustomPage(sellerId),
     hasVerifiedBadge(sellerId),
@@ -91,8 +91,7 @@ export async function pdfSeller(sellerId: string) {
   const contacts: { label: string; value: string }[] = [];
   if (user.phone) contacts.push({ label: "Teléfono", value: user.phone });
   if (user.email) contacts.push({ label: "Email", value: user.email });
-  // La web y el WhatsApp propios solo se muestran en la página personalizada (VA-87).
-  if (custom && user.whatsapp) contacts.push({ label: "WhatsApp", value: `+${user.whatsapp}` });
+  // La web propia solo se muestra en la página personalizada (VA-87).
   if (custom && user.website) contacts.push({ label: "Web", value: user.website.replace(/^https?:\/\//, "").replace(/\/$/, "") });
   return {
     name: (custom && user.businessName) || user.name || "Vendedor",

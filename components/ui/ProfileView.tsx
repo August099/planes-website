@@ -17,7 +17,7 @@ const SellerMetricsPanel = dynamic(() => import("@/components/ui/profile/SellerM
   loading: () => <p className="text-sm text-slate-500">Cargando métricas…</p>,
 });
 import { deleteListingAction, setListingStatusAction } from "@/app/actions/listing-actions";
-import { BarChart3, MapPin, Calendar, Phone, Mail, Edit, Plane } from "lucide-react";
+import { BarChart3, MapPin, Calendar, MessageCircle, Phone, Mail, Edit, Plane } from "lucide-react";
 import { USER_TYPE_LABELS } from "@/lib/user-types";
 import { StorefrontHeader, type StorefrontData } from "@/components/ui/profile/StorefrontHeader";
 import type { SubscriptionSummary } from "@/lib/subscriptions";
@@ -221,17 +221,29 @@ export function ProfileView({
                 Miembro desde {memberSince}
               </span>
 
-              {isOwner && profileUser.phone && (
-                <span className="flex items-center gap-1.5 font-medium text-[#00205B] tabular-nums">
-                  <Phone className="w-3.5 h-3.5 text-[#00205B]/60" />
+              {/* 2/11: el teléfono y el email de la cuenta; la página solo los manda si se pueden mostrar. */}
+              {profileUser.phone && (
+                <a href={`tel:${profileUser.phone}`} className="flex min-h-9 items-center gap-1.5 font-medium text-[#00205B] tabular-nums hover:text-[#D62828] sm:min-h-0">
+                  <Phone className="w-3.5 h-3.5 text-[#00205B]/60" aria-hidden />
                   {profileUser.phone}
-                </span>
+                </a>
               )}
-              {isOwner && (
-                <span className="flex items-center gap-1.5 font-medium text-[#00205B]">
-                  <Mail className="w-3.5 h-3.5 text-[#00205B]/60" />
+              {profileUser.phone && (
+                <a
+                  href={`https://wa.me/${profileUser.phone.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex min-h-9 items-center gap-1.5 font-medium text-[#00205B] hover:text-[#D62828] sm:min-h-0"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-[#00205B]/60" aria-hidden />
+                  WhatsApp
+                </a>
+              )}
+              {profileUser.email && (
+                <a href={`mailto:${profileUser.email}`} className="flex min-h-9 min-w-0 items-center gap-1.5 break-all font-medium text-[#00205B] hover:text-[#D62828] sm:min-h-0">
+                  <Mail className="w-3.5 h-3.5 shrink-0 text-[#00205B]/60" aria-hidden />
                   {profileUser.email}
-                </span>
+                </a>
               )}
             </div>
 
