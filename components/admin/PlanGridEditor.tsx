@@ -318,7 +318,9 @@ export function PlanGridEditor({ initial, ids, subscribers }: { initial: PlansGr
                     (draft.pro ? (
                       <div className="mt-2 space-y-2">
                         {priceInputs("Precio por mes", draft.pro.price, draft.pro.listPrice, (n) => setPro({ price: n }), (n) => setPro({ listPrice: n }))}
-                        <Toggle label="Pro a la venta en /plans" on="A la venta" off="Muy pronto (sin precio ni botón)" checked={draft.pro.isActive} onChange={(v) => setPro({ isActive: v })} />
+                        {/* 3/11: el texto no cambia; antes, destildada decía "Muy pronto" y se leía al revés. */}
+                        <Toggle label="Pro a la venta en /plans" on="A la venta en /plans" off="A la venta en /plans" checked={draft.pro.isActive} onChange={(v) => setPro({ isActive: v })} />
+                        {!draft.pro.isActive && <p className="text-xs text-amber-700">Sin tildar: en /plans dice &quot;Muy pronto&quot;, sin precio ni botón.</p>}
                         <p className="text-xs text-slate-500">{ids.pro ? subscribers[ids.pro] ?? 0 : 0} suscriptores</p>
                       </div>
                     ) : (
@@ -329,7 +331,9 @@ export function PlanGridEditor({ initial, ids, subscribers }: { initial: PlansGr
                       <div className="mt-2 space-y-2">
                         {priceInputs("Un rubro ilimitado", draft.broker.priceOne, draft.broker.listOne, (n) => setBroker({ priceOne: n }), (n) => setBroker({ listOne: n }))}
                         {priceInputs("Ambos ilimitados", draft.broker.priceBoth, draft.broker.listBoth, (n) => setBroker({ priceBoth: n }), (n) => setBroker({ listBoth: n }))}
-                        <Toggle label="Broker a la venta en /plans" on="A la venta" off="Muy pronto (sin precio ni botón)" checked={draft.broker.isActive} onChange={(v) => setBroker({ isActive: v })} />
+                        {/* 3/11: el texto no cambia; antes, destildada decía "Muy pronto" y se leía al revés. */}
+                        <Toggle label="Broker a la venta en /plans" on="A la venta en /plans" off="A la venta en /plans" checked={draft.broker.isActive} onChange={(v) => setBroker({ isActive: v })} />
+                        {!draft.broker.isActive && <p className="text-xs text-amber-700">Sin tildar: en /plans dice &quot;Muy pronto&quot;, sin precio ni botón.</p>}
                         <p className="text-xs text-slate-500">
                           {[ids.brokerAircraft, ids.brokerParts, ids.brokerBoth].reduce((n, id) => n + (id ? subscribers[id] ?? 0 : 0), 0)} suscriptores
                         </p>
