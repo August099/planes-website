@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
 import { formatPrice } from "@/lib/format";
+import { rankSellers } from "@/lib/seller-search";
 
 export interface SearchResultItem {
   id: string;
@@ -147,7 +148,7 @@ export async function searchGlobal(
 }
 
 // ============================================================
-// VA-172: VENDEDORES (Brokers y admins con Página VA publicada)
+// VA-172: VENDEDORES (todos los Brokers y los admins con Página VA publicada)
 // ============================================================
 export interface SellerResult {
   id: string;
@@ -158,25 +159,23 @@ export interface SellerResult {
 }
 
 /**
- * Busca brokers por nombre comercial o nombre personal.
- * Muestra como máximo los 2 resultados más cercanos para no saturar el menú desplegable.
+ * Busca brokers por nombre comercial o nombre personal, sin distinguir acentos (lib/seller-search.ts).
+ * 3/11: Broker es el plan (tier BUSINESS) vigente, pagado o bonificado, haya armado o no su página.
+ * Por defecto, los 2 más parecidos para no saturar el menú desplegable; /search pide más.
  */
 export async function searchSellers(query: string, take = 2): Promise<SellerResult[]> {
   const q = query.trim();
   if (q.length < 2) return [];
-  
-  const now = new Date();
-  
-  // Forzamos que el límite máximo sea estrictamente 2 resultados
-  const limit = Math.min(Math.max(1, take), 2);
 
-  const users = await prisma.user.findMany({
+  const now = new Date();
+
+  const candidates = await prisma.user.findMany({
     where: {
       OR: [
         { isAdmin: true, profilePage: { publishedAt: { not: null } } },
         {
           Subscription: {
-            plan: { vaPageLevel: "FULL" },
+            plan: { tier: "BUSINESS" },
             OR: [
               { status: "ACTIVE", currentPeriodEnd: { gt: now } },
               { status: "PAST_DUE", graceUntil: { gt: now } },
@@ -184,15 +183,14 @@ export async function searchSellers(query: string, take = 2): Promise<SellerResu
           },
         },
       ],
-      AND: [
-        {
-          OR: [
-            { businessName: { contains: q, mode: "insensitive" } },
-            { name: { contains: q, mode: "insensitive" } },
-          ],
-        },
-      ],
     },
+    select: { id: true, name: true, businessName: true },
+  });
+  const matches = rankSellers(candidates, q, Math.max(1, take));
+  if (matches.length === 0) return [];
+
+  const users = await prisma.user.findMany({
+    where: { id: { in: matches.map((m) => m.id) } },
     select: {
       id: true,
       name: true,
@@ -206,14 +204,20 @@ export async function searchSellers(query: string, take = 2): Promise<SellerResu
         },
       },
     },
-    take: limit,
   });
+  const byId = new Map(users.map((u) => [u.id, u]));
 
-  return users.map((u) => ({
-    id: u.id,
-    name: u.businessName || u.name || "Vendedor",
-    logoUrl: u.image ?? u.logoUrl, // 27/10: el logo es la foto de perfil
-    listings: u._count.aircrafts + u._count.spareParts,
-    url: `/profile/${u.id}`,
-  }));
+  return matches.flatMap((m) => {
+    const u = byId.get(m.id);
+    if (!u) return [];
+    return [
+      {
+        id: u.id,
+        name: u.businessName || u.name || "Vendedor",
+        logoUrl: u.image ?? u.logoUrl, // 27/10: el logo es la foto de perfil
+        listings: u._count.aircrafts + u._count.spareParts,
+        url: `/profile/${u.id}`,
+      },
+    ];
+  });
 }
