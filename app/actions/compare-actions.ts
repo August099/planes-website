@@ -3,11 +3,12 @@
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
 import { formatPrice } from "@/lib/format";
+import { aircraftIdsMatching } from "@/lib/listing-text-search";
 
 export type CompareSearchResult = { id: string; title: string; image: string | null; subtitle: string };
 
 // VA-83: buscador de "+ Agregar aeronave" en /aircraft/compare. Solo avisos visibles (mismo
-// criterio que /aircraft), por título, marca o modelo.
+// criterio que /aircraft), sin distinguir acentos (lib/listing-text-search.ts).
 export async function searchAircraftForCompare(query: string, excludeIds: string[] = []): Promise<CompareSearchResult[]> {
   const q = typeof query === "string" ? query.trim().slice(0, 60) : "";
   if (q.length < 2) return [];
@@ -16,14 +17,7 @@ export async function searchAircraftForCompare(query: string, excludeIds: string
   const rows = await prisma.aircraft.findMany({
     where: {
       ...activeListingWhere(),
-      id: { notIn: exclude },
-      OR: [
-        { title: { contains: q, mode: "insensitive" } },
-        { customBrand: { contains: q, mode: "insensitive" } },
-        { customModel: { contains: q, mode: "insensitive" } },
-        { brand: { name: { contains: q, mode: "insensitive" } } },
-        { model: { name: { contains: q, mode: "insensitive" } } },
-      ],
+      id: { notIn: exclude, in: await aircraftIdsMatching(q) },
     },
     orderBy: { createdAt: "desc" },
     take: 8,
