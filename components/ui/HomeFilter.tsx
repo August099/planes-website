@@ -132,15 +132,15 @@ export default function HomeHeroFilter() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-2 sm:p-3 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl">
-      <div role="group" aria-label="Qué querés buscar" className="mb-2 flex w-fit gap-1 rounded-full bg-[#00205B]/55 p-1">
+      <div role="group" aria-label="Qué querés buscar" className="mb-2 grid grid-cols-2 gap-1 rounded-xl bg-[#00205B]/35 p-1">
         {MODES.map((m) => (
           <button
             key={m.key}
             type="button"
             aria-pressed={mode === m.key}
             onClick={() => handleModeChange(m.key)}
-            className={`min-h-11 sm:min-h-9 cursor-pointer rounded-full px-4 text-xs font-bold transition-colors sm:text-sm ${
-              mode === m.key ? "bg-white text-[#00205B]" : "text-white hover:bg-white/15"
+            className={`min-h-11 cursor-pointer rounded-lg px-4 text-xs font-semibold transition-colors sm:min-h-8 ${
+              mode === m.key ? "bg-[#00205B] text-white" : "text-white/85 hover:bg-[#00205B]/40 hover:text-white"
             }`}
           >
             {m.label}
