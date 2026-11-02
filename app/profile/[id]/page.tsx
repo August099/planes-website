@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
+import { profileIsIndexable } from "@/lib/seo-landing";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { notFound, redirect } from "next/navigation";
 import { ProfileView } from "@/components/ui/ProfileView";
@@ -19,6 +21,28 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 interface Props {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ tab?: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const where = activeListingWhere();
+  const u = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      name: true,
+      businessName: true,
+      bio: true,
+      userType: true,
+      isAdmin: true,
+      _count: { select: { aircrafts: { where }, spareParts: { where } } },
+    },
+  });
+  if (!u) return { robots: { index: false, follow: false } };
+  const name = u.businessName || u.name || "Vendedor";
+  const active = u._count.aircrafts + u._count.spareParts;
+  if (!profileIsIndexable(u, active)) return { title: name, robots: { index: false, follow: true } };
+  const description = u.bio?.trim().slice(0, 155) || `${name}: aviones y repuestos aeronáuticos en venta en Argentina. Mirá sus ${active} avisos y contactá directo en Ventas Aeronáuticas.`;
+  return { title: `${name}: aviones y repuestos en venta`, description, alternates: { canonical: `/profile/${id}` } };
 }
 
 export default async function ProfilePage({ params, searchParams }: Props) {

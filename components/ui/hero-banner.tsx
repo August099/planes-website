@@ -67,10 +67,14 @@ export function HeroBanner({
           {/* VA-55 (pedido del socio, 9/10): se mantiene el degradé blanco → rojo en "a bordo", sin
               recuadro oscuro detrás. El rojo final es más claro que el de marca (#D62828) para que
               se lea sobre el azul de la foto, y una sombra suave le da contraste. */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight md:leading-none whitespace-normal md:whitespace-nowrap drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]">
+          <p className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight md:leading-none whitespace-normal md:whitespace-nowrap drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]">
             <span className="text-white">Bienvenido </span>
             {/* VA-191: color plano en vez de texto con degradé. */}
             <span className="text-[#FF5A64]">a bordo</span>
+          </p>
+          {/* 2/11: el título de la página para los buscadores dice qué se vende y dónde. */}
+          <h1 className="mt-3 text-sm font-semibold text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] sm:text-base md:whitespace-nowrap md:text-lg">
+            Aviones y repuestos aeronáuticos en venta en Argentina
           </h1>
 
           <span className="block h-6 sm:h-8 md:h-10" />

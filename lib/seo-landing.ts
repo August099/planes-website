@@ -22,6 +22,20 @@ function singleFilter(params: Params, allowed: string[]): { key: string; value: 
   return { key: keys[0], value };
 }
 
+// 2/11: Monomotor y Bimotor son dos categorías (pistón y turbohélice) y así las linkea la Home: página propia.
+const AIRCRAFT_GROUPS = [
+  { ids: ["MP", "MT"], heading: "Aviones monomotor" },
+  { ids: ["BP", "BT"], heading: "Aviones bimotor" },
+];
+const groupPath = (ids: string[]) => `/aircraft?${ids.map((id) => `category=${id}`).join("&")}`;
+
+function aircraftGroup(params: Params) {
+  const keys = Object.keys(params).filter((k) => k !== "page" && params[k] !== undefined && params[k] !== "");
+  const value = params.category;
+  if (keys.length !== 1 || !Array.isArray(value)) return null;
+  return AIRCRAFT_GROUPS.find((g) => g.ids.length === value.length && g.ids.every((id) => value.includes(id))) ?? null;
+}
+
 // Nombre del tipo para el título: helicópteros y agrícolas en plural; el resto, el nombre de la categoría.
 function aircraftTypeTitle(name: string): string {
   const n = name.toLowerCase();
@@ -31,6 +45,15 @@ function aircraftTypeTitle(name: string): string {
 }
 
 export const aircraftLanding = cache(async (params: Params): Promise<Landing | null> => {
+  const group = aircraftGroup(params);
+  if (group) {
+    return {
+      path: groupPath(group.ids),
+      heading: group.heading,
+      title: `${group.heading} en venta en Argentina`,
+      description: `${group.heading} en venta en Argentina: compará precios, año, horas y estado, y contactá directo con el vendedor en Ventas Aeronáuticas.`,
+    };
+  }
   const f = singleFilter(params, ["category", "brand", "province"]);
   if (!f) return null;
   const path = `/aircraft?${f.key}=${encodeURIComponent(f.value)}`;
@@ -89,6 +112,14 @@ export const sparePartLanding = cache(async (params: Params): Promise<Landing | 
   };
 });
 
+/**
+ * 2/11: en los buscadores solo entran los perfiles de empresa con avisos activos. Los particulares y las cuentas
+ * sin avisos no: tienen datos personales y ningún contenido que buscar.
+ */
+export function profileIsIndexable(u: { userType: string; isAdmin: boolean }, activeListings: number): boolean {
+  return u.userType !== "PARTICULAR" && !u.isAdmin && activeListings > 0;
+}
+
 /** Páginas por tipo, marca, categoría y provincia que tienen al menos un aviso activo (para el sitemap). */
 export async function landingPaths(): Promise<string[]> {
   const where = activeListingWhere();
@@ -104,6 +135,7 @@ export async function landingPaths(): Promise<string[]> {
   const parents = await prisma.category.findMany({ where: { id: { in: pCats.map((c) => c.categoryId) } }, select: { parentId: true } });
   const partCategoryIds = new Set([...pCats.map((c) => c.categoryId), ...parents.map((p) => p.parentId).filter((id): id is string => !!id)]);
   return [
+    ...AIRCRAFT_GROUPS.filter((g) => aCats.some((c) => g.ids.includes(c.categoryId))).map((g) => groupPath(g.ids)),
     ...aCats.map((c) => `/aircraft?category=${encodeURIComponent(c.categoryId)}`),
     ...aBrands.filter((b) => b.brandId).map((b) => `/aircraft?brand=${encodeURIComponent(b.brandId!)}`),
     ...aProv.map((p) => slug(p.province)).filter(Boolean).map((s) => `/aircraft?province=${s}`),
