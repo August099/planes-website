@@ -26,11 +26,16 @@ const STATIC_PAGES: { path: string; changeFrequency: "daily" | "weekly" | "month
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const where = activeListingWhere();
 
-  const [aircrafts, spareParts, landings] = await Promise.all([
+  const [aircrafts, spareParts, landings, sellers] = await Promise.all([
     // 31/10: listados por tipo, marca, categoría y provincia con avisos activos (lib/seo-landing.ts).
     prisma.aircraft.findMany({ where, select: { id: true, updatedAt: true }, orderBy: { updatedAt: "desc" } }),
     prisma.sparePart.findMany({ where, select: { id: true, updatedAt: true }, orderBy: { updatedAt: "desc" } }),
     landingPaths(),
+    // 2/11: mismas condiciones que profileIsIndexable (lib/seo-landing.ts).
+    prisma.user.findMany({
+      where: { userType: { not: "PARTICULAR" }, isAdmin: false, OR: [{ aircrafts: { some: where } }, { spareParts: { some: where } }] },
+      select: { id: true },
+    }),
   ]);
 
   return [
@@ -39,7 +44,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: page.changeFrequency,
       priority: page.priority,
     })),
-    ...landings.map((path) => ({ url: absoluteUrl(path), changeFrequency: "daily" as const, priority: 0.7 })),
+    ...landings.map((path) => ({ url: absoluteUrl(path).replace(/&/g, "&amp;"), changeFrequency: "daily" as const, priority: 0.7 })),
+    ...sellers.map((u) => ({ url: absoluteUrl(`/profile/${u.id}`), changeFrequency: "weekly" as const, priority: 0.6 })),
     // Guías (VA-78)
     // VA-85: solo las guías publicadas.
     ...(await getPublishedGuides()).map((g) => ({

@@ -12,7 +12,7 @@ export default function robots(): MetadataRoute.Robots {
         "/publish",
         "/favs",
         "/questions",
-        "/profile",
+        // 2/11: /profile se abrió; cada perfil decide con su meta robots (app/profile/[id]/page.tsx).
         "/login",
         "/register",
         "/verify-email",
