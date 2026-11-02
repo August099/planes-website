@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { sortAircraftCategories } from "@/lib/aircraft-categories";
 import { activeListingWhere } from "@/lib/listing-filters";
+import { getSparePartCategories } from "@/lib/cached-data";
 
 export async function getAircraftCategories() {
   // VA-149: mismo orden que en todo el sitio.
@@ -35,4 +36,10 @@ export async function getModelsByBrand(brandId: string, categoryId?: string) {
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
+}
+
+// 2/11: filtro de repuestos de la Home.
+export async function getPartCategories() {
+  const categories = await getSparePartCategories();
+  return categories.map(({ id, name, parentId }) => ({ id, name, parentId }));
 }
