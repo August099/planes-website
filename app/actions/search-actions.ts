@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
 import { formatPrice } from "@/lib/format";
 import { rankSellers } from "@/lib/seller-search";
+import { USER_TYPE_LABELS } from "@/lib/user-types";
 import { aircraftIdsMatching, sparePartIdsMatching } from "@/lib/listing-text-search";
 
 export interface SearchResultItem {
@@ -101,6 +102,7 @@ export interface SellerResult {
   id: string;
   name: string;
   logoUrl: string | null;
+  typeLabel: string;
   listings: number;
   url: string;
 }
@@ -142,6 +144,7 @@ export async function searchSellers(query: string, take = 2): Promise<SellerResu
       id: true,
       name: true,
       businessName: true,
+      userType: true,
       image: true,
       logoUrl: true,
       _count: {
@@ -162,6 +165,7 @@ export async function searchSellers(query: string, take = 2): Promise<SellerResu
         id: u.id,
         name: u.businessName || u.name || "Vendedor",
         logoUrl: u.image ?? u.logoUrl, // 27/10: el logo es la foto de perfil
+        typeLabel: USER_TYPE_LABELS[u.userType],
         listings: u._count.aircrafts + u._count.spareParts,
         url: `/profile/${u.id}`,
       },
