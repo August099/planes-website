@@ -44,7 +44,8 @@ export function FeaturedBrands({ brands }: FeaturedBrandsProps) {
       <div className="relative w-full flex overflow-hidden py-4 [mask-image:linear-gradient(to_right,transparent,black_4rem,black_calc(100%-4rem),transparent)] sm:[mask-image:linear-gradient(to_right,transparent,black_6rem,black_calc(100%-6rem),transparent)]">
 
         {/* PISTA DE MARQUESINA */}
-        <div className="flex w-max items-center animate-[marquee_60s_linear_infinite] hover:[animation-play-state:paused]">
+        {/* 3/11 (socio): iba muy rápido. La velocidad ya no depende de cuántas marcas hay: 15 s por logo. */}
+        <div className="flex w-max items-center animate-[marquee_60s_linear_infinite] hover:[animation-play-state:paused] motion-reduce:animate-none" style={{ animationDuration: `${brandsWithLogo.length * 15}s` }}>
           {repeatedBrands.map((brand, index) => {
             // Las copias (para el loop de la marquesina) son decorativas: fuera del orden de
             // tabulación y ocultas para lectores de pantalla.
