@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { activeListingWhere } from "@/lib/listing-filters";
 import { formatPrice } from "@/lib/format";
 import { rankSellers } from "@/lib/seller-search";
+import { aircraftIdsMatching, sparePartIdsMatching } from "@/lib/listing-text-search";
 
 export interface SearchResultItem {
   id: string;
@@ -29,11 +30,6 @@ export async function searchGlobal(
     return [];
   }
 
-  // Tokenización
-  const tokens = cleanQuery
-    .split(" ")
-    .filter((t) => t.length > 0);
-
   let results: SearchResultItem[] = [];
 
   // ============================================================
@@ -41,37 +37,7 @@ export async function searchGlobal(
   // ============================================================
   if (searchType === "Aeronave" || searchType === "Todos") {
     const aircrafts = await prisma.aircraft.findMany({
-      where: {
-        ...activeListingWhere(),
-        AND: tokens.map((token) => ({
-          OR: [
-            { title: { contains: token, mode: "insensitive" } },
-            { description: { contains: token, mode: "insensitive" } },
-            { city: { contains: token, mode: "insensitive" } },
-            { province: { contains: token, mode: "insensitive" } },
-            {
-              brand: {
-                name: {
-                  contains: token,
-                  mode: "insensitive",
-                },
-              },
-            },
-            {
-              customBrand: {
-                contains: token,
-                mode: "insensitive",
-              },
-            },
-            {
-              customModel: {
-                contains: token,
-                mode: "insensitive",
-              },
-            },
-          ],
-        })),
-      },
+      where: { ...activeListingWhere(), id: { in: await aircraftIdsMatching(cleanQuery) } },
       select: {
         id: true,
         title: true,
@@ -100,26 +66,7 @@ export async function searchGlobal(
   // ============================================================
   if (searchType === "Repuesto" || searchType === "Todos") {
     const spareParts = await prisma.sparePart.findMany({
-      where: {
-        ...activeListingWhere(),
-        AND: tokens.map((token) => ({
-          OR: [
-            { title: { contains: token, mode: "insensitive" } },
-            { description: { contains: token, mode: "insensitive" } },
-            { partNumber: { contains: token, mode: "insensitive" } },
-            { city: { contains: token, mode: "insensitive" } },
-            { province: { contains: token, mode: "insensitive" } },
-            {
-              category: {
-                name: {
-                  contains: token,
-                  mode: "insensitive",
-                },
-              },
-            },
-          ],
-        })),
-      },
+      where: { ...activeListingWhere(), id: { in: await sparePartIdsMatching(cleanQuery) } },
       select: {
         id: true,
         title: true,
