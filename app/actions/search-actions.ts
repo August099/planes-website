@@ -95,7 +95,7 @@ export async function searchGlobal(
 }
 
 // ============================================================
-// VA-172: VENDEDORES (todos los Brokers y los admins con Página VA publicada)
+// VA-172: VENDEDORES (todos los Brokers y todos los admins)
 // ============================================================
 export interface SellerResult {
   id: string;
@@ -107,7 +107,7 @@ export interface SellerResult {
 
 /**
  * Busca brokers por nombre comercial o nombre personal, sin distinguir acentos (lib/seller-search.ts).
- * 3/11: Broker es el plan (tier BUSINESS) vigente, pagado o bonificado, haya armado o no su página.
+ * 3/11: Broker es el plan (tier BUSINESS) vigente, pagado o bonificado, haya armado o no su página. Los admins salen todos.
  * Por defecto, los 2 más parecidos para no saturar el menú desplegable; /search pide más.
  */
 export async function searchSellers(query: string, take = 2): Promise<SellerResult[]> {
@@ -119,7 +119,7 @@ export async function searchSellers(query: string, take = 2): Promise<SellerResu
   const candidates = await prisma.user.findMany({
     where: {
       OR: [
-        { isAdmin: true, profilePage: { publishedAt: { not: null } } },
+        { isAdmin: true },
         {
           Subscription: {
             plan: { tier: "BUSINESS" },
