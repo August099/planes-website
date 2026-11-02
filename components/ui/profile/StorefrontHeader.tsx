@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { BadgeCheck, Globe, MapPin, MessageCircle } from "lucide-react";
+import { BadgeCheck, Globe, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { SiFacebook, SiInstagram } from "@icons-pack/react-simple-icons";
 
 // Encabezado de la "página personalizada" (VA-87): como la tienda oficial de una marca frente al
@@ -11,7 +11,9 @@ export type StorefrontData = {
   coverUrl: string | null;
   logoUrl: string | null;
   website: string | null;
-  whatsapp: string | null;
+  // 2/11: los de la cuenta (ya no hay un WhatsApp aparte de la página).
+  phone: string | null;
+  email: string | null;
   // VA-105: insignia del plan (includesVerifiedBadge), aparte de la Página VA.
   verified: boolean;
   // VA-170: detalles personalizados (solo Broker y admins): portada de los detalles y color de acento.
@@ -39,12 +41,14 @@ export function StorefrontHeader({ storefront, fallbackName, userTypeLabel, loca
   const name = storefront.businessName || fallbackName;
   const websiteLabel = storefront.website?.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
   const contacts = [
-    storefront.whatsapp && {
+    storefront.phone && { label: "Teléfono", value: storefront.phone, href: `tel:${storefront.phone}`, icon: <Phone className="h-4 w-4" aria-hidden /> },
+    storefront.phone && {
       label: "WhatsApp",
-      value: `+${storefront.whatsapp}`,
-      href: `https://wa.me/${storefront.whatsapp}`,
+      value: "Enviar mensaje",
+      href: `https://wa.me/${storefront.phone.replace(/\D/g, "")}`,
       icon: <MessageCircle className="h-4 w-4" aria-hidden />,
     },
+    storefront.email && { label: "Email", value: storefront.email, href: `mailto:${storefront.email}`, icon: <Mail className="h-4 w-4" aria-hidden /> },
     storefront.website && { label: "Web", value: websiteLabel, href: storefront.website, icon: <Globe className="h-4 w-4" aria-hidden /> },
     instagram && { label: "Instagram", value: "Ver perfil", href: instagram, icon: <SiInstagram className="h-4 w-4" aria-hidden /> },
     facebook && { label: "Facebook", value: "Ver página", href: facebook, icon: <SiFacebook className="h-4 w-4" aria-hidden /> },

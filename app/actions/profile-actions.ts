@@ -52,7 +52,7 @@ export async function updateProfileAction(formData: FormData) {
   }
 
   // VA-87: datos de la página personalizada, solo con el beneficio del plan.
-  const storefrontFields = ["businessName", "bio", "website", "whatsapp"].filter((f) => formData.has(f));
+  const storefrontFields = ["businessName", "bio", "website"].filter((f) => formData.has(f));
   if (storefrontFields.length > 0) {
     if (!(await hasCustomPage(user.id))) throw new Error("Tu plan no incluye págin personalizada.");
     for (const field of storefrontFields) {
@@ -67,12 +67,6 @@ export async function updateProfileAction(formData: FormData) {
       } catch {
         throw new Error("La web no es una dirección válida.");
       }
-    }
-    const whatsapp = dataToUpdate.whatsapp;
-    if (typeof whatsapp === "string") {
-      const digits = whatsapp.replace(/\D/g, "");
-      if (digits.length < 8 || digits.length > 15) throw new Error("El WhatsApp tiene que tener entre 8 y 15 números.");
-      dataToUpdate.whatsapp = digits;
     }
   }
 
