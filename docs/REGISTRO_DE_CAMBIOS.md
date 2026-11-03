@@ -347,6 +347,7 @@ Estilo elegido por el socio después de varias rondas de maquetas. Las reglas qu
 | 3/11: las búsquedas de texto no distinguen acentos (`lib/listing-text-search.ts`, sin migración): buscador del header, `/search` y comparador. El desplegable del header ahora busca en los mismos campos que `/search` | ver git log | buscador del header, `/search`, `/aircraft/compare` |
 | 3/11: carrusel "Explorá por Fabricante" más lento: 15 s por logo, sin importar cuántas marcas haya; quieto con movimiento reducido | ver git log | `/` |
 | 3/11: `/admin/plans`: la casilla de venta de Pro y Broker dice siempre "A la venta en /plans" (destildada decía "Muy pronto" y se leía al revés) | ver git log | `/admin/plans` |
+| 3/11: datos estructurados: los avisos sin precio ya no declaran Product (Google lo invalida), solo las migas de pan. No se agregan aggregateRating ni review: el sitio no tiene reseñas reales | ver git log | `/aircraft/[id]`, `/spareparts/sparepart-details/[id]` |
 | Plan de prueba (27/10): aparte de la grilla, publicado o borrador desde `/admin/plans`; pago único que no da nada, para probar cobro y factura | ver git log | `/admin/plans`, pie de `/plans` |
 | Perfil: la barra de plan y cupo de publicaciones en rojo (27/10) | ver git log | Perfil propio |
 
