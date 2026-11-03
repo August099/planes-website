@@ -174,7 +174,7 @@ export default async function SparePartDetailsPage({
               Ventas Aeronáuticas
             </p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            {broker?.logoUrl && <img src={broker.logoUrl} alt={`Logo de ${broker.name}`} className="mt-1 h-10 w-auto max-w-[140px] object-contain" />}
+            {broker?.logoUrl && <img src={broker.logoUrl} alt={`Logo de ${broker.name}`} loading="lazy" className="mt-1 h-10 w-auto max-w-[140px] object-contain" />}
             <p className="text-xs text-slate-500">Ficha Técnica de Repuesto</p>
           </div>
           <div className="text-right text-xs">

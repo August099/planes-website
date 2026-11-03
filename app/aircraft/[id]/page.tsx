@@ -164,14 +164,14 @@ export default async function AircraftDetailsPage({
         <OwnerRepublishBar view={republishView(await getRepublishStatus(aircraft.sellerId))} id={aircraft.id} kind="AIRCRAFT" profileHref={`/profile/${aircraft.sellerId}`} />
       )}
 
-      {/* VISTA DE IMPRESIÓN PDF */}
+      {/* VISTA DE IMPRESIÓN PDF. 3/11: imágenes lazy: oculta en pantalla, no tiene que precargar las fotos originales. */}
       <div id="pdf-content" className="hidden print:block font-sans text-slate-900 p-10 max-w-4xl mx-auto space-y-6">
         <div className="flex flex-col items-center justify-center border-b-2 border-[#00205B] pb-4 space-y-2 text-center">
           <div className="flex items-center justify-center gap-6">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-full.png" alt="Ventas Aeronáuticas" className="h-14 w-auto object-contain" />
+            <img src="/logo-full.png" alt="Ventas Aeronáuticas" loading="lazy" className="h-14 w-auto object-contain" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            {broker?.logoUrl && <img src={broker.logoUrl} alt={`Logo de ${broker.name}`} className="h-14 w-auto max-w-[160px] object-contain" />}
+            {broker?.logoUrl && <img src={broker.logoUrl} alt={`Logo de ${broker.name}`} loading="lazy" className="h-14 w-auto max-w-[160px] object-contain" />}
           </div>
           <div className="flex items-center gap-4 text-[11px] text-slate-500 font-medium">
             <span>Ficha Técnica de Publicación</span>
@@ -198,7 +198,7 @@ export default async function AircraftDetailsPage({
               {aircraft.images.slice(0, 3).map((img, idx) => (
                 <div key={img.id || idx} className="h-36 relative rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.url} alt={`${aircraft.title} – foto ${idx + 1}`} className="w-full h-full object-cover" />
+                  <img src={img.url} alt={`${aircraft.title} – foto ${idx + 1}`} loading="lazy" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>

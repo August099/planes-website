@@ -117,6 +117,8 @@ export function AircraftGallery({ images, title, video = null, fade = false }: G
                     alt={photoAlt(image, index)}
                     width={1200}
                     height={900}
+                    // 3/11: sin sizes, un celular bajaba la versión de 1920 o 3840 px.
+                    sizes="(min-width: 1280px) 820px, (min-width: 1024px) 62vw, 100vw"
                     priority={index === 0}
                     className="object-contain w-full h-full max-h-[520px]"
                   />
