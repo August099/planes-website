@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/arrepentimiento" },
 };
 
-// VA-125: acceso al botón de arrepentimiento desde el pie de todas las páginas (Resolución 424/2020).
+// VA-125: acceso al botón de arrepentimiento desde el pie de todas las páginas (Disposición 954/2025, que reemplazó a la Resolución 424/2020).
 // Con sesión, lleva directo a "Mis compras"; sin sesión, explica cómo hacerlo y pide iniciar sesión.
 export default async function WithdrawalPage() {
   const user = await getCurrentUser();
@@ -45,7 +45,7 @@ export default async function WithdrawalPage() {
             Iniciar sesión para continuar
           </Link>
           <p className="mt-4 text-xs text-slate-500">
-            ¿No podés entrar a tu cuenta? Escribinos a los datos de contacto del pie de la página y lo resolvemos.
+            No hace falta tener una cuenta para pedirlo: también podés escribirnos a los datos de contacto del pie de la página, indicando el correo con el que pagaste.
           </p>
         </section>
       </div>
