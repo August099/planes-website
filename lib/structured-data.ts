@@ -40,6 +40,13 @@ export function organizationAndWebsiteJsonLd() {
   ];
 }
 
+// 3/11: Google invalida un Product sin precio (con la oferta incompleta o sin oferta). Los avisos "a consultar"
+// declaran solo las migas de pan, sin inventar un precio ni reseñas.
+const hasPrice = (price: unknown) => {
+  const value = price === null || price === undefined ? NaN : Number(price);
+  return Number.isFinite(value) && value > 0;
+};
+
 function offer({
   price,
   currency,
@@ -51,13 +58,11 @@ function offer({
   isNew: boolean;
   url: string;
 }) {
-  const value = price === null || price === undefined ? NaN : Number(price);
   return {
     "@type": "Offer",
     url,
     priceCurrency: currency,
-    // "A consultar": se omite el precio.
-    ...(Number.isFinite(value) && value > 0 ? { price: value.toFixed(2) } : {}),
+    price: Number(price).toFixed(2),
     availability: "https://schema.org/InStock",
     itemCondition: isNew ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition",
   };
@@ -101,7 +106,7 @@ export function aircraftJsonLd(aircraft: AircraftDetail) {
     { name: aircraft.title, path },
   ];
 
-  return [product, breadcrumbs(trail)];
+  return hasPrice(aircraft.price) ? [product, breadcrumbs(trail)] : [breadcrumbs(trail)];
 }
 
 export function sparePartJsonLd(sparePart: SparePartDetail) {
@@ -135,7 +140,7 @@ export function sparePartJsonLd(sparePart: SparePartDetail) {
     { name: sparePart.title, path },
   ];
 
-  return [product, breadcrumbs(trail)];
+  return hasPrice(sparePart.price) ? [product, breadcrumbs(trail)] : [breadcrumbs(trail)];
 }
 
 export function faqPageJsonLd(faqs: { question: string; answer: string }[]) {
