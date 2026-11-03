@@ -8,7 +8,7 @@ import { sendWithdrawalEmail } from "@/lib/mail";
 import { describePaused, excessFor, limitsWithoutPlan, type KeepChoice, type QuotaKind } from "@/lib/quota";
 import { getAccountPlan, getBasePlan, type AccountPlan } from "@/lib/plan-benefits";
 
-// VA-125: botón de arrepentimiento (Ley 24.240 y Resolución 424/2020). Dentro de los 10 días corridos
+// VA-125: botón de arrepentimiento (Ley 24.240 y Disposición 954/2025). Dentro de los 10 días corridos
 // desde el pago, el usuario pide la devolución desde "Mis compras": se reembolsa el total por Mercado
 // Pago en el momento. VA-152: solo para suscripciones (no se venden avisos sueltos ni packs). La
 // suscripción termina, se cancela el débito y la cuenta vuelve al cupo Gratis: si tiene más avisos
