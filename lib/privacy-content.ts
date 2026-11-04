@@ -10,7 +10,7 @@ export const privacySections: LegalSection[] = [
     title: "Quién es responsable de tus datos",
     blocks: [
       "Esta política explica qué datos personales trata **Ventas Aeronáuticas**, para qué, con quién los compartimos y qué derechos tenés, según la Ley 25.326 de Protección de Datos Personales y su reglamentación. Se aplica a [ventasaeronauticas.com](https://ventasaeronauticas.com).",
-      `Los responsables del tratamiento son quienes operan el sitio bajo el nombre comercial Ventas Aeronáuticas, en la República Argentina. Para cualquier tema de privacidad, escribinos a ${CONTACT}, o comunicate al +54 9 3456 44-5758. Los datos fiscales del emisor constan en cada factura.`,
+      `Los responsables del tratamiento son quienes operan el sitio bajo el nombre comercial Ventas Aeronáuticas, en la República Argentina. Para cualquier tema de privacidad, escribinos a ${CONTACT}, o comunicate al +54 9 3456 44-5758.`,
     ],
   },
   {

@@ -10,7 +10,7 @@ export const termsSections: LegalSection[] = [
     id: "objeto",
     title: "Quiénes somos y qué regulan estos términos",
     blocks: [
-      "**Ventas Aeronáuticas** es un sitio de avisos clasificados de aeronaves y repuestos aeronáuticos que funciona en la República Argentina en [ventasaeronauticas.com](https://ventasaeronauticas.com). En estos términos, “nosotros” se refiere a quienes operan el sitio bajo ese nombre comercial. Los datos fiscales del emisor constan en cada factura.",
+      "**Ventas Aeronáuticas** es un sitio de avisos clasificados de aeronaves y repuestos aeronáuticos que funciona en la República Argentina en [ventasaeronauticas.com](https://ventasaeronauticas.com). En estos términos, “nosotros” se refiere a quienes operan el sitio bajo ese nombre comercial.",
       `Podés comunicarte con nosotros por correo a ${CONTACT}, por teléfono o WhatsApp al +54 9 3456 44-5758, y por Instagram en @ventas.aeronauticas. Esos canales sirven también para consultas y reclamos.`,
       "Estos términos regulan el uso de las funciones que requieren una cuenta y la contratación de los planes pagos. También describen las reglas de convivencia que aplican a quien publica, pregunta o contacta a otras personas a través del sitio.",
       "Estos términos se complementan con la [Política de privacidad](/privacy), que explica cómo tratamos tus datos personales y qué cookies usamos, y con la información de cada plan publicada en [Planes y precios](/plans).",
