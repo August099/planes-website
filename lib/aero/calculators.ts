@@ -1,5 +1,6 @@
 // VA-191: lista de calculadoras (índice, menú interno y metadata). Cada una tiene su URL.
 export type CalculatorSlug =
+  | "weather"
   | "crosswind"
   | "wind-triangle"
   | "time-speed-distance"
@@ -15,6 +16,7 @@ export type CalculatorSlug =
 export type CalculatorMeta = { slug: CalculatorSlug; name: string; description: string; group: string };
 
 export const CALCULATORS: CalculatorMeta[] = [
+  { slug: "weather", name: "Clima aeronáutico", description: "METAR y TAF en lenguaje claro, y el aeródromo más cercano.", group: "Navegación" },
   { slug: "crosswind", name: "Viento cruzado", description: "Componentes de frente o de cola y cruzada para una pista.", group: "Navegación" },
   { slug: "wind-triangle", name: "Triángulo de viento", description: "Rumbo, deriva y velocidad sobre tierra para una derrota.", group: "Navegación" },
   { slug: "time-speed-distance", name: "Tiempo, velocidad y distancia", description: "Cargá dos de los tres valores y calcula el otro.", group: "Navegación" },

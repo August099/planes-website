@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { getTimes } from "suncalc";
 import type { AeroPlaceDetail } from "@/app/api/aero/place/route";
 import { formatCoordinate, M_PER_FT } from "@/lib/aero/formulas";
+import { NO_RECENT_DATA, WeatherDetails, useWeather } from "@/components/flight-plan/WeatherSummary";
 
 // VA-191: ficha de un aeródromo o LAD. Lo que la fuente no trae se dice o no se muestra; nunca se completa.
 const TIME_ZONE = "America/Argentina/Buenos_Aires";
@@ -37,6 +38,7 @@ export function PlaceCard({ source, code, onClose }: { source: string; code: str
 
   const current = state?.key === key ? state : null;
   const p = current?.place;
+  const weather = useWeather(p?.icao ?? null);
   const now = new Date();
   const noon = new Date(`${now.toLocaleDateString("en-CA", { timeZone: TIME_ZONE })}T12:00:00-03:00`);
   const sun = p && p.lat !== null && p.lng !== null ? getTimes(noon, p.lat, p.lng) : null;
@@ -87,6 +89,13 @@ export function PlaceCard({ source, code, onClose }: { source: string; code: str
             </div>
           )}
           {p.seeAip && <p className="mt-3 border-l-2 border-[#D62828] pl-3 text-sm text-[#00205B]">Pistas y frecuencias: consultá el AIP Parte AD, como indica el MADHEL.</p>}
+          <div className="mt-4 border-t border-[#00205B]/10 pt-3">
+            <h3 className="mb-1 text-sm font-bold text-[#00205B]">Clima</h3>
+            {!p.icao && <p className="text-sm text-slate-700">Sin código OACI: este lugar no reporta METAR.</p>}
+            {weather.loading && <p className="text-sm text-slate-600">Consultando el clima…</p>}
+            {weather.failed && <p className="text-sm text-slate-700">{NO_RECENT_DATA}: el servicio no responde.</p>}
+            {weather.data && <WeatherDetails data={weather.data} />}
+          </div>
           <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-[#00205B]">
             <li>
               <a href="https://ais.anac.gob.ar/notam" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center underline underline-offset-2 hover:text-[#D62828]">

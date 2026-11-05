@@ -20,6 +20,8 @@ import {
   weightAndBalance,
 } from "@/lib/aero/formulas";
 import { PlacePicker } from "@/components/flight-plan/PlacePicker";
+import { useWeather } from "@/components/flight-plan/WeatherSummary";
+import { isRecentMetar } from "@/lib/aero/metar";
 import { CalcLayout, Facts, NumberField, ResultPanel, Segmented, Warning, fmt, num, useFields, useUnit } from "./shared";
 
 export function DensityAltitudeCalculator() {
@@ -27,6 +29,13 @@ export function DensityAltitudeCalculator() {
   const [altUnit, setAltUnit] = useUnit("altitude", ["ft", "m"] as const, "ft");
   const [pressureUnit, setPressureUnit] = useUnit("pressure", ["hpa", "inhg"] as const, "hpa");
   const [tempUnit, setTempUnit] = useUnit("temperature", ["c", "f"] as const, "c");
+  const [station, setStation] = useState<string | null>(null);
+  const weather = useWeather(station);
+  const metar = weather.data?.metar && isRecentMetar(weather.data.metar.obsTime) ? weather.data.metar : null;
+  const useMetar = () => {
+    if (typeof metar?.altim === "number") set("qnh", pressureUnit === "hpa" ? String(Math.round(metar.altim)) : (metar.altim / HPA_PER_INHG).toFixed(2));
+    if (typeof metar?.temp === "number") set("temp", String(tempUnit === "c" ? metar.temp : Math.round(cToF(metar.temp))));
+  };
   const elev = num(fields.elev);
   const qnh = num(fields.qnh);
   const temp = num(fields.temp);
@@ -52,8 +61,14 @@ export function DensityAltitudeCalculator() {
             hint="Completa la elevación con el dato oficial."
             onPick={(p) => {
               if (p.elevationM !== null) set("elev", String(Math.round(altUnit === "ft" ? p.elevationM / M_PER_FT : p.elevationM)));
+              setStation(p.icao);
             }}
           />
+          {metar && (
+            <button type="button" onClick={useMetar} className="inline-flex min-h-11 cursor-pointer items-center rounded-md border border-[#00205B]/25 bg-white px-4 text-sm font-bold text-[#00205B] hover:bg-slate-50">
+              Usar datos del METAR actual
+            </button>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <NumberField label="Elevación" value={fields.elev} onChange={(v) => set("elev", v)} suffix={altUnit} integer placeholder="2000" />
             <NumberField label="QNH" value={fields.qnh} onChange={(v) => set("qnh", v)} suffix={pressureUnit === "hpa" ? "hPa" : "inHg"} placeholder={pressureUnit === "hpa" ? "1013" : "29,92"} />
