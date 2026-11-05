@@ -10,6 +10,7 @@ const nav = () => import("./NavigationCalculators");
 const perf = () => import("./PerformanceCalculators");
 
 const VIEWS: Record<CalculatorSlug, ComponentType> = {
+  weather: dynamic(() => import("./WeatherCalculator").then((m) => m.WeatherCalculator), { ssr: false, loading }),
   crosswind: dynamic(() => nav().then((m) => m.CrosswindCalculator), { ssr: false, loading }),
   "wind-triangle": dynamic(() => nav().then((m) => m.WindTriangleCalculator), { ssr: false, loading }),
   "time-speed-distance": dynamic(() => nav().then((m) => m.TimeSpeedDistanceCalculator), { ssr: false, loading }),

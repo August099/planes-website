@@ -31,7 +31,6 @@ export default function CalculatorsPage() {
           </ul>
         </section>
       ))}
-      <p className="text-sm text-slate-600">Clima aeronáutico (METAR y TAF) llega en la próxima entrega.</p>
     </div>
   );
 }
