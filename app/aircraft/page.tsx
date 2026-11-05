@@ -39,8 +39,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const canonical = !hasFilters && page > 1 ? `/aircraft?page=${page}` : "/aircraft";
 
   return {
-    title: "Aviones en venta en Argentina",
-    description: "Aviones, helicópteros y aeronaves agrícolas en venta en Argentina. Filtrá por marca, modelo, año, horas y precio, y contactá directo con el vendedor.",
+    title: "Comprar aviones en Argentina: aviones y avionetas en venta",
+    description: "Comprar aviones, avionetas, helicópteros y aeronaves agrícolas en Argentina. Filtrá por marca, modelo, año, horas y precio, y contactá directo con el vendedor.",
     alternates: { canonical },
   };
 }

@@ -7,8 +7,8 @@ import { MAX_LISTING_IMAGES } from "@/lib/listing-schema";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata: Metadata = {
-  title: "Cómo publicar tu avión o repuesto",
-  description: "Paso a paso para publicar tu avión o repuesto en Ventas Aeronáuticas y llegar a compradores de todo el país.",
+  title: "Vender tu avión o repuesto en Argentina: cómo publicar",
+  description: "Cómo vender tu avión o repuesto: paso a paso para publicar tu aviso en Ventas Aeronáuticas y llegar a compradores de todo el país.",
   alternates: { canonical: "/howtopublish" },
 };
 

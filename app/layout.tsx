@@ -27,7 +27,7 @@ const ibmPlexSans = IBM_Plex_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Ventas Aeronáuticas | Aviones y repuestos aeronáuticos en Argentina",
+    default: "Comprar y vender aviones en Argentina | Ventas Aeronáuticas",
     template: "%s | Ventas Aeronáuticas",
   },
   description: SITE_DESCRIPTION,
