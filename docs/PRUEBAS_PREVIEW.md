@@ -253,6 +253,7 @@ Marcar cada punto. Celular real para los que dicen 📱.
 
 En un celular real y en la computadora:
 
+- [ ] `/services`: el plan de vuelo, el mapa y las calculadoras figuran en "Disponible ahora" y sus enlaces abren.
 - [ ] `/services/flight-plan`, sin cuenta: se puede hacer todo salvo guardar. Al recargar, lo cargado sigue ahí.
 - [ ] Aeronave: escribir "Cessna 182" ofrece C182 y completa la estela. Un tipo sin designador pasa a ZZZZ con TYP/.
 - [ ] Ruta: elegir salida, destino y alternativa; tocar el mapa agrega un punto. Con viento cargado cambian deriva, proa y tiempo.
