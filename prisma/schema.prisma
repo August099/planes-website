@@ -76,6 +76,10 @@ model User {
   republications            Republication[]
   // VA-169: secciones de la Página VA completa (Broker y admins).
   profilePage               ProfilePage?
+  // VA-191: plan de vuelo.
+  aircraftProfiles          AircraftProfile[]
+  flightPlans               FlightPlan[]
+  aeroImportsApplied        AeroImport[]
 }
 
 model Account {
@@ -163,6 +167,8 @@ model Plan {
   vaPageLevel             VaPageLevel      @default(NONE)
   includesCustomDetail    Boolean          @default(false)
   metricsLevel            MetricsLevel     @default(BASIC)
+  // VA-191: planes de vuelo y perfiles de aeronave guardados (suman juntos). null = sin límite.
+  flightPlansLimit        Int?             @default(2)
   isActive                Boolean          @default(true)
   aircraftListingsCount   Int              @default(0)
   sparePartsListingsCount Int              @default(0)
@@ -1570,4 +1576,137 @@ model ExchangeRate {
   createdAt   DateTime @default(now())
 
   @@index([date])
+}
+
+// VA-191: plan de vuelo. Lo importado queda en AeroImport hasta que un admin lo aplica (lib/aero/).
+enum AeroDataset {
+  MADHEL
+  LAD
+  NAVAID
+  AIRSPACE
+}
+
+enum AeroImportStatus {
+  PENDING
+  APPLIED
+  REJECTED
+  FAILED
+}
+
+enum AeroPlaceKind {
+  AD
+  HELIPORT
+  LAD
+  LADH
+}
+
+enum AirspaceKind {
+  TMA
+  CTR
+  ATZ
+  PROHIBITED
+  RESTRICTED
+  DANGEROUS
+  ADIZ
+  FIR
+}
+
+model AeroImport {
+  id          String           @id @default(cuid())
+  dataset     AeroDataset
+  status      AeroImportStatus @default(PENDING)
+  sourceUrl   String?
+  sourceDate  DateTime?
+  added       Int              @default(0)
+  changed     Int              @default(0)
+  removed     Int              @default(0)
+  diff        Json             @default("{}")
+  payload     Json?
+  warnings    Json             @default("[]")
+  error       String?
+  appliedAt   DateTime?
+  appliedById String?
+  appliedBy   User?            @relation(fields: [appliedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime         @default(now())
+
+  @@index([dataset, status])
+}
+
+model AeroPlace {
+  id              String        @id @default(cuid())
+  kind            AeroPlaceKind
+  source          AeroDataset
+  code            String
+  icao            String?
+  iata            String?
+  name            String
+  fir             String?
+  province        String?
+  location        String?
+  // Sin coordenadas (algunos LAD): no va al mapa, pero se puede buscar.
+  lat             Float?
+  lng             Float?
+  elevationM      Int?
+  condition       String?
+  runways         Json          @default("[]")
+  frequencies     Json          @default("[]")
+  details         Json          @default("{}")
+  sourceUpdatedAt DateTime?
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([source, code])
+  @@index([icao])
+  @@index([kind])
+}
+
+model Navaid {
+  id        String   @id @default(cuid())
+  ident     String
+  name      String
+  type      String
+  frequency String?
+  lat       Float
+  lng       Float
+  updatedAt DateTime @updatedAt
+
+  @@unique([ident, type])
+}
+
+model Airspace {
+  id         String       @id @default(cuid())
+  kind       AirspaceKind
+  name       String
+  lowerLimit String?
+  upperLimit String?
+  geometry   Json
+  updatedAt  DateTime     @updatedAt
+
+  @@index([kind])
+}
+
+model AircraftProfile {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model FlightPlan {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  origin      String?
+  destination String?
+  departureAt DateTime?
+  data        Json
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId, updatedAt])
 }

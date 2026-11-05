@@ -50,6 +50,7 @@ export async function savePlanGridAction(input: GridDraft, opts: { confirmPrice?
     vaPageLevel: b.vaPage,
     includesCustomDetail: b.customDetail,
     metricsLevel: b.metrics,
+    flightPlansLimit: b.flightPlans,
   });
 
   try {

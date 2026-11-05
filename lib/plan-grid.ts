@@ -9,8 +9,8 @@ export type GridColumn = "BASE" | "PRO" | "BROKER";
 export const GRID_COLUMNS: GridColumn[] = ["BASE", "PRO", "BROKER"];
 export const GRID_COLUMN_LABEL: Record<GridColumn, string> = { BASE: "Base", PRO: "Pro", BROKER: "Broker / Empresa" };
 
-export type SystemKey = "aircraft" | "parts" | "total" | "republish" | "metrics" | "verified" | "featured" | "branding";
-export const SYSTEM_KEYS: SystemKey[] = ["aircraft", "parts", "total", "republish", "metrics", "verified", "featured", "branding"];
+export type SystemKey = "aircraft" | "parts" | "total" | "republish" | "metrics" | "verified" | "featured" | "branding" | "flightPlans";
+export const SYSTEM_KEYS: SystemKey[] = ["aircraft", "parts", "total", "republish", "metrics", "verified", "featured", "branding", "flightPlans"];
 
 export type CellKind = "yes" | "no" | "text";
 export type GridCell = { kind: CellKind; text?: string };
@@ -35,6 +35,8 @@ export type GridPlan = {
   vaPage: VaPage;
   customDetail: boolean;
   metrics: Metrics;
+  // VA-191: planes de vuelo y perfiles guardados, sumados. null = sin límite.
+  flightPlans: number | null;
 };
 
 export type BrokerOption = "aircraft" | "parts" | "both";
@@ -80,6 +82,8 @@ export function cellFor(row: GridRow, column: GridColumn, plan: GridPlan | null)
       return { kind: plan.verified ? "yes" : "no" };
     case "featured":
       return { kind: plan.featured ? "yes" : "no" };
+    case "flightPlans":
+      return { kind: "text", text: limitText(plan.flightPlans) };
     case "branding":
       if (plan.vaPage === "NONE") return { kind: "no" };
       // VA-187: la fila se llama "Página personalizada" (antes "Branding").

@@ -7,6 +7,8 @@ import HeaderSearchBar from "./HeaderSearchBar";
 import MobileHeaderSearchBar from "./MobileHeaderSearchBar";
 import { DesktopUserMenu, MobileMenu } from "./HeaderUser";
 import { SparePartsMenu } from "./SparePartsMenu";
+import { ServicesMenu } from "./ServicesMenu";
+import { flightPlanEnabled } from "@/lib/flight-plan-flag";
 import { getSparePartCategories } from "@/lib/cached-data";
 
 // Header estático (VA-71): no lee la sesión en el servidor. Antes llamaba a auth() y consultaba
@@ -47,9 +49,14 @@ export async function Header() {
             </Link>
             {/* VA-120: Repuestos abre un panel con las categorías; VA-116: Servicios es un link simple */}
             <SparePartsMenu linkClass={linkClass} categories={partCategories} />
-            <Link href="/services" className={linkClass}>
-              Servicios
-            </Link>
+            {/* VA-191: con Plan de vuelo prendido, Servicios abre un panel como Repuestos. */}
+            {flightPlanEnabled() ? (
+              <ServicesMenu linkClass={linkClass} />
+            ) : (
+              <Link href="/services" className={linkClass}>
+                Servicios
+              </Link>
+            )}
             {/* Sin sesión, el proxy manda a /login y vuelve a /publish después de ingresar. */}
             <Link href="/publish" className={linkClass}>
               Vender
@@ -60,7 +67,7 @@ export async function Header() {
           {/* Acciones Mobile (Lupa + Menú) */}
           <div className="flex min-w-0 flex-1 md:hidden items-center justify-end gap-1 pl-3">
             <MobileHeaderSearchBar />
-            <MobileMenu partCategories={partCategories} />
+            <MobileMenu partCategories={partCategories} servicesMenu={flightPlanEnabled()} />
           </div>
         </div>
       </HeaderWrapper>

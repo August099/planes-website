@@ -21,6 +21,14 @@ export const NAV: { href: string; label: string }[] = [
   { href: "/publish", label: "Vender" },
 ];
 
+// VA-191: lo que abre "Servicios" con la sección de Plan de vuelo prendida (escritorio y celular).
+export const SERVICE_LINKS: { href: string; label: string; description: string }[] = [
+  { href: "/services/flight-plan", label: "Plan de vuelo", description: "Aeronave, ruta, briefing y formulario OACI." },
+  { href: "/services/flight-plan/calculators", label: "Calculadoras", description: "Cálculos de navegación y performance, sin cuenta." },
+  { href: "/services/guides", label: "Guías", description: "Comprar, vender y transferir una aeronave." },
+  { href: "/aircraft/compare", label: "Comparador", description: "Hasta 3 aeronaves, dato por dato." },
+];
+
 // children: subcategorías directas (menú de escritorio, 26/10).
 export type PartCategoryLink = { id: string; name: string; children?: { id: string; name: string }[] };
 
@@ -30,4 +38,4 @@ export const MOBILE_TRIGGER_CLASS = "relative p-2 rounded-lg border-none hover:b
 
 // VA-167: hasRepublish = hay republicaciones disponibles (punto en "Mi Cuenta"). VA-185: hasMissingProfile =
 // faltan datos del perfil (punto en "Ajustes").
-export type MenuUser = { userId?: string; isAdmin: boolean; hasUnanswered: boolean; hasRepublish?: boolean; hasMissingProfile?: boolean; loading?: boolean; partCategories?: PartCategoryLink[] };
+export type MenuUser = { servicesMenu?: boolean; userId?: string; isAdmin: boolean; hasUnanswered: boolean; hasRepublish?: boolean; hasMissingProfile?: boolean; loading?: boolean; partCategories?: PartCategoryLink[] };

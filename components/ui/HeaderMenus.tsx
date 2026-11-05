@@ -16,6 +16,7 @@ import {
   MOBILE_TRIGGER_CLASS,
   NAV,
   PendingDot,
+  SERVICE_LINKS,
   type MenuUser,
 } from "@/components/ui/header-menu-shared";
 
@@ -94,7 +95,7 @@ export function DesktopDropdown({ userId, isAdmin, hasUnanswered, hasRepublish =
   );
 }
 
-export function MobileDropdown({ userId, isAdmin, hasUnanswered, hasRepublish = false, hasMissingProfile = false, loading, partCategories = [] }: MenuUser) {
+export function MobileDropdown({ servicesMenu = false, userId, isAdmin, hasUnanswered, hasRepublish = false, hasMissingProfile = false, loading, partCategories = [] }: MenuUser) {
   const news = hasUnanswered || hasRepublish || hasMissingProfile;
   return (
     <DropdownMenu defaultOpen>
@@ -109,6 +110,8 @@ export function MobileDropdown({ userId, isAdmin, hasUnanswered, hasRepublish = 
         {NAV.map((item) =>
           item.href === "/spareparts" && partCategories.length > 0 ? (
             <SparePartsGroup key={item.href} label={item.label} categories={partCategories} />
+          ) : item.href === "/services" && servicesMenu ? (
+            <ServicesGroup key={item.href} label={item.label} />
           ) : (
             <DropdownMenuItem key={item.href} className="p-0">
               <Link href={item.href} className="w-full px-2 py-1.5 text-sm font-medium">
@@ -185,6 +188,39 @@ export function MobileDropdown({ userId, isAdmin, hasUnanswered, hasRepublish = 
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+// VA-191: igual que Repuestos: "Servicios" abre su página y la flecha despliega lo que tiene adentro.
+function ServicesGroup({ label }: { label: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <div className="flex items-center">
+        <DropdownMenuItem className="flex-1 p-0">
+          <Link href="/services" className="w-full px-2 py-1.5 text-sm font-medium">
+            {label}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          closeOnClick={false}
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={open ? "Ocultar servicios" : "Ver servicios"}
+          className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center p-0"
+        >
+          <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+        </DropdownMenuItem>
+      </div>
+      {open &&
+        SERVICE_LINKS.map((item) => (
+          <DropdownMenuItem key={item.href} className="p-0">
+            <Link href={item.href} className="w-full py-1.5 pr-2 pl-5 text-sm text-slate-700">
+              {item.label}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+    </>
   );
 }
 
