@@ -19,6 +19,16 @@ export const AVGAS_KG_PER_L = 0.72;
 export const cToF = (c: number) => (c * 9) / 5 + 32;
 export const fToC = (f: number) => ((f - 32) * 5) / 9;
 
+/** -34.5589, "lat" → 34°33'32"S. */
+export function formatCoordinate(value: number, axis: "lat" | "lng"): string {
+  const hemisphere = axis === "lat" ? (value < 0 ? "S" : "N") : value < 0 ? "W" : "E";
+  const totalSeconds = Math.round(Math.abs(value) * 3600);
+  const deg = Math.floor(totalSeconds / 3600);
+  const min = Math.floor((totalSeconds % 3600) / 60);
+  const sec = totalSeconds % 60;
+  return `${String(deg).padStart(axis === "lat" ? 2 : 3, "0")}°${String(min).padStart(2, "0")}'${String(sec).padStart(2, "0")}"${hemisphere}`;
+}
+
 // --- Viento en pista ---
 /** "18" es la pista 18 (180°); de 37 en adelante, grados. Las pistas van de 01 a 36. */
 export const runwayToHeading = (value: number) => (value > 0 && value <= 36 ? value * 10 : value);

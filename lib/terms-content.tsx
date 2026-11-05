@@ -246,6 +246,18 @@ export const termsSections: LegalSection[] = [
     ],
   },
   {
+    id: "plan-de-vuelo",
+    title: "Plan de vuelo, mapa y calculadoras",
+    blocks: [
+      "El sitio ofrece herramientas gratuitas de apoyo a la planificación: plan de vuelo, mapa aeronáutico, fichas de aeródromos, información meteorológica y calculadoras. **Son orientativas. No reemplazan el AIP, los NOTAM, la información meteorológica oficial, la consulta en la oficina ARO-AIS, el manual de vuelo de la aeronave ni la planificación del piloto.**",
+      "**El piloto al mando es quien decide y quien debe verificar toda la información antes de cada vuelo**, con las fuentes oficiales y los documentos de su aeronave. No uses estas herramientas como única fuente para una decisión operativa, ni para navegar en vuelo.",
+      "Los datos provienen de fuentes públicas de terceros, como la Administración Nacional de Aviación Civil y servicios meteorológicos. Pueden estar incompletos, desactualizados o tener errores de origen o de lectura, y pueden no estar disponibles. La fecha de vigencia de cada fuente se muestra en la sección. No somos una fuente oficial de información aeronáutica ni reemplazamos a las autoridades competentes.",
+      "Los resultados de las calculadoras dependen de los datos que cargues y de fórmulas generales o aproximadas. No contemplan todas las condiciones reales ni las particularidades de cada aeronave. Peso y balance, combustible, performance y límites deben controlarse siempre con el manual de vuelo. No cargamos valores reglamentarios por defecto: tenés que verificar la normativa vigente, por ejemplo sobre reservas de combustible.",
+      "Un plan de vuelo armado acá no se presenta por sí solo ante ninguna autoridad y no implica una autorización. Presentarlo y cumplir los procedimientos es responsabilidad del piloto. El sitio no presta servicios de tránsito aéreo, de información de vuelo ni de meteorología aeronáutica.",
+      "Usás estas herramientas bajo tu propio criterio profesional. Esta sección no limita los derechos que la ley te reconoce, como se aclara en la sección de responsabilidad.",
+    ],
+  },
+  {
     id: "responsabilidad",
     title: "Responsabilidad",
     blocks: [

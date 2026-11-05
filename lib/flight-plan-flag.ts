@@ -4,3 +4,4 @@ export const flightPlanEnabled = () => process.env.FLIGHT_PLAN_ENABLED !== "fals
 
 export const FLIGHT_PLAN_PATH = "/services/flight-plan";
 export const CALCULATORS_PATH = "/services/flight-plan/calculators";
+export const MAP_PATH = "/services/flight-plan/map";
