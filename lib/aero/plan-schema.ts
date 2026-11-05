@@ -18,6 +18,14 @@ const pointSchema = z.object({
   elevationM: z.number().nullable().optional(),
 });
 
+export const balanceSchema = z.object({
+  unit: z.enum(["kg", "lb"]),
+  stations: z.array(z.object({ name: z.string().max(60), weight: z.string().max(12), arm: z.string().max(12) })).max(30),
+  max: z.string().max(12),
+  fwd: z.string().max(12),
+  aft: z.string().max(12),
+});
+
 export const aircraftSchema = z.object({
   registration: short,
   typeCode: z.string().max(4),
@@ -30,6 +38,7 @@ export const aircraftSchema = z.object({
   equipment: codes,
   surveillance: codes,
   pbn: z.string().max(40),
+  balance: balanceSchema.optional(),
 });
 
 export const planSchema = z.object({

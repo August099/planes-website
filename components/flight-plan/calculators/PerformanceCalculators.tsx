@@ -21,6 +21,7 @@ import {
 } from "@/lib/aero/formulas";
 import { PlacePicker } from "@/components/flight-plan/PlacePicker";
 import { useWeather } from "@/components/flight-plan/WeatherSummary";
+import { BalanceProfiles } from "@/components/flight-plan/calculators/BalanceProfiles";
 import { isRecentMetar } from "@/lib/aero/metar";
 import { CalcLayout, Facts, NumberField, ResultPanel, Segmented, Warning, fmt, num, useFields, useUnit } from "./shared";
 
@@ -166,6 +167,16 @@ export function WeightBalanceCalculator() {
       units={<Segmented label="Unidad de peso" value={unit} options={[{ value: "kg", label: "kg" }, { value: "lb", label: "lb" }]} onChange={setUnit} />}
       inputs={
         <div className="space-y-3">
+          <BalanceProfiles
+            current={{ unit, stations: rows.map(({ name, weight, arm }) => ({ name, weight, arm })), max: fields.max ?? "", fwd: fields.fwd ?? "", aft: fields.aft ?? "" }}
+            onLoad={(b) => {
+              setUnit(b.unit);
+              setRows(b.stations.map((station, i) => ({ id: i + 1, ...station })));
+              set("max", b.max);
+              set("fwd", b.fwd);
+              set("aft", b.aft);
+            }}
+          />
           <p className="text-sm text-slate-600">Cargá los pesos y brazos de tu manual de vuelo. Podés sumar o quitar estaciones.</p>
           <ul className="space-y-3">
             {rows.map((r) => (

@@ -2,6 +2,9 @@
 // El mensaje FPL lleva las casillas 7 a 18: la 19 queda en el formulario, como indica el documento.
 import type { RoutePoint } from "@/lib/aero/route";
 
+/** Datos de peso y balance guardados con la aeronave. Salen del manual de vuelo y los carga el piloto. */
+export type AircraftBalance = { unit: "kg" | "lb"; stations: { name: string; weight: string; arm: string }[]; max: string; fwd: string; aft: string };
+
 export type PlanDraft = {
   v: 1;
   aircraft: {
@@ -16,6 +19,7 @@ export type PlanDraft = {
     equipment: string[];
     surveillance: string[];
     pbn: string;
+    balance?: AircraftBalance;
   };
   route: { origin: RoutePoint | null; destination: RoutePoint | null; alternate: RoutePoint | null; waypoints: RoutePoint[]; winds: { dir: string; speed: string }[] };
   flight: {
@@ -273,3 +277,15 @@ export const AIRCRAFT_TYPES = [
   ["M20P", "Mooney M20"], ["SR20", "Cirrus SR20"], ["SR22", "Cirrus SR22"], ["DA20", "Diamond DA20"], ["DA40", "Diamond DA40"], ["DA42", "Diamond DA42"], ["P92", "Tecnam P92"],
   ["R22", "Robinson R22"], ["R44", "Robinson R44"], ["R66", "Robinson R66"], ["B06", "Bell 206"], ["B407", "Bell 407"], ["AS50", "Airbus H125, AS350"],
 ].map(([code, name]) => ({ code, name, wake: "L" as const }));
+
+const plain = (text: string) => text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+/** Busca por modelo o designador: "cessna 182", "182" y "c182" encuentran C182. Todas las palabras tienen que coincidir. */
+export function matchAircraftTypes(query: string, limit = 6) {
+  const words = plain(query).split(/\s+/).filter(Boolean);
+  if (!words.length || plain(query).trim().length < 2) return [];
+  return AIRCRAFT_TYPES.filter((t) => {
+    const text = plain(`${t.code} ${t.name}`);
+    return words.every((w) => text.includes(w));
+  }).slice(0, limit);
+}

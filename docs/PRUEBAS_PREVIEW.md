@@ -263,6 +263,9 @@ En un celular real y en la computadora:
 - [ ] Resultado: marca lo que falta; copiar mensaje, PDF y WhatsApp. Mostrarle el PDF y el mensaje a la oficina ARO-AIS para confirmar que los aceptan.
 - [ ] Con cuenta Base: guardar 2 cosas entre planes y aeronaves; la tercera no se puede. Con Pro, Broker o admin, sin límite.
 - [ ] Abrir, editar y borrar un plan guardado. Guardar y borrar una aeronave.
+- [ ] En el celular: la barra Anterior / Siguiente queda fija, el botón Atrás vuelve de paso y no saca del plan, y cada dato que falta en Resultado lleva a su paso.
+- [ ] En el celular: el mapa se mueve con dos dedos y con uno se mueve la página. Al tocarlo se agrega un punto con Deshacer, y los puntos se pueden subir y bajar.
+- [ ] Peso y balance: guardar los datos en una aeronave, recargar y volver a cargarlos.
 - [ ] Mapa: capas METAR y SIGMET, con la lista de vigentes y el texto original.
 - [ ] Calculadoras > Clima: buscar, favoritos, el más cercano. Altitud de densidad: "Usar datos del METAR actual".
 
