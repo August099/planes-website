@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import {
   costPerHour,
   densityAltitude,
+  formatCoordinate,
   formatDuration,
   fuelNeeded,
   normalize360,
@@ -147,4 +148,10 @@ test("hora local y UTC: Argentina es UTC−3, con cambio de día", () => {
   assert.deepEqual(shiftClock(870, 3), { hhmm: "1730", dayShift: 0 });
   assert.deepEqual(shiftClock(1350, 3), { hhmm: "0130", dayShift: 1 });
   assert.deepEqual(shiftClock(60, -3), { hhmm: "2200", dayShift: -1 });
+});
+
+test("coordenadas para leer en la ficha", () => {
+  assert.equal(formatCoordinate(-34.558889, "lat"), "34°33'32\"S");
+  assert.equal(formatCoordinate(-58.416389, "lng"), "058°24'59\"W");
+  assert.equal(formatCoordinate(-28.574444, "lat"), "28°34'28\"S");
 });

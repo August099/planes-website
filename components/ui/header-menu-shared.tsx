@@ -24,7 +24,7 @@ export const NAV: { href: string; label: string }[] = [
 // VA-191: lo que abre "Servicios" con la sección de Plan de vuelo prendida (escritorio y celular).
 // icon: máscara de public/icons/services (scripts/process-service-icons.mjs).
 export const SERVICE_LINKS: { href: string; label: string; description: string; icon: string }[] = [
-  { href: "/services/flight-plan", label: "Plan de vuelo", description: "Aeronave, ruta, briefing y formulario OACI.", icon: "flight-plan" },
+  { href: "/services/flight-plan", label: "Plan de vuelo", description: "Mapa, aeródromos, briefing y formulario OACI.", icon: "flight-plan" },
   { href: "/services/flight-plan/calculators", label: "Calculadoras", description: "Cálculos de navegación y performance, sin cuenta.", icon: "calculators" },
   { href: "/services/guides", label: "Guías", description: "Comprar, vender y transferir una aeronave.", icon: "guides" },
   { href: "/aircraft/compare", label: "Comparador", description: "Hasta 3 aeronaves, dato por dato.", icon: "compare" },
