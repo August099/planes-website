@@ -6,16 +6,11 @@ import { PlacePicker } from "@/components/flight-plan/PlacePicker";
 import { PlaceCard } from "@/components/flight-plan/PlaceCard";
 import type { MapWeather, SigmetSummary } from "@/app/api/aero/map-weather/route";
 import { FLIGHT_CATEGORY } from "@/lib/aero/metar";
+import { ARGENTINA, MAP_STYLE, hasWebGL, loadMapLibre } from "@/components/flight-plan/map-loader";
 
 // VA-191: mapa aeronáutico. MapLibre + OpenFreeMap, cargado solo acá desde public/vendor/ (como el mapa de los
 // avisos, VA-156). Las capas se prenden y apagan; la forma de cada punto también las distingue, no solo el color.
 // Sin WebGL, el buscador y la ficha siguen funcionando.
-const STYLE = "https://tiles.openfreemap.org/styles/positron";
-const VENDOR = `/vendor/maplibre-gl-${process.env.NEXT_PUBLIC_MAPLIBRE_VERSION}`;
-const ARGENTINA: [[number, number], [number, number]] = [
-  [-74, -55.5],
-  [-53, -21.5],
-];
 const NAVY = "#00205B";
 const RED = "#D62828";
 
@@ -40,23 +35,6 @@ const SWATCH: Record<LayerKey, string> = {
 
 type Selected = { source: string; code: string };
 
-function hasWebGL(): boolean {
-  try {
-    const canvas = document.createElement("canvas");
-    return !!(canvas.getContext("webgl2") || canvas.getContext("webgl"));
-  } catch {
-    return false;
-  }
-}
-
-function loadCss(href: string) {
-  if (document.querySelector(`link[href="${href}"]`)) return;
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = href;
-  document.head.appendChild(link);
-}
-
 export function AeroMap() {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -80,10 +58,9 @@ export function AeroMap() {
         return;
       }
       try {
-        loadCss(`${VENDOR}/maplibre-gl.css`);
-        const lib: typeof import("maplibre-gl") = await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ `${VENDOR}/maplibre-gl.mjs`);
+        const lib = await loadMapLibre();
         if (cancelled) return;
-        map = new lib.Map({ container: el, style: STYLE, bounds: ARGENTINA, cooperativeGestures: true, attributionControl: { compact: false } });
+        map = new lib.Map({ container: el, style: MAP_STYLE, bounds: ARGENTINA, cooperativeGestures: true, attributionControl: { compact: false } });
         mapRef.current = map;
         map.addControl(new lib.NavigationControl({ showCompass: false }), "top-right");
         map.on("load", async () => {

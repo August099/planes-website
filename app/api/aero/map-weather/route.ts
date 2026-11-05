@@ -31,7 +31,7 @@ export async function GET() {
         type: "FeatureCollection",
         features: regional.flatMap((s) => {
           const ring = sigmetRing(s);
-          return ring ? [{ type: "Feature" as const, geometry: { type: "Polygon" as const, coordinates: [ring] }, properties: { label: describeHazard(s.hazard) } }] : [];
+          return ring ? [{ type: "Feature" as const, geometry: { type: "Polygon" as const, coordinates: [ring] }, properties: { label: describeHazard(s.hazard), fir: s.firName ?? s.firId ?? "", levels: describeSigmetLevels(s.base, s.top) } }] : [];
         }),
       },
       sigmetList: regional.map((s, i) => ({ id: `${s.firId ?? "fir"}-${s.validTimeFrom}-${i}`, hazard: describeHazard(s.hazard), fir: s.firName ?? s.firId ?? "FIR sin dato", levels: describeSigmetLevels(s.base, s.top), from: s.validTimeFrom, to: s.validTimeTo, raw: s.rawSigmet })),

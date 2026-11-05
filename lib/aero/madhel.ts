@@ -93,7 +93,7 @@ export function normalizeMadhel(item: MadhelListItem, detail: MadhelDetail | nul
     code,
     icao: meta?.identifiers?.icao || null,
     iata: meta?.identifiers?.iata || null,
-    name: madhelName(fullName),
+    name: madhelName(fullName).replace(/\uFEFF/g, ""),
     fir: loc?.fir || null,
     province,
     location,
