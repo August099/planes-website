@@ -5,7 +5,7 @@ import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
 import type { AeroPlaceDetail } from "@/app/api/aero/place/route";
 import type { RoutePoint } from "@/lib/aero/route";
 import { icaoCoordinates } from "@/lib/aero/fpl";
-import { ARGENTINA, MAP_STYLE, hasWebGL, loadMapLibre } from "@/components/flight-plan/map-loader";
+import { ARGENTINA, MAP_LOCALE, MAP_STYLE, hasWebGL, loadMapLibre } from "@/components/flight-plan/map-loader";
 
 // VA-191: ruta sobre el mapa. Tocar agrega un punto intermedio: el aeródromo o LAD si hay uno cerca, si no, la coordenada.
 const NAVY = "#00205B";
@@ -44,7 +44,7 @@ export function RouteMap({ points, onAddWaypoint }: { points: RoutePoint[]; onAd
       try {
         const lib = await loadMapLibre();
         if (cancelled) return;
-        map = new lib.Map({ container: el, style: MAP_STYLE, bounds: ARGENTINA, cooperativeGestures: true, attributionControl: { compact: false } });
+        map = new lib.Map({ container: el, style: MAP_STYLE, bounds: ARGENTINA, cooperativeGestures: true, locale: MAP_LOCALE, attributionControl: { compact: false } });
         mapRef.current = map;
         map.addControl(new lib.NavigationControl({ showCompass: false }), "top-right");
         map.on("load", async () => {
@@ -112,7 +112,7 @@ export function RouteMap({ points, onAddWaypoint }: { points: RoutePoint[]; onAd
   return (
     <div>
       <div ref={container} className="h-[42vh] min-h-72 w-full overflow-hidden rounded-lg border border-[#00205B]/15 bg-[#EEF5FC]" />
-      <p className="mt-1 text-xs text-slate-500">Tocá el mapa para agregar un punto intermedio. Si tocás cerca de un aeródromo o LAD, se usa ese lugar.</p>
+      <p className="mt-1 text-xs text-slate-500">Tocá el mapa para agregar un punto intermedio. Si tocás cerca de un aeródromo o LAD, se usa ese lugar. En el celular, movés el mapa con dos dedos.</p>
     </div>
   );
 }

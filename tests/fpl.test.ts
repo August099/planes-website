@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { bestRunway, buildLeg, buildLegs, crossedAreas, declinationAt, runwayEnds, sunAtArrival, totalDistanceNm, totalHours, type RoutePoint } from "../lib/aero/route";
 import { planFuel, planWarnings } from "../lib/aero/plan-summary";
-import { aircraftIdent, buildItems, emptyDraft, enduranceHhmm, fplMessage, hoursToHhmm, icaoCoordinates, localToUtc, missingFields } from "../lib/aero/fpl";
+import { aircraftIdent, matchAircraftTypes, buildItems, emptyDraft, enduranceHhmm, fplMessage, hoursToHhmm, icaoCoordinates, localToUtc, missingFields } from "../lib/aero/fpl";
 
 const near = (a: number, b: number, tol: number, what = "") => assert.ok(Math.abs(a - b) <= tol, `${what} ${a} no está cerca de ${b}`);
 const place = (icao: string | null, name: string, lat: number, lng: number): RoutePoint => ({ kind: "AD", code: icao ?? name, icao, name, lat, lng });
@@ -212,4 +212,15 @@ test("avisos: combustible, autonomía y noche", () => {
   const night = planWarnings(d, 2, { sunset: dusk, dusk, afterSunset: true, afterDusk: true, beforeSunrise: false });
   assert.ok(night[0].startsWith("Llegás de noche"));
   assert.ok(night[0].includes("19:50"));
+});
+
+test("buscador de tipo: encuentra por modelo o designador, sin importar mayúsculas", () => {
+  const codes = (q: string) => matchAircraftTypes(q).map((t) => t.code);
+  assert.deepEqual(codes("Cessna 182"), ["C182"]);
+  assert.deepEqual(codes("182"), ["C182"]);
+  assert.deepEqual(codes("c182"), ["C182"]);
+  assert.ok(codes("cessna").includes("C150"));
+  assert.ok(codes("seneca").includes("PA34"));
+  assert.deepEqual(codes("x"), []);
+  assert.deepEqual(codes("no existe"), []);
 });

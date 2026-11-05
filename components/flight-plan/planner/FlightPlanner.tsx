@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Trash2, X } from "lucide-react";
 import { deleteAircraftProfileAction, deleteFlightPlanAction, saveAircraftProfileAction, saveFlightPlanAction } from "@/app/actions/flight-plan-actions";
 import { aircraftSchema, draftLegs, planSchema, routePoints } from "@/lib/aero/plan-schema";
-import { AIRCRAFT_TYPES, EQUIPMENT, FLIGHT_RULES, FLIGHT_TYPES, JACKETS, RADIOS, SURVEILLANCE, SURVIVAL, buildItems, emptyDraft, fplMessage, localToUtc, missingFields, type FplItems, type PlanDraft } from "@/lib/aero/fpl";
+import { AIRCRAFT_TYPES, matchAircraftTypes, EQUIPMENT, FLIGHT_RULES, FLIGHT_TYPES, JACKETS, RADIOS, SURVEILLANCE, SURVIVAL, buildItems, emptyDraft, fplMessage, localToUtc, missingFields, type FplItems, type PlanDraft } from "@/lib/aero/fpl";
 import { totalDistanceNm, type RoutePoint } from "@/lib/aero/route";
 import { PlacePicker } from "@/components/flight-plan/PlacePicker";
 import { Briefing } from "@/components/flight-plan/planner/Briefing";
@@ -17,6 +17,14 @@ import { CheckGroup, Field, PointField, Select, toRoutePoint } from "@/component
 // VA-191: plan de vuelo guiado en 5 pasos. Lo que se carga queda en el navegador, y se guarda en la cuenta solo si se pide.
 const DRAFT_KEY = "va_fp_draft";
 const STEPS = ["Aeronave", "Ruta", "Vuelo", "Briefing", "Resultado"] as const;
+
+/** Paso donde se completa cada dato que falta. */
+const MISSING_STEP: Record<string, number> = { "Aeródromo de salida": 1, "Aeródromo de destino": 1, Ruta: 1, "Duración total estimada": 1, "Reglas de vuelo": 2, "Tipo de vuelo": 2, "Fecha y hora de salida": 2, "Altitud o nivel": 2, Autonomía: 2, "Personas a bordo": 2, "Piloto al mando": 2 };
+const stepOfMissing = (label: string) => MISSING_STEP[label] ?? 0;
+const stepFromHash = () => {
+  const n = Number(window.location.hash.match(/^#paso-([1-5])$/)?.[1] ?? 1);
+  return n - 1;
+};
 
 export type SavedPlan = { id: string; name: string; origin: string | null; destination: string | null; departureAt: string | null; data: unknown };
 export type SavedProfile = { id: string; name: string; data: unknown };
@@ -45,22 +53,54 @@ function loadDraft(pilot: string | null): PlanDraft {
 
 function TypePicker({ draft, setAircraft, missing }: { draft: PlanDraft; setAircraft: (patch: Partial<PlanDraft["aircraft"]>) => void; missing: boolean }) {
   const code = draft.aircraft.typeCode;
-  const query = code.trim().toLowerCase();
-  const matches = useMemo(() => (query.length < 2 ? [] : AIRCRAFT_TYPES.filter((t) => t.code.toLowerCase().includes(query) || t.name.toLowerCase().includes(query)).slice(0, 6)), [query]);
+  const [query, setQuery] = useState("");
+  const matches = useMemo(() => matchAircraftTypes(query), [query]);
   const exact = AIRCRAFT_TYPES.find((t) => t.code === code);
+  const typedCode = query.trim().toUpperCase();
+  if (code) {
+    return (
+      <div className="min-w-0">
+        <span className="mb-1 block text-xs font-semibold text-slate-600">Tipo de aeronave</span>
+        <div className="flex min-h-11 items-center justify-between gap-2 rounded-md border border-[#00205B]/25 bg-white py-1 pl-3">
+          <span className="min-w-0 text-sm font-semibold tabular-nums text-[#00205B]">
+            {code} {exact && <span className="font-normal text-slate-700">{exact.name}</span>}
+          </span>
+          <button type="button" onClick={() => setAircraft({ typeCode: "" })} aria-label="Cambiar el tipo de aeronave" className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md text-[#00205B] hover:bg-slate-100">
+            <X className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
+      </div>
+    );
+  }
+  const choose = (patch: Partial<PlanDraft["aircraft"]>) => {
+    setAircraft({ typeText: "", ...patch });
+    setQuery("");
+  };
   return (
     <div className="relative min-w-0">
-      <Field label="Tipo de aeronave" value={code} onChange={(v) => setAircraft({ typeCode: v.trim().slice(0, 4).toUpperCase() })} placeholder="Cessna 182 o C182" missing={missing} hint={exact ? exact.name : "Escribí el modelo y elegí el designador OACI."} />
-      {matches.length > 0 && !exact && (
-        <ul className="absolute inset-x-0 z-30 mt-1 rounded-md border border-[#00205B]/15 bg-white shadow-lg">
+      <Field label="Tipo de aeronave" value={query} onChange={setQuery} placeholder="Cessna 182" missing={missing} hint="Escribí el modelo y elegilo de la lista." />
+      {query.trim().length >= 2 && (
+        <ul className="absolute inset-x-0 top-[4.75rem] z-30 max-h-72 overflow-y-auto rounded-md border border-[#00205B]/15 bg-white shadow-lg">
           {matches.map((t) => (
             <li key={t.code}>
-              <button type="button" onClick={() => setAircraft({ typeCode: t.code, wake: t.wake, typeText: "" })} className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-slate-50">
+              <button type="button" onClick={() => choose({ typeCode: t.code, wake: t.wake })} className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-slate-50">
                 <span className="text-[#00205B]">{t.name}</span>
                 <span className="font-semibold tabular-nums text-[#00205B]">{t.code}</span>
               </button>
             </li>
           ))}
+          {/^[A-Z0-9]{2,4}$/.test(typedCode) && !matches.some((t) => t.code === typedCode) && (
+            <li>
+              <button type="button" onClick={() => choose({ typeCode: typedCode })} className="min-h-11 w-full cursor-pointer px-3 py-2 text-left text-sm font-semibold text-[#00205B] hover:bg-slate-50">
+                Usar {typedCode} como designador
+              </button>
+            </li>
+          )}
+          <li>
+            <button type="button" onClick={() => choose({ typeText: query.trim() })} className="min-h-11 w-full cursor-pointer px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+              No tiene designador: usar el texto &quot;{query.trim()}&quot;
+            </button>
+          </li>
         </ul>
       )}
     </div>
@@ -75,7 +115,7 @@ function AircraftForm({ draft, setAircraft, items, showMissing }: { draft: PlanD
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Matrícula" value={a.registration} onChange={(v) => setAircraft({ registration: v })} placeholder="LV-ABC" uppercase maxLength={10} missing={showMissing && (items.item7.length < 2 || items.item7.length > 7)} />
         <TypePicker draft={draft} setAircraft={setAircraft} missing={showMissing && !items.item9Type} />
-        {!a.typeCode && <Field label="Si no tiene designador, el tipo en texto" value={a.typeText} onChange={(v) => setAircraft({ typeText: v })} placeholder="Experimental RV-7" hint="Va en la casilla 18 como TYP/, con ZZZZ en la 9." />}
+        {!a.typeCode && a.typeText && <Field label="Tipo en texto, sin designador" value={a.typeText} onChange={(v) => setAircraft({ typeText: v })} hint="Va en la casilla 18 como TYP/, con ZZZZ en la 9." />}
         <Select label="Categoría de estela" value={a.wake} onChange={(wake) => setAircraft({ wake })} options={WAKE_OPTIONS} missing={showMissing && !a.wake} />
         <Field label="Velocidad de crucero (TAS)" value={a.cruiseKt} onChange={(v) => setAircraft({ cruiseKt: num(v) })} inputMode="decimal" placeholder="120" hint="En nudos" missing={showMissing && !items.item15Speed} />
         <Field label="Color y marcas" value={a.color} onChange={(v) => setAircraft({ color: v })} placeholder="Blanco con franja roja" missing={showMissing && !items.item19.color} />
@@ -84,8 +124,8 @@ function AircraftForm({ draft, setAircraft, items, showMissing }: { draft: PlanD
           <Select label="Unidad" value={a.fuelUnit} onChange={(fuelUnit) => setAircraft({ fuelUnit })} options={[{ value: "L", label: "Litros" }, { value: "GAL", label: "Galones" }, { value: "KG", label: "Kilos" }]} />
         </div>
       </div>
-      <CheckGroup legend="Comunicación y navegación a bordo" value={a.equipment} onChange={(equipment) => setAircraft({ equipment })} options={EQUIPMENT} exclusive="N" missing={showMissing && !items.item10a} />
-      <CheckGroup legend="Transpondedor" value={a.surveillance} onChange={(surveillance) => setAircraft({ surveillance })} options={SURVEILLANCE} exclusive="N" missing={showMissing && !items.item10b} />
+      <CheckGroup legend="Comunicación y navegación a bordo" value={a.equipment} onChange={(equipment) => setAircraft({ equipment })} options={EQUIPMENT} exclusive="N" more={["L", "V", "U", "H", "Y", "R"]} missing={showMissing && !items.item10a} />
+      <CheckGroup legend="Transpondedor" value={a.surveillance} onChange={(surveillance) => setAircraft({ surveillance })} options={SURVEILLANCE} exclusive="N" more={["E", "B1"]} missing={showMissing && !items.item10b} />
       {a.equipment.includes("R") && <Field label="Capacidades PBN" value={a.pbn} onChange={(v) => setAircraft({ pbn: v.toUpperCase() })} placeholder="B2C2D2" hint="Tal como figuran en la aprobación de la aeronave." />}
     </div>
   );
@@ -127,7 +167,7 @@ function FlightForm({ draft, setFlight, items, showMissing }: { draft: PlanDraft
   );
 }
 
-function ResultStep({ draft, setAircraft, setFlight, hours, signedIn, loaded, onSaved, limitReached }: { draft: PlanDraft; setAircraft: (p: Partial<PlanDraft["aircraft"]>) => void; setFlight: (p: Partial<PlanDraft["flight"]>) => void; hours: number | null; signedIn: boolean; loaded: { id: string; name: string } | null; onSaved: (plan: { id: string; name: string }) => void; limitReached: boolean }) {
+function ResultStep({ draft, setAircraft, setFlight, hours, signedIn, loaded, onSaved, limitReached, goTo }: { goTo: (step: number) => void; draft: PlanDraft; setAircraft: (p: Partial<PlanDraft["aircraft"]>) => void; setFlight: (p: Partial<PlanDraft["flight"]>) => void; hours: number | null; signedIn: boolean; loaded: { id: string; name: string } | null; onSaved: (plan: { id: string; name: string }) => void; limitReached: boolean }) {
   const items = useMemo(() => buildItems(draft, hours), [draft, hours]);
   const missing = useMemo(() => missingFields(items), [items]);
   const message = useMemo(() => fplMessage(items), [items]);
@@ -136,6 +176,7 @@ function ResultStep({ draft, setAircraft, setFlight, hours, signedIn, loaded, on
   const [name, setName] = useState(loaded?.name ?? "");
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [formOpen, setFormOpen] = useState(missing.length > 0);
 
   const copy = async () => {
     try {
@@ -181,14 +222,16 @@ function ResultStep({ draft, setAircraft, setFlight, hours, signedIn, loaded, on
   const button = "inline-flex min-h-11 cursor-pointer items-center justify-center rounded-md border border-[#00205B]/25 bg-white px-4 text-sm font-bold text-[#00205B] hover:bg-slate-50 disabled:opacity-60";
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-8">
       {missing.length > 0 ? (
         <section aria-labelledby="fp-missing" className="border-l-2 border-[#D62828] pl-3">
           <h3 id="fp-missing" className="text-sm font-bold text-[#00205B]">Falta completar</h3>
           <ul className="mt-1 text-sm text-slate-700">
             {missing.map((m) => (
               <li key={`${m.item}-${m.label}`}>
-                <span className="font-semibold tabular-nums">Casilla {m.item}:</span> {m.label}
+                <button type="button" onClick={() => goTo(stepOfMissing(m.label))} className="min-h-11 w-full cursor-pointer py-1.5 text-left underline-offset-2 hover:underline">
+                  <span className="font-semibold tabular-nums">Casilla {m.item}:</span> {m.label} <span className="whitespace-nowrap font-semibold text-[#00205B]">Completar</span>
+                </button>
               </li>
             ))}
           </ul>
@@ -197,8 +240,9 @@ function ResultStep({ draft, setAircraft, setFlight, hours, signedIn, loaded, on
         <p className="border-l-2 border-[#00205B] pl-3 text-sm font-semibold text-[#00205B]">El formulario está completo. Revisalo antes de presentarlo.</p>
       )}
 
-      <section aria-labelledby="fp-form" className="space-y-6">
-        <h3 id="fp-form" className="font-heading text-base font-bold text-[#00205B]">Formulario OACI, casillas 7 a 19</h3>
+      <details open={formOpen} onToggle={(e) => setFormOpen(e.currentTarget.open)} className={missing.length > 0 ? "order-1" : "order-3"}>
+        <summary className="min-h-11 cursor-pointer py-2 font-heading text-base font-bold text-[#00205B]">Formulario OACI, casillas 7 a 19</summary>
+        <div className="mt-3 space-y-6">
         <AircraftForm draft={draft} setAircraft={setAircraft} items={items} showMissing />
         <FlightForm draft={draft} setFlight={setFlight} items={items} showMissing />
         <dl className="grid gap-x-6 gap-y-2 rounded-lg border border-[#00205B]/12 bg-white p-4 text-sm sm:grid-cols-2">
@@ -221,13 +265,14 @@ function ResultStep({ draft, setAircraft, setFlight, hours, signedIn, loaded, on
             Volver a la ruta automática
           </button>
         )}
-      </section>
+        </div>
+      </details>
 
-      <section aria-labelledby="fp-message">
+      <section aria-labelledby="fp-message" className="order-2">
         <h3 id="fp-message" className="font-heading text-base font-bold text-[#00205B]">Mensaje FPL</h3>
         <p className="mt-1 text-xs text-slate-500">Casillas 7 a 18, en texto OACI. La casilla 19 va solo en el formulario.</p>
         <pre className="mt-2 overflow-x-auto rounded-md border border-[#00205B]/12 bg-white p-3 font-mono text-sm text-[#00205B]">{message}</pre>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
           <button type="button" onClick={copy} className={button}>
             {copied ? "Copiado" : "Copiar mensaje"}
           </button>
@@ -242,7 +287,7 @@ function ResultStep({ draft, setAircraft, setFlight, hours, signedIn, loaded, on
         <p className="mt-2 text-xs text-slate-500">Este plan no se envía a ninguna autoridad: presentarlo es responsabilidad del piloto. Confirmá el formato con la oficina ARO-AIS.</p>
       </section>
 
-      <section aria-labelledby="fp-save">
+      <section aria-labelledby="fp-save" className="order-3">
         <h3 id="fp-save" className="font-heading text-base font-bold text-[#00205B]">Guardar</h3>
         {signedIn ? (
           <div className="mt-2 flex flex-wrap items-end gap-2">
@@ -272,7 +317,9 @@ function ResultStep({ draft, setAircraft, setFlight, hours, signedIn, loaded, on
 export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used, dataNote }: PlannerProps) {
   const router = useRouter();
   const [draft, setDraft] = useState<PlanDraft>(() => loadDraft(userName));
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(stepFromHash);
+  const topRef = useRef<HTMLDivElement>(null);
+  const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState<{ id: string; name: string } | null>(null);
   const [profileNotice, setProfileNotice] = useState<string | null>(null);
@@ -286,10 +333,32 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
     }
   }, [draft]);
 
+  // Cada paso queda en el historial: el botón Atrás del celular vuelve al paso anterior y no saca del plan.
+  useEffect(() => {
+    const onPop = () => setStep(stepFromHash());
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  const goTo = useCallback((next: number) => {
+    setStep(next);
+    window.history.pushState(null, "", `#paso-${next + 1}`);
+    topRef.current?.scrollIntoView({ block: "start" });
+  }, []);
+
   const setAircraft = useCallback((patch: Partial<PlanDraft["aircraft"]>) => setDraft((d) => ({ ...d, aircraft: { ...d.aircraft, ...patch } })), []);
   const setRoute = useCallback((patch: Partial<PlanDraft["route"]>) => setDraft((d) => ({ ...d, route: { ...d.route, ...patch } })), []);
   const setFlight = useCallback((patch: Partial<PlanDraft["flight"]>) => setDraft((d) => ({ ...d, flight: { ...d.flight, ...patch } })), []);
-  const addWaypoint = useCallback((p: RoutePoint) => setDraft((d) => (d.route.waypoints.length >= 30 ? d : { ...d, route: { ...d.route, waypoints: [...d.route.waypoints, p] } })), []);
+  const addWaypoint = useCallback((p: RoutePoint) => {
+    setDraft((d) => (d.route.waypoints.length >= 30 ? d : { ...d, route: { ...d.route, waypoints: [...d.route.waypoints, p], winds: d.route.winds.slice(0, d.route.waypoints.length) } }));
+    setLastAdded(p.icao ?? p.name);
+  }, []);
+  const moveWaypoint = (from: number, to: number) => {
+    const waypoints = [...draft.route.waypoints];
+    waypoints.splice(to, 0, ...waypoints.splice(from, 1));
+    setRoute({ waypoints, winds: [] });
+    setLastAdded(null);
+  };
 
   const { legs, hours } = useMemo(() => draftLegs(draft), [draft]);
   const items = useMemo(() => buildItems(draft, hours), [draft, hours]);
@@ -297,6 +366,8 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
   // Para el mapa alcanza con lo cargado: muestra el origen aunque todavía no haya destino.
   const mapPoints = useMemo(() => [draft.route.origin, ...draft.route.waypoints, draft.route.destination].filter((p): p is RoutePoint => !!p), [draft.route]);
   const limitReached = limit !== null && used >= limit;
+  const missingNow = useMemo(() => missingFields(items), [items]);
+  const stepComplete = (i: number) => (i <= 2 ? !missingNow.some((m) => stepOfMissing(m.label) === i) : false);
 
   const setWind = (index: number, patch: Partial<{ dir: string; speed: string }>) => {
     const winds = Array.from({ length: Math.max(legs.length, draft.route.winds.length) }, (_, i) => draft.route.winds[i] ?? { dir: "", speed: "" });
@@ -310,7 +381,7 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
     setDraft(parsed.data);
     setLoaded({ id: plan.id, name: plan.name });
     setError(null);
-    setStep(4);
+    goTo(4);
   };
 
   const reset = () => {
@@ -319,7 +390,8 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
     if (userName) fresh.flight.pilot = userName;
     setDraft(fresh);
     setLoaded(null);
-    setStep(0);
+    setLastAdded(null);
+    goTo(0);
   };
 
   const applyProfile = (id: string) => {
@@ -348,13 +420,23 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
 
   return (
     <div className="max-w-4xl space-y-6">
+      <div ref={topRef} className="scroll-mt-20" />
       <nav aria-label="Pasos del plan de vuelo">
         <ol className="grid grid-cols-5 gap-1">
           {STEPS.map((label, i) => (
             <li key={label}>
-              <button type="button" onClick={() => setStep(i)} aria-current={i === step ? "step" : undefined} className={`w-full cursor-pointer border-t-[3px] pb-1 pt-2 text-left text-xs font-semibold sm:text-sm ${i === step ? "border-[#D62828] text-[#00205B]" : i < step ? "border-[#00205B] text-[#00205B]/80" : "border-[#00205B]/20 text-slate-600"} min-h-11`}>
-                <span className="tabular-nums">{i + 1}</span> <span className="hidden sm:inline">{label}</span>
-                <span className="block truncate sm:hidden">{label}</span>
+              <button type="button" onClick={() => goTo(i)} aria-current={i === step ? "step" : undefined} className={`w-full cursor-pointer border-t-[3px] pb-1 pt-2 text-left text-xs font-semibold sm:text-sm ${i === step ? "border-[#D62828] text-[#00205B]" : i < step ? "border-[#00205B] text-[#00205B]/80" : "border-[#00205B]/20 text-slate-600"} min-h-11`}>
+                <span className="flex items-center gap-1 tabular-nums">
+                  {i + 1}
+                  {stepComplete(i) && (
+                    <>
+                      <Check className="h-3.5 w-3.5" aria-hidden />
+                      <span className="sr-only">completo</span>
+                    </>
+                  )}
+                  <span className="hidden sm:inline">{label}</span>
+                </span>
+                <span className="block truncate text-[11px] sm:hidden">{label}</span>
               </button>
             </li>
           ))}
@@ -365,7 +447,7 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
         <h2 className="font-heading text-lg font-bold text-[#00205B]">{STEPS[step]}{loaded ? <span className="ml-2 text-sm font-medium text-slate-600">{loaded.name}</span> : null}</h2>
         <div className="flex flex-wrap gap-x-4">
           {step !== 4 && (
-            <button type="button" onClick={() => setStep(4)} className="min-h-11 cursor-pointer font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828]">
+            <button type="button" onClick={() => goTo(4)} className="min-h-11 cursor-pointer font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828]">
               Ver formulario OACI completo
             </button>
           )}
@@ -410,11 +492,19 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
       {step === 1 && (
         <div className="space-y-5">
           <div className="grid gap-4 md:grid-cols-3">
-            <PointField label="Salida" value={draft.route.origin} onChange={(origin) => { setRoute({ origin }); setError(null); }} onError={setError} />
-            <PointField label="Destino" value={draft.route.destination} onChange={(destination) => { setRoute({ destination }); setError(null); }} onError={setError} />
+            <PointField label="Salida" value={draft.route.origin} onChange={(origin) => { setRoute({ origin, winds: [] }); setError(null); }} onError={setError} />
+            <PointField label="Destino" value={draft.route.destination} onChange={(destination) => { setRoute({ destination, winds: [] }); setError(null); }} onError={setError} />
             <PointField label="Alternativa (opcional)" value={draft.route.alternate} onChange={(alternate) => { setRoute({ alternate }); setError(null); }} onError={setError} />
           </div>
           <RouteMap points={mapPoints} onAddWaypoint={addWaypoint} />
+          {lastAdded && draft.route.waypoints.length > 0 && (
+            <p role="status" className="flex flex-wrap items-center gap-x-3 text-sm text-[#00205B]">
+              Agregaste {lastAdded} como punto {draft.route.waypoints.length}.
+              <button type="button" onClick={() => { setRoute({ waypoints: draft.route.waypoints.slice(0, -1), winds: [] }); setLastAdded(null); }} className="min-h-11 cursor-pointer font-semibold underline underline-offset-2 hover:text-[#D62828]">
+                Deshacer
+              </button>
+            </p>
+          )}
           <div>
             <PlacePicker
               label="Agregar punto intermedio"
@@ -429,9 +519,17 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
                 {draft.route.waypoints.map((w, i) => (
                   <li key={`${w.code}-${i}`} className="flex items-center justify-between gap-2">
                     <span className="min-w-0 truncate text-[#00205B]"><span className="tabular-nums">{i + 1}.</span> {w.icao ?? w.name}{w.icao ? ` ${w.name}` : ""}</span>
-                    <button type="button" onClick={() => setRoute({ waypoints: draft.route.waypoints.filter((_, n) => n !== i), winds: [] })} aria-label={`Quitar ${w.name}`} className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center text-slate-500 hover:text-[#D62828]">
-                      <Trash2 className="h-4 w-4" aria-hidden />
-                    </button>
+                    <span className="flex shrink-0">
+                      <button type="button" onClick={() => moveWaypoint(i, i - 1)} disabled={i === 0} aria-label={`Subir ${w.name}`} className="flex h-11 w-11 cursor-pointer items-center justify-center text-[#00205B] disabled:invisible">
+                        <ChevronUp className="h-4 w-4" aria-hidden />
+                      </button>
+                      <button type="button" onClick={() => moveWaypoint(i, i + 1)} disabled={i === draft.route.waypoints.length - 1} aria-label={`Bajar ${w.name}`} className="flex h-11 w-11 cursor-pointer items-center justify-center text-[#00205B] disabled:invisible">
+                        <ChevronDown className="h-4 w-4" aria-hidden />
+                      </button>
+                      <button type="button" onClick={() => { setRoute({ waypoints: draft.route.waypoints.filter((_, n) => n !== i), winds: [] }); setLastAdded(null); }} aria-label={`Quitar ${w.name}`} className="flex h-11 w-11 cursor-pointer items-center justify-center text-slate-500 hover:text-[#D62828]">
+                        <Trash2 className="h-4 w-4" aria-hidden />
+                      </button>
+                    </span>
                   </li>
                 ))}
               </ol>
@@ -440,7 +538,7 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
           {points.length > 1 && (
             <section aria-labelledby="fp-legs">
               <h3 id="fp-legs" className="font-heading text-base font-bold text-[#00205B]">Tramos</h3>
-              <p className="mt-1 text-sm text-slate-700">Cargá el viento pronosticado de cada tramo, en grados verdaderos y nudos. Sin viento, se calcula en aire calmo.</p>
+              <p className="mt-1 text-sm text-slate-700">Cargá el viento del pronóstico oficial para cada tramo, en grados verdaderos y nudos. Sin viento, se calcula en aire calmo.</p>
               <LegList
                 legs={legs}
                 renderWind={(i) => (
@@ -451,7 +549,15 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
                 )}
               />
               <p className="mt-2 text-sm font-semibold tabular-nums text-[#00205B]">Total: {totalDistanceNm(legs).toFixed(0)} NM</p>
-              {!draft.aircraft.cruiseKt && <p className="mt-1 text-sm text-slate-700">Cargá la velocidad de crucero en el paso Aeronave para ver rumbo con viento y tiempo.</p>}
+              {!draft.aircraft.cruiseKt && (
+                <p className="mt-1 text-sm text-slate-700">
+                  Para ver proa y tiempo, cargá la velocidad en{" "}
+                  <button type="button" onClick={() => goTo(0)} className="min-h-11 cursor-pointer font-semibold underline underline-offset-2">
+                    Aeronave
+                  </button>
+                  .
+                </p>
+              )}
             </section>
           )}
         </div>
@@ -469,6 +575,7 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
           signedIn={signedIn}
           loaded={loaded}
           limitReached={limitReached}
+          goTo={goTo}
           onSaved={(plan) => {
             setLoaded(plan);
             router.refresh();
@@ -476,11 +583,11 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
         />
       )}
 
-      <div className="flex justify-between gap-2 border-t border-[#00205B]/15 pt-4">
-        <button type="button" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0} className="inline-flex min-h-11 cursor-pointer items-center rounded-md border border-[#00205B]/25 bg-white px-4 text-sm font-bold text-[#00205B] hover:bg-slate-50 disabled:invisible">
+      <div className="sticky bottom-0 z-20 -mx-4 flex justify-between gap-2 border-t border-[#00205B]/15 bg-white px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-4">
+        <button type="button" onClick={() => goTo(Math.max(0, step - 1))} disabled={step === 0} className="inline-flex min-h-11 cursor-pointer items-center rounded-md border border-[#00205B]/25 bg-white px-4 text-sm font-bold text-[#00205B] hover:bg-slate-50 disabled:invisible">
           Anterior
         </button>
-        <button type="button" onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))} disabled={step === STEPS.length - 1} className="inline-flex min-h-11 cursor-pointer items-center rounded-md bg-[#00205B] px-5 text-sm font-bold text-white hover:bg-[#00307F] disabled:invisible">
+        <button type="button" onClick={() => goTo(Math.min(STEPS.length - 1, step + 1))} disabled={step === STEPS.length - 1} className="inline-flex min-h-11 cursor-pointer items-center rounded-md bg-[#00205B] px-5 text-sm font-bold text-white hover:bg-[#00307F] disabled:invisible">
           Siguiente: {STEPS[Math.min(step + 1, STEPS.length - 1)]}
         </button>
       </div>
@@ -509,7 +616,7 @@ export function FlightPlanner({ userName, signedIn, plans, profiles, limit, used
           )}
         </section>
       )}
-      <p className="text-xs text-slate-500">{dataNote}</p>
+      <p className="text-xs text-slate-500">Lo que cargás queda guardado en este dispositivo. {dataNote}</p>
     </div>
   );
 }

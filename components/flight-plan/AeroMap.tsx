@@ -6,7 +6,7 @@ import { PlacePicker } from "@/components/flight-plan/PlacePicker";
 import { PlaceCard } from "@/components/flight-plan/PlaceCard";
 import type { MapWeather, SigmetSummary } from "@/app/api/aero/map-weather/route";
 import { FLIGHT_CATEGORY } from "@/lib/aero/metar";
-import { ARGENTINA, MAP_STYLE, hasWebGL, loadMapLibre } from "@/components/flight-plan/map-loader";
+import { ARGENTINA, MAP_LOCALE, MAP_STYLE, hasWebGL, loadMapLibre } from "@/components/flight-plan/map-loader";
 
 // VA-191: mapa aeronáutico. MapLibre + OpenFreeMap, cargado solo acá desde public/vendor/ (como el mapa de los
 // avisos, VA-156). Las capas se prenden y apagan; la forma de cada punto también las distingue, no solo el color.
@@ -38,6 +38,7 @@ type Selected = { source: string; code: string };
 export function AeroMap() {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Selected | null>(null);
   const [visible, setVisible] = useState<Record<LayerKey, boolean>>({ ad: true, heli: true, lad: true });
   const [status, setStatus] = useState<"loading" | "ready" | "empty" | "failed">("loading");
@@ -60,7 +61,7 @@ export function AeroMap() {
       try {
         const lib = await loadMapLibre();
         if (cancelled) return;
-        map = new lib.Map({ container: el, style: MAP_STYLE, bounds: ARGENTINA, cooperativeGestures: true, attributionControl: { compact: false } });
+        map = new lib.Map({ container: el, style: MAP_STYLE, bounds: ARGENTINA, cooperativeGestures: true, locale: MAP_LOCALE, attributionControl: { compact: false } });
         mapRef.current = map;
         map.addControl(new lib.NavigationControl({ showCompass: false }), "top-right");
         map.on("load", async () => {
@@ -128,6 +129,13 @@ export function AeroMap() {
     };
   }, []);
 
+  // En el celular la ficha queda debajo del mapa: se lleva a la vista para que se note que se abrió.
+  useEffect(() => {
+    if (!selected || !window.matchMedia("(max-width: 1023px)").matches) return;
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    cardRef.current?.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
+  }, [selected]);
+
   const toggle = (key: LayerKey) => {
     const next = !visible[key];
     setVisible((v) => ({ ...v, [key]: next }));
@@ -175,7 +183,16 @@ export function AeroMap() {
 
   return (
     <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="space-y-3">
+      <div className="lg:col-start-2 lg:row-start-1">
+        <PlacePicker
+          label="Buscar aeródromo o LAD"
+          onPick={(p) => {
+            setSelected({ source: p.kind === "LAD" || p.kind === "LADH" ? "LAD" : "MADHEL", code: p.code });
+            if (p.lat !== null && p.lng !== null) mapRef.current?.flyTo({ center: [p.lng, p.lat], zoom: 10 });
+          }}
+        />
+      </div>
+      <div className="min-w-0 space-y-3 lg:col-start-1 lg:row-span-2 lg:row-start-1">
         <div role="group" aria-label="Capas del mapa" className="flex flex-wrap gap-2">
           {LAYERS.map((l) => (
             <button
@@ -243,14 +260,7 @@ export function AeroMap() {
           </section>
         )}
       </div>
-      <div className="space-y-4">
-        <PlacePicker
-          label="Buscar aeródromo o LAD"
-          onPick={(p) => {
-            setSelected({ source: p.kind === "LAD" || p.kind === "LADH" ? "LAD" : "MADHEL", code: p.code });
-            if (p.lat !== null && p.lng !== null) mapRef.current?.flyTo({ center: [p.lng, p.lat], zoom: 10 });
-          }}
-        />
+      <div ref={cardRef} className="scroll-mt-20 lg:col-start-2 lg:row-start-2">
         {selected ? <PlaceCard source={selected.source} code={selected.code} onClose={() => setSelected(null)} /> : <p className="text-sm text-slate-600">Tocá un punto del mapa o buscá un lugar para ver su ficha.</p>}
       </div>
     </div>

@@ -141,14 +141,16 @@ export function Briefing({ draft }: { draft: PlanDraft }) {
           ))}
         </ul>
       )}
-      <section>
-        <h3 className="font-heading text-base font-bold text-[#00205B]">Tramos</h3>
+      <details>
+        <summary className="min-h-11 cursor-pointer py-2 font-heading text-base font-bold text-[#00205B]">
+          <span className="tabular-nums">
+            Tramos ·{" "}{totalDistanceNm(legs).toFixed(0)} NM{hours !== null ? ` · ${Math.floor(Math.round(hours * 60) / 60)} h ${String(Math.round(hours * 60) % 60).padStart(2, "0")} min` : ""}
+          </span>
+          {altLeg !== null && <span className="block text-sm font-medium tabular-nums text-slate-600">Destino a alternativa: {altLeg.toFixed(0)} NM</span>}
+        </summary>
         <LegList legs={legs} />
-        <p className="mt-2 text-sm font-semibold tabular-nums text-[#00205B]">
-          Total: {totalDistanceNm(legs).toFixed(0)} NM{hours !== null ? ` · ${Math.floor(Math.round(hours * 60) / 60)} h ${String(Math.round(hours * 60) % 60).padStart(2, "0")} min` : ""}
-          {altLeg !== null ? ` · Destino a alternativa: ${altLeg.toFixed(0)} NM` : ""}
-        </p>
-      </section>
+      </details>
+      {legs.some((l) => l.wind.dir === null) && <p className="text-sm text-slate-700">Hay tramos sin viento cargado: sus tiempos y su combustible están calculados en aire calmo.</p>}
       <section className="grid gap-6 md:grid-cols-2">
         <div>
           <h3 className="font-heading text-base font-bold text-[#00205B]">Sol en el destino</h3>

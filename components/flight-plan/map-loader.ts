@@ -6,6 +6,15 @@ export const ARGENTINA: [[number, number], [number, number]] = [
   [-53, -21.5],
 ];
 
+/** Textos del mapa en castellano. En el celular se mueve con dos dedos, para que un dedo siga moviendo la página. */
+export const MAP_LOCALE = {
+  "CooperativeGesturesHandler.WindowsHelpText": "Usá Ctrl + rueda para hacer zoom",
+  "CooperativeGesturesHandler.MacHelpText": "Usá ⌘ + rueda para hacer zoom",
+  "CooperativeGesturesHandler.MobileHelpText": "Usá dos dedos para mover el mapa",
+  "NavigationControl.ZoomIn": "Acercar",
+  "NavigationControl.ZoomOut": "Alejar",
+};
+
 export function hasWebGL(): boolean {
   try {
     const canvas = document.createElement("canvas");

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { X } from "lucide-react";
 import type { RoutePoint } from "@/lib/aero/route";
 import type { AeroPlaceResult } from "@/app/api/aero/places/route";
@@ -7,7 +8,7 @@ import { PlacePicker } from "@/components/flight-plan/PlacePicker";
 
 // VA-191: campos del plan de vuelo. Misma estética que las calculadoras.
 const LABEL = "mb-1 block text-xs font-semibold text-slate-600";
-const INPUT = "min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-[#00205B] placeholder:text-slate-400";
+const INPUT = "min-h-11 w-full min-w-0 appearance-none rounded-md border border-slate-300 bg-white px-3 py-2 text-base text-[#00205B] placeholder:text-slate-400";
 
 export function Field({ label, value, onChange, hint, placeholder, inputMode, type = "text", uppercase = false, missing = false, maxLength }: { label: string; value: string; onChange: (v: string) => void; hint?: string; placeholder?: string; inputMode?: "text" | "numeric" | "decimal"; type?: "text" | "date" | "time"; uppercase?: boolean; missing?: boolean; maxLength?: number }) {
   return (
@@ -42,7 +43,11 @@ export function Select<T extends string>({ label, value, onChange, options, miss
 }
 
 /** Casillas en lenguaje simple. `exclusive` es el código que se marca solo: "N" (sin equipo) excluye al resto. */
-export function CheckGroup({ legend, value, onChange, options, exclusive, missing = false }: { legend: string; value: string[]; onChange: (v: string[]) => void; options: readonly { code: string; label: string }[]; exclusive?: string; missing?: boolean }) {
+export function CheckGroup({ legend, value, onChange, options, exclusive, missing = false, more = [] }: { legend: string; value: string[]; onChange: (v: string[]) => void; options: readonly { code: string; label: string }[]; exclusive?: string; missing?: boolean; more?: readonly string[] }) {
+  // Las opciones menos comunes quedan a un toque, para no hacer una lista larga en el celular.
+  const [showMore, setShowMore] = useState(false);
+  const hidden = more.filter((code) => !value.includes(code));
+  const visible = options.filter((o) => showMore || !hidden.includes(o.code));
   const toggle = (code: string) => {
     if (value.includes(code)) return onChange(value.filter((c) => c !== code));
     if (code === exclusive) return onChange([code]);
@@ -57,13 +62,18 @@ export function CheckGroup({ legend, value, onChange, options, exclusive, missin
         {missing && <span className="ml-1 font-bold text-[#D62828]">Falta</span>}
       </legend>
       <div className="grid gap-x-4 sm:grid-cols-2">
-        {options.map((o) => (
+        {visible.map((o) => (
           <label key={o.code} className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm text-[#00205B]">
             <input type="checkbox" checked={value.includes(o.code)} onChange={() => toggle(o.code)} className="h-5 w-5 shrink-0 cursor-pointer accent-[#00205B]" />
             {o.label}
           </label>
         ))}
       </div>
+      {!showMore && hidden.length > 0 && (
+        <button type="button" onClick={() => setShowMore(true)} className="min-h-11 cursor-pointer text-sm font-semibold text-[#00205B] underline underline-offset-2 hover:text-[#D62828]">
+          Ver más opciones
+        </button>
+      )}
     </fieldset>
   );
 }

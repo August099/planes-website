@@ -5,8 +5,8 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { flightPlanEnabled, FLIGHT_PLAN_PATH } from "@/lib/flight-plan-flag";
 import { flightPlanQuota } from "@/lib/flight-plan-quota";
-import { aircraftSchema, planSchema } from "@/lib/aero/plan-schema";
-import { localToUtc } from "@/lib/aero/fpl";
+import { aircraftSchema, balanceSchema, planSchema } from "@/lib/aero/plan-schema";
+import { emptyDraft, localToUtc } from "@/lib/aero/fpl";
 import { Prisma } from "@prisma/client";
 
 // VA-191: guardado de planes y perfiles de aeronave. El cupo suma los dos; editar lo ya guardado no consume cupo.
@@ -71,8 +71,37 @@ export async function saveAircraftProfileAction(input: { id?: string; name: stri
     revalidatePath(FLIGHT_PLAN_PATH);
     return { ok: true, id: input.id };
   }
+  const same = await prisma.aircraftProfile.findFirst({ where: { userId, name: fields.name }, select: { id: true } });
+  if (same) {
+    await prisma.aircraftProfile.update({ where: { id: same.id }, data: fields });
+    revalidatePath(FLIGHT_PLAN_PATH);
+    return { ok: true, id: same.id };
+  }
   if (!(await hasRoom(userId))) return { ok: false, error: LIMIT_MESSAGE };
   const created = await prisma.aircraftProfile.create({ data: { ...fields, userId }, select: { id: true } });
+  revalidatePath(FLIGHT_PLAN_PATH);
+  return { ok: true, id: created.id };
+}
+
+/** Guarda el peso y balance en una aeronave existente, o crea una nueva con ese nombre. */
+export async function saveAircraftBalanceAction(input: { id?: string; name?: string; balance: unknown }): Promise<SaveResult> {
+  const userId = await currentUserId();
+  if (!userId) return { ok: false, error: "Ingresá a tu cuenta para guardar." };
+  const parsed = balanceSchema.safeParse(input.balance);
+  if (!parsed.success) return { ok: false, error: "No se pudieron leer los datos. Revisalos." };
+  if (input.id) {
+    const profile = await prisma.aircraftProfile.findFirst({ where: { id: input.id, userId }, select: { data: true } });
+    if (!profile) return { ok: false, error: "Esa aeronave ya no existe." };
+    const data = { ...(profile.data as Record<string, unknown>), balance: parsed.data } as unknown as Prisma.InputJsonValue;
+    await prisma.aircraftProfile.update({ where: { id: input.id }, data: { data } });
+    revalidatePath(FLIGHT_PLAN_PATH);
+    return { ok: true, id: input.id };
+  }
+  const name = cleanName(input.name, "");
+  if (!name) return { ok: false, error: "Poné un nombre o una matrícula." };
+  if (!(await hasRoom(userId))) return { ok: false, error: LIMIT_MESSAGE };
+  const aircraft = { ...emptyDraft().aircraft, registration: name.slice(0, 10).toUpperCase(), balance: parsed.data };
+  const created = await prisma.aircraftProfile.create({ data: { userId, name, data: aircraft as unknown as Prisma.InputJsonValue }, select: { id: true } });
   revalidatePath(FLIGHT_PLAN_PATH);
   return { ok: true, id: created.id };
 }

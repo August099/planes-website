@@ -10,7 +10,7 @@ import { FlightPlanTabs } from "@/components/flight-plan/FlightPlanTabs";
 export default function FlightPlanLayout({ children }: { children: React.ReactNode }) {
   if (!flightPlanEnabled()) notFound();
   return (
-    <main className="relative isolate min-h-screen overflow-hidden">
+    <main className="relative isolate min-h-screen overflow-clip">
       <PageBackground page="default" />
       <div className="container mx-auto max-w-6xl px-4 pt-6 pb-20">
         <Breadcrumbs items={[{ label: "Servicios", href: "/services" }, { label: "Plan de vuelo" }]} className="mb-6" />
