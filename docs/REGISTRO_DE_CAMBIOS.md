@@ -349,6 +349,7 @@ Estilo elegido por el socio después de varias rondas de maquetas. Las reglas qu
 | 3/11: `/admin/plans`: la casilla de venta de Pro y Broker dice siempre "A la venta en /plans" (destildada decía "Muy pronto" y se leía al revés) | ver git log | `/admin/plans` |
 | 3/11: datos estructurados: los avisos sin precio ya no declaran Product (Google lo invalida), solo las migas de pan. No se agregan aggregateRating ni review: el sitio no tiene reseñas reales | ver git log | `/aircraft/[id]`, `/spareparts/sparepart-details/[id]` |
 | 3/11: galería del aviso con `sizes` y menos precargas (fotos de impresión lazy, fondo con prioridad baja). Términos y privacidad ampliados y actualizados a las Disposiciones 954/2025 y 377/2026 (`lib/terms-content.tsx`, `lib/privacy-content.ts`, `LegalDocument`). Preguntas frecuentes al día (documentos públicos, contacto, DURG/SMOH, búsqueda, republicar, datos) | ver git log | `/aircraft/[id]`, `/terms`, `/privacy`, `/faq` |
+| 5/11: SEO: títulos y descripciones de la Home, `/aircraft` y `/howtopublish` con "comprar" y "vender" aviones; no cambia nada visible | ver git log | Search Console |
 | Plan de prueba (27/10): aparte de la grilla, publicado o borrador desde `/admin/plans`; pago único que no da nada, para probar cobro y factura | ver git log | `/admin/plans`, pie de `/plans` |
 | Perfil: la barra de plan y cupo de publicaciones en rojo (27/10) | ver git log | Perfil propio |
 
