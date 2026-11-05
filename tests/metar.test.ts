@@ -2,7 +2,7 @@
 // Correr con: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { describeChange, describeClouds, describeMiles, describeVisibility, describeWeather, describeWind, isRecentMetar, minutesAgo } from "../lib/aero/metar";
+import { describeChange, describeClouds, describeHazard, describeMiles, describeSigmetLevels, describeVisibility, describeWeather, describeWind, isRecentMetar, minutesAgo, regionalSigmets, sigmetRing, type NoaaSigmet } from "../lib/aero/metar";
 
 test("viento: dirección, variable, calma y ráfagas", () => {
   assert.equal(describeWind("VRB", 4), "Variable a 4 kt");
@@ -63,4 +63,25 @@ test("bloques del TAF", () => {
   assert.equal(describeChange(null), "Inicial");
   assert.equal(describeChange("BECMG"), "Cambio gradual");
   assert.equal(describeChange("PROB", 30), "Probabilidad 30 %");
+});
+
+test("SIGMET: niveles sin inventar una base", () => {
+  assert.equal(describeSigmetLevels(0, 15000), "Hasta FL150");
+  assert.equal(describeSigmetLevels(10000, 25000), "FL100 a FL250");
+  assert.equal(describeSigmetLevels(null, null), "Niveles en el texto original");
+  assert.equal(describeHazard("TS"), "Tormentas");
+  assert.equal(describeHazard("XX"), "XX");
+});
+
+test("SIGMET: solo vigentes y de la región, con las FIR argentinas primero", () => {
+  const now = 1_800_000_000_000;
+  const s = (firId: string, lat: number, from: number, to: number): NoaaSigmet => ({ firId, validTimeFrom: now / 1000 + from, validTimeTo: now / 1000 + to, rawSigmet: "", coords: [{ lat, lon: -60 }] });
+  const list = regionalSigmets([s("SBCW", -25, -60, 60), s("SAEF", -35, -60, 60), s("SAVF", -40, -600, -60), s("SAMF", -33, 600, 1200), s("EGTT", 51, -60, 60)], now);
+  assert.deepEqual(list.map((x) => x.firId), ["SAEF", "SBCW"]);
+});
+
+test("SIGMET: cierra el anillo y descarta geometrías sin área", () => {
+  const base = { validTimeFrom: 0, validTimeTo: 1, rawSigmet: "" };
+  assert.deepEqual(sigmetRing({ ...base, coords: [{ lat: 1, lon: 1 }, { lat: 2, lon: 1 }, { lat: 2, lon: 2 }] }), [[1, 1], [1, 2], [2, 2], [1, 1]]);
+  assert.equal(sigmetRing({ ...base, coords: [{ lat: 1, lon: 1 }] }), null);
 });

@@ -1,28 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { flightPlanEnabled } from "@/lib/flight-plan-flag";
 import { hitRateLimit, limitKey } from "@/lib/rate-limit";
+import { cachedMetars, cachedTaf } from "@/lib/aero/noaa";
 import { isRecentMetar, type NoaaMetar, type NoaaTaf } from "@/lib/aero/metar";
 
-// VA-191: METAR y TAF de aviationweather.gov, siempre desde el servidor y con caché por estación: el navegador
-// nunca llama a la API (su límite es de 100 pedidos por minuto). Si falla, no se cachea el error.
+// VA-191: METAR y TAF por estación, desde el servidor (lib/aero/noaa.ts): el navegador nunca llama a la API.
 export const dynamic = "force-dynamic";
 
-const API = "https://aviationweather.gov/api/data";
-const USER_AGENT = "VentasAeronauticas/1.0 (+https://ventasaeronauticas.com)";
 // Solo estaciones argentinas: acota los códigos que se pueden pedir a la API y protege su límite.
 const STATION = /^SA[A-Z0-9]{2}$/;
-
-async function noaa<T>(path: string): Promise<T[]> {
-  const res = await fetch(`${API}/${path}`, { headers: { "User-Agent": USER_AGENT, Accept: "application/json" }, signal: AbortSignal.timeout(10_000), cache: "no-store" });
-  if (res.status === 204) return []; // La estación no reporta.
-  if (!res.ok) throw new Error(`aviationweather respondió ${res.status}`);
-  return (await res.json()) as T[];
-}
-
-const cachedMetars = unstable_cache(async (ids: string) => noaa<NoaaMetar>(`metar?ids=${ids}&format=json`), ["aero-metar-v1"], { revalidate: 300 });
-const cachedTaf = unstable_cache(async (id: string) => noaa<NoaaTaf>(`taf?ids=${id}&format=json`), ["aero-taf-v1"], { revalidate: 600 });
 
 export type WeatherResponse = { station: string; distanceKm?: number; metar: NoaaMetar | null; taf: NoaaTaf | null };
 
