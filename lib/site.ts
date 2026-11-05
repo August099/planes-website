@@ -5,7 +5,7 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://ventasaero
 export const SITE_NAME = "Ventas Aeronáuticas";
 
 export const SITE_DESCRIPTION =
-  "Comprá y vendé aviones, helicópteros y repuestos aeronáuticos en Argentina. Publicá tu aviso y contactá directo con el vendedor.";
+  "Comprar y vender aviones, avionetas, helicópteros y repuestos aeronáuticos en Argentina. Publicá tu aviso y contactá directo con el vendedor.";
 
 // Teléfono de contacto del sitio (VA-50, D10): footer y JSON-LD de la organización.
 export const CONTACT_PHONE = { display: "+54 9 3456 44-5758", e164: "+5493456445758" };
