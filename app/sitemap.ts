@@ -5,6 +5,8 @@ import { absoluteUrl } from "@/lib/site";
 import { GUIDES_PATH, guidePath } from "@/lib/guides";
 import { getPublishedGuides } from "@/lib/guides-data";
 import { landingPaths } from "@/lib/seo-landing";
+import { CALCULATORS } from "@/lib/aero/calculators";
+import { CALCULATORS_PATH, FLIGHT_PLAN_PATH, MAP_PATH, flightPlanEnabled } from "@/lib/flight-plan-flag";
 
 // Se regenera como máximo una vez por hora.
 export const revalidate = 3600;
@@ -44,6 +46,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: page.changeFrequency,
       priority: page.priority,
     })),
+    // VA-191: solo con la sección prendida. Lo apagado responde 404 y no se publica.
+    ...(flightPlanEnabled()
+      ? [
+          { url: absoluteUrl(FLIGHT_PLAN_PATH), changeFrequency: "monthly" as const, priority: 0.7 },
+          { url: absoluteUrl(MAP_PATH), changeFrequency: "monthly" as const, priority: 0.6 },
+          { url: absoluteUrl(CALCULATORS_PATH), changeFrequency: "monthly" as const, priority: 0.7 },
+          ...CALCULATORS.map((c) => ({ url: absoluteUrl(`${CALCULATORS_PATH}/${c.slug}`), changeFrequency: "monthly" as const, priority: 0.6 })),
+        ]
+      : []),
     ...landings.map((path) => ({ url: absoluteUrl(path).replace(/&/g, "&amp;"), changeFrequency: "daily" as const, priority: 0.7 })),
     ...sellers.map((u) => ({ url: absoluteUrl(`/profile/${u.id}`), changeFrequency: "weekly" as const, priority: 0.6 })),
     // Guías (VA-78)

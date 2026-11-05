@@ -1,4 +1,8 @@
+import type { Metadata } from "next";
 import { aeroStatus } from "@/lib/aero/import";
+import { flightToolJsonLd } from "@/lib/structured-data";
+import { FLIGHT_PLAN_PATH } from "@/lib/flight-plan-flag";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { flightPlanQuota } from "@/lib/flight-plan-quota";
@@ -6,6 +10,10 @@ import { PlannerLoader } from "@/components/flight-plan/planner/PlannerLoader";
 
 // VA-191: plan de vuelo guiado. Sin cuenta funciona entero salvo guardar.
 export const dynamic = "force-dynamic";
+
+const TITLE = "Plan de vuelo online en Argentina: formulario OACI y briefing";
+const DESCRIPTION = "Armá tu plan de vuelo paso a paso: ruta con rumbos y tiempos, METAR y TAF, formulario OACI, mensaje FPL y PDF. Con aeródromos y LAD de Argentina. Gratis.";
+export const metadata: Metadata = { title: TITLE, description: DESCRIPTION, alternates: { canonical: FLIGHT_PLAN_PATH }, openGraph: { title: TITLE, description: DESCRIPTION, url: FLIGHT_PLAN_PATH } };
 
 const date = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" }) : "sin fecha");
 const LABEL = { MADHEL: "MADHEL", LAD: "LAD" } as const;
@@ -22,7 +30,9 @@ export default async function FlightPlanPage() {
   const dataNote = `Datos oficiales cargados: ${status.map((s) => `${LABEL[s.dataset]} ${s.lastApplied ? `vigencia ${date(s.lastApplied.sourceDate)}` : "sin cargar"}`).join(" · ")}.`;
 
   return (
-    <PlannerLoader
+    <>
+      <JsonLd data={flightToolJsonLd({ name: TITLE, description: DESCRIPTION, path: FLIGHT_PLAN_PATH })} />
+      <PlannerLoader
       signedIn={!!user?.id}
       userName={user?.name ?? null}
       plans={plans.map((p) => ({ ...p, departureAt: p.departureAt?.toISOString() ?? null }))}
@@ -31,5 +41,6 @@ export default async function FlightPlanPage() {
       used={quota.used}
       dataNote={dataNote}
     />
+    </>
   );
 }

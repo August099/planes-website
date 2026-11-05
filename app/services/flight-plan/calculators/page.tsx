@@ -3,13 +3,18 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { CALCULATORS } from "@/lib/aero/calculators";
 import { CALCULATORS_PATH } from "@/lib/flight-plan-flag";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { flightToolJsonLd } from "@/lib/structured-data";
 
-export const metadata: Metadata = { title: "Calculadoras", robots: { index: false, follow: false } };
+const TITLE = "Calculadoras aeronáuticas para pilotos";
+const DESCRIPTION = "Viento cruzado, triángulo de viento, altitud de densidad, combustible, peso y balance, costo por hora y más. Gratis, sin cuenta y desde el celular.";
+export const metadata: Metadata = { title: TITLE, description: DESCRIPTION, alternates: { canonical: CALCULATORS_PATH }, openGraph: { title: TITLE, description: DESCRIPTION, url: CALCULATORS_PATH } };
 
 export default function CalculatorsPage() {
   const groups = [...new Set(CALCULATORS.map((c) => c.group))];
   return (
     <div className="max-w-4xl space-y-8">
+      <JsonLd data={flightToolJsonLd({ name: TITLE, description: DESCRIPTION, path: CALCULATORS_PATH })} />
       <p className="text-sm leading-relaxed text-slate-700">De uso libre y sin cuenta. Los cálculos se hacen en tu dispositivo, y cada uno tiene su enlace para compartirlo con los datos cargados.</p>
       {groups.map((group) => (
         <section key={group} aria-labelledby={`calc-${group}`}>
