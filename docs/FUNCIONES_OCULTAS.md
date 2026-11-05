@@ -85,7 +85,7 @@ cobro distinto en el débito automático (primer mes gratis o descuento por vari
 
 | | |
 |---|---|
-| Interruptor | Variable `FLIGHT_PLAN_ENABLED=true`: hoy, solo en el ambiente Preview de Vercel |
+| Dónde se ve | `pre-production`. A `main` va solo cuando los socios lo pidan expresamente. `FLIGHT_PLAN_ENABLED=false` la apaga |
 | Apagado | `/services/flight-plan` y `/admin/aero-data` dan 404; Servicios es un link simple; la fila de la grilla no se ve en `/plans`; el cron no hace nada |
 | Base de datos | Migración `20261104120000_plan_de_vuelo`: correrla en cada base antes de desplegar el código |
 | Detalle | `docs/specs/VA-191-plan-de-vuelo.md` |
