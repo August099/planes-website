@@ -136,14 +136,14 @@ export function DesktopUserMenu() {
   );
 }
 
-export function MobileMenu({ partCategories = [] }: { partCategories?: PartCategoryLink[] }) {
+export function MobileMenu({ partCategories = [], servicesMenu = false }: { partCategories?: PartCategoryLink[]; servicesMenu?: boolean }) {
   const { status, userId, isAdmin, hasUnanswered, hasRepublish, hasMissingProfile } = useHeaderUser();
   const [armed, setArmed] = useState(false);
   const dot = hasUnanswered || hasRepublish || hasMissingProfile;
 
   if (armed) {
     return (
-      <MobileDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} hasRepublish={hasRepublish} hasMissingProfile={hasMissingProfile} loading={status === "loading"} partCategories={partCategories} />
+      <MobileDropdown userId={userId} isAdmin={isAdmin} hasUnanswered={hasUnanswered} hasRepublish={hasRepublish} hasMissingProfile={hasMissingProfile} loading={status === "loading"} partCategories={partCategories} servicesMenu={servicesMenu} />
     );
   }
 

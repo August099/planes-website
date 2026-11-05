@@ -15,6 +15,7 @@ const benefits = {
   vaPage: z.enum(["NONE", "BANNER", "FULL"]),
   customDetail: z.boolean(),
   metrics: z.enum(["BASIC", "PRO", "FULL"]),
+  flightPlans: count.nullable(),
 };
 const cell = z.object({ kind: z.enum(["yes", "no", "text"]), text: z.string().trim().max(60, "Hasta 60 caracteres.").optional() });
 
@@ -50,7 +51,7 @@ export const gridDraftSchema = z.object({
   for (const k of SYSTEM_KEYS) if (!keys.includes(k)) ctx.addIssue({ code: "custom", path: ["rows"], message: "Las filas del sistema no se pueden quitar." });
 });
 
-export type GridBenefits = { verified: boolean; featured: boolean; vaPage: VaPage; customDetail: boolean; metrics: Metrics };
+export type GridBenefits = { verified: boolean; featured: boolean; vaPage: VaPage; customDetail: boolean; metrics: Metrics; flightPlans: number | null };
 export type GridDraft = {
   base: { aircraft: number; parts: number; republishesPerYear: number } & GridBenefits;
   pro: ({ price: number; listPrice: number | null; isActive: boolean; aircraft: number; parts: number; republishesPerYear: number } & GridBenefits) | null;

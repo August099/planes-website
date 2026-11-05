@@ -35,7 +35,7 @@ const VA_PAGES: VaPage[] = ["NONE", "BANNER", "FULL"];
 type Ids = { base: string; pro: string | null; brokerAircraft: string | null; brokerParts: string | null; brokerBoth: string | null };
 
 function benefitsOf(p: GridPlan): GridBenefits {
-  return { verified: p.verified, featured: p.featured, vaPage: p.vaPage, customDetail: p.customDetail, metrics: p.metrics };
+  return { verified: p.verified, featured: p.featured, vaPage: p.vaPage, customDetail: p.customDetail, metrics: p.metrics, flightPlans: p.flightPlans };
 }
 
 /** Del estado de la base al borrador editable. */
@@ -65,7 +65,7 @@ export function draftFromGrid(grid: PlansGrid): GridDraft {
 
 /** Del borrador a la grilla que se ve en /plans (vista previa). */
 function gridFromDraft(d: GridDraft, ids: Ids): PlansGrid {
-  const pick = (b: GridBenefits): GridBenefits => ({ verified: b.verified, featured: b.featured, vaPage: b.vaPage, customDetail: b.customDetail, metrics: b.metrics });
+  const pick = (b: GridBenefits): GridBenefits => ({ verified: b.verified, featured: b.featured, vaPage: b.vaPage, customDetail: b.customDetail, metrics: b.metrics, flightPlans: b.flightPlans });
   const base: GridPlan = { id: ids.base, name: "Base", price: 0, listPrice: null, isActive: true, aircraft: d.base.aircraft, parts: d.base.parts, republishesPerYear: d.base.republishesPerYear, republishAllEveryDays: null, ...pick(d.base) };
   const pro: GridPlan | null = d.pro && ids.pro ? { id: ids.pro, name: "Pro", listPrice: d.pro.listPrice, price: d.pro.price, isActive: d.pro.isActive, aircraft: d.pro.aircraft, parts: d.pro.parts, republishesPerYear: d.pro.republishesPerYear, republishAllEveryDays: null, ...pick(d.pro) } : null;
   const broker = (id: string | null, a: boolean, r: boolean): GridPlan | null =>
@@ -247,6 +247,20 @@ export function PlanGridEditor({ initial, ids, subscribers }: { initial: PlansGr
         return <Toggle label={`${GRID_COLUMN_LABEL[c]}: usuario verificado`} checked={b.verified} onChange={(v) => setB({ verified: v })} />;
       case "featured":
         return <Toggle label={`${GRID_COLUMN_LABEL[c]}: destacadas`} checked={b.featured} onChange={(v) => setB({ featured: v })} />;
+      case "flightPlans":
+        return (
+          <div className="flex items-center gap-2 text-xs text-slate-600">
+            {b.flightPlans !== null && (
+              <div className="w-16">
+                <NumberInput label={`${GRID_COLUMN_LABEL[c]}: planes de vuelo guardados`} value={b.flightPlans} onChange={(n) => setB({ flightPlans: n ?? 0 })} />
+              </div>
+            )}
+            <label className="flex items-center gap-1.5">
+              <input type="checkbox" checked={b.flightPlans === null} onChange={(e) => setB({ flightPlans: e.target.checked ? null : 2 })} className="h-3.5 w-3.5 accent-[#001F58]" />
+              Sin límite
+            </label>
+          </div>
+        );
       case "branding":
         return (
           <div className="space-y-1.5">

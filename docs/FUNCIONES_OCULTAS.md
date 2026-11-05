@@ -78,3 +78,14 @@ cobro distinto en el débito automático (primer mes gratis o descuento por vari
 ## Visible en Servicios
 
 - **Guías** (`/services/guides`) y el **Comparador** (`/aircraft/compare`).
+
+---
+
+## Plan de vuelo (VA-191)
+
+| | |
+|---|---|
+| Interruptor | Variable `FLIGHT_PLAN_ENABLED=true`: hoy, solo en el ambiente Preview de Vercel |
+| Apagado | `/services/flight-plan` y `/admin/aero-data` dan 404; Servicios es un link simple; la fila de la grilla no se ve en `/plans`; el cron no hace nada |
+| Base de datos | Migración `20261104120000_plan_de_vuelo`: correrla en cada base antes de desplegar el código |
+| Detalle | `docs/specs/VA-191-plan-de-vuelo.md` |

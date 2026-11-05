@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { flightPlanEnabled } from "@/lib/flight-plan-flag";
 import { AdminBreadcrumbs } from "@/components/admin/AdminBreadcrumbs";
 
 export default async function AdminLayout({
@@ -18,7 +19,7 @@ export default async function AdminLayout({
   return (
     // Columna en celular (barra superior + contenido), fila desde lg (barra lateral + contenido).
     <div className="flex w-full min-h-screen flex-col lg:flex-row">
-      <AdminNav />
+      <AdminNav aeroData={flightPlanEnabled()} />
 
       {/* ÁREA DE CONTENIDO */}
       <div className="relative flex-1 flex flex-col min-w-0 min-h-screen">

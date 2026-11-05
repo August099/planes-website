@@ -38,13 +38,15 @@ export const NAV_ITEMS = [
   // VA-173: gastos fijos y tipo de cambio (referencia).
   { label: "Gastos fijos", href: "/admin/expenses", icon: Wallet },
   { label: "Guías", href: "/admin/guides", icon: BookOpen },
+  // VA-191: solo con la sección de Plan de vuelo prendida (se filtra en AdminNav).
+  { label: "Datos aeronáuticos", href: "/admin/aero-data", icon: Plane },
   { label: "Sugerencias", href: "/admin/suggestions", icon: Lightbulb },
 ];
 
-function NavLinks({ pathname }: { pathname: string }) {
+function NavLinks({ pathname, aeroData }: { pathname: string; aeroData: boolean }) {
   return (
     <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-      {NAV_ITEMS.map((item) => {
+      {NAV_ITEMS.filter((item) => aeroData || item.href !== "/admin/aero-data").map((item) => {
         const Icon = item.icon;
         const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
         return (
@@ -74,7 +76,7 @@ const Brand = () => (
 
 // Navegación del panel admin (VA-60): barra lateral fija desde lg; debajo, una barra superior
 // con botón de menú que abre la misma navegación en un panel lateral.
-export function AdminNav() {
+export function AdminNav({ aeroData = false }: { aeroData?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -116,7 +118,7 @@ export function AdminNav() {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <NavLinks pathname={pathname} />
+            <NavLinks pathname={pathname} aeroData={aeroData} />
           </aside>
         </div>
       )}
@@ -126,7 +128,7 @@ export function AdminNav() {
         <div className="p-6 border-b border-white/10">
           <Brand />
         </div>
-        <NavLinks pathname={pathname} />
+        <NavLinks pathname={pathname} aeroData={aeroData} />
         <div className="p-4 border-t border-white/10 text-xs text-white/50 text-center shrink-0">
           Ventas Aeronáuticas v1.0
         </div>

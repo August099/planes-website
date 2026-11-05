@@ -1,3 +1,4 @@
+import { flightPlanEnabled } from "@/lib/flight-plan-flag";
 import "server-only";
 import { unstable_cache } from "next/cache";
 import type { Plan, PlanGridRow } from "@prisma/client";
@@ -26,6 +27,7 @@ export function toGridPlan(p: Plan, base: { aircraft: number; parts: number }): 
     vaPage: p.vaPageLevel,
     customDetail: p.includesCustomDetail,
     metrics: p.metricsLevel,
+    flightPlans: p.flightPlansLimit,
   };
 }
 
@@ -46,7 +48,7 @@ export async function loadPlansGrid(): Promise<PlansGrid & { all: Plan[] }> {
   const option = (a: boolean, r: boolean) => plans.find((p) => p.tier === "BUSINESS" && p.isUnlimitedAircraft === a && p.isUnlimitedSpareParts === r);
   return {
     all: plans,
-    base: grid(baseRow) ?? { id: "", name: "Base", price: 0, listPrice: null, isActive: true, aircraft: base.aircraft, parts: base.parts, republishesPerYear: 2, republishAllEveryDays: null, verified: false, featured: false, vaPage: "NONE", customDetail: false, metrics: "BASIC" },
+    base: grid(baseRow) ?? { id: "", name: "Base", price: 0, listPrice: null, isActive: true, aircraft: base.aircraft, parts: base.parts, republishesPerYear: 2, republishAllEveryDays: null, verified: false, featured: false, vaPage: "NONE", customDetail: false, metrics: "BASIC", flightPlans: 2 },
     pro: grid(plans.find((p) => p.tier === "PRO")),
     broker: { aircraft: grid(option(true, false)), parts: grid(option(false, true)), both: grid(option(true, true)) },
     rows: rows.map(toGridRow),
@@ -59,8 +61,9 @@ export async function loadPlansGrid(): Promise<PlansGrid & { all: Plan[] }> {
 export const getPlansPage = unstable_cache(
   async (): Promise<PlansGrid> => {
     const { base, pro, broker, rows } = await loadPlansGrid();
-    return { base, pro, broker, rows };
+    // VA-191: con la sección apagada, la fila de planes de vuelo no se muestra.
+    return { base, pro, broker, rows: flightPlanEnabled() ? rows : rows.filter((r) => r.systemKey !== "flightPlans") };
   },
-  ["plans-page", "va187", "unsellable-visible"],
+  ["plans-page", "va187", "unsellable-visible", flightPlanEnabled() ? "flight-plan" : "no-flight-plan"],
   { tags: [PLANS_TAG, "quota"], revalidate: 3600 }
 );
