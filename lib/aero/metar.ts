@@ -161,3 +161,50 @@ export const describeChange = (change: string | null | undefined, probability?: 
   const base = change ? (CHANGE[change] ?? change) : "Inicial";
   return probability ? `${base} ${probability} %` : base;
 };
+
+export type NoaaSigmet = {
+  icaoId?: string;
+  firId?: string | null;
+  firName?: string | null;
+  validTimeFrom: number;
+  validTimeTo: number;
+  hazard?: string | null;
+  qualifier?: string | null;
+  base?: number | null;
+  top?: number | null;
+  geom?: string | null;
+  coords?: { lat: number; lon: number }[] | null;
+  rawSigmet: string;
+};
+
+const HAZARD: Record<string, string> = { TS: "Tormentas", TURB: "Turbulencia", ICE: "Engelamiento", VA: "Ceniza volcánica", MTW: "Ondas de montaña", TC: "Ciclón tropical", DS: "Tempestad de polvo", SS: "Tempestad de arena", RDOACT: "Nube radiactiva" };
+export const describeHazard = (hazard: string | null | undefined) => (hazard ? (HAZARD[hazard] ?? hazard) : "Fenómeno sin clasificar");
+
+/** "Hasta FL150" o "FL100 a FL150". La fuente da pies; un 0 puede ser "sin base informada", así que no se afirma superficie. */
+export function describeSigmetLevels(base: number | null | undefined, top: number | null | undefined): string {
+  const level = (ft: number) => (ft >= 1000 ? `FL${String(Math.round(ft / 100)).padStart(3, "0")}` : `${ft} ft`);
+  if (typeof top !== "number") return "Niveles en el texto original";
+  return typeof base === "number" && base > 0 ? `${level(base)} a ${level(top)}` : `Hasta ${level(top)}`;
+}
+
+const AREA = { minLat: -60, maxLat: -18, minLng: -80, maxLng: -48 };
+const ARGENTINE_FIR = /^SA/;
+
+/** Vigentes ahora, de las FIR argentinas o con algún punto cerca del país. */
+export function regionalSigmets(sigmets: NoaaSigmet[], now = Date.now()): NoaaSigmet[] {
+  const argentineFirst = (s: NoaaSigmet) => (s.firId && ARGENTINE_FIR.test(s.firId) ? 0 : 1);
+  const active = sigmets.filter((s) => {
+    if (s.validTimeTo * 1000 <= now || s.validTimeFrom * 1000 > now) return false;
+    if (s.firId && ARGENTINE_FIR.test(s.firId)) return true;
+    return (s.coords ?? []).some((c) => c.lat >= AREA.minLat && c.lat <= AREA.maxLat && c.lon >= AREA.minLng && c.lon <= AREA.maxLng);
+  });
+  return active.sort((a, b) => argentineFirst(a) - argentineFirst(b));
+}
+
+/** Anillo cerrado para el mapa o null si la geometría no alcanza para un área. */
+export function sigmetRing(s: NoaaSigmet): [number, number][] | null {
+  const points = (s.coords ?? []).map((c) => [c.lon, c.lat] as [number, number]);
+  if (points.length < 3) return null;
+  const [first, last] = [points[0], points[points.length - 1]];
+  return first[0] === last[0] && first[1] === last[1] ? points : [...points, first];
+}
