@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { flightPlanEnabled } from "@/lib/flight-plan-flag";
 import { PageBackground } from "@/components/ui/PageBackground";
@@ -6,8 +5,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FlightPlanTabs } from "@/components/flight-plan/FlightPlanTabs";
 
-// VA-191: sin FLIGHT_PLAN_ENABLED, toda la sección responde 404. Fuera de los buscadores hasta el lanzamiento.
-export const metadata: Metadata = { title: "Plan de vuelo", robots: { index: false, follow: false } };
+// VA-191: con FLIGHT_PLAN_ENABLED=false, toda la sección responde 404. Título y descripción, en cada página.
 
 export default function FlightPlanLayout({ children }: { children: React.ReactNode }) {
   if (!flightPlanEnabled()) notFound();

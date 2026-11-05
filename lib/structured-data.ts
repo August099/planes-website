@@ -199,6 +199,23 @@ export function guideJsonLd(guide: Guide) {
   return [article, trail, termSet];
 }
 
+/**
+ * VA-191: páginas del plan de vuelo y las calculadoras. WebPage a propósito: SoftwareApplication pide puntajes y reseñas
+ * que no tenemos, y Search Console lo marcaría como inválido.
+ */
+export function flightToolJsonLd({ name, description, path }: { name: string; description: string; path: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name,
+    description,
+    url: absoluteUrl(path),
+    inLanguage: "es-AR",
+    isAccessibleForFree: true,
+    isPartOf: { "@type": "WebSite", name: SITE_NAME, url: absoluteUrl("/") },
+  };
+}
+
 export function guidesIndexJsonLd() {
   return breadcrumbs([
     { name: "Inicio", path: "/" },
