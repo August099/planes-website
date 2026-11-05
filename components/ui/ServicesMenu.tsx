@@ -42,9 +42,17 @@ export function ServicesMenu({ linkClass }: { linkClass: string }) {
           <ul className="grid gap-x-10 border-t border-[var(--mega-line)] md:grid-cols-2">
             {SERVICE_LINKS.map((item) => (
               <li key={item.href} className="border-b border-[var(--mega-line)]">
-                <Link href={item.href} className="group/link block py-3">
-                  <span className="block text-sm font-semibold transition-transform duration-200 group-hover/link:translate-x-1">{item.label}</span>
-                  <span className="mt-0.5 block text-[13px] text-[var(--mega-muted)]">{item.description}</span>
+                <Link href={item.href} className="group/link flex items-center gap-4 py-3">
+                  {/* Máscara: el trazo toma el color del panel (blanco sobre azul en la Home, azul en el resto). */}
+                  <span
+                    aria-hidden
+                    className="h-10 w-10 shrink-0 bg-current [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
+                    style={{ maskImage: `url(/icons/services/${item.icon}.webp)`, WebkitMaskImage: `url(/icons/services/${item.icon}.webp)` }}
+                  />
+                  <span className="min-w-0 transition-transform duration-200 group-hover/link:translate-x-1">
+                    <span className="block text-sm font-semibold">{item.label}</span>
+                    <span className="mt-0.5 block text-[13px] text-[var(--mega-muted)]">{item.description}</span>
+                  </span>
                 </Link>
               </li>
             ))}
