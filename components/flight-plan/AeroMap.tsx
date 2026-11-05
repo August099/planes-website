@@ -182,7 +182,7 @@ export function AeroMap() {
   };
 
   return (
-    <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[auto_1fr]">
       <div className="lg:col-start-2 lg:row-start-1">
         <PlacePicker
           label="Buscar aeródromo o LAD"
