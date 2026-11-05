@@ -249,6 +249,25 @@ Marcar cada punto. Celular real para los que dicen 📱.
 
 ---
 
+## VA-191. Plan de vuelo (solo en pre-production)
+
+En un celular real y en la computadora:
+
+- [ ] `/services/flight-plan`, sin cuenta: se puede hacer todo salvo guardar. Al recargar, lo cargado sigue ahí.
+- [ ] Aeronave: escribir "Cessna 182" ofrece C182 y completa la estela. Un tipo sin designador pasa a ZZZZ con TYP/.
+- [ ] Ruta: elegir salida, destino y alternativa; tocar el mapa agrega un punto. Con viento cargado cambian deriva, proa y tiempo.
+- [ ] Contrastar rumbo, distancia y declinación de una ruta conocida con tu carta o tu GPS.
+- [ ] Vuelo: la hora argentina se convierte a UTC, también si cruza la medianoche (DOF debe ser el día UTC).
+- [ ] Briefing: METAR y TAF de los tres lugares, pista según el viento, SIGMET, sol, combustible. Una llegada de noche da aviso.
+- [ ] Un LAD sin código OACI sale con ZZZZ y DEP/ DEST/ ALTN/ en la casilla 18.
+- [ ] Resultado: marca lo que falta; copiar mensaje, PDF y WhatsApp. Mostrarle el PDF y el mensaje a la oficina ARO-AIS para confirmar que los aceptan.
+- [ ] Con cuenta Base: guardar 2 cosas entre planes y aeronaves; la tercera no se puede. Con Pro, Broker o admin, sin límite.
+- [ ] Abrir, editar y borrar un plan guardado. Guardar y borrar una aeronave.
+- [ ] Mapa: capas METAR y SIGMET, con la lista de vigentes y el texto original.
+- [ ] Calculadoras > Clima: buscar, favoritos, el más cercano. Altitud de densidad: "Usar datos del METAR actual".
+
+---
+
 ## 6. Después
 
 Con todo en verde: pasar a producción con `docs/PASE_A_PRODUCCION.md` (ahí van las credenciales

@@ -208,3 +208,6 @@ export function sigmetRing(s: NoaaSigmet): [number, number][] | null {
   const [first, last] = [points[0], points[points.length - 1]];
   return first[0] === last[0] && first[1] === last[1] ? points : [...points, first];
 }
+
+/** Bloques del TAF que rigen en ese instante. Vacío si el TAF no llega hasta ahí. */
+export const tafBlocksAt = (taf: NoaaTaf, seconds: number) => (taf.fcsts ?? []).filter((f) => f.timeFrom <= seconds && seconds < f.timeTo);

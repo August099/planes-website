@@ -55,6 +55,7 @@ export const privacySections: LegalSection[] = [
     blocks: [
       "Las calculadoras se usan sin cuenta y hacen los cálculos en tu dispositivo: lo que cargás no se guarda en nuestros servidores. Si copiás el enlace de una calculadora, los valores van dentro del enlace, y los ve quien lo reciba.",
       "Usamos tu ubicación solo si tocás el botón para usarla, y tu navegador te pide permiso antes. Para el sol se usa en tu dispositivo. Para el clima más cercano se envía a nuestro servidor, redondeada, solo para buscar la estación. En ningún caso la guardamos.",
+      "El plan que estás armando queda guardado en tu navegador hasta que lo borres. Si lo guardás con tu cuenta, guardamos en nuestra base lo que cargaste, incluidos la matrícula, el nombre del piloto y la ruta, hasta que lo borres o elimines la cuenta. Para el PDF, los datos pasan por nuestro servidor solo para armarlo y no quedan guardados. Si compartís el plan por WhatsApp, lo mandás vos con esa aplicación.",
       "Las unidades elegidas quedan guardadas en tu navegador, como figura en la sección de cookies. El mapa descarga imágenes de OpenFreeMap, según se indica en la sección de proveedores.",
     ],
   },
@@ -159,6 +160,7 @@ export const privacySections: LegalSection[] = [
             ["Comparador (almacenamiento local)", "Necesaria", "Las aeronaves que elegiste para comparar; queda solo en tu dispositivo", "Hasta que la quites"],
             ["Cartel de la Home (almacenamiento local)", "Necesaria", "Si ya cerraste o viste el cartel de bienvenida, para no mostrártelo de más", "Hasta que borres los datos del navegador"],
             ["va_calc_units (almacenamiento local)", "Necesaria", "Las unidades que elegiste en las calculadoras; queda solo en tu dispositivo", "Hasta que borres los datos del navegador"],
+            ["va_fp_draft (almacenamiento local)", "Necesaria", "El plan de vuelo que estás armando; queda solo en tu dispositivo", "Hasta que lo borres"],
             ["va_weather_favorites (almacenamiento local)", "Necesaria", "Los aeródromos favoritos que guardaste en Clima; quedan solo en tu dispositivo", "Hasta que los quites"],
             ["va_republish_dismissed (almacenamiento local)", "Necesaria", "Si cerraste el aviso de republicaciones disponibles, para no mostrarlo hasta que cambie tu saldo", "Hasta que borres los datos del navegador"],
             ["Marcas de visita (almacenamiento de la pestaña)", "Necesaria", "Contar una sola vez la visita a una página, un aviso o un perfil en la misma pestaña. No llevan ningún identificador", "Se borran al cerrar la pestaña"],
